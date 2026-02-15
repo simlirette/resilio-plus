@@ -102,7 +102,20 @@ resilio vdot paces --vdot <VDOT>
 
 Use these paces to set pace_range for each workout type (easy, tempo, intervals).
 
-5. Design exact workouts using AI judgment:
+5. Determine run count (suggest-run-count):
+
+**CRITICAL**: Before designing workouts, consult the system for optimal run count using:
+
+```bash
+resilio plan suggest-run-count \
+  --volume <TARGET_VOLUME_KM> \
+  --max-runs <ATHLETE_MAX_RUN_DAYS> \
+  --phase <PHASE>
+```
+
+This step is strongly recommended - skipping it risks presentation-JSON mismatches. See `references/choosing_run_count.md` for complete workflow, decision heuristics, and integration guidance.
+
+6. Design exact workouts using AI judgment:
 
 **YOU design the workouts** using:
 
@@ -188,7 +201,7 @@ Create explicit workout JSON manually with exact distances. Example structure:
 
 Write JSON to `/tmp/weekly_plan_w<week>.json`
 
-6. Validate your design:
+7. Validate comprehensively:
 
 ```bash
 resilio plan validate-week --file /tmp/weekly_plan_w<week>.json
@@ -204,7 +217,24 @@ This checks:
 
 If validation fails, fix the issues and re-validate.
 
-7. Interval structure validation (conditional):
+**Before proceeding**, verify your JSON:
+
+```bash
+# Count workouts (must match suggest-run-count recommendation)
+jq '.weeks[0].workouts | length' /tmp/weekly_plan_w<week>.json
+
+# Verify volume sum (must equal target_volume_km ±0.1km)
+jq '[.weeks[0].workouts[].distance_km] | add' /tmp/weekly_plan_w<week>.json
+```
+
+**Consult the pre-presentation checklist** (`references/pre_presentation_checklist.md`) to confirm:
+- Workout count matches suggest-run-count recommendation
+- Volume sum equals target_volume_km (±0.1km)
+- Presentation text will match actual JSON structure
+
+If any check fails, FIX THE JSON before presenting.
+
+8. Interval structure validation (conditional):
    Run **only if** your designed week includes a structured tempo/interval workout
    with explicit work + recovery bouts (Daniels-style). If not, skip.
 
@@ -240,7 +270,7 @@ resilio plan validate-intervals \
   --weekly-volume <WEEKLY_KM>
 ```
 
-8. Present directly in chat:
+9. Present directly in chat:
 
 **IMPORTANT**: Always show the complete weekly training plan with ALL activities (running + other sports).
 
@@ -321,10 +351,11 @@ I'll record your approval with:
 
 ## References (load only if needed)
 
+- **Pre-presentation checklist**: `references/pre_presentation_checklist.md` (consult before presenting)
 - Workout structure & session mechanics: `references/workout_structure.md`
 - Weekly volume progression: `references/volume_progression_weekly.md`
 - Workout generation: `references/workout_generation.md`
-- Choosing run count: `references/choosing_run_count.md`
+- **Choosing run count**: `references/choosing_run_count.md` (consult before workout design)
 - Pace zones: `references/pace_zones.md`
 - Guardrails: `references/guardrails_weekly.md`
 - JSON workflow: `references/json_workflow.md`

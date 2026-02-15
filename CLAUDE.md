@@ -316,7 +316,11 @@ The analytical style is hardcoded (not user-configurable) and designed for amate
    - After presenting the full review doc, use the `athlete_prompt` to ask for approval
 4. **Athlete approval** → `resilio approvals approve-macro`
    - After approval, the plan is automatically saved to `data/plans/current_plan_review.md` for reference
-5. **Weekly plan**: `weekly-plan-generate` (weekly JSON + review)
+5. **Weekly plan**:
+   - Run `weekly-plan-generate` skill (returns `weekly_json_path`, `athlete_prompt`)
+   - **CRITICAL**: Read the actual JSON file at `weekly_json_path` and verify the workout count is reasonable
+   - Present the plan inline in chat using the JSON as source of truth
+   - After presenting, use the `athlete_prompt` to ask for approval
 6. **Athlete approval** → `resilio approvals approve-week --week <N> --file /tmp/weekly_plan_wN.json`
 7. **Apply**: `weekly-plan-apply` → `resilio plan populate --from-json /tmp/weekly_plan_wN.json --validate`
 
