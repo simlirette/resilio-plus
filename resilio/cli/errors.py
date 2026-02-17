@@ -40,9 +40,10 @@ def get_exit_code_for_error_type(error_type: str) -> int:
         "config": EXIT_CONFIG_MISSING,
         # Auth issues
         "auth": EXIT_AUTH_FAILURE,
-        # Network issues
+        # Network / service issues
         "rate_limit": EXIT_NETWORK_ERROR,
         "network": EXIT_NETWORK_ERROR,
+        "api_error": EXIT_VALIDATION_ERROR,
         # Validation issues
         "validation": EXIT_VALIDATION_ERROR,
         "invalid_input": EXIT_VALIDATION_ERROR,

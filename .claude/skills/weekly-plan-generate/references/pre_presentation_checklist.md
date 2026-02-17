@@ -9,6 +9,7 @@
 - [ ] Volume sum = target_volume_km (±0.1km tolerance)
 - [ ] No duplicate days, all within week boundaries
 - [ ] Presentation text matches actual JSON structure
+- [ ] Weather advisory context reviewed (`resilio weather week`) and reflected in notes
 
 ## Validation Commands
 

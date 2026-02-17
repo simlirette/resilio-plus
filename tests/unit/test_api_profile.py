@@ -29,6 +29,7 @@ from resilio.schemas.profile import (
     ConflictPolicy,
     OtherSport,
     PauseReason,
+    WeatherPreferences,
 )
 from resilio.schemas.repository import RepoError, RepoErrorType
 
@@ -489,6 +490,26 @@ class TestPR1NewFields:
         assert result.error_type == "validation"
         assert "Invalid profile data" in result.message
 
+    @patch("resilio.api.profile.RepositoryIO")
+    @patch("resilio.api.profile.AthleteProfile")
+    def test_update_profile_with_weather_location_alias(
+        self, mock_profile_cls, mock_repo_cls, mock_log, mock_profile
+    ):
+        """weather_location alias should map to weather_preferences.location_query."""
+        mock_repo = Mock()
+        mock_repo_cls.return_value = mock_repo
+        mock_repo.read_yaml.return_value = mock_profile
+        mock_repo.write_yaml.return_value = None
+
+        mock_profile.model_dump.return_value = {"name": "Test", "weather_preferences": None}
+        mock_profile_cls.model_validate.return_value = mock_profile
+
+        result = update_profile(weather_location="Paris, France")
+
+        assert isinstance(result, Mock)
+        validated_dict = mock_profile_cls.model_validate.call_args[0][0]
+        assert validated_dict["weather_preferences"]["location_query"] == "Paris, France"
+
 
 class TestPR2ConstraintFields:
     """Test constraint fields added in PR2."""
@@ -530,6 +551,20 @@ class TestPR2ConstraintFields:
         assert isinstance(result, AthleteProfile)
         # Default: no unavailable days (all days available)
         assert len(result.constraints.unavailable_run_days) == 0
+
+    @patch("resilio.api.profile.RepositoryIO")
+    def test_create_profile_with_weather_location(self, mock_repo_cls, mock_log):
+        """Creating profile with weather location should persist typed preferences."""
+        mock_repo = Mock()
+        mock_repo_cls.return_value = mock_repo
+        mock_repo.read_yaml.return_value = None
+        mock_repo.write_yaml.return_value = None
+
+        result = create_profile(name="Test Athlete", weather_location="Paris, France")
+
+        assert isinstance(result, AthleteProfile)
+        assert isinstance(result.weather_preferences, WeatherPreferences)
+        assert result.weather_preferences.location_query == "Paris, France"
 
 
 class TestSportCommitments:

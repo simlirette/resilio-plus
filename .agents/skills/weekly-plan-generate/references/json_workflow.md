@@ -26,6 +26,9 @@ poetry run resilio plan generate-week \
 # 4. Validate JSON before presenting to athlete
 poetry run resilio plan validate-week --file /tmp/weekly_plan_w1.json
 
+# 4.5 Add weather advisory context (for coaching notes)
+poetry run resilio weather week --start 2026-01-20
+
 # 5. Record approval
 poetry run resilio approvals approve-week --week 1 --file /tmp/weekly_plan_w1.json
 

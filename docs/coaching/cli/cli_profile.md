@@ -29,6 +29,7 @@ Create a new athlete profile.
 - `--age` - Age in years
 - `--max-hr` - Maximum heart rate
 - `--resting-hr` - Resting heart rate
+- `--weather-location` - Default weather lookup location (e.g., `"Paris, France"`)
 - `--run-priority` - `primary|secondary|equal` (default: `equal`)
 - `--primary-sport` - Primary sport name if not running
 - `--conflict-policy` - `primary_sport_wins|running_goal_wins|ask_each_time` (default: `ask_each_time`)
@@ -36,7 +37,7 @@ Create a new athlete profile.
 - `--max-run-days` - Maximum run days/week (default: `4`)
 - `--unavailable-days` - Days you cannot run (comma-separated)
 - `--detail-level` - `brief|moderate|detailed`
-- `--coaching-style` - `supportive|direct|analytical`
+- `--coaching-style` - `analytical` (only valid value)
 - `--intensity-metric` - `pace|hr|rpe`
 
 **Examples:**
@@ -44,6 +45,7 @@ Create a new athlete profile.
 ```bash
 resilio profile create --name "Alex"
 resilio profile create --name "Alex" --age 32 --max-hr 190 --unavailable-days "tuesday,thursday"
+resilio profile create --name "Alex" --weather-location "Paris, France"
 ```
 
 ---
@@ -69,7 +71,10 @@ resilio profile set --max-hr 190 --resting-hr 55
 resilio profile set --min-run-days 3 --max-run-days 4 --unavailable-days "tuesday,thursday"
 resilio profile set --run-priority primary --conflict-policy running_goal_wins
 resilio profile set --detail-level detailed --coaching-style analytical --intensity-metric hr
+resilio profile set --weather-location "Paris, France"
 ```
+
+**Weather location enrichment:** After the first successful `resilio weather week` lookup using a profile-based location (no `--location` flag), the resolved geocoding data (`resolved_name`, `latitude`, `longitude`, `timezone`) is automatically cached in `profile.weather_preferences`. Subsequent lookups skip geocoding and use cached coordinates for faster, more stable results. To update the location (e.g., after relocating or for travel weeks), run `resilio profile set --weather-location "New City, Country"`.
 
 ---
 

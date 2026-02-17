@@ -2,7 +2,7 @@
 
 ## Overview
 
-The profile system supports 28 fields accessible via `resilio profile set` and `resilio profile get`. Use natural conversation to gather most values, not chat-based numbered options.
+The profile system supports many fields via `resilio profile set` and `resilio profile get`. Use natural conversation to gather most values, not chat-based numbered options.
 
 ---
 
@@ -26,6 +26,16 @@ Command: resilio profile set --name "Alex"
 Coach: "How old are you?"
 Athlete: "32"
 Command: resilio profile set --age 32
+```
+
+### weather-location (string)
+**What**: Default location used for weather forecast retrieval
+**How to gather**: Natural conversation
+**Example**:
+```
+Coach: "Where do you usually train?"
+Athlete: "Lyon, France"
+Command: resilio profile set --weather-location "Lyon, France"
 ```
 
 ---
@@ -243,6 +253,7 @@ resilio profile analyze
 ### Set Multiple Fields at Once
 ```bash
 resilio profile set --name "Alex" --age 32 --max-hr 190 --max-run-days 4 --conflict-policy ask_each_time
+resilio profile set --weather-location "Lyon, France"
 ```
 
 ### Update Individual Field
@@ -266,6 +277,7 @@ resilio profile set --max-hr 185
 - `max-session-minutes` (defaults to 180 if not set)
 - `unavailable-days` (defaults to empty list if not set)
 - `conflict-policy` (defaults to "ask_each_time" if multi-sport)
+- `weather-location` (enables weather-aware weekly planning)
 
 ### Auto-Populated (Don't Ask)
 - `vdot` (calculated from races)
@@ -274,12 +286,13 @@ resilio profile set --max-hr 185
 
 ---
 
-## Complete Field List (28 total)
+## Complete Field List (Core Fields)
 
 | Field | Type | Required | How to Gather |
 |-------|------|----------|---------------|
 | name | string | Yes | Natural conversation |
 | age | integer | Yes | Natural conversation |
+| weather-location | string | Recommended | Natural conversation |
 | max-hr | integer | Yes | Reference analyze data |
 | resting-hr | integer | No | Natural conversation |
 | max-run-days | integer | Yes | Natural conversation |

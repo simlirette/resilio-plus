@@ -194,7 +194,12 @@ This ensures we understand the athlete's complete training picture before asking
 
 #### Quick Overview (Multi-Sport Sequence)
 
-**Step 4a - Basic Info**: Name, age, max HR (reference Strava peak), resting HR, running experience (years)
+**Step 4a - Basic Info**: Name, age, max HR (reference Strava peak), resting HR, running experience (years), weather location
+
+- Ask explicitly: "Where do you usually train? I'll use this to pull weekly weather context when designing your training plans — so I can factor in heat, wind, or storms before assigning quality sessions."
+- Capture as a location string suitable for weather lookup (e.g., "Lyon, France")
+- If the athlete travels frequently, note their primary base location and mention they can update it later for travel weeks
+- If location geocoding fails during planning, let the athlete know the weather lookup was skipped and they can set a more specific location (e.g., "Paris, France" instead of "Paris")
 
 **Why this matters**: "I need your complete training picture. Climbing loads your cardiovascular system even though it doesn't stress your legs the same way. If I ignore it, I'll over-prescribe running and you'll burn out."
 
@@ -215,7 +220,7 @@ This ensures we understand the athlete's complete training picture before asking
 **Step 4e - Create Profile**:
 
 ```bash
-resilio profile create --name "Alex" --age 32 --max-hr 190 --run-priority equal --conflict-policy ask_each_time
+resilio profile create --name "Alex" --age 32 --max-hr 190 --run-priority equal --conflict-policy ask_each_time --weather-location "Lyon, France"
 ```
 
 **Step 4f - Other Sports Collection** (AFTER profile creation):

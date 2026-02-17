@@ -112,6 +112,11 @@ from resilio.api.validation import (
     ValidationError,
 )
 
+from resilio.api.weather import (
+    get_weekly_weather_forecast,
+    WeatherError,
+)
+
 from resilio.core.memory import (
     save_memory,
     load_memories,
@@ -202,6 +207,9 @@ __all__ = [
     "api_validate_plan_structure",
     "api_assess_goal_feasibility",
     "ValidationError",
+    # Weather operations
+    "get_weekly_weather_forecast",
+    "WeatherError",
     # Memory operations
     "save_memory",
     "load_memories",

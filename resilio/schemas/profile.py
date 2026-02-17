@@ -9,6 +9,7 @@ from enum import Enum
 import warnings
 
 from resilio.schemas.adaptation import AdaptationThresholds
+from resilio.schemas.weather import WeatherLocation
 
 
 # ============================================================
@@ -166,6 +167,11 @@ class CommunicationPreferences(BaseModel):
     intensity_metric: IntensityMetric = IntensityMetric.PACE
 
 
+# WeatherPreferences is an alias for WeatherLocation — one canonical schema for weather
+# location data used both in forecast responses and the athlete profile.
+WeatherPreferences = WeatherLocation
+
+
 class StravaConnection(BaseModel):
     """Strava connection info."""
 
@@ -264,6 +270,9 @@ class AthleteProfile(BaseModel):
     preferences: CommunicationPreferences = Field(
         default_factory=CommunicationPreferences
     )
+
+    # Weather Preferences
+    weather_preferences: Optional[WeatherPreferences] = None
 
     # Adaptation Thresholds (Phase 5: Toolkit Paradigm)
     adaptation_thresholds: AdaptationThresholds = Field(

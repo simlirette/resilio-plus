@@ -69,6 +69,17 @@ resilio dates week-boundaries --start <WEEK_START>
 resilio profile get  # Load athlete profile including other_sports
 ```
 
+2.5. Add weekly weather context (advisory-only):
+
+```bash
+resilio weather week --start <WEEK_START>
+```
+
+- Use weather output to refine coaching notes and session placement guidance.
+- Keep workout generation coach-driven (no rigid auto-swaps).
+- If weather lookup fails, continue planning and explicitly call out uncertainty.
+- In environments with web access, the main coach may use internet search as fallback.
+
 **Multi-sport athletes**: Check `other_sports` field in profile to identify:
 
 - What other sports they do (climbing, cycling, surfing, etc.)
@@ -293,6 +304,14 @@ Present in this structure:
 - Volume change vs previous week: {prev_km}km → {target_km}km ({change}%)
 - Multi-sport considerations: {e.g., "Light week due to climbing comp", "No quality runs on climbing days"}
 - Any guardrail overrides with justification
+
+**Weather Context & Adjustments**:
+
+- Weekly weather summary: {weekly_summary}
+- Advisory signals: {list each advisory date + signal label + condition, e.g. "Mon HEAT_HIGH (32°C max), Thu WIND_MODERATE (28 km/h)"}
+- **Multi-sport note**: If a heat/wind advisory coincides with a cycling or other outdoor sport day, note that the advisory affects all activities that day — not just running.
+- Coaching note: Use the raw advisory signals above to decide how (or whether) to adjust the week. Weather decisions are yours to make — the data surfaces conditions; you synthesize context, athlete fatigue, and training priorities.
+- If weather data unavailable: note the uncertainty and recommend the athlete checks local conditions before scheduling quality sessions outdoors.
 
 **Weekly Training Schedule**:
 

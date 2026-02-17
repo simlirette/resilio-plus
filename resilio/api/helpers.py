@@ -38,6 +38,7 @@ def is_error(result) -> bool:
     from resilio.api.guardrails import GuardrailsError
     from resilio.api.analysis import AnalysisError
     from resilio.api.validation import ValidationError
+    from resilio.api.weather import WeatherError
 
     return isinstance(
         result,
@@ -51,6 +52,7 @@ def is_error(result) -> bool:
             GuardrailsError,
             AnalysisError,
             ValidationError,
+            WeatherError,
         ),
     )
 

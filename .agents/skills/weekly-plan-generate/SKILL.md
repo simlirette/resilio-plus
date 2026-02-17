@@ -69,6 +69,17 @@ resilio dates week-boundaries --start <WEEK_START>
 resilio profile get  # Load athlete profile including other_sports
 ```
 
+2.5. Add weekly weather context (advisory-only):
+
+```bash
+resilio weather week --start <WEEK_START>
+```
+
+- Use weather output to refine coaching notes and session placement guidance.
+- Keep workout generation coach-driven (no rigid auto-swaps).
+- If weather lookup fails, continue planning and explicitly call out uncertainty.
+- In environments with web access, the main coach may use internet search as fallback.
+
 **Multi-sport athletes**: Check `other_sports` field in profile to identify:
 
 - What other sports they do (climbing, cycling, surfing, etc.)
@@ -102,7 +113,20 @@ resilio vdot paces --vdot <VDOT>
 
 Use these paces to set pace_range for each workout type (easy, tempo, intervals).
 
-5. Design exact workouts using AI judgment:
+5. Determine run count (suggest-run-count):
+
+**CRITICAL**: Before designing workouts, consult the system for optimal run count using:
+
+```bash
+resilio plan suggest-run-count \
+  --volume <TARGET_VOLUME_KM> \
+  --max-runs <ATHLETE_MAX_RUN_DAYS> \
+  --phase <PHASE>
+```
+
+This step is strongly recommended - skipping it risks presentation-JSON mismatches. See `references/choosing_run_count.md` for complete workflow, decision heuristics, and integration guidance.
+
+6. Design exact workouts using AI judgment:
 
 **YOU design the workouts** using:
 
@@ -188,7 +212,7 @@ Create explicit workout JSON manually with exact distances. Example structure:
 
 Write JSON to `/tmp/weekly_plan_w<week>.json`
 
-6. Validate your design:
+7. Validate comprehensively:
 
 ```bash
 resilio plan validate-week --file /tmp/weekly_plan_w<week>.json
@@ -204,7 +228,24 @@ This checks:
 
 If validation fails, fix the issues and re-validate.
 
-7. Interval structure validation (conditional):
+**Before proceeding**, verify your JSON:
+
+```bash
+# Count workouts (must match suggest-run-count recommendation)
+jq '.weeks[0].workouts | length' /tmp/weekly_plan_w<week>.json
+
+# Verify volume sum (must equal target_volume_km ±0.1km)
+jq '[.weeks[0].workouts[].distance_km] | add' /tmp/weekly_plan_w<week>.json
+```
+
+**Consult the pre-presentation checklist** (`references/pre_presentation_checklist.md`) to confirm:
+- Workout count matches suggest-run-count recommendation
+- Volume sum equals target_volume_km (±0.1km)
+- Presentation text will match actual JSON structure
+
+If any check fails, FIX THE JSON before presenting.
+
+8. Interval structure validation (conditional):
    Run **only if** your designed week includes a structured tempo/interval workout
    with explicit work + recovery bouts (Daniels-style). If not, skip.
 
@@ -240,7 +281,7 @@ resilio plan validate-intervals \
   --weekly-volume <WEEKLY_KM>
 ```
 
-8. Present directly in chat:
+9. Present directly in chat:
 
 **IMPORTANT**: Always show the complete weekly training plan with ALL activities (running + other sports).
 
@@ -263,6 +304,14 @@ Present in this structure:
 - Volume change vs previous week: {prev_km}km → {target_km}km ({change}%)
 - Multi-sport considerations: {e.g., "Light week due to climbing comp", "No quality runs on climbing days"}
 - Any guardrail overrides with justification
+
+**Weather Context & Adjustments**:
+
+- Weekly weather summary: {weekly_summary}
+- Advisory signals: {list each advisory date + signal label + condition, e.g. "Mon HEAT_HIGH (32°C max), Thu WIND_MODERATE (28 km/h)"}
+- **Multi-sport note**: If a heat/wind advisory coincides with a cycling or other outdoor sport day, note that the advisory affects all activities that day — not just running.
+- Coaching note: Use the raw advisory signals above to decide how (or whether) to adjust the week. Weather decisions are yours to make — the data surfaces conditions; you synthesize context, athlete fatigue, and training priorities.
+- If weather data unavailable: note the uncertainty and recommend the athlete checks local conditions before scheduling quality sessions outdoors.
 
 **Weekly Training Schedule**:
 
@@ -324,7 +373,8 @@ I'll record your approval with:
 - Workout structure & session mechanics: `references/workout_structure.md`
 - Weekly volume progression: `references/volume_progression_weekly.md`
 - Workout generation: `references/workout_generation.md`
-- Choosing run count: `references/choosing_run_count.md`
+- **Pre-presentation checklist**: `references/pre_presentation_checklist.md` (consult before presenting)
+- **Choosing run count**: `references/choosing_run_count.md` (consult before workout design)
 - Pace zones: `references/pace_zones.md`
 - Guardrails: `references/guardrails_weekly.md`
 - JSON workflow: `references/json_workflow.md`

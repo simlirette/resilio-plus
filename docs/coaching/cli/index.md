@@ -28,6 +28,7 @@ resilio plan week --next     # Next week's plan → [Planning Commands](cli_plan
 
 ### Daily Coaching
 - [**Metrics & Status**](cli_metrics.md) - Current metrics, daily workouts, weekly summaries (`resilio status`, `resilio today`, `resilio week`)
+- [**Weather**](cli_weather.md) - Weekly forecast advisories for plan context (`resilio weather`)
 - [**Activity Search**](cli_activity.md) - List and search activity notes (`resilio activity list`, `resilio activity search`)
 - [**Memory**](cli_memory.md) - Injury history, preferences, insights (`resilio memory`)
 
@@ -66,6 +67,7 @@ resilio plan week --next     # Next week's plan → [Planning Commands](cli_plan
 | `resilio vdot {calculate\|paces\|predict\|...}` | VDOT | [cli_vdot.md](cli_vdot.md) |
 | `resilio activity {list\|search}` | Activity | [cli_activity.md](cli_activity.md) |
 | `resilio dates {today\|next-monday\|week-boundaries\|validate}` | Dates | [cli_dates.md](cli_dates.md) |
+| `resilio weather week --start [--location]` | Weather | [cli_weather.md](cli_weather.md) |
 | `resilio memory {add\|list\|search}` | Memory | [cli_memory.md](cli_memory.md) |
 | `resilio analysis {intensity\|gaps\|load\|capacity}` | Analysis | [cli_analysis.md](cli_analysis.md) |
 | `resilio risk {assess\|forecast\|...}` | Risk | [cli_risk.md](cli_risk.md) |
@@ -88,6 +90,7 @@ resilio plan week --next     # Next week's plan → [Planning Commands](cli_plan
 - **"Find activities with ankle pain"** → [`resilio activity search --query "ankle"`](cli_activity.md#resilio-activity-search)
 - **"Record past injury"** → [`resilio memory add --type INJURY_HISTORY`](cli_memory.md#resilio-memory-add)
 - **"What day is this date?"** → [`resilio dates validate`](cli_dates.md#resilio-dates-validate)
+- **"How does weather affect this week?"** → [`resilio weather week`](cli_weather.md#resilio-weather-week)
 
 ## All Commands Reference
 
@@ -134,6 +137,7 @@ resilio plan week --next     # Next week's plan → [Planning Commands](cli_plan
 | **`resilio dates next-monday`** | Next Monday | [Dates](cli_dates.md#resilio-dates-next-monday) |
 | **`resilio dates week-boundaries`** | Week boundaries | [Dates](cli_dates.md#resilio-dates-week-boundaries) |
 | **`resilio dates validate`** | Validate weekday | [Dates](cli_dates.md#resilio-dates-validate) |
+| **`resilio weather week --start [--location]`** | Weekly weather advisories | [Weather](cli_weather.md#resilio-weather-week) |
 | **`resilio vdot calculate`** | Calculate VDOT from race | [VDOT](cli_vdot.md#resilio-vdot-calculate) |
 | **`resilio vdot paces`** | Get training pace zones | [VDOT](cli_vdot.md#resilio-vdot-paces) |
 | **`resilio vdot predict`** | Predict race times | [VDOT](cli_vdot.md#resilio-vdot-predict) |
@@ -170,4 +174,4 @@ See [Core Concepts](core_concepts.md) for:
 
 ---
 
-**Navigation**: [Core Concepts](core_concepts.md) | [Auth](cli_auth.md) | [Data](cli_data.md) | [Metrics](cli_metrics.md) | [Dates](cli_dates.md) | [Profile](cli_profile.md) | [Planning](cli_planning.md) | [VDOT](cli_vdot.md) | [Activity](cli_activity.md) | [Memory](cli_memory.md) | [Analysis](cli_analysis.md) | [Risk](cli_risk.md) | [Guardrails](cli_guardrails.md)
+**Navigation**: [Core Concepts](core_concepts.md) | [Auth](cli_auth.md) | [Data](cli_data.md) | [Metrics](cli_metrics.md) | [Dates](cli_dates.md) | [Weather](cli_weather.md) | [Profile](cli_profile.md) | [Planning](cli_planning.md) | [VDOT](cli_vdot.md) | [Activity](cli_activity.md) | [Memory](cli_memory.md) | [Analysis](cli_analysis.md) | [Risk](cli_risk.md) | [Guardrails](cli_guardrails.md)

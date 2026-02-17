@@ -54,6 +54,11 @@ def profile_create_command(
         "--intensity-metric",
         help="Intensity metric: pace, hr, or rpe"
     ),
+    weather_location: Optional[str] = typer.Option(
+        None,
+        "--weather-location",
+        help="Default weather location (e.g., 'San Francisco, United States')",
+    ),
 ) -> None:
     """Create a new athlete profile.
 
@@ -119,6 +124,7 @@ def profile_create_command(
         unavailable_run_days=unavailable_days_list,
         detail_level=detail_level_enum,
         intensity_metric=intensity_metric_enum,
+        weather_location=weather_location,
     )
 
     # Convert to envelope
@@ -215,6 +221,11 @@ def profile_set_command(
         "--intensity-metric",
         help="Intensity metric: pace, hr, or rpe"
     ),
+    weather_location: Optional[str] = typer.Option(
+        None,
+        "--weather-location",
+        help="Default weather location (e.g., 'San Francisco, United States')",
+    ),
 ) -> None:
     """Update athlete profile fields.
 
@@ -253,6 +264,8 @@ def profile_set_command(
         fields["primary_sport"] = primary_sport
     if conflict_policy is not None:
         fields["conflict_policy"] = conflict_policy
+    if weather_location is not None:
+        fields["weather_location"] = weather_location
 
     # Constraint fields (nested in profile.constraints)
     if min_run_days is not None:
@@ -385,6 +398,8 @@ def profile_set_command(
         updated_fields.append("max_run_days")
     if max_session_minutes is not None:
         updated_fields.append("max_session_minutes")
+    if weather_location is not None:
+        updated_fields.append("weather_location")
 
     envelope = api_result_to_envelope(
         result,

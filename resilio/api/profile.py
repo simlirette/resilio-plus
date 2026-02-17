@@ -30,6 +30,7 @@ from resilio.schemas.profile import (
     IntensityMetric,
     PauseReason,
     PBEntry,
+    WeatherPreferences,
 )
 from resilio.schemas.activity import NormalizedActivity
 
@@ -69,6 +70,7 @@ def create_profile(
     detail_level: Optional["DetailLevel"] = None,
     coaching_style: Optional["CoachingStyle"] = None,
     intensity_metric: Optional["IntensityMetric"] = None,
+    weather_location: Optional[str] = None,
 ) -> Union[AthleteProfile, ProfileError]:
     """
     Create a new athlete profile with sensible defaults.
@@ -91,6 +93,7 @@ def create_profile(
         running_experience_years: Years of running experience (optional)
         current_weekly_run_km: Current weekly run volume baseline (optional)
         vdot: Jack Daniels VDOT (optional, 30.0-85.0)
+        weather_location: Default weather location query for forecast lookup
         running_priority: "primary", "secondary", or "equal" (default: "equal")
         primary_sport: Primary sport name for multi-sport athletes (optional)
         conflict_policy: "primary_sport_wins", "running_goal_wins", or "ask_each_time" (default: "ask_each_time")
@@ -180,6 +183,16 @@ def create_profile(
     # Create default goal (general fitness)
     goal = Goal(type=GoalType.GENERAL_FITNESS)
 
+    weather_preferences = None
+    if weather_location is not None:
+        cleaned = weather_location.strip()
+        if not cleaned:
+            return ProfileError(
+                error_type="validation",
+                message="weather_location cannot be empty",
+            )
+        weather_preferences = WeatherPreferences(location_query=cleaned)
+
     # Create profile
     try:
         profile = AthleteProfile(
@@ -196,6 +209,7 @@ def create_profile(
             conflict_policy=policy_enum,
             goal=goal,
             preferences=preferences,
+            weather_preferences=weather_preferences,
         )
     except Exception as e:
         return ProfileError(
@@ -317,6 +331,25 @@ def update_profile(**fields: Any) -> Union[AthleteProfile, ProfileError]:
     # Update fields using dict-merging (safer than setattr)
     # Convert profile to dict, merge updates, then validate
     profile_dict = profile.model_dump(mode='json')
+
+    # Alias helper for CLI/API convenience.
+    if "weather_location" in fields:
+        weather_location = fields.pop("weather_location")
+        if weather_location is None:
+            fields["weather_preferences"] = None
+        elif isinstance(weather_location, str):
+            cleaned = weather_location.strip()
+            if not cleaned:
+                return ProfileError(
+                    error_type="validation",
+                    message="weather_location cannot be empty",
+                )
+            fields["weather_preferences"] = {"location_query": cleaned}
+        else:
+            return ProfileError(
+                error_type="validation",
+                message="weather_location must be a string",
+            )
 
     # Merge updates into profile dict
     profile_dict.update(fields)

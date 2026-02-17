@@ -56,7 +56,7 @@ def main(
 
 
 # Import and register commands
-from resilio.cli.commands import auth, metrics, plan, profile, vdot, guardrails, analysis, memory, activity, dates, performance, goal, approvals
+from resilio.cli.commands import auth, metrics, plan, profile, vdot, guardrails, analysis, memory, activity, dates, performance, goal, approvals, weather
 from resilio.cli.commands.init_cmd import init_command
 from resilio.cli.commands.status import status_command
 from resilio.cli.commands.sync import sync_command
@@ -80,6 +80,7 @@ app.add_typer(vdot.app, name="vdot", help="VDOT calculations and training paces"
 app.add_typer(guardrails.app, name="guardrails", help="Volume validation and recovery planning")
 app.add_typer(analysis.app, name="analysis", help="Weekly analysis and risk assessment")
 app.add_typer(analysis.risk_app, name="risk", help="Risk assessment commands")
+app.add_typer(weather.app, name="weather", help="Weather forecast for planning context")
 app.add_typer(memory.app, name="memory", help="Manage athlete memories and insights")
 app.add_typer(activity.app, name="activity", help="List and search activities")
 app.add_typer(dates.app, name="dates", help="Date utilities for training plan generation")
