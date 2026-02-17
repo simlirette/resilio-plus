@@ -1,7 +1,7 @@
 # Resilio
 
 AI-powered adaptive coach for multi-sport athletes, designed to run with
-Claude Code and Codex in both app and CLI versions, with local YAML/JSON persistence.
+Claude Code and Codex in both app and CLI environments, with local YAML/JSON persistence.
 
 **How to use Resilio:**
 
@@ -17,10 +17,17 @@ Resilio works in both app and CLI versions of Claude Code and Codex. For most us
 
 ## Start Here (Recommended: App)
 
-1. Open this project in your app of choice:
+1. Get the project files:
+   - **New to GitHub**: On the repository page, click **Code** -> **Download ZIP**, unzip it, then use the extracted `resilio-app` folder.
+   - **If you use Git**:
+     ```bash
+     git clone https://github.com/du-phan/resilio-app.git
+     cd resilio-app
+     ```
+2. Open this project in your app of choice:
    - **Claude app**: Open Claude app -> **Code** -> **Add folder** (select this repository).
    - **Codex app**: Open Codex app -> **Add new project** (select this repository folder).
-2. Start chatting with the assistant (for example: "Let's get started"). The assistant guides setup, authentication, sync, and profile onboarding.
+3. Start chatting with the assistant (for example: "Let's get started"). The assistant guides setup, authentication, sync, and profile onboarding.
 
 ## Alternative: CLI
 
@@ -34,7 +41,7 @@ If you prefer terminal workflows, you can also use Claude Code CLI or Codex CLI 
 - `docs/coaching/methodology.md` - Training methodology
 - `docs/coaching/scenarios.md` - Practical coaching scenarios
 
-## Coach Quickstart (Codex/Claude)
+## Coach Quickstart (CLI Commands)
 
 ```bash
 # Install dependencies (Poetry recommended)
