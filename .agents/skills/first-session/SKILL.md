@@ -1,7 +1,6 @@
 ---
 name: first-session
 description: Onboard new athletes with complete setup workflow including authentication, activity sync, profile creation, goal setting, and constraints discussion. Use when athlete requests "let's get started", "set up my profile", "new athlete onboarding", or "first time using the system".
-compatibility: Codex CLI/IDE; requires local resilio CLI and repo context
 ---
 
 # First Session: Athlete Onboarding
@@ -52,7 +51,15 @@ resilio auth status
 
 1. Run `resilio init` to create `config/secrets.local.yaml` (if missing).
 2. Read `config/secrets.local.yaml` and verify `strava.client_id` and `strava.client_secret` are present.
-3. If either is missing or still the placeholder, ask the athlete to paste the **Client ID** and **Client Secret** from the Strava API settings page (`https://www.strava.com/settings/api`).
+3. If either is missing or still the placeholder:
+   - Explain FIRST (before opening anything):
+     "To connect your Strava data, I need two credentials from your Strava API settings:
+      a **Client ID** (a short number) and a **Client Secret** (a long alphanumeric string).
+      I'm about to open your Strava API settings page in the browser.
+      Once it opens: scroll down to find 'My API Application' — you'll see Client ID and Client Secret listed there.
+      Copy both values and paste them here."
+   - THEN auto-open: run `open https://www.strava.com/settings/api` via Bash
+   - Fallback: "If your browser didn't open: https://www.strava.com/settings/api"
 4. Write the values into `config/secrets.local.yaml` under:
    ```yaml
    strava:
@@ -65,7 +72,7 @@ resilio auth status
 
 1. Explain why: "I need Strava access to provide intelligent coaching based on actual training patterns."
 2. Generate URL: `resilio auth url`
-3. Instruct: "Open URL, authorize, copy code from final page"
+3. Auto-open: run `open <URL>` (Bash), then show URL as fallback; say "Your browser is opening to Strava — authorize and paste the code here"
 4. Wait for athlete to provide code
 5. Exchange: `resilio auth exchange --code CODE`
 6. Confirm: "Great! I can now access your training history."
@@ -200,6 +207,15 @@ This ensures we understand the athlete's complete training picture before asking
 - Capture as a location string suitable for weather lookup (e.g., "Lyon, France")
 - If the athlete travels frequently, note their primary base location and mention they can update it later for travel weeks
 - If location geocoding fails during planning, let the athlete know the weather lookup was skipped and they can set a more specific location (e.g., "Paris, France" instead of "Paris")
+
+**CRITICAL**: After collecting running_experience_years in conversation, you MUST persist it to the profile immediately after profile creation (Step 4e):
+
+```bash
+# After resilio profile create, if running_experience_years was collected:
+resilio profile set --running-experience-years <value>
+```
+
+This ensures the value is stored in profile.yaml and available for future coaching decisions.
 
 **Why this matters**: "I need your complete training picture. Climbing loads your cardiovascular system even though it doesn't stress your legs the same way. If I ignore it, I'll over-prescribe running and you'll burn out."
 

@@ -29,13 +29,20 @@ resilio auth url
 # Returns: https://strava.com/oauth/authorize?client_id=12345&redirect_uri=...
 ```
 
-**Coach**: "Here's your authorization URL: [URL]
+**Coach**: "I need access to your Strava data to coach you based on your actual training patterns. Here's what's about to happen:
+1. Your browser will open to Strava's authorization page
+2. Click **'Authorize'** to grant access
+3. Strava will redirect you — the page will show a connection error, that's normal
+4. Look at your browser's URL bar: copy the value after `code=` (everything up to `&scope`)
+5. Paste that code back here
 
-Please:
-1. Open this URL in your browser
-2. Click 'Authorize' to grant access
-3. Copy the code from the final page
-4. Paste it here"
+Opening your browser now..."
+
+```bash
+open "https://strava.com/oauth/authorize?client_id=12345&redirect_uri=..."
+```
+
+"If your browser didn't open, paste this link: `https://strava.com/oauth/authorize?client_id=12345&redirect_uri=...`"
 
 **Athlete**: "ABC123XYZ789"
 

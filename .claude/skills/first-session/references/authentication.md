@@ -42,16 +42,26 @@ resilio auth url
 
 **Returns**: OAuth URL like `https://strava.com/oauth/authorize?client_id=...&redirect_uri=...`
 
-### Step 3: Instruct Athlete
+### Step 3: Full Instructions → Auto-Open Browser
 
-**Explain why**:
-"I need access to your Strava data to provide intelligent coaching based on your actual training patterns, not guesses."
+**Explain FIRST** (deliver all instructions before opening anything):
+"I need access to your Strava data to coach you based on your actual training patterns.
+Here's what's about to happen:
+1. Your browser will open to Strava's authorization page
+2. Click **'Authorize'** to grant access
+3. Strava will redirect you — the page will show a connection error, that's normal
+4. Look at your browser's URL bar: copy the value after `code=` (everything up to `&scope`)
+5. Paste that code back here
 
-**Instructions**:
-1. Open this URL in your browser
-2. Click "Authorize" to grant access
-3. Copy the code from the final page
-4. Paste it here
+Opening your browser now..."
+
+**Then auto-open** (run immediately after the explanation above):
+```bash
+open "<URL from resilio auth url output>"
+```
+
+**Always print fallback URL** (in case browser didn't open — SSH, headless, etc.):
+"If your browser didn't open, paste this link: `<URL>`"
 
 ### Step 4: Wait for Athlete to Provide Code
 
@@ -97,13 +107,13 @@ resilio auth status
 **Scenario**: Athlete took too long (>10 minutes) to provide code.
 
 **Response**:
-```
-The authorization code expired (they timeout after 10 minutes). Let me generate a new URL.
+Generate a new URL (`resilio auth url`), then deliver full instructions before re-opening:
 
-[Run: resilio auth url]
+"The authorization code expired (they timeout after 10 minutes). No problem — I'm generating a fresh one.
+Same steps as before: click Authorize → page redirects with a connection error → copy the `code=` value from the URL bar → paste it here.
+Opening the page again now..."
 
-Here's a fresh authorization link. This time, I'll wait right here - just authorize and paste the code within a few minutes.
-```
+Then auto-open (`open <new URL>`) and print fallback: "If your browser didn't open: `<URL>`"
 
 ### Q: Athlete has no recent Strava data
 
