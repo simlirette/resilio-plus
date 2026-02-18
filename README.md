@@ -18,7 +18,7 @@ Resilio works in both app and CLI versions of Claude Code and Codex. For most us
 ## Start Here (Recommended: App)
 
 1. Get the project files:
-   - **New to GitHub**: On the repository page, click **Code** -> **Download ZIP**, unzip it, then use the extracted `resilio-app` folder.
+   - **New to GitHub**: Download [v0.1.0 ZIP](https://github.com/du-phan/resilio-app/archive/refs/tags/v0.1.0.zip), unzip it, then use the extracted `resilio-app-0.1.0` folder.
    - **If you use Git**:
      ```bash
      git clone https://github.com/du-phan/resilio-app.git
