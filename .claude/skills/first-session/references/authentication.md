@@ -42,26 +42,16 @@ resilio auth url
 
 **Returns**: OAuth URL like `https://strava.com/oauth/authorize?client_id=...&redirect_uri=...`
 
-### Step 3: Full Instructions → Auto-Open Browser
+### Step 3: Instruct Athlete
 
-**Explain FIRST** (deliver all instructions before opening anything):
+**Explain why and provide full instructions**:
 "I need access to your Strava data to coach you based on your actual training patterns.
-Here's what's about to happen:
-1. Your browser will open to Strava's authorization page
+Here's what to do:
+1. Open this link in your browser: `<URL from resilio auth url output>`
 2. Click **'Authorize'** to grant access
 3. Strava will redirect you — the page will show a connection error, that's normal
 4. Look at your browser's URL bar: copy the value after `code=` (everything up to `&scope`)
-5. Paste that code back here
-
-Opening your browser now..."
-
-**Then auto-open** (run immediately after the explanation above):
-```bash
-open "<URL from resilio auth url output>"
-```
-
-**Always print fallback URL** (in case browser didn't open — SSH, headless, etc.):
-"If your browser didn't open, paste this link: `<URL>`"
+5. Paste that code back here"
 
 ### Step 4: Wait for Athlete to Provide Code
 
@@ -107,13 +97,10 @@ resilio auth status
 **Scenario**: Athlete took too long (>10 minutes) to provide code.
 
 **Response**:
-Generate a new URL (`resilio auth url`), then deliver full instructions before re-opening:
+Generate a new URL (`resilio auth url`), then print it with instructions:
 
 "The authorization code expired (they timeout after 10 minutes). No problem — I'm generating a fresh one.
-Same steps as before: click Authorize → page redirects with a connection error → copy the `code=` value from the URL bar → paste it here.
-Opening the page again now..."
-
-Then auto-open (`open <new URL>`) and print fallback: "If your browser didn't open: `<URL>`"
+Open this link: `<new URL>` — click Authorize → page redirects with a connection error → copy the `code=` value from the URL bar → paste it here."
 
 ### Q: Athlete has no recent Strava data
 

@@ -53,15 +53,10 @@ resilio auth status
 
 1. Run `resilio init` to create `config/secrets.local.yaml` (if missing).
 2. Read `config/secrets.local.yaml` and verify `strava.client_id` and `strava.client_secret` are present.
-3. If either is missing or still the placeholder:
-   - Explain FIRST (before opening anything):
-     "To connect your Strava data, I need two credentials from your Strava API settings:
-      a **Client ID** (a short number) and a **Client Secret** (a long alphanumeric string).
-      I'm about to open your Strava API settings page in the browser.
-      Once it opens: scroll down to find 'My API Application' — you'll see Client ID and Client Secret listed there.
-      Copy both values and paste them here."
-   - THEN auto-open: run `open https://www.strava.com/settings/api` via Bash
-   - Fallback: "If your browser didn't open: https://www.strava.com/settings/api"
+3. If either is missing or still the placeholder, ask the athlete:
+   "To connect your Strava data, I need two credentials from your Strava API settings:
+    a **Client ID** (a short number) and a **Client Secret** (a long alphanumeric string).
+    Open this page: https://www.strava.com/settings/api — scroll down to 'My API Application' and copy both values here."
 4. Write the values into `config/secrets.local.yaml` under:
    ```yaml
    strava:
@@ -74,7 +69,7 @@ resilio auth status
 
 1. Explain why: "I need Strava access to provide intelligent coaching based on actual training patterns."
 2. Generate URL: `resilio auth url`
-3. Auto-open: run `open <URL>` (Bash), then show URL as fallback; say "Your browser is opening to Strava — authorize and paste the code here"
+3. Print URL: show the URL and say "Open this link in your browser to authorize, then paste the code back here"
 4. Wait for athlete to provide code
 5. Exchange: `resilio auth exchange --code CODE`
 6. Confirm: "Great! I can now access your training history."
