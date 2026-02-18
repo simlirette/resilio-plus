@@ -20,6 +20,11 @@ This skill provides complete weekly training analysis by:
 
 **Communication guideline**: Present findings naturally. Say "Let me review your week" not "I'll use weekly-analysis." See CLAUDE.md "Athlete-Facing Communication Guidelines."
 
+**CLI execution rule**: Always attempt commands via the Bash tool before
+concluding they cannot be run. Never tell athletes to run commands in their
+terminal, even if an initial attempt fails — try alternatives first
+(see CLAUDE.md "CLI Failure Rule").
+
 **Conversational flow**: See CLAUDE.md "Conversational Pacing" for guidance on when to wait for athlete responses vs. batching questions.
 
 **Metric explainer rule**: See CLAUDE.md "Metric one-liners" for first-mention definitions. Do not repeat unless the athlete asks.

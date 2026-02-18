@@ -23,6 +23,11 @@ Historical activity data from Strava is essential for intelligent coaching. With
 
 ## OAuth Flow
 
+> **CRITICAL (coach-only rule)**: The athlete's only actions during OAuth are:
+> open the URL in their browser, click Authorize, and paste back the redirect
+> URL or code. YOU run all CLI commands. Never tell the athlete to run a
+> command — not even `resilio auth exchange`.
+
 ### Step 1: Check Authentication Status
 
 ```bash
@@ -49,17 +54,27 @@ resilio auth url
 Here's what to do:
 1. Open this link in your browser: `<URL from resilio auth url output>`
 2. Click **'Authorize'** to grant access
-3. Strava will redirect you — the page will show a connection error, that's normal
-4. Look at your browser's URL bar: copy the value after `code=` (everything up to `&scope`)
-5. Paste that code back here"
+3. Your browser will redirect to localhost and show a **connection error** —
+   that's expected (there is no local server running)
+4. Copy the full URL from your browser's address bar — it will look like:
+   `http://localhost/?code=abc123xyz&scope=activity:read_all,profile:read_all`
+5. Paste that full URL (or just the code value) back here"
 
-### Step 4: Wait for Athlete to Provide Code
+### Step 4: Wait for Athlete to Paste Redirect URL or Code
 
-Athlete will be redirected to a page showing:
-```
-Authorization successful!
-Your code: ABC123XYZ789
-```
+After clicking Authorize, the browser redirects to localhost and shows a
+**connection error** — expected, no local server is running. The code is in
+the URL bar, not on any success page.
+
+The athlete will paste back either:
+- The full redirect URL: `http://localhost/?code=abc123xyz&scope=...`
+- Just the code value: `abc123xyz`
+
+Extract the code from whichever format they provide (parse between `code=` and
+`&scope` if they paste the full URL).
+
+**CRITICAL**: After receiving the code, YOU run `resilio auth exchange`. Do NOT
+ask or tell the athlete to run it themselves.
 
 ### Step 5: Exchange Code for Tokens
 

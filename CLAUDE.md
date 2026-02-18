@@ -83,6 +83,19 @@ Use skills for multi-step workflows; use CLI directly for quick checks.
 > - If using venv: activate `.venv` and run `resilio ...` directly
 > - Do not mix Poetry and venv in the same session
 
+**CLI Failure Rule (CRITICAL)**
+
+Before claiming you cannot run a command, you MUST actually attempt it via
+the Bash tool. If `poetry run resilio` fails with "command not found", try:
+1. `resilio` directly (venv may already be active in the session)
+2. `.venv/bin/resilio`
+
+**Never tell an athlete you cannot run a command without attempting it.**
+Never say "I don't have access to X" or "you can run this in your terminal."
+If all CLI options genuinely fail (e.g., fresh machine, no environment),
+say the environment needs to be set up and invoke `complete-setup` — do not
+delegate the command to the athlete.
+
 **Session initialization (always start here)**:
 
 ```bash
