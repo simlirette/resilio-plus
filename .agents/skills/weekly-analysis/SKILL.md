@@ -89,12 +89,22 @@ resilio week
 
 Cross-reference planned workouts (from Step 0.5) with actual activities (from `resilio week`):
 
-1. **Map planned → actual by date:**
-   - **Match**: Correct workout type on planned date
-   - **Day shift**: Correct type/volume but different day (e.g., Wed→Thu)
-   - **Volume variance**: Right day but >15% over/under planned distance
-   - **Missed**: Planned workout not completed
-   - **Extra**: Activity not in the plan (including cross-training)
+**⚠️ CRITICAL — Collect activities first, then match to plan**
+
+Do NOT look for activities on specific planned dates. Instead:
+
+**Step A — Collect ALL activities in the week window (Mon [date] through Sun [date])**
+From `resilio week` → `completed_activities`: extract every running activity in the week,
+regardless of what day it was planned.
+Day-shifted runs (e.g., Wednesday run done on Thursday) are common and will be missed
+if you only check planned dates.
+
+**Step B — Match each collected activity → closest planned workout:**
+- ✅ **Match**: Type + volume aligns with a planned workout, same day
+- ⚠️ **Day shift**: Aligns with a planned workout but on a different day — **count as completed**
+- ⚠️ **Volume variance**: Matched workout but >15% over/under planned distance — flag, don't penalize
+- ❌ **Missed**: Planned workout with NO matching activity found anywhere in the week window
+- ➕ **Extra**: Activity with no corresponding planned workout (cross-training, bonus run)
 
 2. **Assess adherence:**
    - **Workout completion**: How many planned workouts were completed (count day-shifts as completed)
@@ -182,7 +192,7 @@ resilio analysis intensity --activities /tmp/week_activities.json --days 7
 ### Step 5: Multi-Sport Load Breakdown
 
 ```bash
-resilio analysis load --activities [ACTIVITIES_FILE] --days 7 --priority [PRIORITY]
+resilio analysis load --activities /tmp/week_activities.json --days 7 --priority [PRIORITY]
 ```
 
 **Returns**:
@@ -419,6 +429,8 @@ Coach: "Week 2 plan saved! You'll see workouts starting Monday."
 
 Before sending weekly review, verify:
 
+0. ✅ **Checked for active plan** - Ran `resilio plan week` before analyzing
+0b. ✅ **Checked all week days** — Collected activities from full Mon-Sun window before matching (not just planned days)
 1. ✅ **Started with positive** - Not leading with criticism
 2. ✅ **Contextualized completion** - Investigated why low (if applicable)
 3. ✅ **Flagged 80/20 violations** - Checked intensity distribution
@@ -437,6 +449,18 @@ Before sending weekly review, verify:
 ## Summary
 
 [One sentence: overall + key achievement]
+
+## Plan Adherence (if on structured plan)
+
+**Week [N] of [TOTAL] — [PHASE] phase**
+
+| Planned | Actual | Status |
+|---------|--------|--------|
+| [date: workout] | [date: activity] | ✅/⚠️/❌ |
+
+**Workout completion**: [X]/[Y] planned workouts
+**Volume adherence**: [actual]km / [planned]km = [pct]%
+**Quality sessions**: [completed/missed]
 
 ## Completion
 

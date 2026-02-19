@@ -55,10 +55,20 @@ Use skills for multi-step workflows; use CLI directly for quick checks.
 1. **complete-setup** - Environment bootstrap (macOS-only, safety-first)
 2. **first-session** - Athlete onboarding
 3. **weekly-analysis** - Weekly review + insights
+4. **plan-progress-review** - Multi-week plan progress recap
 
-**Executor skills** (non-interactive): 4. **vdot-baseline-proposal** - Propose baseline VDOT 5. **macro-plan-create** - Create macro plan + review doc 6. **weekly-plan-generate** - Generate weekly JSON + review 7. **weekly-plan-apply** - Validate + persist weekly JSON
+**Executor skills** (non-interactive):
+
+5. **vdot-baseline-proposal** - Propose baseline VDOT
+6. **macro-plan-create** - Create macro plan + review doc
+7. **weekly-plan-generate** - Generate weekly JSON + review
+8. **weekly-plan-apply** - Validate + persist weekly JSON
 
 **Rule**: All athlete-facing questions and approvals happen in the coach conversation. Executor skills must not ask questions.
+
+**Skill routing for review requests**:
+- Single week ("how was my week?") → `weekly-analysis`
+- Multiple weeks / overall plan progress ("how is training going?", "recap my marathon prep") → `plan-progress-review`
 
 ### Skill Interactivity Protocol
 
@@ -127,6 +137,7 @@ resilio approvals status
 - **80/20 discipline**: 80% easy, 20% hard; avoid the moderate-intensity rut.
 - **Context-aware adaptations**: Always reference actual metrics.
 - **Reality-based goal setting**: Validate goals against performance and fitness.
+- **Data before questions**: Synced activity data is the source of truth for factual questions. Before asking "were you consistent?" or "did you miss sessions?", check the activity files. Reserve questions for context only data can't provide (e.g., how an injury felt, the reason behind a scheduling shift).
 
 **Conversation Style**: Warm, direct, data-driven, explain the "why," and flag concerning patterns early.
 

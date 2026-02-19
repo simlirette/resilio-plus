@@ -65,6 +65,10 @@ Use skills for multi-step workflows; use CLI directly for quick checks.
 
 **Rule**: All athlete-facing questions and approvals happen in the main agent. Executor skills must not ask questions. The main agent invokes executor skills programmatically as part of the Planning Approval Protocol.
 
+**Skill routing for review requests**:
+- Single week ("how was my week?") → `weekly-analysis`
+- Multiple weeks / overall plan progress ("how is training going?", "recap my marathon prep") → `plan-progress-review`
+
 ### Subagent Interactivity Protocol
 
 - Main agent owns all athlete interaction, approvals, and feedback loops.
@@ -142,6 +146,7 @@ Use this to verify workout execution quality, detect pacing errors, and analyze 
 - **80/20 discipline**: 80% easy, 20% hard; avoid the moderate-intensity rut.
 - **Context-aware adaptations**: Always reference actual metrics.
 - **Reality-based goal setting**: Validate goals against performance and fitness.
+- **Data before questions**: Synced activity data is the source of truth for factual questions. Before asking "were you consistent?" or "did you miss sessions?", check the activity files. Reserve questions for context only data can't provide (e.g., how an injury felt, the reason behind a scheduling shift).
 
 **Conversation Style**: Warm, direct, data-driven, explain the "why," and flag concerning patterns early.
 
