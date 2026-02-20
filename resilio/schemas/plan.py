@@ -329,6 +329,16 @@ class LongRunHints(BaseModel):
         ...,
         description="Preferred long-run percentage range of weekly volume (e.g., [24, 30])"
     )
+    target_km: Optional[float] = Field(
+        default=None,
+        gt=0,
+        description=(
+            "Absolute long run distance target in km. When set, the weekly plan generator "
+            "should use this as the primary target, treating pct_range as a fallback range. "
+            "Takes priority over pct_range percentage calculation. Useful for marathon-specific "
+            "blocks where the long run exceeds the typical 30-35% percentage range."
+        )
+    )
 
     @field_validator("pct_range")
     @classmethod
@@ -337,8 +347,12 @@ class LongRunHints(BaseModel):
             raise ValueError("long_run.pct_range must have exactly two values")
         if value[0] >= value[1]:
             raise ValueError("long_run.pct_range must be ascending (min < max)")
-        if value[0] < 15 or value[1] > 35:
-            raise ValueError("long_run.pct_range must be within 15-35%")
+        if value[0] < 15 or value[1] > 55:
+            raise ValueError(
+                "long_run.pct_range must be within 15-55%. "
+                "Values above 35% are appropriate for marathon-specific blocks "
+                "with lower weekly volumes where the long run dominates the week."
+            )
         return value
 
     model_config = ConfigDict(use_enum_values=True)

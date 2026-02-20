@@ -67,6 +67,28 @@ class TestWorkoutStructureHints:
                 long_run=LongRunHints(emphasis="steady", pct_range=[24, 30]),
                 intensity_balance=IntensityBalanceHints(low_intensity_pct=0.85),
             )
+
+    def test_long_run_hints_marathon_block_pct_range(self):
+        """Marathon-specific blocks legitimately need 47-52% long run allocation."""
+        hints = LongRunHints(emphasis="race_specific", pct_range=[45, 52], target_km=23.0)
+        assert hints.pct_range == [45, 52]
+        assert hints.target_km == 23.0
+
+    def test_long_run_hints_target_km_without_high_pct(self):
+        """target_km can be set alongside a standard pct_range."""
+        hints = LongRunHints(emphasis="progression", pct_range=[28, 35], target_km=17.0)
+        assert hints.target_km == 17.0
+
+    def test_long_run_hints_target_km_defaults_to_none(self):
+        """target_km should be optional with None default."""
+        hints = LongRunHints(emphasis="steady", pct_range=[24, 30])
+        assert hints.target_km is None
+
+    def test_long_run_hints_cap_still_enforced(self):
+        """pct_range above 55% should still be rejected."""
+        with pytest.raises(ValidationError):
+            LongRunHints(emphasis="steady", pct_range=[30, 60])
+
     def test_goal_type_from_string(self):
         """Goal types should be creatable from string values."""
         assert GoalType("5k") == GoalType.FIVE_K

@@ -60,6 +60,10 @@ the next unpopulated week.
 **Extract `workout_structure_hints`** from the macro plan week - these are strategic
 guidelines (e.g., "max 2 quality sessions", "long run 25-30%", "80% easy intensity").
 
+**Long run target priority:**
+1. If `workout_structure_hints.long_run.target_km` is set → use it as the long run distance directly
+2. Otherwise → derive from `pct_range` against the week's `target_volume_km`
+
 2. Load current metrics and recent response:
 
 ```bash
