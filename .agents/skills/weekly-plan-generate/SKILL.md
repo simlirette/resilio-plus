@@ -73,15 +73,16 @@ resilio dates week-boundaries --start <WEEK_START>
 resilio profile get  # Load athlete profile including other_sports
 ```
 
-2.5. Add weekly weather context (advisory-only):
+2.5. Add weekly weather context:
 
 ```bash
 resilio weather week --start <WEEK_START>
 ```
 
-- Use weather output to refine coaching notes and session placement guidance.
-- Keep workout generation coach-driven (no rigid auto-swaps).
-- If weather lookup fails, continue planning and explicitly call out uncertainty.
+- Weather data is coaching context for day selection — use it alongside training load,
+  athlete state, and spacing rules when deciding which day gets which session.
+- Example: a tempo on a rainy, windy day when a dry day is available is a poor coaching call.
+- If weather lookup fails, continue planning and note the uncertainty.
 - In environments with web access, the main coach may use internet search as fallback.
 
 **Multi-sport athletes**: Check `other_sports` field in profile to identify:
@@ -132,6 +133,9 @@ This step is strongly recommended - skipping it risks presentation-JSON mismatch
 
 6. Design exact workouts using AI judgment:
 
+**Day selection**: Reference weather signals from Step 2.5 when choosing days.
+Prefer best-conditions days for quality sessions and long runs among structurally valid options.
+
 **YOU design the workouts** using:
 
 - Strategic hints from macro plan (workout_structure_hints)
@@ -139,6 +143,7 @@ This step is strongly recommended - skipping it risks presentation-JSON mismatch
 - Guardrail analysis (safe volume range, warnings)
 - Training methodology principles (80/20, hard/easy separation, long run caps)
 - VDOT-based pace zones
+- Weekly weather conditions (from Step 2.5) — factor into day selection
 
 Create explicit workout JSON manually with exact distances. Example structure:
 
@@ -301,21 +306,22 @@ Present in this structure:
 - Expected other sport activities: {e.g., "climbing 2x/week, cycling 1x/week"}
 - Load integration: Running plan accounts for {systemic load from other sports}
 
-**Coaching Rationale**:
-
-- Why these exact workouts? (reference workout_structure_hints)
-- How this follows macro plan strategic guidance
-- Volume change vs previous week: {prev_km}km → {target_km}km ({change}%)
-- Multi-sport considerations: {e.g., "Light week due to climbing comp", "No quality runs on climbing days"}
-- Any guardrail overrides with justification
-
 **Weather Context & Adjustments**:
 
 - Weekly weather summary: {weekly_summary}
 - Advisory signals: {list each advisory date + signal label + condition, e.g. "Mon HEAT_HIGH (32°C max), Thu WIND_MODERATE (28 km/h)"}
 - **Multi-sport note**: If a heat/wind advisory coincides with a cycling or other outdoor sport day, note that the advisory affects all activities that day — not just running.
-- Coaching note: Use the raw advisory signals above to decide how (or whether) to adjust the week. Weather decisions are yours to make — the data surfaces conditions; you synthesize context, athlete fatigue, and training priorities.
+- Day selection: weather conditions informed session placement (explain briefly how).
 - If weather data unavailable: note the uncertainty and recommend the athlete checks local conditions before scheduling quality sessions outdoors.
+
+**Coaching Rationale**:
+
+- Why these exact workouts? (reference workout_structure_hints)
+- How this follows macro plan strategic guidance
+- Volume change vs previous week: {prev_km}km → {target_km}km ({change}%)
+- Weather influence: {e.g., "Tempo placed Wednesday (dry/mild) over Thursday (rain/wind)"}
+- Multi-sport considerations: {e.g., "Light week due to climbing comp", "No quality runs on climbing days"}
+- Any guardrail overrides with justification
 
 **Weekly Training Schedule**:
 
@@ -374,10 +380,10 @@ I'll record your approval with:
 
 ## References (load only if needed)
 
+- **Pre-presentation checklist**: `references/pre_presentation_checklist.md` (consult before presenting)
 - Workout structure & session mechanics: `references/workout_structure.md`
 - Weekly volume progression: `references/volume_progression_weekly.md`
 - Workout generation: `references/workout_generation.md`
-- **Pre-presentation checklist**: `references/pre_presentation_checklist.md` (consult before presenting)
 - **Choosing run count**: `references/choosing_run_count.md` (consult before workout design)
 - Pace zones: `references/pace_zones.md`
 - Guardrails: `references/guardrails_weekly.md`
