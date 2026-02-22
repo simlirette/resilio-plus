@@ -10,7 +10,20 @@ argument-hint: "approved_file=<path>"
 
 # Weekly Plan Apply (Executor)
 
-Applies a previously approved weekly JSON payload.
+## SCOPE LOCK
+
+This skill's ONLY job is to validate and persist a pre-approved JSON.
+It does NOT generate, redesign, re-present, or re-evaluate workout content.
+
+**Prohibited actions:**
+- Do NOT re-generate or re-design any workout
+- Do NOT write to any `/tmp/weekly_plan_*.json` file
+- Do NOT re-present the full training schedule
+- Do NOT call `resilio plan generate-week` or any plan-creation command
+- Do NOT return `athlete_prompt` — approval is already recorded upstream
+
+If you find yourself writing workout content or re-presenting a schedule, STOP.
+You are in the wrong workflow. Return a blocking checklist immediately.
 
 ## Preconditions (block if missing)
 - Approved weekly JSON file path provided in arguments
@@ -18,41 +31,53 @@ Applies a previously approved weekly JSON payload.
 
 If missing, return a blocking checklist and stop.
 
-## Interactivity & Feedback
-
-- Non-interactive: do not ask the athlete questions or call approval commands.
-- Apply only when approvals state matches the provided file.
-- If the athlete requests changes, the main agent must re-run weekly-plan-generate and record a new approval before applying.
-- If any CLI command fails (exit code ≠ 0), include the error output in your response and return a blocking checklist.
-
 ## Workflow
 
-1) Verify approval state:
+Copy this checklist and check off each step as you complete it:
+
+```
+Apply Progress:
+- [ ] Step 1: Verify approval state
+- [ ] Step 2: Validate payload
+- [ ] Step 3: Apply (populate)
+- [ ] Step 4: Confirm workouts persisted
+```
+
+**Step 1 — Verify approval state:**
 ```bash
 resilio approvals status
 ```
-Confirm `weekly_approval.week_number` and `weekly_approval.approved_file` match the payload.
+Confirm `weekly_approval.week_number` and `weekly_approval.approved_file` match
+the provided payload path. If they don't match, return a blocking checklist and stop.
 
-2) Validate payload:
+**Step 2 — Validate payload:**
 ```bash
 resilio plan validate-week --file <APPROVED_FILE>
 ```
+If validation fails (exit code ≠ 0), include the full error output in a blocking
+checklist. Do NOT attempt to fix the JSON — return the error to the main agent.
 
-3) Apply with validation gate:
+**Step 3 — Apply:**
 ```bash
 resilio plan populate --from-json <APPROVED_FILE> --validate
 ```
+If this fails (exit code ≠ 0), include the full error output in a blocking checklist.
 
-4) Confirm:
+**Step 4 — Confirm workouts persisted:**
 ```bash
 resilio plan week --week <WEEK_NUMBER>
 ```
+Verify the `workouts` array in the response is non-empty. If it is empty, populate
+did not succeed — return a blocking checklist with the plan week output.
 
 ## References (load only if needed)
 - JSON workflow: `references/json_workflow.md`
 
 ## Output
-Return:
-- `applied_file`
-- `week_number`
-- If blocked: `blocking_checklist`
+
+Return EXACTLY:
+- `applied_file`: path of the file that was applied
+- `week_number`: the week that was populated
+
+Do NOT return `weekly_json_path`. Do NOT return `athlete_prompt`.
+If blocked: return `blocking_checklist` with the specific failure and CLI output.

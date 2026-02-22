@@ -336,11 +336,22 @@ The analytical style is hardcoded (not user-configurable) and designed for amate
    - After approval, the plan is automatically saved to `data/plans/current_plan_review.md` for reference
 5. **Weekly plan**:
    - Run `weekly-plan-generate` skill (returns `weekly_json_path`, `athlete_prompt`)
-   - **CRITICAL**: Read the actual JSON file at `weekly_json_path` and verify the workout count is reasonable
-   - Present the plan inline in chat using the JSON as source of truth
+   - **CRITICAL**: Read `weekly_json_path` and run:
+     ```bash
+     jq '.weeks[0].workouts[] | {date, day_of_week, workout_type, distance_km}' \
+        <weekly_json_path>
+     ```
+     Build the presentation table EXCLUSIVELY from this jq output. Do NOT relay the
+     skill's verbal summary — it may differ from the JSON if workouts were revised
+     during validation.
    - After presenting, use the `athlete_prompt` to ask for approval
 6. **Athlete approval** → `resilio approvals approve-week --week <N> --file /tmp/weekly_plan_wN.json`
-7. **Apply**: `weekly-plan-apply` → `resilio plan populate --from-json /tmp/weekly_plan_wN.json --validate`
+7. **Apply**: Run `weekly-plan-apply`. Immediately verify the result:
+   - Output MUST contain `applied_file` and `week_number`. If it contains
+     `weekly_json_path` or `athlete_prompt` instead, the skill ran the generate
+     workflow by mistake — do NOT confirm to the athlete; return a blocking message.
+   - Run `resilio plan week --week <N>` directly and confirm the `workouts` array is
+     non-empty before telling the athlete the plan is saved.
 
 ---
 

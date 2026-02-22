@@ -6,7 +6,9 @@
 
 ## Solution
 
-**Before creating workout pattern JSON**, consult the system for optimal run count:
+**Before creating workout pattern JSON**, consult the system for optimal run count.
+
+**This step is NOT optional** - skipping it can lead to presentation discrepancies where you generate one workout count but present another to the athlete.
 
 ```bash
 poetry run resilio plan suggest-run-count --volume 23 --max-runs 4 --phase base
@@ -58,21 +60,23 @@ poetry run resilio plan suggest-run-count --volume 21 --max-runs 4 --phase recov
 # Output: Recommend 3 runs (recovery weeks use fewer days)
 ```
 
-### Then Create Workout Pattern
+### Then Design Explicit Workouts
 
-Use the recommended run count in your pattern JSON:
+Use the recommended run count to design an explicit `workouts` array (required by
+SKILL.md — do NOT use `workout_pattern` format here):
 
 ```json
 {
   "week_number": 1,
   "target_volume_km": 23.0,
-  "workout_pattern": {
-    "run_days": [0, 2, 6],
-    "long_run_day": 6,
-    "long_run_pct": 0.48,
-    "easy_run_paces": "6:30-6:50",
-    "long_run_pace": "6:30-6:50"
-  }
+  "workouts": [
+    {"date": "2026-01-20", "day_of_week": 0, "workout_type": "easy",
+     "distance_km": 6.0, "pace_range": "6:30-6:50", "target_rpe": 4},
+    {"date": "2026-01-22", "day_of_week": 2, "workout_type": "easy",
+     "distance_km": 6.0, "pace_range": "6:30-6:50", "target_rpe": 4},
+    {"date": "2026-01-25", "day_of_week": 5, "workout_type": "long_run",
+     "distance_km": 11.0, "pace_range": "6:30-6:50", "target_rpe": 5}
+  ]
 }
 ```
 
@@ -114,3 +118,5 @@ comfortable_km = min_km + N
 2. **Trust the recommendation** - It considers minimums, phase, athlete history
 3. **Override cautiously** - If overriding, document rationale in plan notes
 4. **Progressive increase** - Can increase run count as volume grows across weeks
+
+**Why this step is critical**: Skipping this step risks generating plans with mismatched workout counts between your JSON and the presentation shown to athletes. This undermines trust in the coaching system.

@@ -60,21 +60,23 @@ resilio plan suggest-run-count --volume 21 --max-runs 4 --phase recovery
 # Output: Recommend 3 runs (recovery weeks use fewer days)
 ```
 
-### Then Create Workout Pattern
+### Then Design Explicit Workouts
 
-Use the recommended run count in your pattern JSON:
+Use the recommended run count to design an explicit `workouts` array (required by
+SKILL.md — do NOT use `workout_pattern` format here):
 
 ```json
 {
   "week_number": 1,
   "target_volume_km": 23.0,
-  "workout_pattern": {
-    "run_days": [0, 2, 6],
-    "long_run_day": 6,
-    "long_run_pct": 0.48,
-    "easy_run_paces": "6:30-6:50",
-    "long_run_pace": "6:30-6:50"
-  }
+  "workouts": [
+    {"date": "2026-01-20", "day_of_week": 0, "workout_type": "easy",
+     "distance_km": 6.0, "pace_range": "6:30-6:50", "target_rpe": 4},
+    {"date": "2026-01-22", "day_of_week": 2, "workout_type": "easy",
+     "distance_km": 6.0, "pace_range": "6:30-6:50", "target_rpe": 4},
+    {"date": "2026-01-25", "day_of_week": 5, "workout_type": "long_run",
+     "distance_km": 11.0, "pace_range": "6:30-6:50", "target_rpe": 5}
+  ]
 }
 ```
 

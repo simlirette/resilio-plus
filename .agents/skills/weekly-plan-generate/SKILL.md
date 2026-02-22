@@ -292,6 +292,18 @@ resilio plan validate-intervals \
 
 9. Present directly in chat:
 
+**MANDATORY — derive presentation from JSON, not from memory:**
+
+Before writing anything, read the saved workouts:
+```bash
+jq '.weeks[0].workouts[] | {date, day_of_week, workout_type, distance_km, target_rpe}' \
+   /tmp/weekly_plan_w<N>.json
+```
+Use this output as the sole source for every day, distance, and type in your
+presentation. Do not paraphrase from design memory. If the jq output differs from what
+you intended to describe, your presentation must match the JSON — not the other way
+around. Fix the description, not the file.
+
 **IMPORTANT**: Always show the complete weekly training plan with ALL activities (running + other sports).
 
 Present in this structure:
