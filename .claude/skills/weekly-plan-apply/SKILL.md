@@ -3,7 +3,6 @@ name: weekly-plan-apply
 description: Applies an approved weekly plan JSON to the plan store after validation. Use only after athlete approval is recorded by the main agent.
 disable-model-invocation: false
 context: fork
-agent: weekly-planner
 allowed-tools: Bash, Read, Write
 argument-hint: "approved_file=<path>"
 ---

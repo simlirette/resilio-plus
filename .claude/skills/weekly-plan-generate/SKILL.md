@@ -1,9 +1,7 @@
 ---
 name: weekly-plan-generate
-description: Designs exact workouts for a single week using AI coaching judgment and presents the review directly in chat without applying it. Use for Week 1 and all subsequent weeks.
+description: Designs exact workouts for a single week using AI coaching judgment and writes a validated JSON file without applying it. Use for Week 1 and all subsequent weeks.
 disable-model-invocation: false
-context: fork
-agent: weekly-planner
 allowed-tools: Bash, Read, Write
 argument-hint: "[optional-notes]"
 ---
@@ -247,12 +245,12 @@ jq '.weeks[0].workouts | length' /tmp/weekly_plan_w<week>.json
 jq '[.weeks[0].workouts[].distance_km] | add' /tmp/weekly_plan_w<week>.json
 ```
 
-**Consult the pre-presentation checklist** (`references/pre_presentation_checklist.md`) to confirm:
+**Consult the pre-return checklist** (`references/pre_presentation_checklist.md`) to confirm:
 - Workout count matches suggest-run-count recommendation
 - Volume sum equals target_volume_km (±0.1km)
-- Presentation text will match actual JSON structure
+- JSON is self-consistent and ready for main agent jq extraction
 
-If any check fails, FIX THE JSON before presenting.
+If any check fails, FIX THE JSON before returning.
 
 8. Interval structure validation (conditional):
    Run **only if** your designed week includes a structured tempo/interval workout
@@ -289,106 +287,6 @@ resilio plan validate-intervals \
   --recovery-bouts /tmp/recovery_bouts.json \
   --weekly-volume <WEEKLY_KM>
 ```
-
-9. Present directly in chat:
-
-**MANDATORY — derive presentation from JSON, not from memory:**
-
-Before writing anything, read the saved workouts:
-```bash
-jq '.weeks[0].workouts[] | {date, day_of_week, workout_type, distance_km, target_rpe}' \
-   /tmp/weekly_plan_w<N>.json
-```
-Use this output as the sole source for every day, distance, and type in your
-presentation. Do not paraphrase from design memory. If the jq output differs from what
-you intended to describe, your presentation must match the JSON — not the other way
-around. Fix the description, not the file.
-
-**IMPORTANT**: Always show the complete weekly training plan with ALL activities (running + other sports).
-
-Present in this structure:
-
-**Weekly Training Plan - Week {N}**
-**Phase**: {phase} | **Run Volume**: {target_km}km | **Dates**: {start} to {end}
-
-**Multi-Sport Context** (if applicable):
-
-- Athlete profile: {list other_sports from profile}
-- Running priority: {running_priority} (PRIMARY/EQUAL/SECONDARY)
-- Expected other sport activities: {e.g., "climbing 2x/week, cycling 1x/week"}
-- Load integration: Running plan accounts for {systemic load from other sports}
-
-**Weather Context & Adjustments**:
-
-- Weekly weather summary: {weekly_summary}
-- Advisory signals: {list each advisory date + signal label + condition, e.g. "Mon HEAT_HIGH (32°C max), Thu WIND_MODERATE (28 km/h)"}
-- **Multi-sport note**: If a heat/wind advisory coincides with a cycling or other outdoor sport day, note that the advisory affects all activities that day — not just running.
-- Day selection: weather conditions informed session placement (explain briefly how).
-- If weather data unavailable: note the uncertainty and recommend the athlete checks local conditions before scheduling quality sessions outdoors.
-
-**Coaching Rationale**:
-
-- Why these exact workouts? (reference workout_structure_hints)
-- How this follows macro plan strategic guidance
-- Volume change vs previous week: {prev_km}km → {target_km}km ({change}%)
-- Weather influence: {e.g., "Tempo placed Wednesday (dry/mild) over Thursday (rain/wind)"}
-- Multi-sport considerations: {e.g., "Light week due to climbing comp", "No quality runs on climbing days"}
-- Any guardrail overrides with justification
-
-**Weekly Training Schedule**:
-
-**Monday ({date})**:
-
-- 🏃 Run: {workout_type} - {distance}km @ {pace}
-  - Target RPE: {rpe}/10
-  - Notes: {notes}
-- 🧗 Climbing: {expected activity from profile or "None scheduled"}
-
-**Tuesday ({date})**:
-
-- 🏃 Run: Rest
-- 🧗 Climbing: {expected activity}
-
-**Wednesday ({date})**:
-
-- 🏃 Run: {workout_type} - {distance}km @ {pace}
-  - Target RPE: {rpe}/10
-  - Notes: {notes}
-- 🚴 Cycling: {expected activity}
-
-... (continue for all 7 days, showing BOTH running AND other sports)
-
-**Integration Notes**:
-
-- Days with both activities: {e.g., "Mon: easy run + climbing (systemic load stacked)"}
-- Recovery days (no activities): {e.g., "Tue, Thu"}
-- Conflict avoidance: {e.g., "No quality runs on climbing days"}
-
-**Week Summary**:
-
-**Running**:
-
-- Total volume: {sum_of_workouts}km (target: {target_km}km)
-- Running days: {count} days
-- Quality sessions: {count} (excluding long run)
-- Long run: {distance}km ({percentage}% of volume)
-- Easy volume: {percentage}% | Quality volume: {percentage}%
-
-**Multi-Sport Load** (if applicable):
-
-- Total systemic load: {running_load + other_sports_load}au
-- Running contribution: {percentage}%
-- Other sports contribution: {percentage}%
-- ACWR: {value} ({safe/caution/danger})
-
-**Approval Required**:
-Does this plan work for you, considering both your running and {other sports}?
-I'll record your approval with:
-`resilio approvals approve-week --week {N} --file /tmp/weekly_plan_w{N}.json`
-
-**Handoff note**: main agent must record approval via the command above.
-
-**Note on workout verification**: After workouts are completed, use `resilio activity laps <activity-id>` to verify execution quality and adjust future weeks if pacing discipline issues emerge.
 
 ## References (load only if needed)
 

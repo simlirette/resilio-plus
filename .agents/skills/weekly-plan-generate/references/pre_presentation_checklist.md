@@ -1,16 +1,14 @@
-# Pre-Presentation Checklist
+# Pre-Return Checklist
 
-**Purpose**: Prevent presentation-JSON discrepancies before returning to the main agent.
+**Purpose**: Ensure JSON is self-consistent and correct before returning `weekly_json_path` to the main agent. The main agent reads this JSON via jq and owns all athlete-facing presentation.
 
 ## Critical Checks
 
 - [ ] Used `suggest-run-count` recommendation (or documented override)
-- [ ] Workout count in JSON matches presented count
+- [ ] Workout count in JSON matches suggest-run-count output
 - [ ] Volume sum = target_volume_km (±0.1km tolerance)
 - [ ] No duplicate days, all within week boundaries
-- [ ] Presentation derived from jq output above — each workout's date, day, and
-      distance_km in the verbal summary matches jq output exactly (not from memory)
-- [ ] Weather advisory context reviewed (`resilio weather week`) and reflected in notes
+- [ ] Weather advisory context reviewed (`resilio weather week`) and reflected in workout notes
 
 ## Validation Commands
 
@@ -24,14 +22,14 @@ jq '.weeks[0].workouts | length' /tmp/weekly_plan_w<N>.json
 # Sum volume
 jq '[.weeks[0].workouts[].distance_km] | add' /tmp/weekly_plan_w<N>.json
 
-# List dates and distances (must match verbal presentation exactly)
+# List workouts (main agent will build presentation from this exact output)
 jq '.weeks[0].workouts[] | {date, day_of_week, type: .workout_type, distance_km}' \
    /tmp/weekly_plan_w<N>.json
 ```
 
 ## If Any Check Fails
 
-**FIX THE JSON** before presenting to the main agent.
+**FIX THE JSON** before returning to the main agent.
 
 Common fixes:
 - Workout count mismatch → Regenerate using suggest-run-count recommendation
@@ -41,6 +39,6 @@ Common fixes:
 
 ## Why This Matters
 
-Presentation-JSON mismatches erode athlete trust. The main agent presents YOUR JSON structure - any discrepancy will reach the athlete.
+The main agent presents your JSON structure directly to the athlete via jq. Any discrepancy in the JSON will reach the athlete unchanged.
 
 Always verify before returning.
