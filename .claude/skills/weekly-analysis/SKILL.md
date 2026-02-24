@@ -1,6 +1,6 @@
 ---
 name: weekly-analysis
-description: Comprehensive weekly training review including completion checks, intensity distribution validation (80/20), multi-sport load breakdown, and pattern detection. Use when athlete asks "how was my week?", "weekly review", "analyze training", or "did I follow the plan?".
+description: Comprehensive weekly training review including completion checks, intensity distribution validation (80/20), multi-sport load breakdown, and pattern detection. Works for both completed weeks and mid-week check-ins. Use when athlete asks "how was my week?", "how's my week going?", "weekly review", "analyze training", "did I follow the plan?", or "how am I doing this week?".
 allowed-tools: Bash, Read, Write, AskUserQuestion
 argument-hint: ""
 ---
@@ -72,6 +72,23 @@ resilio week
 - Running volume vs. other activities
 - CTL/ATL/TSB/ACWR/readiness changes
 
+### Step 1.5: Week Completion Check
+
+**Only applies when `planned_workouts_detail` is non-null (structured plan athletes).** If `planned_workouts_detail` is null (freeform, Step 0.5 → Option B), skip this check entirely — freeform athletes always proceed with full framing for all steps including Steps 8 and 9.
+
+**For structured plan athletes:** filter `planned_workouts_detail` (from Step 0.5) to entries whose `date` field is strictly after today, then count. Use that count to determine framing:
+
+- **Remaining = 0**: All scheduled workouts have passed — treat as end-of-week review. Run Steps 8 and 9 normally.
+- **Remaining > 0**: Week is in progress — apply mid-week adjustments below.
+
+**Mid-week adjustments (remaining > 0):**
+- **Step 2**: Only collect activities from Monday through today. Workouts scheduled for dates **after today** are "not yet due" — list them in a separate "Upcoming" row, never as "Missed".
+- **Completion denominator**: Count only workouts due on or before today. Report as "X/Y workouts completed so far (Z remaining this week)".
+- **Step 8**: **Skip entirely** — do not log a partial week to the training log. An inline reminder is also placed at Step 8.
+- **Step 9**: Skip the "plan next week" prompt — offer forward-looking guidance for the remaining days of this week instead (e.g., pacing, recovery, upcoming quality sessions).
+
+---
+
 ### Step 2: Plan Adherence (if on plan) OR Activity Summary (if freeform)
 
 #### Option A: Athlete on Structured Plan
@@ -83,27 +100,28 @@ Cross-reference planned workouts (from Step 0.5) with actual activities (from `r
 Do NOT look for activities on specific planned dates. Instead:
 
 **Step A — Collect ALL activities in the week window (Mon [date] through Sun [date])**
-From `resilio week` → `completed_activities`: extract every running activity in the week,
-regardless of what day it was planned.
-Day-shifted runs (e.g., Wednesday run done on Thursday) are common and will be missed
-if you only check planned dates.
+From `resilio week` → `completed_activities`: extract every activity in the week regardless
+of sport type, regardless of what day it was planned.
+Day-shifted sessions (e.g., Wednesday run done on Thursday, Thursday climb done on Friday)
+are common and will be missed if you only check planned dates.
 
 **Step B — Match each collected activity → closest planned workout:**
 - ✅ **Match**: Type + volume aligns with a planned workout, same day
 - ⚠️ **Day shift**: Aligns with a planned workout but on a different day — **count as completed**
 - ⚠️ **Volume variance**: Matched workout but >15% over/under planned distance — flag, don't penalize
-- ❌ **Missed**: Planned workout with NO matching activity found anywhere in the week window
+- ❌ **Missed**: Planned workout with NO matching activity found anywhere in the window of days already elapsed
+- 🔜 **Not yet due**: Planned workout scheduled for a date **after today** (mid-week check-in only) — never count as missed
 - ➕ **Extra**: Activity with no corresponding planned workout (cross-training, bonus run)
 
 2. **Assess adherence:**
    - **Workout completion**: How many planned workouts were completed (count day-shifts as completed)
-   - **Volume adherence**: Actual running km vs planned km — flag if >115% or <80%
-   - **Quality session check**: Were tempo/interval/long run sessions completed as prescribed? (highest priority)
+   - **Volume adherence**: For each planned activity, compare actual vs planned volume using the appropriate metric (running/cycling: km; climbing: duration or vertical meters) — flag if >115% or <80%
+   - **Quality session check**: Were quality sessions (tempo, intervals, long run, hard climbing circuit, threshold ride) completed as prescribed? (highest priority)
 
 3. **Flag critical patterns:**
-   - ⚠️ Quality sessions missed or downgraded (tempo→easy) — high priority
-   - ⚠️ Long run >20% over/under planned distance
-   - ⚠️ Easy runs at moderate pace (80/20 violation risk)
+   - ⚠️ Quality sessions missed or downgraded (tempo→easy, hard circuit→easy climb) — high priority
+   - ⚠️ Key long session (long run, long ride, big climbing day) >20% over/under planned volume
+   - ⚠️ Easy sessions at moderate pace/intensity (80/20 violation risk)
    - ⚠️ Unplanned high-load activities on rest days or before quality sessions
 
 **Context matters:** A day shift (Wed→Thu) is usually fine. Volume variance needs coaching judgment — was it intentional, terrain-driven, or loss of discipline?
@@ -273,7 +291,9 @@ Great week! You completed 7/8 planned workouts (88% completion) and your CTL inc
 
 ### Step 8: Log Weekly Summary to Training Log
 
-**After presenting analysis**, append summary to training log:
+> **Mid-week check-in**: Only run this step when remaining planned workouts = 0 (all scheduled workouts for this week have passed). See Step 1.5. Do not log a partial week.
+
+**After presenting analysis** (completed weeks only), append summary to training log:
 
 Create JSON with week summary:
 
@@ -490,10 +510,11 @@ Before sending weekly review, verify:
 
 ## Completion
 
-**Completion rate**: [X]% ([Y]/[Z] workouts)
+**Completion rate**: [X]% ([Y]/[Z] workouts completed so far[, W remaining this week — if mid-week])
 
 Completed: [list]
 Missed: [list with reasons]
+Upcoming (not yet due): [list — mid-week only]
 Extra: [list]
 
 ## Intensity Distribution (80/20)

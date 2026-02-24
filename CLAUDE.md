@@ -100,13 +100,24 @@ If all CLI options genuinely fail (e.g., fresh machine, no environment),
 say the environment needs to be set up and invoke `complete-setup` — do not
 delegate the command to the athlete.
 
-**Session initialization (always start here)**:
+**Planning / onboarding** (new athlete, first session, creating or modifying any plan, weekly-analysis review, plan-progress-review, absence >1 week):
 
 ```bash
 resilio auth status
 resilio sync              # Smart sync: targets up to 365 days first-time, incremental after
-resilio profile analyze   # Required after sync: report actual span; never assume 365 days
+resilio profile analyze   # Validate actual data span; surface to athlete in this context
+resilio dates today
 resilio status
+resilio memory list --type INJURY_HISTORY
+```
+
+**Casual fetch / mid-session sync** ("fetch latest", "sync", between-session check-in):
+
+```bash
+resilio auth status
+resilio sync
+resilio status
+resilio week
 ```
 
 **Weekly coaching workflow**:
@@ -274,19 +285,33 @@ The analytical style is hardcoded (not user-configurable) and designed for amate
 
 ## Session Pattern
 
-1. **Check auth**: `resilio auth status`
-2. **Sync activities**: `resilio sync`
-   - Note: Activities stored in `data/activities/YYYY-MM/*.yaml` (monthly folders)
-   - Count files, not directories: `find data/activities -name "*.yaml" | wc -l`
-   - See `docs/coaching/cli/cli_data_structure.md` for details
-   - Immediately run `resilio profile analyze` and report actual span using `data_window_days`, `synced_data_start`, `synced_data_end`
+**Determine context first:**
+
+**Planning / onboarding** (new athlete, first session, creating or modifying any plan, weekly-analysis review, plan-progress-review, absence >1 week):
+1. `resilio auth status`
+2. `resilio sync`
+3. `resilio profile analyze` — validate actual data span; surface to athlete in this context
+   - Report actual span using `data_window_days`, `synced_data_start`, `synced_data_end`
    - Never claim "last 365 days" unless `data_window_days >= 360` and no rate-limit error occurred
    - If rate limit hit, say the history is partial and offer to resume later
-3. **Verify date context**: `resilio dates today`
-4. **Assess state**: `resilio status`
-5. **Review memories**: `resilio memory list --type INJURY_HISTORY` (and other relevant types)
-6. **Use skill or CLI** based on task complexity
-7. **Capture insights** with `resilio memory add` when new patterns or constraints emerge
+4. `resilio dates today`
+5. `resilio status`
+6. `resilio memory list --type INJURY_HISTORY` (and other relevant types)
+7. Use skill or CLI based on task
+8. Capture insights with `resilio memory add`
+
+**Casual fetch / mid-session sync** ("fetch latest", "sync", between-session check-in):
+1. `resilio auth status`
+2. `resilio sync`
+3. `resilio status`
+4. `resilio week`
+
+**What to report after a casual fetch:**
+- Sync result: "X new activities synced" (from sync JSON)
+- Current state from `resilio status`: fitness trend, form, readiness — synthesized in 2–3 sentences
+- This week's context from `resilio week`
+- If sport mix context is needed: reference the last 28 days, not all-time history
+- Do NOT report: total activity count, full date span, all-time sport distribution, 13-month averages
 
 ---
 
