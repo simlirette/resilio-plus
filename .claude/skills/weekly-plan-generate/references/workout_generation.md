@@ -23,6 +23,18 @@ You design each workout explicitly in the `workouts` array. This leverages your 
 - `notes` (coaching cues, M-pace segments for long runs, strides, etc.)
 - `key_workout` (true for week's critical sessions)
 
+## Notes: Athlete-Facing Adjustment Cues
+
+Workout `notes` are read by the athlete. Any conditional guidance must use a controllable metric — never RPE.
+
+❌ "If too hard, back off to RPE 6"
+✅ "If HR climbs above 175, ease pace to 5:25+/km"
+✅ "If HR climbs above 175, cut the block short and begin cooldown"
+
+RPE in notes = sensation descriptor only ("should feel comfortably hard"). Pace and HR are the adjustment levers.
+
+**Exception**: short intervals (<2 min) and hilly terrain — effort language is appropriate when pace is unreliable. Use qualitative descriptors, not RPE numbers: e.g., "run the uphills at a controlled hard effort, keep breathing rhythmic; walk if needed" or "hold a hard-but-repeatable effort across all reps."
+
 ---
 
 ## Critical Volume Rule

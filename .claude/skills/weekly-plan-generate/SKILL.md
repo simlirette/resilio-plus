@@ -192,6 +192,7 @@ Planned quality this week: [type] | [structure: X min / N×Y] | [RPE X]
 ```
 
 Reflect the key progression reasoning in the workout's `notes` field.
+Notes are athlete-facing: use pace/HR for any adjustment cues, not RPE. See `references/workout_generation.md` for the rule and examples.
 
 **YOU design the workouts** using:
 
