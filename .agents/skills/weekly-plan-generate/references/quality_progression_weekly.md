@@ -13,6 +13,7 @@
 4. [Long Run Progression Tracking](#4-long-run-progression-tracking)
 5. [Cross-Week Boundary Quality Check](#5-cross-week-boundary-quality-check)
 6. [Execution Quality → Progression Gate](#6-execution-quality--progression-gate)
+   - [6b. Lap Analysis for Quality Session Execution](#6b-lap-analysis-for-quality-session-execution)
 
 ---
 
@@ -187,6 +188,63 @@ If all prior quality sessions have `execution: null` (still `status: scheduled`,
 - Classify as "no execution data yet"
 - Design based on macro plan structure only
 - Apply conservative rules (introduction-level, not progression)
+
+---
+
+## 6b. Lap Analysis for Quality Session Execution
+
+When `resilio plan week-execution` returns `classification: null` for a quality workout,
+the AI coach must classify the session using lap data — full-run avg pace is unreliable
+because warmup and cooldown dilute the quality segment.
+
+### When to use
+
+- `classification: null` AND `has_laps: true` → fetch lap detail and classify below
+- `classification: null` AND `has_laps: false` → use `actual_avg_pace` as proxy (see fallback)
+
+```bash
+resilio activity laps <activity_id>
+```
+
+### Identify phases from lap data
+
+- **Warmup**: First lap(s) with easy pace (HR < 145, pace slower than E-pace ceiling)
+- **Quality segment**: Lap(s) where pace approaches the prescribed target range
+- **Cooldown**: Final lap(s) returning to easy pace
+
+For interval sessions: recovery-jog laps between quality reps are **not** quality laps —
+ignore them when evaluating execution quality.
+
+### Classify based on quality-segment laps only
+
+| Quality laps pace | HR | Classification |
+|---|---|---|
+| Within prescribed range ±5 sec/km | Within HR zone | CLEAN |
+| Faster than floor by >10 sec/km | Well above ceiling | STRUGGLED (over-effort) |
+| Slower than ceiling by >20 sec/km | Well below floor | EASY (skipped quality) |
+| No laps in quality range | All easy | EASY (session not executed) |
+
+### Additional signals (apply even when pace is CLEAN)
+
+- **Lap fade**: Final quality laps >8 sec/km slower than first quality laps → athlete
+  started too fast or faded; apply **MAINTAIN** rather than PROGRESS next week, even
+  if average quality pace was within range
+- **HR creep**: HR rises >10 bpm across constant-pace quality laps → underlying fatigue;
+  caution flag even if classification is CLEAN; prefer MAINTAIN over PROGRESS
+- **Perfect consistency**: Lap splits within 5 sec/km, HR steady → strongly CLEAN;
+  safe to progress
+
+### When no lap data (`has_laps: false`)
+
+Use `actual_avg_pace` and `actual_avg_hr` from the week-execution output as a proxy.
+Note the limitation explicitly in your Quality Progression Analysis:
+
+> "No lap data. Full-run avg pace X:XX/km (target Y:YY–Z:ZZ). Warmup/cooldown may
+> dilute the avg — an EASY result here may be a false flag. Treating as [CLEAN/EASY]
+> with low confidence; apply conservative progression."
+
+A CLEAN result from full-run avg is less reliable. An EASY result may be a false flag
+(proper warmup dragging avg down). When confidence is low, prefer MAINTAIN over PROGRESS.
 
 ---
 

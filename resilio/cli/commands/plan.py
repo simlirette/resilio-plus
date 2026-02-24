@@ -1828,13 +1828,17 @@ def plan_week_execution_command(
 ) -> None:
     """Analyse planned vs actual execution for a training week.
 
-    Matches each planned workout to an actual Strava activity by date,
-    then classifies execution as CLEAN / STRUGGLED / EASY / MISSED.
+    Matches each planned workout to an actual Strava activity by date.
 
-    CLEAN    — pace and HR within planned ranges, completion ≥ 90%
-    STRUGGLED — pace too fast/slow, HR above ceiling, or session cut short
-    EASY     — pace well below floor AND HR well below lower bound
-    MISSED   — no running activity found on that date
+    Easy/long run workouts: classified CLEAN / STRUGGLED / EASY / MISSED via
+    full-run avg pace (full-run avg is valid for these workout types).
+
+    Quality workouts (tempo, intervals, fartlek, race, strides): classification
+    is null — full-run avg pace is unreliable due to warmup/cooldown. The AI
+    coach must fetch lap data (resilio activity laps <id>) and classify the
+    quality segment. See references/quality_progression_weekly.md §6b.
+
+    MISSED — no running activity found on that date (all workout types).
 
     Use in Step 2b of the weekly-plan-generate workflow to gate
     quality progression decisions.
@@ -1856,12 +1860,14 @@ def plan_week_execution_command(
         msg = f"Week {week}: {note}"
     else:
         summary = result.get("summary", {})
+        ai_classify = summary.get('ai_classify', 0)
         msg = (
             f"Week {week} execution: "
             f"{summary.get('clean', 0)} clean, "
             f"{summary.get('struggled', 0)} struggled, "
             f"{summary.get('easy', 0)} easy, "
             f"{summary.get('missed', 0)} missed"
+            + (f", {ai_classify} need lap review" if ai_classify else "")
         )
     envelope = create_success_envelope(message=msg, data=result)
     output_json(envelope)

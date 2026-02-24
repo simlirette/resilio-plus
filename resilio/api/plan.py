@@ -2631,17 +2631,20 @@ def assess_week_execution(week_number: int) -> Union[dict, PlanError]:
     Analyse planned vs actual execution for a specific training week.
 
     For each planned workout in the week, finds a matching Strava activity by date
-    and sport type, then classifies execution as CLEAN / STRUGGLED / EASY / MISSED
-    based on pace range compliance, HR compliance, and completion percentage.
+    and sport type, then classifies execution.
 
-    Classification rules (quality workouts):
+    Classification rules — easy / long run workouts (full-run avg pace is valid):
         CLEAN    — actual avg pace within planned range AND avg HR within HR range
-                   AND completion ≥ 90%
-        STRUGGLED — pace above ceiling, HR above upper bound, or completion < 90%
-        EASY     — pace well below floor (>10 sec/km under) AND HR below lower bound
+        STRUGGLED — pace too slow/fast or HR above ceiling
+        EASY     — pace well below floor AND HR consistently low
         MISSED   — no matching running activity found on that date
 
-    Easy / long run workouts: classified CLEAN if avg pace within range (less strict).
+    Classification rules — quality workouts (tempo, intervals, fartlek, race, strides):
+        null     — full-run avg pace is unreliable (warmup/cooldown inflate avg);
+                   the AI coach must classify by fetching lap data:
+                   `resilio activity laps <activity_id>` (when has_laps: true)
+                   or use actual_avg_pace as a caveat-flagged proxy (has_laps: false).
+        MISSED   — no matching running activity found on that date
 
     Returns:
         dict with 'executions' list, one entry per planned workout.
@@ -2724,8 +2727,17 @@ def assess_week_execution(week_number: int) -> Union[dict, PlanError]:
         except (ValueError, IndexError, AttributeError):
             return None
 
-    def _classify_workout(workout, activity) -> tuple[str, str]:
-        """Return (classification, detail) for a workout/activity pair."""
+    def _classify_workout(workout, activity) -> tuple[str | None, str]:
+        """Return (classification, detail) for a workout/activity pair.
+
+        For quality workouts (tempo, intervals, fartlek, race, strides):
+          Returns classification=None — full-run avg pace is unreliable because
+          warmup/cooldown dilute the quality segment. The AI coach must classify
+          by fetching lap data via `resilio activity laps <id>`.
+
+        For easy/long run workouts:
+          Returns CLEAN/STRUGGLED/EASY based on full-run avg pace (valid for these).
+        """
         wtype = str(getattr(workout, 'workout_type', 'easy'))
         is_quality = wtype in ('tempo', 'intervals', 'fartlek', 'race', 'strides')
 
@@ -2755,7 +2767,7 @@ def assess_week_execution(week_number: int) -> Union[dict, PlanError]:
 
         detail_parts = []
         if actual_avg_pace_str:
-            detail_parts.append(f"pace {actual_avg_pace_str}/km")
+            detail_parts.append(f"full-run avg pace {actual_avg_pace_str}/km")
             if planned_min_secs and planned_max_secs:
                 detail_parts.append(f"(target {workout.pace_range_min_km}–{workout.pace_range_max_km})")
         if actual_avg_hr:
@@ -2771,36 +2783,25 @@ def assess_week_execution(week_number: int) -> Union[dict, PlanError]:
         if actual_avg_pace_secs is None and actual_avg_hr is None:
             return "MISSED", "no pace or HR data available"
 
-        # For quality workouts: strict classification
-        if is_quality and planned_min_secs and planned_max_secs:
-            # EASY takes priority: pace way over ceiling (athlete ran much slower than
-            # prescribed = skipped quality work and ran at easy effort instead).
-            # HR confirms when available; pace alone is sufficient for athletes without
-            # a HR monitor (>20 sec/km over ceiling is unambiguous easy effort).
-            if (actual_avg_pace_secs is not None and
-                    actual_avg_pace_secs > planned_max_secs + 20):
-                hr_confirms_easy = (actual_avg_hr is None or
-                                    (hr_low and actual_avg_hr < hr_low - 10))
-                if hr_confirms_easy:
-                    return "EASY", detail
+        # For quality workouts: defer to AI coach with lap data.
+        # Full-run avg pace is unreliable for structured workouts (warmup/cooldown
+        # inflate the average, causing false EASY classifications).
+        if is_quality:
+            # If no pace data exists (HR-only activity), lap analysis would also
+            # lack distance data — flag as unclassifiable rather than sending the
+            # coach on a futile lap fetch.
+            if actual_avg_pace_secs is None:
+                return None, "no distance/pace data available; HR-only activity — cannot classify"
 
-            # STRUGGLED: pace too fast (lower secs = faster pace, more effort than planned)
-            if actual_avg_pace_secs is not None and actual_avg_pace_secs < planned_min_secs - 5:
-                return "STRUGGLED", detail  # faster pace than target (over-effort or VDOT underestimate)
-
-            # STRUGGLED: pace too slow (higher secs = slower)
-            if actual_avg_pace_secs is not None and actual_avg_pace_secs > planned_max_secs + 10:
-                return "STRUGGLED", detail
-
-            # STRUGGLED: HR spiked above ceiling
-            if actual_avg_hr and hr_high and actual_avg_hr > hr_high + 5:
-                return "STRUGGLED", detail
-
-            # STRUGGLED: completion low
-            if completion_pct is not None and completion_pct < 90:
-                return "STRUGGLED", detail
-
-            return "CLEAN", detail
+            act_has_laps = getattr(activity, 'has_laps', False)
+            if act_has_laps:
+                reason = f"{detail}; has_laps: true — fetch lap detail to classify quality segment"
+            else:
+                reason = (
+                    f"{detail}; has_laps: false — no lap data; use full-run avg as proxy "
+                    f"(warmup/cooldown inflate avg, EASY result may be false flag)"
+                )
+            return None, reason
 
         # For easy/long run: pace-range check only (less strict)
         if planned_min_secs and planned_max_secs and actual_avg_pace_secs is not None:
@@ -2920,6 +2921,7 @@ def assess_week_execution(week_number: int) -> Union[dict, PlanError]:
             "actual_avg_pace": best_avg_pace,
             "actual_avg_hr": getattr(best_activity, 'average_hr', None),
             "completion_pct": completion_pct,
+            "has_laps": getattr(best_activity, 'has_laps', False),
             "classification": classification,
             "classification_reason": detail,
         })
@@ -2928,6 +2930,7 @@ def assess_week_execution(week_number: int) -> Union[dict, PlanError]:
     clean = sum(1 for e in executions if e["classification"] == "CLEAN")
     struggled = sum(1 for e in executions if e["classification"] == "STRUGGLED")
     easy = sum(1 for e in executions if e["classification"] == "EASY")
+    ai_classify = sum(1 for e in executions if e["classification"] is None)
 
     return {
         "week_number": week_number,
@@ -2939,6 +2942,7 @@ def assess_week_execution(week_number: int) -> Union[dict, PlanError]:
             "struggled": struggled,
             "easy": easy,
             "missed": missed,
+            "ai_classify": ai_classify,
         },
         "executions": executions,
     }

@@ -107,6 +107,12 @@ resilio plan week --week <N-2>   # if it exists and was not a recovery week
 resilio plan week-execution --week <N-1>  # execution classifications if activities synced
 ```
 
+For any quality workout in the week-execution output where `classification` is `null`:
+- If `has_laps: true` → call `resilio activity laps <activity_id>` and apply the lap
+  classification methodology in `references/quality_progression_weekly.md §6b`
+- If `has_laps: false` → use `actual_avg_pace` and `actual_avg_hr` as proxy; note
+  the limitation (warmup/cooldown dilute the avg; EASY may be a false flag)
+
 Synthesise a **Quality Progression Summary** before Step 6:
 
 ```
@@ -123,7 +129,7 @@ and apply conservative introduction rules from `references/quality_progression_w
 
 See `references/quality_progression_weekly.md` for the full decision framework:
 execution states (CLEAN/STRUGGLED/EASY/MISSED), rotation rules, long run duration
-progression (+10–15 min rule), and cross-week boundary checks.
+progression (+10–15 min rule), cross-week boundary checks, and §6b lap methodology.
 
 3. Analyze progression safety:
 
