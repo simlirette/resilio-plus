@@ -2624,3 +2624,321 @@ def revert_week_plan(week_number: int) -> Union[dict, PlanError]:
         "reverted_to_target": target_volume,
         "message": f"Week {week_number} reverted to macro plan targets (workouts removed). Can regenerate with different parameters."
     }
+
+
+def assess_week_execution(week_number: int) -> Union[dict, PlanError]:
+    """
+    Analyse planned vs actual execution for a specific training week.
+
+    For each planned workout in the week, finds a matching Strava activity by date
+    and sport type, then classifies execution as CLEAN / STRUGGLED / EASY / MISSED
+    based on pace range compliance, HR compliance, and completion percentage.
+
+    Classification rules (quality workouts):
+        CLEAN    — actual avg pace within planned range AND avg HR within HR range
+                   AND completion ≥ 90%
+        STRUGGLED — pace above ceiling, HR above upper bound, or completion < 90%
+        EASY     — pace well below floor (>10 sec/km under) AND HR below lower bound
+        MISSED   — no matching running activity found on that date
+
+    Easy / long run workouts: classified CLEAN if avg pace within range (less strict).
+
+    Returns:
+        dict with 'executions' list, one entry per planned workout.
+        PlanError on plan-load failure.
+
+    Example:
+        >>> result = assess_week_execution(5)
+        >>> if isinstance(result, PlanError):
+        ...     print(result.message)
+        ... else:
+        ...     for ex in result["executions"]:
+        ...         print(f"{ex['date']} {ex['workout_type']}: {ex['classification']}")
+    """
+    from resilio.core.paths import activities_month_dir
+    from resilio.schemas.activity import NormalizedActivity
+
+    # Load plan and target week
+    plan = get_current_plan()
+    if isinstance(plan, PlanError):
+        return plan
+
+    target_week = None
+    for w in plan.weeks:
+        if w.week_number == week_number:
+            target_week = w
+            break
+
+    if target_week is None:
+        return PlanError(
+            error_type="not_found",
+            message=f"Week {week_number} not found in current plan (plan has {plan.total_weeks} weeks)"
+        )
+
+    if not target_week.workouts:
+        return {
+            "week_number": week_number,
+            "start_date": target_week.start_date.isoformat(),
+            "end_date": target_week.end_date.isoformat(),
+            "workouts_analyzed": 0,
+            "executions": [],
+            "note": "Week has no planned workouts — run weekly-plan-generate first"
+        }
+
+    repo = RepositoryIO()
+
+    # Collect ALL running activities across the entire week window (Mon–Sun).
+    # Do NOT filter by planned date yet — athletes routinely shift workouts 1-2 days
+    # without telling the coach (day-shifted runs). Matching happens below.
+    # (Same "collect-then-match" strategy as the weekly-analysis skill Step 2A.)
+    all_run_activities: list = []
+    seen_months: set = set()
+    for day_offset in range(7):
+        check_date = target_week.start_date + timedelta(days=day_offset)
+        month_key = check_date.strftime("%Y-%m")
+        if month_key in seen_months:
+            continue
+        seen_months.add(month_key)
+        month_dir = activities_month_dir(month_key)
+        activity_files = repo.list_files(f"{month_dir}/*.yaml")
+        for af in activity_files:
+            act = repo.read_yaml(af, NormalizedActivity, ReadOptions(allow_missing=True, should_validate=False))
+            if act is None or isinstance(act, RepoError):
+                continue
+            act_date = act.date if isinstance(act.date, date) else None
+            if act_date is None:
+                continue
+            # Include only activities that fall within the week window
+            if target_week.start_date <= act_date <= target_week.end_date:
+                sport = str(getattr(act, 'sport_type', '')).lower()
+                if sport in ('run', 'trail_run', 'treadmill_run', 'track_run'):
+                    all_run_activities.append(act)
+
+    def _pace_to_secs(pace_str: Optional[str]) -> Optional[float]:
+        """Convert 'MM:SS' pace string to seconds per km."""
+        if not pace_str:
+            return None
+        try:
+            parts = str(pace_str).strip().split(":")
+            return int(parts[0]) * 60 + int(parts[1])
+        except (ValueError, IndexError, AttributeError):
+            return None
+
+    def _classify_workout(workout, activity) -> tuple[str, str]:
+        """Return (classification, detail) for a workout/activity pair."""
+        wtype = str(getattr(workout, 'workout_type', 'easy'))
+        is_quality = wtype in ('tempo', 'intervals', 'fartlek', 'race', 'strides')
+
+        planned_min_secs = _pace_to_secs(getattr(workout, 'pace_range_min_km', None))
+        planned_max_secs = _pace_to_secs(getattr(workout, 'pace_range_max_km', None))
+        planned_distance = getattr(workout, 'distance_km', None)
+        hr_low = getattr(workout, 'hr_range_low', None)
+        hr_high = getattr(workout, 'hr_range_high', None)
+
+        # Compute average pace from distance + duration (NormalizedActivity has no avg_pace field)
+        act_dist_km = getattr(activity, 'distance_km', None)
+        act_dur_secs = getattr(activity, 'duration_seconds', None)
+        actual_avg_pace_str = None
+        actual_avg_pace_secs = None
+        if act_dist_km and act_dur_secs and act_dist_km > 0:
+            secs_per_km = act_dur_secs / act_dist_km
+            mins = int(secs_per_km // 60)
+            secs = int(secs_per_km % 60)
+            actual_avg_pace_str = f"{mins}:{secs:02d}"
+            actual_avg_pace_secs = secs_per_km
+        actual_avg_hr = getattr(activity, 'average_hr', None)
+        actual_distance = getattr(activity, 'distance_km', None)
+
+        completion_pct = None
+        if planned_distance and actual_distance and planned_distance > 0:
+            completion_pct = round((actual_distance / planned_distance) * 100, 1)
+
+        detail_parts = []
+        if actual_avg_pace_str:
+            detail_parts.append(f"pace {actual_avg_pace_str}/km")
+            if planned_min_secs and planned_max_secs:
+                detail_parts.append(f"(target {workout.pace_range_min_km}–{workout.pace_range_max_km})")
+        if actual_avg_hr:
+            detail_parts.append(f"HR {actual_avg_hr:.0f}bpm")
+            if hr_low and hr_high:
+                detail_parts.append(f"(target {hr_low}–{hr_high})")
+        if completion_pct is not None:
+            detail_parts.append(f"completion {completion_pct:.0f}%")
+
+        detail = " ".join(detail_parts) if detail_parts else "no pace/HR data"
+
+        # MISSED if no pace data at all
+        if actual_avg_pace_secs is None and actual_avg_hr is None:
+            return "MISSED", "no pace or HR data available"
+
+        # For quality workouts: strict classification
+        if is_quality and planned_min_secs and planned_max_secs:
+            # EASY takes priority: pace way over ceiling (athlete ran much slower than
+            # prescribed = skipped quality work and ran at easy effort instead).
+            # HR confirms when available; pace alone is sufficient for athletes without
+            # a HR monitor (>20 sec/km over ceiling is unambiguous easy effort).
+            if (actual_avg_pace_secs is not None and
+                    actual_avg_pace_secs > planned_max_secs + 20):
+                hr_confirms_easy = (actual_avg_hr is None or
+                                    (hr_low and actual_avg_hr < hr_low - 10))
+                if hr_confirms_easy:
+                    return "EASY", detail
+
+            # STRUGGLED: pace too fast (lower secs = faster pace, more effort than planned)
+            if actual_avg_pace_secs is not None and actual_avg_pace_secs < planned_min_secs - 5:
+                return "STRUGGLED", detail  # faster pace than target (over-effort or VDOT underestimate)
+
+            # STRUGGLED: pace too slow (higher secs = slower)
+            if actual_avg_pace_secs is not None and actual_avg_pace_secs > planned_max_secs + 10:
+                return "STRUGGLED", detail
+
+            # STRUGGLED: HR spiked above ceiling
+            if actual_avg_hr and hr_high and actual_avg_hr > hr_high + 5:
+                return "STRUGGLED", detail
+
+            # STRUGGLED: completion low
+            if completion_pct is not None and completion_pct < 90:
+                return "STRUGGLED", detail
+
+            return "CLEAN", detail
+
+        # For easy/long run: pace-range check only (less strict)
+        if planned_min_secs and planned_max_secs and actual_avg_pace_secs is not None:
+            if actual_avg_pace_secs < planned_min_secs - 20 and (
+                    actual_avg_hr is None or (hr_low and actual_avg_hr < hr_low - 10)):
+                return "EASY", detail
+            if actual_avg_pace_secs > planned_max_secs + 30:
+                return "STRUGGLED", detail
+            return "CLEAN", detail
+
+        # Insufficient data to classify
+        return "CLEAN", detail + " (limited data — assume clean)"
+
+    # Match planned workouts to activities using "collect-then-match" strategy
+    # (mirrors weekly-analysis Step 2A: match by type + distance proximity, not strict date).
+    # Each activity can only be claimed by one planned workout (greedy, best-distance-first).
+    unmatched_activities = list(all_run_activities)
+
+    def _match_activity(workout, pool: list):
+        """Find best matching activity for a workout from the unmatched pool.
+        Priority: same-date match first, then closest distance within ±50% of planned."""
+        planned_dist = getattr(workout, 'distance_km', None) or 0
+        workout_date = workout.date if isinstance(workout.date, date) else None
+
+        if not pool:
+            return None
+
+        # Prefer same-date candidates; fall back to any day in week
+        same_day = [a for a in pool if a.date == workout_date]
+        candidates = same_day if same_day else pool
+
+        # Distance filter: must be within 50% of planned distance (avoids cross-matching
+        # a 6km easy run with a 17km long run on a different day).
+        # If same-day candidates exist but none pass the distance filter, fall back to the
+        # full week pool with distance filter applied — a day-shifted match is better than
+        # a same-day match to a completely different workout type.
+        if planned_dist > 0:
+            dist_filtered = [
+                a for a in candidates
+                if abs((getattr(a, 'distance_km', 0) or 0) - planned_dist) / planned_dist <= 0.50
+            ]
+            if dist_filtered:
+                candidates = dist_filtered
+            elif same_day:
+                # Same-day activities exist but none within ±50% of planned distance.
+                # Fall back to full week pool with distance filter to catch day-shifted runs.
+                week_dist_filtered = [
+                    a for a in pool
+                    if abs((getattr(a, 'distance_km', 0) or 0) - planned_dist) / planned_dist <= 0.50
+                ]
+                candidates = week_dist_filtered if week_dist_filtered else []
+
+        if not candidates:
+            return None
+
+        return min(candidates, key=lambda a: abs((getattr(a, 'distance_km', 0) or 0) - planned_dist))
+
+    executions = []
+    for workout in target_week.workouts:
+        workout_date = workout.date if isinstance(workout.date, date) else None
+        if workout_date is None:
+            continue
+
+        wtype = str(getattr(workout, 'workout_type', ''))
+        if wtype == 'rest':
+            continue
+
+        planned_dist = getattr(workout, 'distance_km', None) or 0
+        best_activity = _match_activity(workout, unmatched_activities)
+
+        if best_activity is None:
+            executions.append({
+                "workout_id": getattr(workout, 'id', None),
+                "date": workout_date.isoformat(),
+                "workout_type": wtype,
+                "planned_distance_km": planned_dist or None,
+                "planned_pace_range": getattr(workout, 'pace_range', None),
+                "activity_id": None,
+                "matched": False,
+                "day_shifted": False,
+                "actual_date": None,
+                "classification": "MISSED",
+                "classification_reason": "No matching running activity found in week window",
+            })
+            continue
+
+        # Claim this activity so it can't be matched again
+        unmatched_activities.remove(best_activity)
+
+        day_shifted = (best_activity.date != workout_date)
+        classification, detail = _classify_workout(workout, best_activity)
+        if day_shifted:
+            detail = f"[day-shifted: planned {workout_date}, actual {best_activity.date}] " + detail
+
+        actual_dist = getattr(best_activity, 'distance_km', None)
+        completion_pct = None
+        if planned_dist and actual_dist and planned_dist > 0:
+            completion_pct = round((actual_dist / planned_dist) * 100, 1)
+
+        best_dur = getattr(best_activity, 'duration_seconds', None)
+        best_avg_pace = None
+        if actual_dist and best_dur and actual_dist > 0:
+            spk = best_dur / actual_dist
+            best_avg_pace = f"{int(spk // 60)}:{int(spk % 60):02d}"
+
+        executions.append({
+            "workout_id": getattr(workout, 'id', None),
+            "date": workout_date.isoformat(),
+            "workout_type": wtype,
+            "planned_distance_km": planned_dist or None,
+            "planned_pace_range": getattr(workout, 'pace_range', None),
+            "activity_id": getattr(best_activity, 'id', None),
+            "matched": True,
+            "day_shifted": day_shifted,
+            "actual_date": best_activity.date.isoformat() if day_shifted else None,
+            "actual_distance_km": actual_dist,
+            "actual_avg_pace": best_avg_pace,
+            "actual_avg_hr": getattr(best_activity, 'average_hr', None),
+            "completion_pct": completion_pct,
+            "classification": classification,
+            "classification_reason": detail,
+        })
+
+    missed = sum(1 for e in executions if e["classification"] == "MISSED")
+    clean = sum(1 for e in executions if e["classification"] == "CLEAN")
+    struggled = sum(1 for e in executions if e["classification"] == "STRUGGLED")
+    easy = sum(1 for e in executions if e["classification"] == "EASY")
+
+    return {
+        "week_number": week_number,
+        "start_date": target_week.start_date.isoformat(),
+        "end_date": target_week.end_date.isoformat(),
+        "workouts_analyzed": len(executions),
+        "summary": {
+            "clean": clean,
+            "struggled": struggled,
+            "easy": easy,
+            "missed": missed,
+        },
+        "executions": executions,
+    }

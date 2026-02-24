@@ -1,7 +1,9 @@
 ---
 name: weekly-plan-generate
 description: Designs exact workouts for a single week using AI coaching judgment and writes a validated JSON file without applying it. Use for Week 1 and all subsequent weeks.
-compatibility: Codex CLI/IDE; requires local resilio CLI and repo context
+disable-model-invocation: false
+allowed-tools: Bash, Read, Write
+argument-hint: "[optional-notes]"
 ---
 
 # Weekly Plan Generate (Workout Designer)
@@ -36,7 +38,7 @@ You are the weekly planning specialist. Use your AI coaching judgment to design 
 CLI tools provide computational support (metrics, guardrails, pace calculations).
 You provide qualitative coaching decisions (exact distances, workout types, pacing).
 
-**Metric explainer rule**: See AGENTS.md "Metric one-liners" for first-mention definitions. Do not repeat unless the athlete asks.
+**Metric explainer rule**: See CLAUDE.md "Metric one-liners" for first-mention definitions. Do not repeat unless the athlete asks.
 
 ## Workflow
 
@@ -95,6 +97,34 @@ resilio activity export --since 28d --out /tmp/activities_28d.json
 resilio analysis intensity --activities /tmp/activities_28d.json --days 28
 ```
 
+2b. Load quality and long run history:
+
+For week N, read the last 2 populated weeks:
+
+```bash
+resilio plan week --week <N-1>
+resilio plan week --week <N-2>   # if it exists and was not a recovery week
+resilio plan week-execution --week <N-1>  # execution classifications if activities synced
+```
+
+Synthesise a **Quality Progression Summary** before Step 6:
+
+```
+Last quality session (Week N-x): [type] | [structure: X min / N×Y] | [RPE X]
+Execution: [CLEAN | STRUGGLED | EASY | MISSED | no execution data yet]
+Execution detail: [actual pace avg vs target, HR trend, lap fade if known]
+Last long run (Week N-x): [Ykm] / [approx Z min]
+LR execution: [completed as prescribed / cut short / no data yet]
+Recovery week since last quality: [yes/no]
+```
+
+If no prior quality exists (early base): note "no prior quality — first introduction"
+and apply conservative introduction rules from `references/quality_progression_weekly.md`.
+
+See `references/quality_progression_weekly.md` for the full decision framework:
+execution states (CLEAN/STRUGGLED/EASY/MISSED), rotation rules, long run duration
+progression (+10–15 min rule), and cross-week boundary checks.
+
 3. Analyze progression safety:
 
 ```bash
@@ -131,6 +161,31 @@ This step is strongly recommended - skipping it risks presentation-JSON mismatch
 
 **Day selection**: Reference weather signals from Step 2.5 when choosing days.
 Prefer best-conditions days for quality sessions and long runs among structurally valid options.
+
+**Before designing any quality session**, produce a Quality Progression Analysis
+(expands the Step 2b summary — add the two fields below and complete the progression
+decision; see `references/quality_progression_weekly.md` for the full decision framework):
+
+```
+QUALITY PROGRESSION ANALYSIS
+─────────────────────────────
+Last quality session (Week N-x): [type] | [structure: X min / N×Y] | [RPE X]
+Execution: [CLEAN | STRUGGLED | EASY | MISSED | no data yet]
+Execution detail: [actual pace avg vs target, HR trend, lap fade if known]
+Last long run (Week N-x): [Ykm] / [approx Z min]
+LR execution: [completed / cut short / no data yet]
+Recovery week since last quality: [yes/no]
+Volume last week vs this week: [±X km / ±Y%]
+Stressor last week: [VOLUME increased / QUALITY progressed / NEITHER / BOTH]
+
+Progression decision: [PROGRESS / MAINTAIN / DOWNGRADE / VARY TYPE]
+Reasoning: [cite execution result + one-stressor rule + methodology source]
+
+Planned quality this week: [type] | [structure: X min / N×Y] | [RPE X]
+─────────────────────────────
+```
+
+Reflect the key progression reasoning in the workout's `notes` field.
 
 **YOU design the workouts** using:
 
@@ -289,6 +344,7 @@ resilio plan validate-intervals \
 ## References (load only if needed)
 
 - **Pre-presentation checklist**: `references/pre_presentation_checklist.md` (consult before presenting)
+- **Quality progression**: `references/quality_progression_weekly.md` (consult in Steps 2b and 6)
 - Workout structure & session mechanics: `references/workout_structure.md`
 - Weekly volume progression: `references/volume_progression_weekly.md`
 - Workout generation: `references/workout_generation.md`

@@ -140,6 +140,31 @@ Fix ALL validation failures before athlete sees plan.
 
 ---
 
+### 9b. Not Reading Prior Weeks' Quality Before Designing New Quality
+
+**Problem**: Designing Week N's quality session without knowing what was done in
+Weeks N-1 and N-2. Results in: same duration repeated (stagnation), same type
+every week (monotony), or inappropriate progressions (too much after a hard block).
+
+**Solution**: Always run Step 2b (Load Quality & Long Run History) and produce a
+Quality Progression Analysis before Step 6. See `references/quality_progression_weekly.md`.
+
+**Concrete examples of this pitfall:**
+- Week N: volume +15%, tempo stays at 15 min (CORRECT — one new stressor: volume).
+  Week N+1: volume flat, tempo STILL 15 min (WRONG — now neither variable progresses).
+  The stagnation is at N+1, not N. Reading prior weeks reveals this pattern.
+- Weeks 2–6 all `types: ["tempo"]` → no cruise interval variation ever attempted.
+- Long run distance picked from % envelope without checking prior LR duration →
+  +23 min jump from previous week (violates +10–15 min rule).
+
+**Important nuance — "one stressor per week" (Daniels/Pfitzinger consensus)**:
+When weekly volume increases significantly (>10%), it is CORRECT to keep quality session
+duration flat. Increasing BOTH volume and quality in the same week stacks two stressors
+simultaneously — a known overreaching risk. Reading prior weeks tells you WHICH variable
+moved last week, so this week can progress the other one.
+
+---
+
 ### 10. Ignoring Conflict Policy (Daily/Weekly Decisions)
 
 **Problem**: Not applying athlete's conflict policy when workout conflicts arise.
@@ -230,6 +255,12 @@ resilio dates validate --date 2026-01-20 --must-be monday
 **Week being generated** (e.g., week 1, 2, 3...):
 - [ ] Unavailable run days confirmed (and upcoming events noted)
 - [ ] Volume target from macro plan: X km
+- [ ] **Quality Progression Analysis completed** (Step 2b — prior weeks read)
+- [ ] Prior quality session type and duration documented
+- [ ] Progression decision (PROGRESS/MAINTAIN/DOWNGRADE/VARY) explicitly stated in notes
+- [ ] Long run duration progression verified (≤+15 min vs. prior hard-week LR, unless
+      `target_km` set in macro hints)
+- [ ] Cross-week quality boundary checked (no Monday quality if last Sunday was RPE ≥ 6)
 - [ ] Quality volume validated: T≤10%, I≤8%, R≤5%
 - [ ] Long run validated: ≤30% of weekly volume, ≤150 min
 - [ ] Multi-sport load calculated (if applicable)

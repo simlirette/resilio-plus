@@ -23,6 +23,7 @@ Commands for setting race goals and managing training plans, including macro pla
 - `resilio plan template-macro` - Generate a blank macro template JSON
 - `resilio plan create-macro` - Generate high-level plan structure (macro)
 - `resilio plan export-structure` - Export stored macro structure JSON for validation
+- `resilio plan week-execution` - Analyse planned vs actual execution for a week (CLEAN/STRUGGLED/EASY/MISSED)
 - `resilio plan assess-period` - Assess completed period for adaptive planning
 - `resilio plan suggest-run-count` - Suggest optimal run count for volume/phase
 
@@ -725,6 +726,82 @@ Suggest optimal run count for a weekly volume and phase.
 ```bash
 resilio plan suggest-run-count --volume 35 --max-runs 5 --phase build
 ```
+
+---
+
+## resilio plan week-execution
+
+Analyse planned vs actual execution for a specific training week.
+
+Matches each planned workout to an actual Strava activity by date and sport type,
+then classifies execution quality. Used in the `weekly-plan-generate` workflow
+(Step 2b) to gate quality progression decisions.
+
+**Usage:**
+
+```bash
+# Analyse Week 5 execution before generating Week 6
+resilio plan week-execution --week 5
+
+# Analyse Week 4 (recovery week) to confirm reduced load
+resilio plan week-execution --week 4
+```
+
+**Classification rules:**
+
+| Class | Criteria |
+|---|---|
+| CLEAN | Pace within range, HR within range, completion ≥ 90% |
+| STRUGGLED | Pace above ceiling, HR spiked, or session cut short (<90%) |
+| EASY | Pace well below floor (>20 sec/km under) AND HR below lower bound |
+| MISSED | No running activity found on that date |
+
+**Returns:**
+
+```json
+{
+  "week_number": 5,
+  "start_date": "2026-02-16",
+  "end_date": "2026-02-22",
+  "workouts_analyzed": 4,
+  "summary": {"clean": 3, "struggled": 0, "easy": 0, "missed": 1},
+  "executions": [
+    {
+      "workout_id": "w_614622b4",
+      "date": "2026-02-19",
+      "workout_type": "tempo",
+      "planned_distance_km": 9.0,
+      "planned_pace_range": "5:02-5:14",
+      "activity_id": "strava_123456789",
+      "matched": true,
+      "day_shifted": false,
+      "actual_date": null,
+      "actual_distance_km": 8.9,
+      "actual_avg_pace": "5:08",
+      "actual_avg_hr": 172,
+      "completion_pct": 99,
+      "classification": "CLEAN",
+      "classification_reason": "pace 5:08/km (target 5:02–5:14) HR 172bpm (target 169–179) completion 99%"
+    }
+  ]
+}
+```
+
+**Typical use in quality progression (Step 2b)**:
+
+```bash
+# Before generating Week 6, check Week 5 quality execution
+resilio plan week-execution --week 5
+# Use classification to decide: CLEAN → PROGRESS, STRUGGLED → MAINTAIN
+```
+
+**Day-shift handling**: Activities are matched across the full Mon–Sun window, not just
+the planned date. A Wednesday run done on Thursday will be detected and classified with
+`"day_shifted": true` rather than marked MISSED. Distance proximity (±50%) prevents
+mismatching a 6km easy run with a 17km long run on a different day.
+
+**Note**: Requires activities to be synced (`resilio sync`). If workouts are still
+`status: scheduled` (future), all will return MISSED — this is expected.
 
 ---
 

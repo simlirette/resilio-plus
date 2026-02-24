@@ -28,6 +28,7 @@ from resilio.api.plan import (
     validate_plan_json_structure,
     validate_week_plan,
     revert_week_plan,
+    assess_week_execution,
     PlanError,
 )
 from resilio.cli.errors import api_result_to_envelope, get_exit_code_from_envelope
@@ -1814,6 +1815,57 @@ def create_macro_command(
     # Exit with appropriate code
     exit_code = get_exit_code_from_envelope(envelope)
     raise typer.Exit(code=exit_code)
+
+
+@app.command(name="week-execution")
+def plan_week_execution_command(
+    ctx: typer.Context,
+    week: int = typer.Option(
+        ...,
+        "--week",
+        help="Week number (1-indexed) to analyse execution for"
+    ),
+) -> None:
+    """Analyse planned vs actual execution for a training week.
+
+    Matches each planned workout to an actual Strava activity by date,
+    then classifies execution as CLEAN / STRUGGLED / EASY / MISSED.
+
+    CLEAN    — pace and HR within planned ranges, completion ≥ 90%
+    STRUGGLED — pace too fast/slow, HR above ceiling, or session cut short
+    EASY     — pace well below floor AND HR well below lower bound
+    MISSED   — no running activity found on that date
+
+    Use in Step 2b of the weekly-plan-generate workflow to gate
+    quality progression decisions.
+
+    Examples:
+        resilio plan week-execution --week 5
+        resilio plan week-execution --week 4
+    """
+    result = assess_week_execution(week)
+
+    if isinstance(result, PlanError):
+        envelope = api_result_to_envelope(result, success_message="")
+        output_json(envelope)
+        raise typer.Exit(code=get_exit_code_from_envelope(envelope))
+
+    # Surface the note field when the week has no planned workouts yet
+    note = result.get("note")
+    if note:
+        msg = f"Week {week}: {note}"
+    else:
+        summary = result.get("summary", {})
+        msg = (
+            f"Week {week} execution: "
+            f"{summary.get('clean', 0)} clean, "
+            f"{summary.get('struggled', 0)} struggled, "
+            f"{summary.get('easy', 0)} easy, "
+            f"{summary.get('missed', 0)} missed"
+        )
+    envelope = create_success_envelope(message=msg, data=result)
+    output_json(envelope)
+    raise typer.Exit(code=0)
 
 
 @app.command(name="assess-period")
