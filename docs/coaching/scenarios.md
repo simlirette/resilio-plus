@@ -935,6 +935,41 @@ for your Monday climbing session - I'll move the tempo run to Wednesday instead.
 
 ---
 
+## Scenario 14: Weather-Driven Workout Rescheduling
+
+**Trigger**: (a) Athlete mentions weather or asks about swapping/moving a workout, OR (b) Coach is about to recommend specific days for quality or long workouts in the upcoming week (proactive check, even without an athlete prompt).
+
+### Wrong Pattern
+
+```
+Athlete: "It's gorgeous out today — should I swap my long run to today instead of Saturday?"
+Coach:   "What does Saturday look like weather-wise?"   ← ❌ asking the athlete what the coach can look up
+```
+
+### Correct Pattern
+
+```
+0. (If week-monday not yet known) resilio dates today → derive Monday from output
+1. resilio weather week --start <current-week-monday>
+2. Review daily forecast + any advisories for the week
+3. Cross-reference with planned workouts (resilio week)
+4. Synthesize and recommend proactively — no weather questions needed
+```
+
+### Example Response (correct)
+
+> "I checked the forecast for your week. Today looks ideal — clear skies, low humidity. Saturday has rain and gusts expected in the afternoon. Moving the long run to today makes sense both for conditions and recovery timing. Let's do that."
+
+### Key Rules
+
+- **Never ask** "What does the weather look like?" or "Is it raining?" — the CLI answers this.
+- **Never use WebSearch** for weather — `resilio weather week` uses a location-aware weather API already configured for the athlete.
+- Always cross-reference weather with the current week's planned workouts before recommending a swap.
+- If `resilio weather week` returns an error or location is not configured, proceed with training-logic-based scheduling and note: "I wasn't able to pull the forecast — let me know if conditions require adjusting the plan."
+- For non-scheduling weather impacts (heat >28°C, high humidity, poor air quality, icy surfaces), adjust pace targets or session format rather than only swapping days.
+
+---
+
 ## Tips for Effective Scenario-Based Coaching
 
 1. **Always start with data**: Run `resilio status` or `resilio today` before giving advice

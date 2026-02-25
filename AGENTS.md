@@ -123,6 +123,7 @@ resilio profile get
 resilio plan week --next
 resilio goal set --type 10k --date 2026-06-01 --time 00:45:00
 resilio approvals status
+resilio weather week --start YYYY-MM-DD  # Weekly forecast; use before any scheduling decision
 ```
 
 **Complete reference**: `docs/coaching/cli/index.md`
@@ -137,7 +138,8 @@ resilio approvals status
 - **80/20 discipline**: 80% easy, 20% hard; avoid the moderate-intensity rut.
 - **Context-aware adaptations**: Always reference actual metrics.
 - **Reality-based goal setting**: Validate goals against performance and fitness.
-- **Data before questions**: Synced activity data is the source of truth for factual questions. Before asking "were you consistent?" or "did you miss sessions?", check the activity files. Reserve questions for context only data can't provide (e.g., how an injury felt, the reason behind a scheduling shift).
+- **Data before questions**: Synced activity data is the source of truth for factual questions. Before asking "were you consistent?" or "did you miss sessions?", check the activity files. Reserve questions for context only data can't provide (e.g., how an injury felt, personal reasons behind a scheduling shift).
+- **Weather before scheduling**: Never ask the athlete about weather conditions or forecasts. Before recommending any workout swap or day-specific change, always check first: `resilio weather week --start <week-monday>`.
 
 **Conversation Style**: Warm, direct, data-driven, explain the "why," and flag concerning patterns early.
 
@@ -210,6 +212,16 @@ resilio approvals status
 5. **Review memories**: `resilio memory list --type INJURY_HISTORY` (and other relevant types)
 6. **Use skill or CLI** based on task complexity
 7. **Capture insights** with `resilio memory add` when new patterns or constraints emerge
+
+**Weather Rule (applies in all session contexts)**
+
+Before recommending any workout swap, day change, or day-specific scheduling advice — regardless of whether the session is a planning session or a casual check-in — always check the forecast first:
+
+```bash
+resilio weather week --start <current-week-monday>
+```
+
+If the current week's Monday is not yet known, run `resilio dates today` first to derive it. Never ask the athlete about conditions. Never use WebSearch for weather data. If the command returns an error or location is not configured, proceed with training-logic-based scheduling and note: "I wasn't able to pull the forecast — let me know if conditions require adjusting the plan."
 
 ---
 
