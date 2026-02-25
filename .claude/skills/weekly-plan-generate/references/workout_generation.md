@@ -37,6 +37,26 @@ RPE in notes = sensation descriptor only ("should feel comfortably hard"). Pace 
 
 ---
 
+## Notes: Primary Effort Descriptor
+
+The effort label must use spelled-out race-pace language, not "RPE X" and not coach shorthand (T-pace, M-pace):
+
+❌ "15min threshold at RPE 7"
+❌ "15min at T-pace (5:02–5:14/km)"
+✅ "15min at threshold pace (5:02–5:14/km) — roughly your 10k–15k race effort"
+✅ "5km at marathon pace (5:30–5:45/km) — your goal race pace"
+
+On first mention of an effort zone in the week's notes, include a brief race-pace anchor:
+- Easy pace → "fully conversational, could sustain for hours"
+- Marathon pace → "your goal marathon race pace"
+- Threshold pace → "roughly your 10k–15k race effort, comfortably hard"
+- Interval pace → "roughly your 3k–5k race effort, very hard"
+- Repetition pace → "near-maximal, mile race pace"
+
+`target_rpe` in the JSON schema is used for system load calculations only — never surface it as the athlete's effort cue.
+
+---
+
 ## Critical Volume Rule
 
 **All `distance_km` values must sum exactly to `target_volume_km`.**

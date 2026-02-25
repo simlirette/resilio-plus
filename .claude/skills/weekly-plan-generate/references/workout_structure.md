@@ -88,7 +88,7 @@ If using `intervals` array with explicit distances, sum interval distances to ge
   "warmup_km": 0.0,
   "cooldown_km": 0.0,
   "intervals": null,
-  "notes": "Full session at easy aerobic pace. HR cap ~75% max HR (e.g., 140 bpm for max HR 185) — if drifting above, slow to 6:45+/km."
+  "notes": "Full session at easy aerobic pace (fully conversational, could sustain for hours). HR cap ~75% max HR (e.g., 140 bpm for max HR 185) — if drifting above, slow to 6:45+/km."
 }
 ```
 
@@ -124,7 +124,7 @@ If using `intervals` array with explicit distances, sum interval distances to ge
       "type": "threshold"
     }
   ],
-  "notes": "15min threshold at 5:02-5:14/km (HR ~88-92% max HR, e.g., 163-170 for max HR 185). If HR climbs above 92% max HR (e.g., 170 bpm), cut block short and begin cooldown early."
+  "notes": "15min at threshold pace (5:02–5:14/km — roughly your 10k race effort, comfortably hard). HR target ~88-92% max HR (e.g., 163-170 for max HR 185). If HR climbs above 92% max HR (e.g., 170 bpm), cut block short and begin cooldown early."
 }
 ```
 
@@ -165,7 +165,7 @@ If using `intervals` array with explicit distances, sum interval distances to ge
     }
   ],
   "key_workout": true,
-  "notes": "20min threshold at 5:00-5:12/km (HR ~88-92% max HR). Checkpoint at 10min: if HR is above 92% max HR, ease to 5:25+/km for the second half."
+  "notes": "20min at threshold pace (5:00–5:12/km — roughly your 10k race effort, comfortably hard). HR target ~88-92% max HR. Checkpoint at 10min: if HR is above 92% max HR, ease to 5:25+/km for the second half."
 }
 ```
 
@@ -208,7 +208,7 @@ If using `intervals` array with explicit distances, sum interval distances to ge
     }
   ],
   "key_workout": true,
-  "notes": "4-6 strides in final 500m of WU. 400m jog recovery between reps. If pace drops >10 sec/km below target by rep 3, stop at 3 reps. If HR hasn't dropped below ~65% max HR before starting the next rep, extend recovery by 60s."
+  "notes": "4×1000m at interval pace (4:45–4:55/km — roughly your 3k–5k race effort, very hard). 4-6 strides in final 500m of WU. 400m jog recovery between reps. If pace drops >10 sec/km below target by rep 3, stop at 3 reps. If HR hasn't dropped below ~65% max HR before starting the next rep, extend recovery by 60s."
 }
 ```
 
@@ -248,7 +248,7 @@ If using `intervals` array with explicit distances, sum interval distances to ge
   "cooldown_km": 0.0,
   "intervals": null,
   "key_workout": true,
-  "notes": "5km easy, then 2×3km @ M-pace (5:30-5:45). If HR climbs above 155 during M-pace segments, drop to E-pace immediately. 1km easy between segments."
+  "notes": "5km easy, then 2×3km at marathon pace (5:30–5:45 — your goal race pace). If HR climbs above 155 during marathon-pace segments, drop to easy pace immediately. 1km easy between segments."
 }
 ```
 
@@ -281,7 +281,7 @@ M-pace segments in long runs are described in `notes` rather than `intervals` ar
   "warmup_km": 0.0,
   "cooldown_km": 0.0,
   "intervals": null,
-  "notes": "Entire run at easy aerobic pace. HR cap 155 bpm — if drifting above in final 3km, ease pace. Completion at easy effort beats hitting exact distance."
+  "notes": "Entire run at easy aerobic pace (fully conversational, could sustain for hours). HR cap 155 bpm — if drifting above in final 3km, ease pace. Completion at easy effort beats hitting exact distance."
 }
 ```
 
