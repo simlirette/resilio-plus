@@ -31,6 +31,8 @@ from resilio.schemas.guardrails import (
     IllnessRecoveryPlan,
     IllnessSeverity,
     ProgressionContext,
+    WeeklyTargetSuggestion,
+    AdjustmentType,
 )
 from resilio.core.guardrails.volume import (
     validate_quality_volume as core_validate_quality,
@@ -39,6 +41,7 @@ from resilio.core.guardrails.volume import (
     validate_weekly_volume_feasibility as core_validate_feasibility,
     calculate_safe_volume_range as core_calculate_safe_range,
     analyze_weekly_progression_context as core_analyze_progression_context,
+    suggest_weekly_target as core_suggest_weekly_target,
 )
 from resilio.core.guardrails.recovery import (
     calculate_break_return_plan as core_break_return,
@@ -266,6 +269,46 @@ def analyze_weekly_progression_context(
         return GuardrailsError(
             error_type="calculation_failed", message=f"Progression context analysis failed: {e}"
         )
+    except Exception as e:
+        return GuardrailsError(error_type="calculation_failed", message=f"Unexpected error: {e}")
+
+
+def suggest_weekly_target(
+    actual_prev_km: float,
+    macro_prev_km: float,
+    macro_next_km: float,
+    run_days: int,
+    is_recovery_transition: bool = False,
+    actual_prev2_km: Optional[float] = None,
+    prev2_is_recovery: bool = False,
+) -> Union[WeeklyTargetSuggestion, GuardrailsError]:
+    """Re-anchor next week's volume target to actual (not planned) previous week.
+
+    Optionally accepts N-2 actual for a 2-week weighted average (2:1 recent:prior)
+    to damp single-week noise from illness, travel, or catch-up weeks.
+    """
+    try:
+        if actual_prev_km < 0:
+            return GuardrailsError(error_type="invalid_input",
+                message=f"actual_prev_km must be non-negative, got {actual_prev_km}")
+        if macro_next_km <= 0:
+            return GuardrailsError(error_type="invalid_input",
+                message=f"macro_next_km must be positive, got {macro_next_km}")
+        if not (1 <= run_days <= 7):
+            return GuardrailsError(error_type="invalid_input",
+                message=f"run_days must be 1-7, got {run_days}")
+        if actual_prev2_km is not None and actual_prev2_km < 0:
+            return GuardrailsError(error_type="invalid_input",
+                message=f"actual_prev2_km must be non-negative if provided, got {actual_prev2_km}")
+        return core_suggest_weekly_target(
+            actual_prev_km=actual_prev_km, macro_prev_km=macro_prev_km,
+            macro_next_km=macro_next_km, run_days=run_days,
+            is_recovery_transition=is_recovery_transition,
+            actual_prev2_km=actual_prev2_km, prev2_is_recovery=prev2_is_recovery,
+        )
+    except ValueError as e:
+        return GuardrailsError(error_type="calculation_failed",
+            message=f"Weekly target calculation failed: {e}")
     except Exception as e:
         return GuardrailsError(error_type="calculation_failed", message=f"Unexpected error: {e}")
 

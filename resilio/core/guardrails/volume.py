@@ -14,6 +14,8 @@ from resilio.schemas.guardrails import (
     SafeVolumeRange,
     Violation,
     ViolationSeverity,
+    WeeklyTargetSuggestion,
+    AdjustmentType,
 )
 
 
@@ -990,3 +992,144 @@ def validate_workout_minimums(
             )
 
     return None
+
+
+def suggest_weekly_target(
+    actual_prev_km: float,
+    macro_prev_km: float,
+    macro_next_km: float,
+    run_days: int,
+    is_recovery_transition: bool = False,
+    actual_prev2_km: Optional[float] = None,
+    prev2_is_recovery: bool = False,
+) -> WeeklyTargetSuggestion:
+    """Suggest next week's volume target anchored to actual (not planned) previous week.
+
+    Uses a 2-week weighted average (2:1 recent:prior) when N-2 data is provided and
+    N-2 was not a recovery week. This damps single-week noise (illness, travel, catch-up)
+    in line with Pfitzinger's multi-week block philosophy.
+    """
+
+    # Special case 1: Week 1 — no prior data
+    if actual_prev_km == 0 or macro_prev_km == 0:
+        planned_delta_km = round(macro_next_km - macro_prev_km, 2)
+        return WeeklyTargetSuggestion(
+            actual_prev_km=actual_prev_km, actual_prev2_km=actual_prev2_km,
+            effective_actual_km=actual_prev_km, prev2_included=False,
+            macro_prev_km=macro_prev_km, macro_next_km=macro_next_km,
+            planned_delta_km=planned_delta_km, actual_based_target_km=macro_next_km,
+            safety_ceiling_km=None, macro_ceiling_km=round(macro_next_km * 1.25, 2),
+            suggested_target_km=macro_next_km, macro_target_km=macro_next_km,
+            macro_deviation_km=0.0, macro_deviation_pct=0.0,
+            adjustment_type=AdjustmentType.FIRST_WEEK,
+            reasoning="No previous actual data. Using macro plan target as-is.",
+        )
+
+    # Special case 2: Recovery transition — use macro_next as-is
+    if is_recovery_transition:
+        return WeeklyTargetSuggestion(
+            actual_prev_km=actual_prev_km, actual_prev2_km=actual_prev2_km,
+            effective_actual_km=actual_prev_km, prev2_included=False,
+            macro_prev_km=macro_prev_km, macro_next_km=macro_next_km,
+            planned_delta_km=round(macro_next_km - macro_prev_km, 2),
+            actual_based_target_km=macro_next_km, safety_ceiling_km=None,
+            macro_ceiling_km=round(macro_next_km * 1.25, 2),
+            suggested_target_km=macro_next_km, macro_target_km=macro_next_km,
+            macro_deviation_km=0.0, macro_deviation_pct=0.0,
+            adjustment_type=AdjustmentType.RECOVERY_TRANSITION,
+            reasoning=(
+                f"Recovery-to-build transition (macro recovery: {macro_prev_km}km, "
+                f"actual: {actual_prev_km}km). Using macro target to avoid "
+                f"amplifying the large recovery→build delta."
+            ),
+        )
+
+    # Compute effective actual: 2-week weighted average (2:1) if N-2 available and normal
+    use_prev2 = (
+        actual_prev2_km is not None
+        and actual_prev2_km > 0
+        and not prev2_is_recovery
+    )
+    if use_prev2:
+        effective_actual_km = round((2 * actual_prev_km + actual_prev2_km) / 3, 2)
+        avg_note = (
+            f"2-week weighted avg: (2×{actual_prev_km} + {actual_prev2_km}) / 3 = {effective_actual_km}km"
+        )
+    else:
+        effective_actual_km = actual_prev_km
+        avg_note = f"Single-week actual: {actual_prev_km}km"
+
+    # Core calculation (all downstream uses effective_actual_km)
+    planned_delta_km = round(macro_next_km - macro_prev_km, 2)
+    actual_based_target_km = round(effective_actual_km + planned_delta_km, 2)
+    macro_ceiling_km = round(macro_next_km * 1.25, 2)
+
+    if planned_delta_km <= 0:
+        # Taper or reduction — no ceiling
+        safety_ceiling_km = None
+        suggested_target_km = round(min(actual_based_target_km, macro_ceiling_km), 1)
+        ceiling_label = "none (reduction week)"
+    else:
+        ten_pct = round(effective_actual_km * 1.10, 2)
+        pfitz = round(effective_actual_km + (1.6 * run_days), 2)
+        safety_ceiling_km = round(min(ten_pct, pfitz), 2)
+        suggested_target_km = round(
+            min(actual_based_target_km, safety_ceiling_km, macro_ceiling_km), 1
+        )
+        ceiling_label = (
+            f"10% rule ({ten_pct}km)" if safety_ceiling_km == ten_pct
+            else f"Pfitzinger ({pfitz}km = {effective_actual_km}+1.6×{run_days})"
+        )
+
+    macro_deviation_km = round(suggested_target_km - macro_next_km, 1)
+    macro_deviation_pct = round((macro_deviation_km / macro_next_km) * 100, 1)
+
+    # Adherence classification: based on last week's raw actual vs macro (not averaged)
+    adherence_ratio = actual_prev_km / macro_prev_km
+    if 0.90 <= adherence_ratio <= 1.15:
+        adjustment_type = AdjustmentType.ALIGNED
+    elif adherence_ratio > 1.15:
+        adjustment_type = AdjustmentType.OVERSHOOT_ADJUSTED
+    else:
+        adjustment_type = AdjustmentType.UNDERSHOOT_CAPPED
+
+    pct_diff = round((adherence_ratio - 1) * 100, 1)
+    direction = "more" if pct_diff >= 0 else "less"
+
+    if adjustment_type == AdjustmentType.ALIGNED:
+        reasoning = (
+            f"Previous week adherence within normal range "
+            f"({actual_prev_km}km actual vs {macro_prev_km}km macro, {abs(pct_diff):.1f}% {direction}). "
+            f"{avg_note}. Macro delta preserved (+{planned_delta_km}km). "
+            f"Suggested {suggested_target_km}km ≈ macro {macro_next_km}km."
+        )
+    elif adjustment_type == AdjustmentType.OVERSHOOT_ADJUSTED:
+        reasoning = (
+            f"Athlete ran {abs(pct_diff):.1f}% more than macro "
+            f"({actual_prev_km}km vs {macro_prev_km}km). "
+            f"{avg_note}. "
+            f"Anchoring to effective actual: {effective_actual_km} + {planned_delta_km} = {actual_based_target_km}km. "
+            f"Ceiling ({ceiling_label}) → {suggested_target_km}km "
+            f"({macro_deviation_pct:+.1f}% vs macro {macro_next_km}km)."
+        )
+    else:
+        spike_pct = round((macro_next_km / effective_actual_km - 1) * 100, 1)
+        reasoning = (
+            f"Athlete ran {abs(pct_diff):.1f}% less than macro "
+            f"({actual_prev_km}km vs {macro_prev_km}km). "
+            f"{avg_note}. "
+            f"Macro target ({macro_next_km}km) would be a +{spike_pct:.1f}% spike over effective actual. "
+            f"Anchoring: {effective_actual_km} + {planned_delta_km} = {actual_based_target_km}km. "
+            f"Ceiling ({ceiling_label}) → {suggested_target_km}km."
+        )
+
+    return WeeklyTargetSuggestion(
+        actual_prev_km=actual_prev_km, actual_prev2_km=actual_prev2_km,
+        effective_actual_km=effective_actual_km, prev2_included=use_prev2,
+        macro_prev_km=macro_prev_km, macro_next_km=macro_next_km,
+        planned_delta_km=planned_delta_km, actual_based_target_km=actual_based_target_km,
+        safety_ceiling_km=safety_ceiling_km, macro_ceiling_km=macro_ceiling_km,
+        suggested_target_km=suggested_target_km, macro_target_km=macro_next_km,
+        macro_deviation_km=macro_deviation_km, macro_deviation_pct=macro_deviation_pct,
+        adjustment_type=adjustment_type, reasoning=reasoning,
+    )

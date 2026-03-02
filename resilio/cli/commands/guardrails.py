@@ -21,6 +21,7 @@ from resilio.api.guardrails import (
     calculate_race_recovery,
     generate_illness_recovery_plan,
     analyze_weekly_progression_context,
+    suggest_weekly_target,
 )
 from resilio.cli.errors import api_result_to_envelope, get_exit_code_from_envelope
 from resilio.cli.output import output_json
@@ -252,6 +253,73 @@ def analyze_progression_command(
     # Exit with appropriate code (always 0 for context provision, not validation)
     exit_code = get_exit_code_from_envelope(envelope)
     raise typer.Exit(code=exit_code)
+
+
+@app.command(name="suggest-weekly-target")
+def suggest_weekly_target_command(
+    ctx: typer.Context,
+    actual_prev: float = typer.Option(..., "--actual-prev",
+        help="Actual km athlete ran last week (N-1)"),
+    macro_prev: float = typer.Option(..., "--macro-prev",
+        help="Macro plan target for last week (km)"),
+    macro_next: float = typer.Option(..., "--macro-next",
+        help="Macro plan target for next week (km)"),
+    run_days: int = typer.Option(..., "--run-days",
+        help="Planned run days for next week"),
+    recovery_transition: bool = typer.Option(False, "--recovery-transition",
+        help="Set if previous week (N-1) was a recovery week"),
+    actual_prev2: Optional[float] = typer.Option(None, "--actual-prev2",
+        help="Actual km athlete ran two weeks ago (N-2). When provided, uses a 2:1 "
+             "weighted average to damp single-week noise. Omit for Week 2 or when "
+             "N-2 was a recovery week (use --prev2-is-recovery instead)."),
+    prev2_is_recovery: bool = typer.Option(False, "--prev2-is-recovery",
+        help="Set if week N-2 was a recovery week (excludes it from the average)"),
+) -> None:
+    """Suggest next week's volume target anchored to actual (not planned) previous week.
+
+    Preserves macro plan's intended progression delta but applies it to what the
+    athlete actually ran. Uses a 2-week weighted average (2:1 N-1:N-2) when N-2
+    data is provided, to damp single-week noise from illness, travel, or catch-up
+    weeks. Applies 10%/Pfitzinger safety ceilings for build weeks.
+
+    Examples:
+        # Overshoot: athlete ran 39.6 (N-1), 35 (N-2), macro said 36, next macro 40
+        resilio guardrails suggest-weekly-target \\
+          --actual-prev 39.6 --actual-prev2 35 --macro-prev 36 --macro-next 40 --run-days 4
+        # -> effective_actual = (2x39.6 + 35)/3 = 38.1km
+
+        # Undershoot (illness N-1): athlete ran 18 (N-1), 35 (N-2), macro said 36
+        resilio guardrails suggest-weekly-target \\
+          --actual-prev 18 --actual-prev2 35 --macro-prev 36 --macro-next 40 --run-days 4
+        # -> effective_actual = (2x18 + 35)/3 = 23.7km (not 18km alone)
+
+        # Recovery transition (prev week was recovery, no N-2 averaging)
+        resilio guardrails suggest-weekly-target \\
+          --actual-prev 30 --macro-prev 28 --macro-next 38 --run-days 4 --recovery-transition
+
+        # Week 2 (no N-2 data): N-2 omitted, fallback to N-1 only
+        resilio guardrails suggest-weekly-target \\
+          --actual-prev 28 --macro-prev 30 --macro-next 33 --run-days 4
+    """
+    result = suggest_weekly_target(
+        actual_prev_km=actual_prev, macro_prev_km=macro_prev,
+        macro_next_km=macro_next, run_days=run_days,
+        is_recovery_transition=recovery_transition,
+        actual_prev2_km=actual_prev2, prev2_is_recovery=prev2_is_recovery,
+    )
+
+    if hasattr(result, "suggested_target_km"):
+        avg_note = ", 2-wk avg" if result.prev2_included else ""
+        msg = (
+            f"Suggested target: {result.suggested_target_km}km "
+            f"(macro: {result.macro_target_km}km, type: {result.adjustment_type.value}{avg_note})"
+        )
+    else:
+        msg = "Weekly target suggestion failed"
+
+    envelope = api_result_to_envelope(result, success_message=msg)
+    output_json(envelope)
+    raise typer.Exit(code=get_exit_code_from_envelope(envelope))
 
 
 @app.command(name="long-run")

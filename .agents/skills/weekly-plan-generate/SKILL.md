@@ -62,6 +62,36 @@ guidelines (e.g., "max 2 quality sessions", "long run 25-30%", "80% easy intensi
 1. If `workout_structure_hints.long_run.target_km` is set → use it as the long run distance directly
 2. Otherwise → derive from `pct_range` against the week's `target_volume_km`
 
+1.5. Adjust target volume for actual adherence (skip for Week 1 or explicit volume override in notes):
+
+```bash
+# N-1: actual km and macro target
+resilio plan week-execution --week <N-1> | \
+  jq '[.data.executions[] | select(.matched == true) | .actual_distance_km] | add // 0'
+resilio plan week --week <N-1> | jq '.data.weeks[0].target_volume_km'
+
+# N-2: actual km and whether it was a recovery week (omit --actual-prev2 if week doesn't exist)
+resilio plan week-execution --week <N-2> | \
+  jq '[.data.executions[] | select(.matched == true) | .actual_distance_km] | add // 0'
+resilio plan week --week <N-2> | jq '.data.weeks[0].is_recovery_week'
+
+# Suggest adjusted target (include --actual-prev2 when N-2 exists and is not recovery)
+resilio guardrails suggest-weekly-target \
+  --actual-prev <actual_prev_km> \
+  --actual-prev2 <actual_prev2_km> \
+  --macro-prev <macro_prev_km> \
+  --macro-next <target_volume_km_from_step_1> \
+  --run-days <max_run_days_per_week> \
+  [--recovery-transition]
+  [--prev2-is-recovery]
+```
+
+**Replace `target_volume_km` from Step 1 with `suggested_target_km` for all downstream steps.**
+If `prev2_included` is true, note the effective average in your rationale.
+If `adjustment_type` is `OVERSHOOT_ADJUSTED` or `UNDERSHOOT_CAPPED`, note the deviation in your coaching rationale.
+
+See `references/volume_progression_weekly.md §Actual vs. Planned Baseline` for rationale and examples.
+
 2. Load current metrics and recent response:
 
 ```bash

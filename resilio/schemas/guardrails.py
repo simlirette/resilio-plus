@@ -42,6 +42,16 @@ class IllnessSeverity(str, Enum):
     SEVERE = "severe"  # 8+ days, significant impact
 
 
+class AdjustmentType(str, Enum):
+    """How the weekly target was adjusted relative to the macro plan."""
+
+    FIRST_WEEK = "FIRST_WEEK"                  # No prior actual data; use macro as-is
+    ALIGNED = "ALIGNED"                        # Adherence within 90-115%; macro delta preserved
+    OVERSHOOT_ADJUSTED = "OVERSHOOT_ADJUSTED"  # Ran >115% of macro; anchor to effective actual
+    UNDERSHOOT_CAPPED = "UNDERSHOOT_CAPPED"    # Ran <90% of macro; anchor + safety ceiling
+    RECOVERY_TRANSITION = "RECOVERY_TRANSITION"  # Recovery→build; use macro to avoid amplifying delta
+
+
 # ============================================================
 # SUPPORTING TYPES
 # ============================================================
@@ -574,3 +584,24 @@ class ProgressionContext(BaseModel):
                 "methodology_references": [],
             }
         }
+
+
+class WeeklyTargetSuggestion(BaseModel):
+    """Suggested weekly volume target anchored to actual (not planned) previous week."""
+
+    actual_prev_km: float
+    actual_prev2_km: Optional[float]     # N-2 actual (None if not provided / not used)
+    effective_actual_km: float           # weighted average used: (2×N-1 + N-2)/3, or N-1 alone
+    prev2_included: bool                 # True if N-2 was factored into effective_actual
+    macro_prev_km: float
+    macro_next_km: float
+    planned_delta_km: float
+    actual_based_target_km: float
+    safety_ceiling_km: Optional[float]   # None for taper/recovery
+    macro_ceiling_km: float
+    suggested_target_km: float
+    macro_target_km: float               # original macro (for reference)
+    macro_deviation_km: float
+    macro_deviation_pct: float
+    adjustment_type: AdjustmentType
+    reasoning: str
