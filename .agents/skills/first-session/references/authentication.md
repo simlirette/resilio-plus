@@ -103,6 +103,10 @@ resilio auth status
 
 ## Troubleshooting
 
+### Q: Athlete doesn't have a Strava account
+
+**Response**: Strava authentication is required for data-driven coaching. Guide the athlete to create a free account at strava.com and record a few activities before proceeding. Without Strava data, the system cannot calculate CTL, detect patterns, or provide personalized coaching.
+
 ### Q: Authorization code expired
 
 **Scenario**: Athlete took too long (>10 minutes) to provide code.

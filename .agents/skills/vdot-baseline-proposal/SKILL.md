@@ -21,6 +21,7 @@ If missing, return a blocking checklist and stop.
 - Return an `athlete_prompt` for the coach to ask and capture approval.
 - If the athlete declines or requests changes, the coach will re-run this skill with notes; treat notes as hard constraints and generate a new proposal.
 - If new constraints are provided (injury, schedule limits), assume the coach updated profile/memory before re-run.
+- If any CLI command fails (exit code ≠ 0), include the error output in your response and return a blocking checklist.
 
 ## Metric explainer rule (athlete-facing)
 
@@ -42,7 +43,7 @@ One-line definitions for other metrics:
 1. Gather evidence:
 
 ```bash
-resilio profile get
+resilio profile get          # Includes personal_bests section
 resilio status
 resilio vdot estimate-current --lookback-days 90  # Longer lookback for continuity analysis
 resilio activity list --since 30d --sport run
