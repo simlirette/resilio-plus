@@ -62,7 +62,7 @@ guidelines (e.g., "max 2 quality sessions", "long run 25-30%", "80% easy intensi
 1. If `workout_structure_hints.long_run.target_km` is set → use it as the long run distance directly
 2. Otherwise → derive from `pct_range` against the week's `target_volume_km`
 
-1.5. Adjust target volume for actual adherence (skip for Week 1 or explicit volume override in notes):
+1.5. Volume context — AI coaching judgment within guardrail ceilings (skip for Week 1 or explicit volume override in notes):
 
 ```bash
 # N-1: actual km and macro target
@@ -70,27 +70,41 @@ resilio plan week-execution --week <N-1> | \
   jq '[.data.executions[] | select(.matched == true) | .actual_distance_km] | add // 0'
 resilio plan week --week <N-1> | jq '.data.weeks[0].target_volume_km'
 
-# N-2: actual km and whether it was a recovery week (omit --actual-prev2 if week doesn't exist)
+# N-2: actual km, macro target, and whether it was a recovery week (omit if week doesn't exist)
 resilio plan week-execution --week <N-2> | \
   jq '[.data.executions[] | select(.matched == true) | .actual_distance_km] | add // 0'
-resilio plan week --week <N-2> | jq '.data.weeks[0].is_recovery_week'
+resilio plan week --week <N-2> | jq '.data.weeks[0].target_volume_km, .data.weeks[0].is_recovery_week'
 
-# Suggest adjusted target (include --actual-prev2 when N-2 exists and is not recovery)
+# Get volume context (include --actual-prev2 and --macro-prev2 when N-2 exists and is not recovery)
 resilio guardrails suggest-weekly-target \
   --actual-prev <actual_prev_km> \
   --actual-prev2 <actual_prev2_km> \
   --macro-prev <macro_prev_km> \
+  --macro-prev2 <macro_prev2_km> \
   --macro-next <target_volume_km_from_step_1> \
   --run-days <max_run_days_per_week> \
-  [--recovery-transition]
+  [--recovery-transition] \
   [--prev2-is-recovery]
 ```
 
-**Replace `target_volume_km` from Step 1 with `suggested_target_km` for all downstream steps.**
-If `prev2_included` is true, note the effective average in your rationale.
-If `adjustment_type` is `OVERSHOOT_ADJUSTED` or `UNDERSHOOT_CAPPED`, note the deviation in your coaching rationale.
+The tool returns volume context. **You (the AI Coach) decide the target volume** using
+this context alongside the CTL/TSB/ACWR metrics from Step 2:
 
-See `references/volume_progression_weekly.md §Actual vs. Planned Baseline` for rationale and examples.
+| Field | Role |
+|---|---|
+| `hard_ceiling_km` | **Outer ceiling — never exceed.** `max(10%, Pfitzinger)` from N-1 actual. Always the more permissive of the two rules: below ~16×run_days km Pfitz wins; above that 10% wins. Both are marginal at high volume. |
+| `actual_prev_km` | What the athlete actually ran last week — your primary baseline. |
+| `macro_next_km` | Macro plan's intent for this week. |
+| `suggested_target_km` | Conservative formula anchor: `min(10%, Pfitz)` from weighted average. Right starting point for normal and undershoot cases. |
+| `overshoot_pattern` | True = N-1 AND N-2 both exceeded their respective macro targets by >10%. |
+
+**Core rules:**
+- Never exceed `hard_ceiling_km` (outer bound from Pfitzinger's rules).
+- **Normal/undershoot/illness**: use `min(suggested_target_km, hard_ceiling_km)` as your anchor. In illness cases the hard ceiling (anchored to low raw N-1) can be tighter than the formula suggestion — it always wins.
+- **When `overshoot_pattern: true`**: anchor target to `actual_prev_km` (not the formula's weighted-down average), then assess fatigue (TSB/ACWR/readiness) to pick the right scenario. See `references/volume_progression_weekly.md §Overshoot Scenarios`.
+- Run Step 3 (`analyze-progression`) with your chosen target to validate against CTL capacity.
+
+Set your chosen volume as `target_volume_km` for all downstream steps.
 
 2. Load current metrics and recent response:
 

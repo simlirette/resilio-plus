@@ -605,3 +605,15 @@ class WeeklyTargetSuggestion(BaseModel):
     macro_deviation_pct: float
     adjustment_type: AdjustmentType
     reasoning: str
+
+    # Ceilings computed from N-1 raw actual (not weighted average)
+    actual_10pct_ceiling_km: float       # actual_prev_km × 1.10
+    actual_pfitz_ceiling_km: float       # actual_prev_km + (1.6 × run_days)
+    # max() of the two: Pfitzinger says "10% OR 1.6km/session" (either sufficient).
+    # At low volumes Pfitzinger wins (more permissive); at high volumes 10% wins.
+    hard_ceiling_km: float               # max(actual_10pct_ceiling_km, actual_pfitz_ceiling_km)
+
+    # Multi-week adherence pattern
+    adherence_n1_pct: float              # (actual_prev_km / macro_prev_km − 1) × 100
+    adherence_n2_pct: Optional[float]    # same for N-2 if available
+    overshoot_pattern: bool              # True if both N-1 and N-2 exceeded macro by >10%

@@ -274,6 +274,11 @@ def suggest_weekly_target_command(
              "N-2 was a recovery week (use --prev2-is-recovery instead)."),
     prev2_is_recovery: bool = typer.Option(False, "--prev2-is-recovery",
         help="Set if week N-2 was a recovery week (excludes it from the average)"),
+    macro_prev2: Optional[float] = typer.Option(None, "--macro-prev2",
+        help="Macro plan target for N-2 week (km). Used as the exact denominator for "
+             "N-2 adherence percentage. When omitted, macro_prev is used as an "
+             "approximation. Provide whenever N-2 data is available for accurate "
+             "overshoot_pattern detection in progressive plans."),
 ) -> None:
     """Suggest next week's volume target anchored to actual (not planned) previous week.
 
@@ -285,12 +290,11 @@ def suggest_weekly_target_command(
     Examples:
         # Overshoot: athlete ran 39.6 (N-1), 35 (N-2), macro said 36, next macro 40
         resilio guardrails suggest-weekly-target \\
-          --actual-prev 39.6 --actual-prev2 35 --macro-prev 36 --macro-next 40 --run-days 4
-        # -> effective_actual = (2x39.6 + 35)/3 = 38.1km
+          --actual-prev 39.6 --actual-prev2 35 --macro-prev 36 --macro-prev2 33 --macro-next 40 --run-days 4
 
         # Undershoot (illness N-1): athlete ran 18 (N-1), 35 (N-2), macro said 36
         resilio guardrails suggest-weekly-target \\
-          --actual-prev 18 --actual-prev2 35 --macro-prev 36 --macro-next 40 --run-days 4
+          --actual-prev 18 --actual-prev2 35 --macro-prev 36 --macro-prev2 33 --macro-next 40 --run-days 4
         # -> effective_actual = (2x18 + 35)/3 = 23.7km (not 18km alone)
 
         # Recovery transition (prev week was recovery, no N-2 averaging)
@@ -306,13 +310,33 @@ def suggest_weekly_target_command(
         macro_next_km=macro_next, run_days=run_days,
         is_recovery_transition=recovery_transition,
         actual_prev2_km=actual_prev2, prev2_is_recovery=prev2_is_recovery,
+        macro_prev2_km=macro_prev2,
     )
 
     if hasattr(result, "suggested_target_km"):
         avg_note = ", 2-wk avg" if result.prev2_included else ""
+        adh_n2_str = f"{result.adherence_n2_pct:+.1f}%" if result.adherence_n2_pct is not None else "N/A"
+        is_taper = result.safety_ceiling_km is None and result.adjustment_type.value not in (
+            "FIRST_WEEK", "RECOVERY_TRANSITION"
+        )
+        # Identify which rule drove the hard ceiling (max picks the more permissive)
+        if result.actual_pfitz_ceiling_km >= result.actual_10pct_ceiling_km:
+            ceiling_winner = "Pfitzinger more permissive (absolute load regime)"
+        else:
+            ceiling_winner = "10% more permissive (cumulative load regime)"
+        ceiling_display = (
+            "N/A (reduction week)" if is_taper
+            else f"{result.hard_ceiling_km}km  [{ceiling_winner}]"
+        )
         msg = (
             f"Suggested target: {result.suggested_target_km}km "
-            f"(macro: {result.macro_target_km}km, type: {result.adjustment_type.value}{avg_note})"
+            f"(macro: {result.macro_target_km}km, type: {result.adjustment_type.value}{avg_note})\n"
+            f"Outer ceiling (max of two Pfitzinger rules, N-1 actual): {ceiling_display}\n"
+            f"  → 10% rule from actual:        {result.actual_10pct_ceiling_km}km\n"
+            f"  → Pfitzinger from actual:       {result.actual_pfitz_ceiling_km}km\n"
+            f"Adherence N-1 / N-2:             {result.adherence_n1_pct:+.1f}% / {adh_n2_str}\n"
+            f"Consistent overshoot pattern:     {result.overshoot_pattern}\n"
+            f"Advisory suggestion:              {result.suggested_target_km}km  ← conservative anchor, not a prescription"
         )
     else:
         msg = "Weekly target suggestion failed"

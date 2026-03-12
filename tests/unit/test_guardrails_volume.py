@@ -16,7 +16,9 @@ from resilio.core.guardrails.volume import (
     validate_weekly_volume_feasibility,
     calculate_safe_volume_range,
     analyze_weekly_progression_context,
+    suggest_weekly_target,
 )
+from resilio.schemas.guardrails import AdjustmentType
 
 
 # ============================================================
@@ -873,3 +875,180 @@ class TestProgressionContextAnalysis:
         assert len(context.methodology_references) > 0
         assert any("pfitzinger" in ref.lower() for ref in context.methodology_references)
         assert any("methodology.md" in ref for ref in context.methodology_references)
+
+
+# ============================================================
+# SUGGEST WEEKLY TARGET TESTS
+# ============================================================
+
+
+class TestSuggestWeeklyTarget:
+    """Tests for suggest_weekly_target() — volume ceiling and adherence pattern logic."""
+
+    # --------------------------------------------------------
+    # Special cases
+    # --------------------------------------------------------
+
+    def test_week1_no_prior_data(self):
+        """Week 1: actual_prev=0 → use macro as-is, no ceilings."""
+        result = suggest_weekly_target(
+            actual_prev_km=0, macro_prev_km=0, macro_next_km=30, run_days=4
+        )
+        assert result.adjustment_type == AdjustmentType.FIRST_WEEK
+        assert result.suggested_target_km == 30.0
+        assert result.overshoot_pattern is False
+        # Ceilings set to a large sentinel (macro × 1.25), not meaningful for Week 1
+        assert result.hard_ceiling_km == round(30 * 1.25, 2)
+
+    def test_recovery_transition(self):
+        """Recovery transition → use macro_next unchanged, no ceiling constraint."""
+        result = suggest_weekly_target(
+            actual_prev_km=28, macro_prev_km=25, macro_next_km=38,
+            run_days=4, is_recovery_transition=True
+        )
+        assert result.adjustment_type == AdjustmentType.RECOVERY_TRANSITION
+        assert result.suggested_target_km == 38.0
+        assert result.overshoot_pattern is False
+
+    # --------------------------------------------------------
+    # Hard ceiling: max(10%, Pfitzinger) from raw N-1
+    # --------------------------------------------------------
+
+    def test_hard_ceiling_low_volume_pfitz_wins(self):
+        """Low volume (18km, 4 days): Pfitzinger more permissive → hard ceiling = Pfitz."""
+        result = suggest_weekly_target(
+            actual_prev_km=18, macro_prev_km=36, macro_next_km=40, run_days=4,
+            actual_prev2_km=35, macro_prev2_km=33,
+        )
+        expected_10pct = round(18 * 1.10, 2)  # 19.8
+        expected_pfitz = round(18 + 1.6 * 4, 2)  # 24.4
+        assert result.actual_10pct_ceiling_km == expected_10pct
+        assert result.actual_pfitz_ceiling_km == expected_pfitz
+        assert result.hard_ceiling_km == expected_pfitz  # max picks Pfitz at low volume
+
+    def test_hard_ceiling_high_volume_10pct_wins(self):
+        """High volume above crossover (70km, 4 days): 10% more permissive → hard ceiling = 10%."""
+        # Crossover at 16 × 4 = 64km. At 70km, 10% = 77km > Pfitz = 76.4km.
+        result = suggest_weekly_target(
+            actual_prev_km=70, macro_prev_km=68, macro_next_km=72, run_days=4,
+        )
+        expected_10pct = round(70 * 1.10, 2)  # 77.0
+        expected_pfitz = round(70 + 1.6 * 4, 2)  # 76.4
+        assert result.actual_10pct_ceiling_km == expected_10pct
+        assert result.actual_pfitz_ceiling_km == expected_pfitz
+        assert result.hard_ceiling_km == expected_10pct  # max picks 10% at high volume
+
+    def test_hard_ceiling_uses_raw_n1_not_weighted_avg(self):
+        """hard_ceiling_km must use N-1 raw actual, not the 2-week weighted average."""
+        result = suggest_weekly_target(
+            actual_prev_km=18, macro_prev_km=36, macro_next_km=40, run_days=4,
+            actual_prev2_km=35, macro_prev2_km=33,
+        )
+        # Weighted avg = (2×18 + 35)/3 = 23.67 → Pfitz from avg = 23.67 + 6.4 = 30.07
+        # Raw N-1 Pfitz = 18 + 6.4 = 24.4 — must use 24.4, not 30.07
+        assert result.actual_pfitz_ceiling_km == round(18 + 1.6 * 4, 2)
+        assert result.hard_ceiling_km == round(18 + 1.6 * 4, 2)
+
+    # --------------------------------------------------------
+    # Illness case: suggested_target can exceed hard_ceiling
+    # --------------------------------------------------------
+
+    def test_illness_suggested_can_exceed_hard_ceiling(self):
+        """Illness (N-1=18km, N-2=35km): suggested_target (weighted-avg anchor) may exceed
+        hard_ceiling (raw N-1 anchor). Both values are returned; AI Coach applies the min."""
+        result = suggest_weekly_target(
+            actual_prev_km=18, macro_prev_km=36, macro_next_km=40, run_days=4,
+            actual_prev2_km=35, macro_prev2_km=33,
+        )
+        assert result.adjustment_type == AdjustmentType.UNDERSHOOT_CAPPED
+        # suggested_target uses weighted average (23.67km base) → ~26km
+        assert result.suggested_target_km > result.hard_ceiling_km
+        # hard_ceiling from raw N-1 (18km) → 24.4km
+        assert result.hard_ceiling_km == pytest.approx(24.4, abs=0.1)
+
+    # --------------------------------------------------------
+    # Overshoot detection and adherence pattern
+    # --------------------------------------------------------
+
+    def test_overshoot_pattern_true_both_weeks_exceed(self):
+        """overshoot_pattern=True only when BOTH N-1 and N-2 exceeded macro by >10%."""
+        # N-1: 50km vs 43km macro = +16.3% (>10%) ✓
+        # N-2: 46km vs 39km macro = +18.0% (>10%) ✓  — uses macro_prev2_km=39 as denominator
+        result = suggest_weekly_target(
+            actual_prev_km=50, macro_prev_km=43, macro_next_km=48, run_days=4,
+            actual_prev2_km=46, macro_prev2_km=39,
+        )
+        assert result.adherence_n1_pct == pytest.approx((50 / 43 - 1) * 100, abs=0.2)
+        assert result.adherence_n2_pct == pytest.approx((46 / 39 - 1) * 100, abs=0.2)
+        assert result.overshoot_pattern is True
+
+    def test_overshoot_pattern_false_n2_uses_correct_denominator(self):
+        """Correct N-2 denominator (macro_prev2_km) prevents false overshoot detection.
+
+        Without macro_prev2_km, N-2 adherence uses macro_prev (43km), giving:
+          (44.5 / 43 - 1) × 100 = +3.5% → no overshoot
+        With macro_prev2_km=39: (44.5 / 39 - 1) × 100 = +14.1% → overshoot detected.
+        This test verifies the correct denominator is used.
+        """
+        result_with_correct_denom = suggest_weekly_target(
+            actual_prev_km=48, macro_prev_km=43, macro_next_km=48, run_days=4,
+            actual_prev2_km=44.5, macro_prev2_km=39,
+        )
+        result_with_approx_denom = suggest_weekly_target(
+            actual_prev_km=48, macro_prev_km=43, macro_next_km=48, run_days=4,
+            actual_prev2_km=44.5,  # no macro_prev2_km → falls back to macro_prev=43
+        )
+        # Correct denominator (39km): 44.5/39 = +14.1% → overshoot detected
+        assert result_with_correct_denom.adherence_n2_pct == pytest.approx(14.1, abs=0.2)
+        # Approximate denominator (43km): 44.5/43 = +3.5% → missed
+        assert result_with_approx_denom.adherence_n2_pct == pytest.approx(3.5, abs=0.2)
+        # Only the correctly-denominated result detects the pattern
+        assert result_with_correct_denom.overshoot_pattern is True
+        assert result_with_approx_denom.overshoot_pattern is False
+
+    def test_overshoot_pattern_false_n2_is_recovery(self):
+        """overshoot_pattern=False when N-2 is a recovery week (can't confirm 2-week pattern)."""
+        result = suggest_weekly_target(
+            actual_prev_km=50, macro_prev_km=43, macro_next_km=48, run_days=4,
+            actual_prev2_km=25, prev2_is_recovery=True,
+        )
+        assert result.adherence_n2_pct is None
+        assert result.overshoot_pattern is False
+
+    def test_overshoot_pattern_false_n1_only_exceeds(self):
+        """overshoot_pattern=False when only N-1 exceeds macro (need 2 consecutive weeks)."""
+        result = suggest_weekly_target(
+            actual_prev_km=50, macro_prev_km=43, macro_next_km=48, run_days=4,
+            actual_prev2_km=38, macro_prev2_km=39,  # N-2 below macro
+        )
+        assert result.adherence_n1_pct > 10.0
+        assert result.adherence_n2_pct is not None and result.adherence_n2_pct < 10.0
+        assert result.overshoot_pattern is False
+
+    # --------------------------------------------------------
+    # Taper / reduction week
+    # --------------------------------------------------------
+
+    def test_taper_week_no_safety_ceiling(self):
+        """Taper week (macro_next < macro_prev): no safety ceiling, hard ceiling still computed."""
+        result = suggest_weekly_target(
+            actual_prev_km=50, macro_prev_km=50, macro_next_km=35, run_days=4
+        )
+        assert result.planned_delta_km < 0
+        assert result.safety_ceiling_km is None
+        # hard_ceiling still available as a reference value
+        assert result.hard_ceiling_km > 0
+
+    # --------------------------------------------------------
+    # Aligned adherence
+    # --------------------------------------------------------
+
+    def test_aligned_macro_delta_preserved(self):
+        """Aligned adherence (90-115% of macro): macro progression delta preserved."""
+        result = suggest_weekly_target(
+            actual_prev_km=36, macro_prev_km=36, macro_next_km=40, run_days=4
+        )
+        assert result.adjustment_type == AdjustmentType.ALIGNED
+        # suggested = effective_actual (36) + planned_delta (4) = 40, capped by ceilings
+        assert result.suggested_target_km <= 40.0
+        assert result.suggested_target_km >= 38.0  # within reasonable range

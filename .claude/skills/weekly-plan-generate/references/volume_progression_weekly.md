@@ -4,11 +4,14 @@ Week-to-week volume progression decisions based on training response, adaptation
 
 ---
 
-## Actual vs. Planned Baseline (The Fundamental Rule)
+## Actual vs. Planned Baseline
 
-> **Why this matters**: The body adapts to actual training load, not scheduled load. The macro plan's progression was designed assuming perfect adherence. When actual differs, blindly using macro targets creates dangerous spikes (undershoot) or missed progression (overshoot).
+> **Philosophy: CLI provides constraints, AI Coach decides.**
+> `suggest-weekly-target` returns a context package: actual volumes, macro intent, safety ceilings, adherence pattern. `hard_ceiling_km` is a hard limit; `suggested_target_km` is an advisory anchor for illness/recovery cases. The AI Coach decides the target using all available data.
+
+> **Why this matters**: The body adapts to actual training load, not scheduled load. When actual differs from planned, blindly using macro targets creates dangerous spikes (undershoot) or missed progression (overshoot).
 >
-> **Why two weeks?** A single week can be noisy — illness, travel, a catch-up surge. A 2:1 weighted average (N-1 counts double, N-2 counts once) damps outliers the same way ACWR uses chronic vs. acute windows. Going further back adds noise without signal; CTL already captures the deeper trend.
+> **Why two weeks?** A single week can be noisy — illness, travel, a catch-up surge. A 2:1 weighted average (N-1 counts double, N-2 counts once) damps outliers the same way ACWR uses chronic vs. acute windows.
 
 ### Command
 
@@ -17,66 +20,106 @@ resilio guardrails suggest-weekly-target \
   --actual-prev <N-1_KM> \
   --actual-prev2 <N-2_KM> \
   --macro-prev <MACRO_N-1_KM> \
+  --macro-prev2 <MACRO_N-2_KM> \
   --macro-next <MACRO_N_KM> \
   --run-days <RUN_DAYS> \
   [--recovery-transition] \
   [--prev2-is-recovery]
 ```
 
-Use `suggested_target_km` from the response. Replace `target_volume_km` from the macro for all downstream steps. If `prev2_included: true`, note the effective average in your rationale.
+`--macro-prev2` is optional but important for accurate `overshoot_pattern` detection in progressive plans: without it, `adherence_n2_pct` uses `macro_prev` as an approximation, which underestimates N-2 adherence when the plan is building week-over-week.
+
+### Key Output Fields
+
+| Field | What it is | How to use it |
+|---|---|---|
+| `hard_ceiling_km` | `max(10%, Pfitz)` from N-1 raw actual | **Absolute maximum — never exceed** |
+| `actual_prev_km` | What athlete actually ran (N-1) | Your primary baseline for progression |
+| `suggested_target_km` | `min(10%, Pfitz)` from weighted avg | Conservative anchor — use for illness/undershoot |
+| `macro_next_km` | Macro plan's intent | Reference for structural progression |
+| `overshoot_pattern` | N-1 AND N-2 both >10% above macro | Signals consistent overperformance |
+
+### The Ceiling Design: Why `max()` for `hard_ceiling_km`
+
+Pfitzinger's actual rule: **"10% OR 1.6km per session per week"** — these are alternatives, not cumulative requirements.
+
+`hard_ceiling_km = max(actual × 1.10, actual + 1.6×run_days)`
+
+This is automatically volume-tier aware — no explicit branching needed:
+- **Crossover point**: `16 × run_days` km (64km for 4 days, 48km for 3 days)
+- **Below crossover (low/medium volume)**: Pfitzinger wins — 1.6km/session guideline is more permissive, matching "absolute load matters at low volumes"
+- **Above crossover (high volume)**: 10% wins — matches "cumulative load matters at high volumes"
+
+Example with 4 run days:
+| actual_prev | 10% ceiling | Pfitz ceiling | hard_ceiling (max) | rule |
+|---|---|---|---|---|
+| 18km | 19.8km | 24.4km | **24.4km** | Pfitz (+36% allowed) |
+| 35km | 38.5km | 41.4km | **41.4km** | Pfitz (+18% allowed) |
+| 50km | 55.0km | 56.4km | **56.4km** | Pfitz (+13% allowed) |
+| 70km | 77.0km | 76.4km | **77.0km** | 10% (+10% allowed) |
+
+The `suggested_target_km` (conservative formula path) still uses `min()` from the weighted average — that's the right anchor for illness recovery. The distinction is intentional:
+- `safety_ceiling_km` / `suggested_target_km`: conservative path (min, from weighted avg)
+- `hard_ceiling_km`: absolute maximum (max, from raw N-1)
 
 ### The Five Scenarios
 
-| Scenario | N-1 actual | N-2 actual | macro_prev | macro_next | effective | → suggested |
-|---|---|---|---|---|---|---|
-| Aligned (N-2 available) | 35.3km | 36.1km | 36km | 40km | 35.6km | 39.6km |
-| Overshoot (N-2 available) | 39.6km | 35.0km | 36km | 40km | 38.1km | **42.1km** |
-| Undershoot after illness (N-2 normal) | 18km | 35km | 36km | 40km | 23.7km | **26.1km** |
-| N-2 not available (Week 2) | 28km | — | 30km | 33km | 28km | 30.8km |
-| Recovery transition | 30km | — | 28km | 38km | — | 38km (macro) |
+| Scenario | N-1 | N-2 | macro_prev | macro_next | → AI target |
+|---|---|---|---|---|---|
+| Aligned | 35.3km | 36.1km | 36km | 40km | ~39–40km (macro delta preserved) |
+| Overshoot (consistent) | 48.1km | 39.6km | 43km | 48km | ~51km (anchor to N-1 +6%, ceiling 52.9km) |
+| Illness undershoot | 18km | 35km | 36km | 40km | ~26km (use suggested_target_km) |
+| Week 2 (no N-2) | 28km | — | 30km | 33km | ~31km |
+| Recovery transition | 30km | — | 28km | 38km | 38km (macro, hardcoded) |
 
-**Overshoot with N-2 example** (`OVERSHOOT_ADJUSTED`):
+**Formula trace — illness undershoot** (`UNDERSHOOT_CAPPED`):
 ```
-effective_actual = (2×39.6 + 35.0) / 3 = 38.1km
+effective_actual = (2×18 + 35) / 3 = 23.67km
 planned_delta    = 40 - 36 = +4km
-actual_target    = 38.1 + 4 = 42.1km
-10% ceiling      = 38.1 × 1.10 = 41.9km
-suggested        = min(42.1, 41.9) = 41.9km  ← safely capped
+safety_ceiling   = min(23.67×1.10, 23.67+6.4) = min(26.03, 30.07) = 26.03km
+suggested        = min(23.67+4, 26.03, macro_ceiling) = min(27.67, 26.03) = 26.0km
+hard_ceiling     = max(18×1.10, 18+6.4) = max(19.8, 24.4) = 24.4km
 ```
-*Without N-2 (N-1 only): 43.6km — slightly more aggressive, equally valid when no prior anomaly.*
+Key insight: `suggested_target_km` (26.0km) > `hard_ceiling_km` (24.4km) — the outer ceiling is
+tighter because it anchors to raw N-1 (18km), not the weighted average (23.67km).
+**→ AI Coach uses `min(suggested, hard_ceiling)` = 24.4km.** The athlete's body last did 18km;
+26km would exceed the outer ceiling.
 
-**Illness undershoot with N-2 example** (`UNDERSHOOT_CAPPED`):
+**Formula trace — consistent overshoot** (`OVERSHOOT_ADJUSTED`, use AI judgment):
 ```
-# Athlete sick N-1 (18km), normal N-2 (35km)
-effective_actual = (2×18 + 35) / 3 = 23.7km   ← not the full 35 (illness dampened fitness)
-planned_delta    = 40 - 36 = +4km
-actual_target    = 23.7 + 4 = 27.7km
-10% ceiling      = 23.7 × 1.10 = 26.1km
-suggested        = min(27.7, 26.1) = 26.1km  ← prevents aggressive jump after illness
+N-1 actual: 48.1km, N-2 actual: 39.6km, macro N-1: 43km, macro N: 48km, 4 run days
+effective_actual = (2×48.1 + 39.6) / 3 = 45.27km
+suggested        = min(45.27+5, 45.27×1.10) = min(50.27, 49.8) = 49.8km
+hard_ceiling     = max(48.1×1.10, 48.1+6.4) = max(52.91, 54.5) = 54.5km
+→ AI Coach: athlete already at 48.1, macro says 48. Check TSB/ACWR → choose ~51km (not 49.8)
 ```
-*Without N-2 (N-1 only): ceiling = 18×1.10 = 19.8km — too conservative for a one-week illness.*
 
-### Safety Ceilings (build weeks only)
+### §Overshoot Scenarios — When `overshoot_pattern: true`
 
-All ceilings are applied to `effective_actual_km` (the weighted average, not raw N-1).
+`overshoot_pattern: true` means N-1 AND N-2 both exceeded macro by >10%. Three possible situations:
 
-| Ceiling | Formula | Wins when |
-|---|---|---|
-| 10% rule | `effective_actual × 1.10` | Standard medium-high volume case |
-| Pfitzinger | `effective_actual + (1.6 × run_days)` | Low volume, many run days |
+**Scenario A — Ease back (fatigue accumulating)**
+Signs: TSB ≤ -20, ACWR ≥ 1.3, readiness low, or TSB declining 3+ weeks.
+Action: Hold near `actual_prev_km` or reduce slightly. "Consistency now protects the peak later."
 
-Take the more restrictive of the two. For taper/reduction weeks (negative delta), no ceiling applies.
+**Scenario B — Continue at athlete's actual pace (adapting well)**
+Signs: TSB -15 to -5, ACWR < 1.3, CTL growing steadily.
+Action: Target `actual_prev_km + 3–8%`. Anchor to N-1 actual, not the formula's weighted-down average.
+
+**Scenario C — Macro plan was too conservative (structural gap)**
+Signs: 3+ consecutive weeks >10% above macro, TSB healthy, CTL growing, no injury flags.
+Detect N-3: `resilio plan week-execution --week <N-3>` to confirm 3rd consecutive week.
+Action: Apply 6–10% from `actual_prev_km`. Flag to main agent that macro needs upward revision.
 
 ### When NOT to use N-2
 
-- N-2 was a planned recovery week (`is_recovery_week: true`) → pass `--prev2-is-recovery`; recovery volumes intentionally low and would drag the average down unfairly
-- N-2 doesn't exist (Week 2 of training plan) → omit `--actual-prev2`; function falls back to N-1 alone
+- N-2 was a planned recovery week (`is_recovery_week: true`) → pass `--prev2-is-recovery`
+- N-2 doesn't exist (Week 2) → omit `--actual-prev2`; falls back to N-1 alone
 
 ### Relationship to Step 3 (`analyze-progression`)
 
-Step 1.5 sets the **adjusted baseline target**. Step 3 still runs and validates the adjusted target against CTL capacity, risk factors, and Pfitzinger guidelines. Both are complementary:
-- **Step 1.5**: Re-anchors the starting point to what athlete actually ran (smoothed)
-- **Step 3**: Validates adjusted target against physiological capacity
+- **Step 1.5**: AI Coach picks target within `hard_ceiling_km`, anchored to actual history
+- **Step 3**: Validates chosen target against CTL capacity and Pfitzinger absolute-load guidelines
 
 ---
 

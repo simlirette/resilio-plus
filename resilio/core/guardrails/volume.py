@@ -1002,38 +1002,54 @@ def suggest_weekly_target(
     is_recovery_transition: bool = False,
     actual_prev2_km: Optional[float] = None,
     prev2_is_recovery: bool = False,
+    macro_prev2_km: Optional[float] = None,
 ) -> WeeklyTargetSuggestion:
     """Suggest next week's volume target anchored to actual (not planned) previous week.
 
     Uses a 2-week weighted average (2:1 recent:prior) when N-2 data is provided and
     N-2 was not a recovery week. This damps single-week noise (illness, travel, catch-up)
     in line with Pfitzinger's multi-week block philosophy.
+
+    Args:
+        macro_prev2_km: Macro plan target for N-2 week. Used as the denominator for
+            adherence_n2_pct. When omitted, falls back to macro_prev_km as an
+            approximation (valid when macro deltas are small; less accurate in
+            progressive builds with large week-to-week steps).
     """
 
     # Special case 1: Week 1 — no prior data
     if actual_prev_km == 0 or macro_prev_km == 0:
         planned_delta_km = round(macro_next_km - macro_prev_km, 2)
+        _large_ceiling = round(macro_next_km * 1.25, 2)
         return WeeklyTargetSuggestion(
             actual_prev_km=actual_prev_km, actual_prev2_km=actual_prev2_km,
             effective_actual_km=actual_prev_km, prev2_included=False,
             macro_prev_km=macro_prev_km, macro_next_km=macro_next_km,
             planned_delta_km=planned_delta_km, actual_based_target_km=macro_next_km,
-            safety_ceiling_km=None, macro_ceiling_km=round(macro_next_km * 1.25, 2),
+            safety_ceiling_km=None, macro_ceiling_km=_large_ceiling,
             suggested_target_km=macro_next_km, macro_target_km=macro_next_km,
             macro_deviation_km=0.0, macro_deviation_pct=0.0,
             adjustment_type=AdjustmentType.FIRST_WEEK,
             reasoning="No previous actual data. Using macro plan target as-is.",
+            actual_10pct_ceiling_km=_large_ceiling,
+            actual_pfitz_ceiling_km=_large_ceiling,
+            hard_ceiling_km=_large_ceiling,
+            adherence_n1_pct=0.0,
+            adherence_n2_pct=None,
+            overshoot_pattern=False,
         )
 
     # Special case 2: Recovery transition — use macro_next as-is
     if is_recovery_transition:
+        _large_ceiling = round(macro_next_km * 1.25, 2)
+        _adh_n1 = round((actual_prev_km / macro_prev_km - 1) * 100, 1)
         return WeeklyTargetSuggestion(
             actual_prev_km=actual_prev_km, actual_prev2_km=actual_prev2_km,
             effective_actual_km=actual_prev_km, prev2_included=False,
             macro_prev_km=macro_prev_km, macro_next_km=macro_next_km,
             planned_delta_km=round(macro_next_km - macro_prev_km, 2),
             actual_based_target_km=macro_next_km, safety_ceiling_km=None,
-            macro_ceiling_km=round(macro_next_km * 1.25, 2),
+            macro_ceiling_km=_large_ceiling,
             suggested_target_km=macro_next_km, macro_target_km=macro_next_km,
             macro_deviation_km=0.0, macro_deviation_pct=0.0,
             adjustment_type=AdjustmentType.RECOVERY_TRANSITION,
@@ -1042,6 +1058,12 @@ def suggest_weekly_target(
                 f"actual: {actual_prev_km}km). Using macro target to avoid "
                 f"amplifying the large recovery→build delta."
             ),
+            actual_10pct_ceiling_km=_large_ceiling,
+            actual_pfitz_ceiling_km=_large_ceiling,
+            hard_ceiling_km=_large_ceiling,
+            adherence_n1_pct=_adh_n1,
+            adherence_n2_pct=None,
+            overshoot_pattern=False,
         )
 
     # Compute effective actual: 2-week weighted average (2:1) if N-2 available and normal
@@ -1081,6 +1103,33 @@ def suggest_weekly_target(
             else f"Pfitzinger ({pfitz}km = {effective_actual_km}+1.6×{run_days})"
         )
 
+    # New fields: ceilings anchored to N-1 raw actual (not weighted average).
+    # hard_ceiling uses max() — Pfitzinger's rule is "10% OR 1.6km/session" (either is sufficient).
+    # max() is naturally volume-tier aware: below ~16×run_days km, Pfitzinger is more permissive
+    # (absolute load matters at low volumes); above that, 10% is more permissive (cumulative load
+    # matters at high volumes). No explicit branching needed.
+    _actual_10pct = round(actual_prev_km * 1.10, 2)
+    _actual_pfitz = round(actual_prev_km + (1.6 * run_days), 2)
+    _hard_ceiling = round(max(_actual_10pct, _actual_pfitz), 2)
+
+    # Adherence pattern fields.
+    # N-1 adherence: raw actual vs N-1 macro (exact).
+    # N-2 adherence: use macro_prev2_km when supplied (exact); fall back to macro_prev_km
+    # (approximate — valid when macro deltas are small, less accurate in progressive builds).
+    _adherence_n1 = round((actual_prev_km / macro_prev_km - 1) * 100, 1)
+    _adherence_n2: Optional[float] = None
+    _n2_denominator = macro_prev2_km if macro_prev2_km is not None else macro_prev_km
+    if (
+        actual_prev2_km is not None
+        and actual_prev2_km > 0
+        and _n2_denominator
+        and not prev2_is_recovery
+    ):
+        _adherence_n2 = round((actual_prev2_km / _n2_denominator - 1) * 100, 1)
+    _overshoot_pattern = (
+        _adherence_n1 > 10.0 and _adherence_n2 is not None and _adherence_n2 > 10.0
+    )
+
     macro_deviation_km = round(suggested_target_km - macro_next_km, 1)
     macro_deviation_pct = round((macro_deviation_km / macro_next_km) * 100, 1)
 
@@ -1104,6 +1153,7 @@ def suggest_weekly_target(
             f"Suggested {suggested_target_km}km ≈ macro {macro_next_km}km."
         )
     elif adjustment_type == AdjustmentType.OVERSHOOT_ADJUSTED:
+        overshoot_note = " Consistent overshoot pattern detected (2+ weeks >10% above macro)." if _overshoot_pattern else ""
         reasoning = (
             f"Athlete ran {abs(pct_diff):.1f}% more than macro "
             f"({actual_prev_km}km vs {macro_prev_km}km). "
@@ -1111,6 +1161,7 @@ def suggest_weekly_target(
             f"Anchoring to effective actual: {effective_actual_km} + {planned_delta_km} = {actual_based_target_km}km. "
             f"Ceiling ({ceiling_label}) → {suggested_target_km}km "
             f"({macro_deviation_pct:+.1f}% vs macro {macro_next_km}km)."
+            f"{overshoot_note}"
         )
     else:
         spike_pct = round((macro_next_km / effective_actual_km - 1) * 100, 1)
@@ -1132,4 +1183,10 @@ def suggest_weekly_target(
         suggested_target_km=suggested_target_km, macro_target_km=macro_next_km,
         macro_deviation_km=macro_deviation_km, macro_deviation_pct=macro_deviation_pct,
         adjustment_type=adjustment_type, reasoning=reasoning,
+        actual_10pct_ceiling_km=_actual_10pct,
+        actual_pfitz_ceiling_km=_actual_pfitz,
+        hard_ceiling_km=_hard_ceiling,
+        adherence_n1_pct=_adherence_n1,
+        adherence_n2_pct=_adherence_n2,
+        overshoot_pattern=_overshoot_pattern,
     )
