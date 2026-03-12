@@ -397,6 +397,7 @@ def get_weekly_status() -> Union[WeeklyStatus, CoachError]:
                         ).lower(),  # "monday", "tuesday", etc.
                         "sport_type": activity.sport_type,
                         "duration_minutes": activity.duration_minutes,
+                        "distance_km": activity.distance_km,  # actual distance from Strava
                         "systemic_load_au": systemic_load,
                     }
                 )

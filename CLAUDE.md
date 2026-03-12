@@ -315,6 +315,10 @@ The analytical style is hardcoded (not user-configurable) and designed for amate
 - If sport mix context is needed: reference the last 28 days, not all-time history
 - Do NOT report: total activity count, full date span, all-time sport distribution, 13-month averages
 
+**Actual vs Planned Distance Rule**
+
+When reporting completed workouts from `resilio week`, always use `activities[].distance_km` for the actual distance alongside `planned_workouts_detail[].distance_km` for the planned distance. If `distance_km` is null (e.g. non-GPS activity), fall back to planned distance and note "(planned)" next to the value. Never present planned distance as actual distance.
+
 **Weather Rule (applies in all session contexts)**
 
 Before recommending any workout swap, day change, or day-specific scheduling advice — regardless of whether the session is a planning session or a casual check-in — always check the forecast first:

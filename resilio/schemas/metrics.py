@@ -73,7 +73,7 @@ class DailyLoad(BaseModel):
     systemic_load_au: float
     lower_body_load_au: float
     activity_count: int
-    activities: list[dict] = Field(default_factory=list)  # Summary info per activity
+    activities: list[dict] = Field(default_factory=list)  # Each entry: {date, day_of_week, day_name, sport_type, duration_minutes, distance_km, systemic_load_au}
 
     model_config = ConfigDict(
         use_enum_values=True,
