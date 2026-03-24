@@ -69,7 +69,15 @@ git checkout -b feat/phase0-restructure
 
 Expected: `Switched to a new branch 'feat/phase0-restructure'`
 
-- [ ] **Step 4: Set git identity for this repo**
+- [ ] **Step 4: Remove the copied remote origin to prevent accidental pushes to the original repo**
+
+```bash
+git remote remove origin
+```
+
+Expected: No errors. `git remote -v` should return nothing.
+
+- [ ] **Step 5: Set git identity for this repo**
 
 ```bash
 git config user.email "simon@resilio-plus.dev"
@@ -77,6 +85,14 @@ git config user.name "Simon"
 ```
 
 Expected: No errors.
+
+- [ ] **Step 6: Create an initial commit to mark the starting point of resilio-plus**
+
+```bash
+git commit --allow-empty -m "chore: init resilio-plus from resilio-app"
+```
+
+Expected: Commit succeeds. This establishes the base commit for the feat/phase0-restructure branch.
 
 - [ ] **Step 5: Verify existing tests still pass on the fresh copy**
 
@@ -111,7 +127,18 @@ mkdir -p /c/Users/simon/resilio-plus/.bmad-core/templates
 mkdir -p /c/Users/simon/resilio-plus/.bmad-core/data
 mkdir -p /c/Users/simon/resilio-plus/.bmad-core/workflows
 mkdir -p /c/Users/simon/resilio-plus/docs/superpowers/plans
+mkdir -p /c/Users/simon/resilio-plus/docs/superpowers/specs
 mkdir -p /c/Users/simon/resilio-plus/docs/legacy
+```
+
+Note: `docs/superpowers/specs/` and `docs/superpowers/plans/` may already exist from the Task 1 `cp -r` (since they exist in resilio-app). The `mkdir -p` is safe to run regardless — it is a no-op if the directory already exists.
+
+Also create a `docs/legacy/README.md` placeholder so git tracks the directory:
+
+```markdown
+# Legacy Docs
+
+CLI-specific documentation will be migrated here when the FastAPI backend supersedes the CLI in Phase 2+.
 ```
 
 - [ ] **Step 2: Create backend/README.md**
@@ -557,7 +584,15 @@ status: placeholder — implemented in Phase 3
 - Supplement v2 §7.2: Readiness Score formula
 ```
 
-- [ ] **Step 8: Commit agent stubs**
+- [ ] **Step 8: Verify all 7 agent files were created before committing**
+
+```bash
+ls /c/Users/simon/resilio-plus/.bmad-core/agents/ | wc -l
+```
+
+Expected: `7`. If the count is less than 7, create the missing files before proceeding.
+
+- [ ] **Step 9: Commit agent stubs**
 
 ```bash
 cd /c/Users/simon/resilio-plus
@@ -583,7 +618,21 @@ cd /c/Users/simon/resilio-plus
 cat pyproject.toml
 ```
 
-Verify you see: `"httpx>=0.25.0,<0.26.0",` in the `[project]` dependencies block.
+Verify you see the following existing block (exact content before edit):
+
+```toml
+dependencies = [
+    "pydantic>=2.5,<3.0",
+    "pyyaml>=6.0,<7.0",
+    "requests>=2.31,<3.0",
+    "python-dateutil>=2.8,<3.0",
+    "httpx>=0.25.0,<0.26.0",
+    "tenacity>=8.0.0,<9.0.0",
+    "typer>=0.21.1,<0.22.0",
+]
+```
+
+If this block differs (extra lines, different versions), stop and compare against the spec before proceeding.
 
 - [ ] **Step 2: Edit pyproject.toml**
 
@@ -635,7 +684,15 @@ poetry run pytest --tb=short -q
 
 Expected: All tests pass. Zero failures.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 6: Verify poetry.lock was updated before committing**
+
+```bash
+git diff --name-only
+```
+
+Expected output includes both `pyproject.toml` and `poetry.lock`. If `poetry.lock` is not listed, run `poetry lock` to force regeneration.
+
+- [ ] **Step 7: Commit**
 
 ```bash
 git add pyproject.toml poetry.lock
@@ -827,13 +884,19 @@ Never increase total weekly load >10% in one step (applies across ALL sports com
 **Agents provide domain expertise. The Head Coach provides integration. Tools provide data. You provide judgment.**
 ```
 
-- [ ] **Step 2: Verify CLAUDE.md was written**
+- [ ] **Step 2: Verify CLAUDE.md was written correctly**
 
 ```bash
-wc -l /c/Users/simon/resilio-plus/CLAUDE.md
+grep -c "Supplement v2" /c/Users/simon/resilio-plus/CLAUDE.md
 ```
 
-Expected: >100 lines.
+Expected: at least `5` (this string appears multiple times throughout the file). If the count is 0, the file was not written correctly — rewrite it.
+
+```bash
+grep "Recovery Coach" /c/Users/simon/resilio-plus/CLAUDE.md
+```
+
+Expected: A line mentioning Recovery Coach. This confirms the tail of the file was written (not truncated mid-write).
 
 - [ ] **Step 3: Commit**
 
@@ -1067,6 +1130,8 @@ git commit -m "docs: update README.md for Resilio Plus hybrid coach platform"
 - Create: `docs/superpowers/plans/2026-03-24-phase0-setup.md` (this file)
 
 - [ ] **Step 1: Copy the spec and plan from resilio-app**
+
+Note: Both files already exist in `resilio-plus` from the initial `cp -r` in Task 1. This step ensures you have the latest committed versions (in case updates were made to resilio-app after the initial copy). The `cp` is a safe overwrite.
 
 ```bash
 cp /c/Users/simon/resilio-app/docs/superpowers/specs/2026-03-24-phase0-design.md \
