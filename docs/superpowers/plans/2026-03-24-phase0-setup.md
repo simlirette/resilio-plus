@@ -94,7 +94,7 @@ git commit --allow-empty -m "chore: init resilio-plus from resilio-app"
 
 Expected: Commit succeeds. This establishes the base commit for the feat/phase0-restructure branch.
 
-- [ ] **Step 5: Verify existing tests still pass on the fresh copy**
+- [ ] **Step 7: Verify existing tests still pass on the fresh copy**
 
 ```bash
 cd /c/Users/simon/resilio-plus
