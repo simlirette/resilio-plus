@@ -48,10 +48,16 @@ resilio-plus/
 │
 ├── docs/
 │   ├── coaching/                   # Running methodology docs (kept intact)
-│   │   └── methodology.md          # 4 books synthesis — used by Running Coach agent
+│   │   └── methodology.md          # 5 books synthesis — used by Running Coach agent
+│   ├── training_books/             # [KEPT INTACT] 5 book summaries used by Running Coach agent
+│   │   ├── daniel_running_formula.md
+│   │   ├── advanced_marathoning_pete_pfitzinger.md
+│   │   ├── faster_road_racing_pete_pfitzinger.md
+│   │   ├── 80_20_matt_fitzgerald.md
+│   │   └── run_less_run_faster_bill_pierce.md
 │   ├── superpowers/
 │   │   └── specs/                  # Superpowers design specs (this file lives here)
-│   └── legacy/                     # (empty for now)
+│   └── legacy/                     # CLI-specific docs to be migrated here once backend supersedes CLI in Phase 2+
 │
 ├── backend/                        # [NEW] FastAPI application — Phase 2+
 │   └── README.md                   # Placeholder: "FastAPI backend — implemented in Phase 2"
@@ -112,19 +118,27 @@ Table: folder → purpose → phase when built
 `/head-coach`, `/run-coach`, `/lift-coach`, `/swim-coach`, `/bike-coach`, `/nutrition-coach`, `/recovery-coach`
 
 **5. Running Coach Knowledge Base**
-Primary sources (4 books + supplement v2 sources):
+Books (5) — summaries in `docs/training_books/`, synthesis in `docs/coaching/methodology.md`:
 - Daniels' Running Formula — VDOT, zones, paces → `resilio/core/vdot/`
 - Pfitzinger's Advanced Marathoning — volume, periodization
+- Pfitzinger's Faster Road Racing — 5K to half-marathon specific
 - Fitzgerald's 80/20 Running — TID 80/20
 - FIRST's Run Less, Run Faster — intensity over volume
-- Seiler — TID best practices (IJSPP 2010)
+
+Blueprint sources (Section 5.3 — referenced by ID, no local summary):
 - Durability of Running Economy (PubMed 40878015)
-- Biomechanical risk factors (PMC 11532757)
-- Running Biomechanics and Economy (PMC 12913831)
+- Biomechanical risk factors for running injuries (PMC 11532757)
+- Running Biomechanics and Running Economy (PMC 12913831)
+- Training volume on marathon performance (blueprint reference)
+- Advanced footwear technology (blueprint reference)
+
+Supplement v2 sources (Section 2 — with expanded treatment):
+- Seiler — TID best practices (IJSPP 2010)
 - Pyramidal→Polarized transition (PMC 9299127)
 - ML-personalized marathon training (Scientific Reports 2025)
-- Key workout protocols: long run, tempo, VO2max intervals, repetitions, progression run, tapering
-- Full methodology: `docs/coaching/methodology.md` (kept intact)
+
+Key workout protocols: long run, tempo, VO2max intervals, repetitions, progression run, tapering
+Full methodology: `docs/coaching/methodology.md` (kept intact)
 
 **6. Development Rules**
 - `resilio/` is read-only in Phase 0 (do not modify)
@@ -166,14 +180,19 @@ status: placeholder — implemented in Phase 3
 
 ## 6. pyproject.toml Changes
 
-Add to `[tool.poetry.dependencies]`:
+The `pyproject.toml` has two sections: `[project]` (PEP 517 standard) and `[tool.poetry]`. The existing httpx constraint in `[project].dependencies` is `"httpx>=0.25.0,<0.26.0"`. This must be **replaced** (not appended) with the updated constraint.
+
+Changes to `[project].dependencies`:
 ```toml
-fastapi = "^0.115.0"
-uvicorn = {extras = ["standard"], version = "^0.32.0"}
-httpx = "^0.28.0"
+# REPLACE this existing line:
+"httpx>=0.25.0,<0.26.0",
+# WITH:
+"httpx>=0.28.0,<1.0",
+"fastapi>=0.115.0,<1.0",
+"uvicorn[standard]>=0.32.0,<1.0",
 ```
 
-`resilio` CLI entry point and all existing dependencies remain unchanged. `poetry install` must pass after these additions.
+No changes to `[tool.poetry]`, `[tool.poetry.group.dev.dependencies]`, or any other section. `resilio` CLI entry point unchanged. `poetry install` must pass after these changes.
 
 ---
 
