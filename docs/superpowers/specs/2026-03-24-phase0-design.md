@@ -3,7 +3,7 @@
 **Date**: 2026-03-24
 **Project**: Resilio Plus — Hybrid Athlete Multi-Agent Coaching Platform
 **Scope**: Phase 0 — Repository duplication, scaffold, and CLAUDE.md rewrite
-**Approach**: Monorepo plat (Approach A)
+**Approach**: Flat monorepo (Approach A)
 
 ---
 
@@ -27,7 +27,7 @@ The target architecture (described in `resilio-hybrid-coach-blueprint.md`) requi
 | Repo name | `resilio-plus` | Project brand name |
 | CLI fate | Kept for dev/debug (Option C) | Zero regression, reuse core logic in FastAPI |
 | .bmad-core/ in Phase 0 | Yes — empty scaffold with placeholders | Visible structure from day one |
-| Structure | Monorepo plat (Approach A) | resilio/ untouched while backend/ built alongside |
+| Structure | Flat monorepo (Approach A) | resilio/ untouched while backend/ built alongside |
 
 ---
 
