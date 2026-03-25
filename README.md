@@ -1,101 +1,63 @@
-# Resilio
+# Resilio Plus — Hybrid Athlete Coaching Platform
 
-AI-powered adaptive coach for multi-sport athletes, designed to run with
-Claude Code and Codex in both app and CLI environments, with local YAML/JSON persistence.
+An AI-powered multi-agent coaching platform for hybrid athletes combining running, strength training, swimming, and cycling.
 
-**How to use Resilio:**
+## What is Resilio Plus?
 
-> Open this folder in **Claude Code** or **Codex**, then chat with the assistant.
->
-> The assistant acts as your AI coach. Resilio provides the tools, training methodology, and local data the coach uses to guide your training.
+A **Head Coach AI** orchestrates 7 specialist agents to create personalized, periodized training and nutrition plans. Plans adapt weekly based on actual performance data from connected apps.
 
-Resilio works in both app and CLI versions of Claude Code and Codex. For most users, we recommend the app versions because they are more user-friendly.
+### Coaching Agents
 
-**Methodology focus (current):** Resilio is currently strongest on running methodology, grounded in frameworks from Daniels' _Running Formula_, Pfitzinger's _Advanced Marathoning_, Fitzgerald's _80/20 Running_, and FIRST's _Run Less, Run Faster_.
+| Agent | Specialty |
+|---|---|
+| Head Coach | Orchestration, conflict resolution, load management |
+| Running Coach | Economy, biomechanics, injury prevention (Daniels/Pfitzinger/80-20/FIRST) |
+| Lifting Coach | Hypertrophy, strength, MEV/MAV/MRV, SFR |
+| Swimming Coach | SWOLF, CSS-based zones, propulsive efficiency |
+| Biking Coach | FTP, Coggan zones, TSS/CTL/ATL/TSB |
+| Nutrition Coach | Carb periodization, evidence-based supplementation |
+| Recovery Coach | HRV-guided training, sleep banking, Readiness Score |
 
-**Strava data usage:** During setup, Resilio connects to Strava to download and leverage the athlete's training data for analysis, planning, and adaptations. The AI coach will guide you through authentication, sync, and any rate-limit pauses.
+### Connected Apps
 
-## Start Here (Recommended: App)
+| App | Data | Status |
+|---|---|---|
+| Strava | Running, cycling, swimming (GPS, HR, power) | Active |
+| Hevy | Strength training (sets, reps, load, volume) | Phase 3 |
+| FatSecret | Nutrition (macros, micros, food journal) | Phase 3 |
+| Apple Health | HRV, sleep, steps (via Terra API) | Phase 3 |
 
-1. Get the project files:
-   - **New to GitHub**: Download [v0.2.0 ZIP](https://github.com/du-phan/resilio-app/archive/refs/tags/v0.2.0.zip), unzip it, then use the extracted folder.
-   - **If you use Git**:
-     ```bash
-     git clone https://github.com/du-phan/resilio-app.git
-     cd resilio-app
-     ```
-2. Open this project in your app of choice:
-   - **Claude app**: Open Claude app -> **Code** -> **Add folder** (select this repository).
-   - **Codex app**: Open Codex app -> **Add new project** (select this repository folder).
-3. Start chatting with the assistant (for example: "Let's get started"). The assistant guides setup, authentication, sync, and profile onboarding.
+## Tech Stack
 
-## Alternative: CLI
+- **Backend**: Python 3.11, FastAPI, SQLite, Poetry
+- **Frontend**: Next.js, React, Tailwind CSS, shadcn/ui
+- **AI**: Claude (Anthropic) via multi-agent architecture
+- **Legacy CLI**: Typer (preserved for development and debug)
 
-If you prefer terminal workflows, you can also use Claude Code CLI or Codex CLI by launching them from this repository folder.
+## Project Status
 
-## Quick Links
+| Phase | Scope | Status |
+|---|---|---|
+| Phase 0 | Repo setup, scaffold, CLAUDE.md | ✅ Complete |
+| Phase 1 | Data schemas, agent definitions | Upcoming |
+| Phase 2 | Agent implementations (backend) | Upcoming |
+| Phase 3 | API connectors, FastAPI routes | Upcoming |
+| Phase 4 | Next.js frontend | Upcoming |
+| Phase 5 | Weekly review loop, E2E | Upcoming |
 
-- `AGENTS.md` - Codex usage, skills, coaching protocols
-- `CLAUDE.md` - Claude Code usage, coaching protocols
-- `docs/coaching/cli/index.md` - CLI command index
-- `docs/coaching/methodology.md` - Training methodology
-- `docs/coaching/scenarios.md` - Practical coaching scenarios
-
-## Coach Quickstart (CLI Commands)
-
-```bash
-# Install dependencies (Poetry recommended)
-poetry install
-
-# Create config
-mkdir -p config
-cp templates/settings.yaml config/settings.yaml
-cp templates/secrets.local.yaml config/secrets.local.yaml
-
-# Add Strava credentials (edit with your preferred editor)
-${EDITOR:-vim} config/secrets.local.yaml
-
-# Core session flow
-poetry run resilio auth status
-poetry run resilio sync
-poetry run resilio profile analyze
-poetry run resilio status
-```
-
-You can run those commands manually, or simply start chatting and let the assistant guide the same flow.
-For full coaching workflows and behavior rules, see `AGENTS.md` and `CLAUDE.md`.
-
-## Developer Quickstart
+## Getting Started (Development)
 
 ```bash
 # Install dependencies
 poetry install
 
+# Verify environment
+poetry run resilio --help
+
 # Run tests
 poetry run pytest
-
-# Type check
-poetry run mypy resilio
-
-# Format
-poetry run black resilio
-
-# Lint
-poetry run ruff resilio
 ```
 
-## Architecture Snapshot
+## Origin
 
-- `resilio/cli/` - Typer CLI entrypoints (`resilio`)
-- `resilio/core/` - Domain logic (metrics, planning, adaptation)
-- `resilio/api/` - Public API layer for agents
-- `resilio/schemas/` - Pydantic models
-- `data/` - Local persistence (gitignored)
-
-## Skills
-
-Skills live in `.agents/skills` (Codex) and `.claude/skills` (Claude Code). For selection rules and workflows, see `AGENTS.md` and `CLAUDE.md`.
-
-## License
-
-MIT
+Based on [resilio-app](https://github.com/du-phan/resilio-app) by du-phan — a running coach CLI with Strava integration. The running methodology and VDOT calculator from resilio-app power the Running Coach agent.
