@@ -64,6 +64,24 @@ def test_activity_result_invalid_sport_raises():
         ActivityResult(**make_activity(sport="yoga"))
 
 
+def test_activity_result_negative_actual_duration_raises():
+    from app.schemas.review import ActivityResult
+    with pytest.raises(ValidationError):
+        ActivityResult(**make_activity(actual_duration_min=-1))
+
+
+def test_weekly_review_negative_hrv_raises():
+    from app.schemas.review import WeeklyReview
+    with pytest.raises(ValidationError):
+        WeeklyReview(**make_review(hrv_rmssd=-1.0))
+
+
+def test_weekly_review_readiness_above_100_raises():
+    from app.schemas.review import WeeklyReview
+    with pytest.raises(ValidationError):
+        WeeklyReview(**make_review(readiness_score=101.0))
+
+
 # --- WeeklyReview ---
 
 def test_weekly_review_valid_empty_results():
