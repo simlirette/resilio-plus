@@ -2,6 +2,7 @@
 Pytest configuration and shared fixtures.
 """
 
+import sys
 import pytest
 from pathlib import Path
 
