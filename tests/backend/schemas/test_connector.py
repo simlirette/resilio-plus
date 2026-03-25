@@ -1,4 +1,3 @@
-import pytest
 from datetime import date
 from uuid import UUID
 from app.schemas.connector import (
@@ -115,7 +114,7 @@ def test_hevy_workout_round_trip():
     assert workout.exercises[0].name == "Bench Press"
 
 
-def test_fatsecret_day_aggregates():
+def test_fatsecret_day_round_trip():
     day = FatSecretDay(
         date=date(2026, 3, 20),
         calories_total=1800.0,

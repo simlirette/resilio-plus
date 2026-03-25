@@ -1,4 +1,5 @@
 from datetime import date
+from typing import Any
 from uuid import UUID, uuid4
 from pydantic import BaseModel, Field
 
@@ -10,15 +11,15 @@ class ConnectorCredential(BaseModel):
     access_token: str | None = None
     refresh_token: str | None = None
     expires_at: int | None = None  # Unix timestamp
-    extra: dict = Field(default_factory=dict)
+    extra: dict[str, Any] = Field(default_factory=dict)
 
 
 class StravaLap(BaseModel):
     lap_index: int
     elapsed_time_seconds: int
     distance_meters: float
-    average_hr: float | None
-    pace_per_km: str | None  # "5:23"
+    average_hr: float | None = None
+    pace_per_km: str | None = None  # "5:23"
 
 
 class StravaActivity(BaseModel):
@@ -27,18 +28,18 @@ class StravaActivity(BaseModel):
     sport_type: str
     date: date
     duration_seconds: int
-    distance_meters: float | None
-    elevation_gain_meters: float | None
-    average_hr: float | None
-    max_hr: float | None
-    perceived_exertion: int | None  # RPE 1-10
+    distance_meters: float | None = None
+    elevation_gain_meters: float | None = None
+    average_hr: float | None = None
+    max_hr: float | None = None
+    perceived_exertion: int | None = Field(default=None, ge=1, le=10)  # RPE 1-10
     laps: list[StravaLap] = Field(default_factory=list)
 
 
 class HevySet(BaseModel):
-    reps: int | None
-    weight_kg: float | None
-    rpe: float | None  # 1-10
+    reps: int | None = None
+    weight_kg: float | None = None
+    rpe: float | None = Field(default=None, ge=1, le=10)  # 1-10
     set_type: str  # "normal", "warmup", "dropset", "failure"
 
 
@@ -74,8 +75,8 @@ class FatSecretDay(BaseModel):
 
 class TerraHealthData(BaseModel):
     date: date
-    hrv_rmssd: float | None  # ms
-    sleep_duration_hours: float | None
-    sleep_score: float | None  # 0-100
-    steps: int | None
-    active_energy_kcal: float | None
+    hrv_rmssd: float | None = None  # ms
+    sleep_duration_hours: float | None = None
+    sleep_score: float | None = Field(default=None, ge=0, le=100)  # 0-100
+    steps: int | None = None
+    active_energy_kcal: float | None = None
