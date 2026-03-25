@@ -51,7 +51,7 @@ backend/app/db/models.py           — ConnectorCredentialModel added (ORM table
 tests/backend/connectors/
 ├── __init__.py
 ├── fixtures/        — JSON fixture files (anonymized real API responses)
-│   ├── strava_activity.json
+│   ├── strava_activities.json
 │   ├── strava_laps.json
 │   ├── hevy_workouts.json
 │   ├── fatsecret_day.json
@@ -83,11 +83,13 @@ class ConnectorCredentialModel(Base):
     expires_at = Column(Integer, nullable=True)        # Unix timestamp
     extra_json = Column(Text, nullable=False, default="{}")  # provider-specific extras
     athlete = relationship("AthleteModel", back_populates="credentials")
+
+    __table_args__ = (UniqueConstraint("athlete_id", "provider"),)
 ```
 
 `AthleteModel` gains: `credentials = relationship("ConnectorCredentialModel", back_populates="athlete")`
 
-Unique constraint: `(athlete_id, provider)` — one credential row per athlete per provider.
+Unique constraint: `(athlete_id, provider)` — one credential row per athlete per provider, enforced at DB level.
 
 ### 4.2 Pydantic Schema (`backend/app/schemas/connector.py`)
 
@@ -117,7 +119,21 @@ class BaseConnector(ABC):
         credential: ConnectorCredential,
         client_id: str,
         client_secret: str,
-    ) -> None: ...
+    ) -> None:
+        self.credential = credential
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self._client = httpx.Client(timeout=30.0)
+
+    def close(self) -> None:
+        """Close the underlying HTTP client. Call when done with the connector."""
+        self._client.close()
+
+    def __enter__(self) -> "BaseConnector":
+        return self
+
+    def __exit__(self, *args: object) -> None:
+        self.close()
 
     def get_valid_token(self) -> str:
         """Return a valid access token, refreshing proactively if expires in < 5 min."""
@@ -132,23 +148,30 @@ class BaseConnector(ABC):
 
 ### 5.2 Retry Strategy
 
+**Note:** `@retry` from tenacity cannot be applied directly as a class decorator on instance methods — the decorator binds at class-definition time before any instance exists, making `self` unreachable. The correct pattern uses an inner function that closes over the instance:
+
 ```python
-@retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=2, min=2, max=8),
-    retry=retry_if_exception_type((ConnectorAPIError, httpx.HTTPError)),
-    reraise=True,
-)
-def _request(self, method, url, **kwargs) -> dict:
-    response = self._client.request(method, url, **kwargs)
-    if response.status_code == 429:
-        retry_after = int(response.headers.get("Retry-After", 60))
-        raise ConnectorRateLimitError(provider=self.provider, retry_after=retry_after)
-    if response.status_code == 401:
-        raise ConnectorAuthError(provider=self.provider)
-    response.raise_for_status()
-    return response.json()
+def _request(self, method: str, url: str, **kwargs) -> dict:
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=2, min=2, max=8),
+        retry=retry_if_exception_type((ConnectorAPIError, httpx.HTTPError)),
+        reraise=True,
+    )
+    def _inner() -> dict:
+        response = self._client.request(method, url, **kwargs)
+        if response.status_code == 429:
+            retry_after = int(response.headers.get("Retry-After", 60))
+            raise ConnectorRateLimitError(provider=self.provider, retry_after=retry_after)
+        if response.status_code == 401:
+            raise ConnectorAuthError(provider=self.provider)
+        response.raise_for_status()
+        return response.json()
+
+    return _inner()
 ```
+
+**429 behaviour:** `ConnectorRateLimitError` is **not** in the retry predicate (`retry_if_exception_type` only covers `ConnectorAPIError` and `httpx.HTTPError`). A 429 raises immediately with `retry_after` populated — the caller is responsible for backing off. This prevents burning retry attempts during a genuine rate-limit window.
 
 ### 5.3 Exception Hierarchy
 
@@ -368,9 +391,33 @@ Add to `[tool.poetry.group.dev.dependencies]`:
 respx = ">=0.21,<1.0"
 ```
 
-### 11.2 Fixtures
+### 11.2 Credentials in Tests
+
+Connectors receive credentials via `__init__` — tests pass values directly rather than relying on env vars. A `conftest.py` in `tests/backend/connectors/` provides shared fixtures:
+
+```python
+# tests/backend/connectors/conftest.py
+import pytest
+from app.schemas.connector import ConnectorCredential
+
+@pytest.fixture
+def strava_credential():
+    return ConnectorCredential(
+        athlete_id="00000000-0000-0000-0000-000000000001",
+        provider="strava",
+        access_token="test_access_token",
+        refresh_token="test_refresh_token",
+        expires_at=9999999999,  # far future — valid token
+    )
+
+# Similar fixtures: hevy_credential, fatsecret_credential, terra_credential
+```
+
+Client credentials (`client_id`, `client_secret`) are passed as literal strings in test constructors (e.g., `"test_client_id"`). No `monkeypatch.setenv` or `.env` loading required in tests.
+
+### 11.3 Fixtures
 `tests/backend/connectors/fixtures/` contains anonymized JSON files matching real API responses:
-- `strava_activity.json` — single activity response from GET /activities/{id}
+- `strava_activities.json` — list endpoint response (2 activities, matching GET /activities)
 - `strava_laps.json` — laps response from GET /activities/{id}/laps
 - `hevy_workouts.json` — page 1 workouts list response
 - `fatsecret_day.json` — food entries response for one day
@@ -422,7 +469,27 @@ respx = ">=0.21,<1.0"
 | `TERRA_API_KEY` | Terra | API key |
 | `TERRA_DEV_ID` | Terra | Developer ID |
 
-A `.env.example` file will be created at the repo root listing all variables with placeholder values.
+A `.env.example` file will be created at the repo root:
+
+```dotenv
+# Strava OAuth app credentials
+STRAVA_CLIENT_ID=CHANGEME
+STRAVA_CLIENT_SECRET=CHANGEME
+STRAVA_REDIRECT_URI=http://localhost:8000/auth/strava/callback
+
+# Hevy Pro API key
+HEVY_API_KEY=CHANGEME
+
+# FatSecret OAuth2 credentials
+FATSECRET_CLIENT_ID=CHANGEME
+FATSECRET_CLIENT_SECRET=CHANGEME
+
+# Terra API credentials
+TERRA_API_KEY=CHANGEME
+TERRA_DEV_ID=CHANGEME
+```
+
+The backend loads these at startup via `os.environ` (`python-dotenv` not required — FastAPI deployments typically inject env vars directly).
 
 ---
 
