@@ -25,10 +25,42 @@ The FatigueScore is the unified inter-agent language described in Section 6 of t
 | FatigueScore persistence | JSON embedded in WorkoutSlot | No dedicated table needed; agents always work with Pydantic objects in memory |
 | Complex fields (lists, dicts) | JSON TEXT columns | SQLite has no native array/JSON type; JSON string with agent-layer deserialization |
 | Entities in scope | All 5 in Phase 1 | FatigueScore, AthleteProfile, TrainingPlan, NutritionPlan, WeeklyReview form a coherent data layer |
+| Backend package name | `backend/resilio/` | Aligns with blueprint paths (`backend/resilio/agents/`, `backend/resilio/connectors/`); namespace resolved via pytest `pythonpath` config |
+| SQLAlchemy version | `>=2.0,<3.0` | Required for `DeclarativeBase` from `sqlalchemy.orm`; must be added to `pyproject.toml` |
+| SQLite FK enforcement | `PRAGMA foreign_keys=ON` via event hook | SQLite does not enforce FK constraints by default; event listener in `database.py` enables this |
+| DATABASE_URL path | Absolute path via `pathlib` | Relative URL (`sqlite:///data/resilio.db`) is working-directory-dependent; absolute path avoids silent failures in CI |
 
 ---
 
-## 3. File Structure
+## 3. Prerequisites
+
+Before implementing, add SQLAlchemy to the project:
+
+```bash
+poetry add "sqlalchemy>=2.0,<3.0"
+```
+
+This must be run from the repo root. Verify `pyproject.toml` is updated and `poetry.lock` regenerated.
+
+---
+
+## 4. Pytest Configuration
+
+Add to `pyproject.toml` to resolve the Python path for backend tests without breaking existing CLI tests:
+
+```toml
+[tool.pytest.ini_options]
+pythonpath = ["backend"]
+testpaths = ["tests"]
+```
+
+**Why**: `backend/resilio/` and the top-level `resilio/` share the package name. With `pythonpath = ["backend"]`, `import resilio` resolves to `backend/resilio/` during test runs. The legacy CLI remains functional via `poetry run resilio` (uses the installed package from the top-level `resilio/`). Legacy CLI tests in `tests/unit/` and `tests/integration/` do not import from `backend/resilio/`, so there is no runtime collision.
+
+**Important**: Both old and new tests are discovered under `tests/`. The existing `tests/conftest.py` applies to all tests — do not break it. New backend tests in `tests/backend/` must not import from the top-level `resilio/` package.
+
+---
+
+## 5. File Structure
 
 ```
 resilio-plus/
@@ -47,7 +79,7 @@ resilio-plus/
 │           ├── database.py         # Engine + SessionLocal + Base
 │           └── models.py           # 4 SQLAlchemy ORM tables
 ├── data/
-│   └── .gitkeep                    # DB file created here at runtime
+│   └── .gitkeep                    # DB file created here at runtime (data/resilio.db)
 └── tests/
     └── backend/
         ├── __init__.py
@@ -60,16 +92,16 @@ resilio-plus/
         │   └── test_review.py
         └── db/
             ├── __init__.py
-            └── test_models.py
+            └── test_models.py      # Uses in-memory SQLite (":memory:") — no file I/O
 ```
 
 ---
 
-## 4. Pydantic Schemas
+## 6. Pydantic Schemas
 
 All schemas use **Pydantic v2** (`from pydantic import BaseModel, Field`). UUIDs default to `uuid4`. All fields validated at construction.
 
-### 4.1 Shared Enums (athlete.py)
+### 6.1 Shared Enums (athlete.py)
 
 ```python
 from enum import Enum
@@ -88,7 +120,7 @@ class DayType(str, Enum):
     RACE = "race"
 ```
 
-### 4.2 FatigueScore (fatigue.py)
+### 6.2 FatigueScore (fatigue.py)
 
 Inter-agent communication primitive. All values 0–100 except `recovery_hours`.
 
@@ -103,7 +135,7 @@ class FatigueScore(BaseModel):
     affected_muscles: list[str] = Field(default_factory=list)  # e.g. ["quads", "glutes"]
 ```
 
-### 4.3 AthleteProfile (athlete.py)
+### 6.3 AthleteProfile (athlete.py)
 
 Full onboarding data. Fitness markers are all optional (not known at sign-up).
 
@@ -139,7 +171,7 @@ class AthleteProfile(BaseModel):
     job_physical: bool = False
 ```
 
-### 4.4 WorkoutSlot + TrainingPlan (plan.py)
+### 6.4 WorkoutSlot + TrainingPlan (plan.py)
 
 `weekly_slots` keyed by `"YYYY-WW"` (ISO week string). ACWR is the Acute:Chronic Workload Ratio (safe zone 0.8–1.3).
 
@@ -170,9 +202,11 @@ class TrainingPlan(BaseModel):
     acwr: float = Field(..., ge=0, description="Acute:Chronic Workload Ratio — safe zone 0.8–1.3")
 ```
 
-### 4.5 MacroTarget + DayNutrition + NutritionPlan (nutrition.py)
+### 6.5 MacroTarget + DayNutrition + NutritionPlan (nutrition.py)
 
 Macros periodized per `DayType`. Carbs range: 4–5 g/kg (strength) → 6–7 g/kg (endurance). Intra-effort and sodium only needed on training days.
+
+**JSON serialization note**: `targets_by_day_type` uses `DayType` enum as dict key. Pydantic v2 serializes this as `{"rest": {...}, "strength": {...}, ...}` (string values of the enum). The `targets_json` TEXT column stores this string-keyed JSON. The repository layer (Phase 4) must deserialize using `{DayType(k): DayNutrition(**v) for k, v in json.loads(targets_json).items()}`.
 
 ```python
 from pydantic import BaseModel, Field
@@ -198,9 +232,11 @@ class NutritionPlan(BaseModel):
     targets_by_day_type: dict[DayType, DayNutrition] = Field(default_factory=dict)
 ```
 
-### 4.6 ActivityResult + WeeklyReview (review.py)
+### 6.6 ActivityResult + WeeklyReview (review.py)
 
 Tracks planned vs. actual execution. `readiness_score`, `hrv_rmssd`, and `sleep_hours_avg` come from Apple Health / Terra connector (Phase 2).
+
+**JSON serialization note**: `results` defaults to an empty list `[]`. Serialized as `"[]"` (not `NULL`), which is consistent with `results_json nullable=False`. An empty week is a valid state (no activities logged yet).
 
 ```python
 from pydantic import BaseModel, Field
@@ -231,34 +267,51 @@ class WeeklyReview(BaseModel):
 
 ---
 
-## 5. SQLAlchemy ORM Models
+## 7. SQLAlchemy ORM Models
 
-**Database**: SQLite at `data/resilio.db` (created at runtime). Switching to PostgreSQL later requires only changing `DATABASE_URL`.
+**Database**: SQLite at `<repo_root>/data/resilio.db` (created at runtime). Switching to PostgreSQL later requires only changing `DATABASE_URL`.
 
-### 5.1 database.py
+**Requires**: `sqlalchemy>=2.0,<3.0` (see Prerequisites section).
+
+### 7.1 database.py
+
+Uses an **absolute path** derived from `__file__` to avoid working-directory-dependent behavior. Enables SQLite FK enforcement via an `@event.listens_for` hook (SQLite ignores FK constraints by default without `PRAGMA foreign_keys=ON`).
 
 ```python
-from sqlalchemy import create_engine
+from pathlib import Path
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
-DATABASE_URL = "sqlite:///data/resilio.db"
+# Absolute path: <repo_root>/data/resilio.db
+_REPO_ROOT = Path(__file__).resolve().parents[3]  # backend/resilio/db/ -> repo root
+_DB_PATH = _REPO_ROOT / "data" / "resilio.db"
+DATABASE_URL = f"sqlite:///{_DB_PATH}"
 
 engine = create_engine(
     DATABASE_URL,
     connect_args={"check_same_thread": False}
 )
+
+@event.listens_for(engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 class Base(DeclarativeBase):
     pass
 ```
 
-### 5.2 models.py — 4 Tables
+**Test override**: `test_models.py` must create its own in-memory engine (`create_engine("sqlite:///:memory:")`) and apply the same FK pragma. Do not use the module-level `engine` in tests.
 
-Complex fields (lists, nested objects) stored as **JSON TEXT**. Agents work with Pydantic objects in memory; serialization/deserialization happens at the repository layer (Phase 2+).
+### 7.2 models.py — 4 Tables
+
+Complex fields (lists, nested objects) stored as **JSON TEXT**. Agents work with Pydantic objects in memory; serialization/deserialization happens at the repository layer (Phase 4). See JSON serialization notes in Pydantic schema sections for deserialization patterns.
 
 ```python
-from sqlalchemy import Column, String, Float, Integer, Boolean, Text, Date, ForeignKey
+from sqlalchemy import Column, String, Float, Integer, Boolean, Text, Date, ForeignKey, event
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -282,9 +335,9 @@ class AthleteModel(Base):
     vdot = Column(Float, nullable=True)
     css_per_100m = Column(Float, nullable=True)
     # JSON-serialized list fields
-    sports_json = Column(Text, nullable=False)         # JSON list of Sport strings
+    sports_json = Column(Text, nullable=False)         # JSON list of Sport strings, e.g. '["running","lifting"]'
     goals_json = Column(Text, nullable=False)          # JSON list of strings
-    available_days_json = Column(Text, nullable=False) # JSON list of ints
+    available_days_json = Column(Text, nullable=False) # JSON list of ints, e.g. '[0,1,2]'
     equipment_json = Column(Text, nullable=False)      # JSON list of strings
     # Relationships
     plans = relationship("TrainingPlanModel", back_populates="athlete")
@@ -311,7 +364,7 @@ class NutritionPlanModel(Base):
     id = Column(String, primary_key=True)
     athlete_id = Column(String, ForeignKey("athletes.id"), nullable=False)
     weight_kg = Column(Float, nullable=False)
-    targets_json = Column(Text, nullable=False)        # JSON dict[DayType, DayNutrition]
+    targets_json = Column(Text, nullable=False)        # JSON dict[DayType.value, DayNutrition dict]
     athlete = relationship("AthleteModel", back_populates="nutrition_plans")
 
 
@@ -325,16 +378,16 @@ class WeeklyReviewModel(Base):
     hrv_rmssd = Column(Float, nullable=True)
     sleep_hours_avg = Column(Float, nullable=True)
     athlete_comment = Column(Text, default="")
-    results_json = Column(Text, nullable=False)        # JSON list[ActivityResult]
+    results_json = Column(Text, nullable=False)        # JSON list[ActivityResult]; '[]' for empty week
     athlete = relationship("AthleteModel", back_populates="reviews")
     plan = relationship("TrainingPlanModel", back_populates="reviews")
 ```
 
 ---
 
-## 6. Testing Strategy
+## 8. Testing Strategy
 
-Each schema file gets a dedicated test file. Tests follow TDD (RED → GREEN → REFACTOR).
+Each schema file gets a dedicated test file. Tests follow TDD (RED → GREEN → REFACTOR). DB tests use **in-memory SQLite** (`"sqlite:///:memory:"`) — no file I/O, no dependency on `data/` directory.
 
 ### Schema tests (per schema):
 - **Valid construction**: all required fields → object created
@@ -344,14 +397,15 @@ Each schema file gets a dedicated test file. Tests follow TDD (RED → GREEN →
 - **JSON round-trip**: `model.model_dump_json()` → `Model.model_validate_json(...)` → same data
 
 ### DB tests (test_models.py):
-- **Table creation**: `Base.metadata.create_all(engine)` creates all 4 tables
-- **CRUD round-trip**: create AthleteModel row → query → assert values match
-- **FK constraint**: TrainingPlanModel with invalid athlete_id raises IntegrityError
-- **JSON TEXT fields**: stored as string, retrievable as original structure
+- **In-memory engine setup**: each test function creates a fresh `create_engine("sqlite:///:memory:")` with `PRAGMA foreign_keys=ON` applied; `Base.metadata.create_all()` before test, `drop_all()` after
+- **Table creation**: all 4 tables present after `create_all`
+- **CRUD round-trip**: create `AthleteModel` row → commit → query → assert scalar values match
+- **FK constraint**: `TrainingPlanModel` with non-existent `athlete_id` raises `IntegrityError` (enforced by `PRAGMA foreign_keys=ON`)
+- **JSON TEXT fields**: verify stored value is a string, parse back to original structure
 
 ---
 
-## 7. Out of Scope for Phase 1
+## 9. Out of Scope for Phase 1
 
 - API routes (FastAPI endpoints) — Phase 4
 - Repository layer (ORM ↔ Pydantic mappers) — Phase 4
