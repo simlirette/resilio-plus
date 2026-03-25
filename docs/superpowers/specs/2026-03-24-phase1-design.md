@@ -34,13 +34,20 @@ The FatigueScore is the unified inter-agent language described in Section 6 of t
 
 ## 3. Prerequisites
 
-Before implementing, add SQLAlchemy to the project:
+Before implementing, run these steps from the repo root:
 
 ```bash
+# 1. Add SQLAlchemy
 poetry add "sqlalchemy>=2.0,<3.0"
+
+# 2. Create the data directory
+mkdir -p data && touch data/.gitkeep
+
+# 3. Verify existing tests still pass before touching pyproject.toml
+poetry run pytest tests/unit tests/integration -q
 ```
 
-This must be run from the repo root. Verify `pyproject.toml` is updated and `poetry.lock` regenerated.
+Step 3 establishes a green baseline. The pytest config change in Section 4 must not break existing tests — verify this by re-running the suite after adding `[tool.pytest.ini_options]`.
 
 ---
 
@@ -54,9 +61,11 @@ pythonpath = ["backend"]
 testpaths = ["tests"]
 ```
 
-**Why**: `backend/resilio/` and the top-level `resilio/` share the package name. With `pythonpath = ["backend"]`, `import resilio` resolves to `backend/resilio/` during test runs. The legacy CLI remains functional via `poetry run resilio` (uses the installed package from the top-level `resilio/`). Legacy CLI tests in `tests/unit/` and `tests/integration/` do not import from `backend/resilio/`, so there is no runtime collision.
+**Why**: `backend/resilio/` and the top-level `resilio/` share the package name. With `pythonpath = ["backend"]`, `import resilio` resolves to `backend/resilio/` during test runs. The legacy CLI remains functional via `poetry run resilio` (uses the installed package from the top-level `resilio/`).
 
-**Important**: Both old and new tests are discovered under `tests/`. The existing `tests/conftest.py` applies to all tests — do not break it. New backend tests in `tests/backend/` must not import from the top-level `resilio/` package.
+**Required verification before adding this config**: Run `grep -r "from resilio" tests/unit tests/integration` and `grep -r "import resilio" tests/unit tests/integration` to confirm that existing tests import from the top-level `resilio/` package using patterns that will continue to resolve correctly. After adding `[tool.pytest.ini_options]`, re-run `poetry run pytest tests/unit tests/integration -q` and confirm the baseline still passes. If any existing test breaks, remove the `pythonpath` addition and raise before proceeding.
+
+**Invariant**: Both old and new tests are discovered under `tests/`. The existing `tests/conftest.py` applies to all tests — do not break it. New backend tests in `tests/backend/` must not import from the top-level `resilio/` package.
 
 ---
 
@@ -174,6 +183,8 @@ class AthleteProfile(BaseModel):
 ### 6.4 WorkoutSlot + TrainingPlan (plan.py)
 
 `weekly_slots` keyed by `"YYYY-WW"` (ISO week string). ACWR is the Acute:Chronic Workload Ratio (safe zone 0.8–1.3).
+
+**JSON serialization note**: `weekly_slots_json` stores a `dict[str, list[WorkoutSlot]]` where each `WorkoutSlot` contains a nested `FatigueScore`. Pydantic v2 fully handles nested model serialization via `model.model_dump_json()`. The repository layer (Phase 4) must reconstruct the full structure using `TrainingPlan.model_validate_json(row.weekly_slots_json)` — Pydantic reconstructs nested models automatically from JSON.
 
 ```python
 from pydantic import BaseModel, Field
