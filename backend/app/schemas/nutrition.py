@@ -15,8 +15,8 @@ class MacroTarget(BaseModel):
 class DayNutrition(BaseModel):
     day_type: DayType
     macro_target: MacroTarget
-    intra_effort_carbs_g_per_h: float | None = None
-    sodium_mg_per_h: float | None = None
+    intra_effort_carbs_g_per_h: float | None = Field(default=None, ge=0)
+    sodium_mg_per_h: float | None = Field(default=None, ge=0)
 
 
 class NutritionPlan(BaseModel):

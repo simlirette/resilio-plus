@@ -85,6 +85,18 @@ def test_day_nutrition_invalid_day_type_raises():
         DayNutrition(**make_day_nutrition(day_type="cardio"))
 
 
+def test_day_nutrition_negative_intra_effort_raises():
+    from app.schemas.nutrition import DayNutrition
+    with pytest.raises(ValidationError):
+        DayNutrition(**make_day_nutrition(intra_effort_carbs_g_per_h=-1.0))
+
+
+def test_nutrition_plan_negative_weight_raises():
+    from app.schemas.nutrition import NutritionPlan
+    with pytest.raises(ValidationError):
+        NutritionPlan(**make_nutrition_plan(weight_kg=-1.0))
+
+
 # --- NutritionPlan ---
 
 def test_nutrition_plan_valid():
