@@ -1,0 +1,25 @@
+{
+  "status": "ok",
+  "data": [
+    {
+      "user": {"user_id": "test_terra_user_123"},
+      "metadata": {
+        "start_time": "2026-03-20T00:00:00+00:00",
+        "end_time": "2026-03-20T23:59:59+00:00"
+      },
+      "heart_rate_data": {
+        "summary": {
+          "hrv_rmssd_data": [{"hrv_rmssd": 45.2}]
+        }
+      },
+      "sleep_durations_data": {
+        "total_sleep_time": 27000
+      },
+      "daily_movement": {
+        "steps": 8500,
+        "active_energy_burned_cal": 450.0
+      },
+      "sleep_score": 78.0
+    }
+  ]
+}

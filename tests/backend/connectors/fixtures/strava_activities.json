@@ -1,0 +1,26 @@
+[
+  {
+    "id": 11111111111,
+    "name": "Morning Run",
+    "sport_type": "Run",
+    "start_date_local": "2026-03-20T07:00:00Z",
+    "elapsed_time": 3600,
+    "distance": 10000.0,
+    "total_elevation_gain": 50.0,
+    "average_heartrate": 145.0,
+    "max_heartrate": 165.0,
+    "perceived_exertion": 6
+  },
+  {
+    "id": 22222222222,
+    "name": "Evening Ride",
+    "sport_type": "Ride",
+    "start_date_local": "2026-03-21T18:00:00Z",
+    "elapsed_time": 5400,
+    "distance": 45000.0,
+    "total_elevation_gain": 300.0,
+    "average_heartrate": 138.0,
+    "max_heartrate": 158.0,
+    "perceived_exertion": null
+  }
+]

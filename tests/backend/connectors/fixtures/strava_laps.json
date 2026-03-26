@@ -1,0 +1,16 @@
+[
+  {
+    "lap_index": 1,
+    "elapsed_time": 360,
+    "distance": 1000.0,
+    "average_heartrate": 140.0,
+    "average_speed": 2.78
+  },
+  {
+    "lap_index": 2,
+    "elapsed_time": 355,
+    "distance": 1000.0,
+    "average_heartrate": 143.0,
+    "average_speed": 2.82
+  }
+]
