@@ -78,6 +78,16 @@ def test_429_raises_rate_limit_immediately(connector):
 
 
 @respx.mock
+def test_429_missing_retry_after_defaults_to_60(connector):
+    respx.get(TEST_URL).mock(
+        return_value=httpx.Response(429, json={})  # no Retry-After header
+    )
+    with pytest.raises(ConnectorRateLimitError) as exc_info:
+        connector._request("GET", TEST_URL)
+    assert exc_info.value.retry_after == 60
+
+
+@respx.mock
 def test_401_raises_auth_error(connector):
     respx.get(TEST_URL).mock(return_value=httpx.Response(401, json={"error": "unauthorized"}))
     with pytest.raises(ConnectorAuthError):
@@ -100,5 +110,5 @@ def test_get_valid_token_refreshes_when_expired(cred):
 
 def test_context_manager_closes_client(cred):
     with FakeConnector(cred, client_id="cid", client_secret="csecret") as c:
-        assert c._client is not None
-    # No assertion needed — just verify no exception on exit
+        client = c._client
+    assert client.is_closed
