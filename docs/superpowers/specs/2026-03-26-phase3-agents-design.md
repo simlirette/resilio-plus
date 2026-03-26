@@ -73,7 +73,7 @@ class AgentRecommendation:
 
 `weekly_load` is a float in normalized effort-minutes (duration_minutes × intensity_weight). This provides the common unit for cross-sport ACWR computation per Supplement §1.1.
 
-`readiness_modifier` allows Recovery Coach to signal low HRV/poor sleep → HeadCoach scales all sessions down accordingly.
+`readiness_modifier` allows Recovery Coach to signal low HRV/poor sleep → HeadCoach scales all sessions down accordingly. It is clamped to [0.5, 1.5] — values outside this range are invalid and raise `ValueError` at construction time.
 
 ### BaseAgent
 
@@ -98,9 +98,9 @@ Implements Blueprint §ACWR Rule + Supplement §1.1.
 ```python
 class ACWRStatus(str, Enum):
     UNDERTRAINED = "undertrained"   # ratio < 0.8
-    SAFE         = "safe"           # 0.8 – 1.3
-    CAUTION      = "caution"        # 1.3 – 1.5
-    DANGER       = "danger"         # > 1.5
+    SAFE         = "safe"           # 0.8 ≤ ratio < 1.3
+    CAUTION      = "caution"        # 1.3 ≤ ratio < 1.5
+    DANGER       = "danger"         # ratio ≥ 1.5
 
 @dataclass
 class ACWRResult:
@@ -115,15 +115,22 @@ def compute_acwr(daily_loads: list[float]) -> ACWRResult:
 ```
 
 **EWMA formulas:**
+- Input `daily_loads` is **oldest-first chronological order** (index 0 = oldest day)
 - `lambda_acute = 2 / (7 + 1) = 0.25`
 - `lambda_chronic = 2 / (28 + 1) ≈ 0.069`
 - `EWMA[t] = load[t] * lambda + EWMA[t-1] * (1 - lambda)`
+- **Cold-start seed:** EWMA is initialized with the first element of `daily_loads` (not zero). If `daily_loads` is empty, return `ACWRResult(0, 0, 0, ACWRStatus.SAFE, 0)`.
+- When `len(daily_loads) < 28`, EWMA uses available data — no padding with zeros.
 
-Requires minimum 1 data point; handles empty list gracefully (returns SAFE with zero loads).
+**Boundary conditions (strict):**
+- `ratio < 0.8` → UNDERTRAINED
+- `0.8 ≤ ratio < 1.3` → SAFE (exactly 1.3 falls into CAUTION)
+- `1.3 ≤ ratio < 1.5` → CAUTION
+- `ratio ≥ 1.5` → DANGER
 
 **Business rules encoded:**
 - Sweet spot: 0.8–1.3 → SAFE
-- Danger: >1.5 → DANGER (injury risk ×2–4)
+- Danger: ≥1.5 → DANGER (injury risk ×2–4)
 - 10% rule: `max_safe = chronic_28d * 1.1`
 
 ### `core/fatigue.py` — FatigueScore Aggregation
@@ -138,6 +145,10 @@ class GlobalFatigue:
     all_affected_muscles: list[str] # union of all affected_muscles lists
 
 def aggregate_fatigue(scores: list[FatigueScore]) -> GlobalFatigue:
+    # Empty list → GlobalFatigue(0.0, 0.0, 0.0, 0.0, [])
+    # Sum each dimension, clamp result to [0, 100]
+    # peak_recovery_hours = max(recovery_hours) across all scores
+    # all_affected_muscles = ordered union (preserves insertion order, deduplicates)
     ...
 ```
 
@@ -148,9 +159,13 @@ Clamping to 100 prevents unrealistic values when multiple high-fatigue agents ov
 Implements Supplement §1.2 sequencing rules.
 
 ```python
+class ConflictSeverity(str, Enum):
+    WARNING  = "warning"
+    CRITICAL = "critical"
+
 @dataclass
 class Conflict:
-    severity: str           # "warning" | "critical"
+    severity: ConflictSeverity
     rule: str               # rule identifier, e.g. "hiit_strength_same_session"
     agents: list[str]       # e.g. ["running", "lifting"]
     message: str            # human-readable explanation
@@ -161,12 +176,14 @@ def detect_conflicts(recommendations: list[AgentRecommendation]) -> list[Conflic
 
 **Rules implemented (from Supplement §1.2):**
 
+`WorkoutSlot.date` (existing field) is used to determine same-day co-occurrence.
+
 | Rule | Severity | Condition |
 |---|---|---|
-| `hiit_strength_same_session` | critical | HIIT session + lifting session on same day |
-| `endurance_before_strength_gap` | warning | Endurance before strength with < 3h gap |
-| `z2_before_strength_no_conflict` | — | Z2/MICT before strength → no conflict (§1.2) |
-| `swimming_before_strength_reduced` | warning (reduced) | Swimming before strength → minor warning only |
+| `hiit_strength_same_session` | CRITICAL | HIIT `WorkoutSlot` (workout_type contains "hiit" or "interval") + lifting `WorkoutSlot` on the same date |
+| `endurance_before_strength_gap` | WARNING | Non-swimming endurance `WorkoutSlot` + lifting `WorkoutSlot` on the same date (gap assumed < 3h since exact time is not tracked at this layer) |
+| `z2_before_strength_no_conflict` | — | Z2/MICT endurance + lifting → explicitly no conflict per §1.2; detector skips this combination |
+| `swimming_before_strength_reduced` | WARNING | Swimming `WorkoutSlot` + lifting on same date → WARNING (not CRITICAL; less inflammatory per §1.2) |
 
 `detect_conflicts` receives `List[AgentRecommendation]` — each recommendation carries `agent_name` so the detector can identify which combination triggers a rule.
 
@@ -182,21 +199,27 @@ class MacroPhase(str, Enum):
     COMPETITION     = "competition"        # 1-3 weeks: tapering -40-60% volume
     TRANSITION      = "transition"         # 2-4 weeks: active recovery
 
+class TIDStrategy(str, Enum):
+    PYRAMIDAL = "pyramidal"
+    POLARIZED = "polarized"
+    MIXED     = "mixed"
+
 @dataclass
 class PeriodizationPhase:
     phase: MacroPhase
     weeks_remaining: int
-    tid_recommendation: str     # "pyramidal" | "polarized" | "mixed"
+    tid_recommendation: TIDStrategy
     volume_modifier: float      # 0.4–1.0 multiplier for target volume
 
 def get_current_phase(target_race_date: date | None, today: date) -> PeriodizationPhase:
-    # If no race date: default to GENERAL_PREP
-    # weeks_remaining drives phase selection:
-    #   > 22w → general_prep
-    #   14-22w → specific_prep
-    #   7-14w → pre_competition
-    #   1-7w  → competition
-    #   post-race → transition
+    # If no race date: default to GENERAL_PREP (tid=PYRAMIDAL, volume_modifier=1.0)
+    # weeks_remaining = (target_race_date - today).days // 7
+    # Phase selection (strict boundaries, evaluated top-down):
+    #   weeks_remaining > 22  → GENERAL_PREP  (tid=PYRAMIDAL, volume_modifier=1.0)
+    #   weeks_remaining >= 14 → SPECIFIC_PREP (tid=MIXED,     volume_modifier=0.9)
+    #   weeks_remaining >= 7  → PRE_COMPETITION (tid=POLARIZED, volume_modifier=0.8)
+    #   weeks_remaining >= 1  → COMPETITION   (tid=POLARIZED, volume_modifier=0.5)
+    #   weeks_remaining <= 0  → TRANSITION    (tid=MIXED,     volume_modifier=0.6)
 ```
 
 ---
@@ -242,14 +265,24 @@ class HeadCoach:
         conflicts = detect_conflicts(recommendations)
 
         # 6. Compute global readiness
-        readiness_modifier = min(r.readiness_modifier for r in recommendations)
+        # min() over all readiness_modifiers (Recovery Coach drives this when HRV is low)
+        readiness_modifier = min(r.readiness_modifier for r in recommendations) if recommendations else 1.0
+        # _modifier_to_level thresholds: green ≥ 0.9, yellow [0.6, 0.9), red < 0.6
         readiness_level = _modifier_to_level(readiness_modifier)
 
-        # 7. Arbitrate final session list
+        # 7. Collect notes from all agents
+        notes = [r.notes for r in recommendations if r.notes]
+
+        # 8. Arbitrate final session list
         all_sessions = [s for r in recommendations for s in r.suggested_sessions]
         sessions = self._arbitrate(all_sessions, conflicts, acwr, readiness_modifier)
 
         return WeeklyPlan(phase, acwr, global_fatigue, conflicts, sessions, readiness_level, notes)
+
+    def _modifier_to_level(self, modifier: float) -> str:
+        # modifier ≥ 0.9 → "green"
+        # 0.6 ≤ modifier < 0.9 → "yellow"
+        # modifier < 0.6 → "red"
 
     def _arbitrate(
         self,
@@ -259,15 +292,20 @@ class HeadCoach:
         readiness_modifier: float,
     ) -> list[WorkoutSlot]:
         # Rules applied in order:
-        # 1. If ACWR DANGER: reduce total volume by 20-30% (scale durations)
-        # 2. If conflict critical: remove lower-priority session of conflicting pair
-        # 3. If readiness RED (modifier < 0.6): convert all sessions to Z1
-        # 4. If proposed weekly load > acwr.max_safe_weekly_load: trim sessions
+        # 1. If readiness RED (modifier < 0.6): convert all sessions to Z1
+        #    (set workout_type = "easy_z1", duration unchanged)
+        # 2. If ACWR DANGER: scale all session durations by 0.75 (25% reduction)
+        # 3. If conflict CRITICAL: drop the shorter session (by duration_min) of the
+        #    conflicting pair. Tiebreaker: drop the session from the agent with
+        #    alphabetically later name. This is deterministic.
+        # 4. If total weekly load > acwr.max_safe_weekly_load:
+        #    trim sessions by dropping shortest sessions first until within budget.
 ```
 
-**Arbitration priority order (when dropping sessions):**
-1. Keep: long run, main lifting session, key interval session
-2. Drop first: supplementary/accessory sessions, extra volume days
+**`_modifier_to_level` thresholds:**
+- `modifier ≥ 0.9` → `"green"` (train as planned)
+- `0.6 ≤ modifier < 0.9` → `"yellow"` (reduce intensity 10–20%)
+- `modifier < 0.6` → `"red"` (Z1 only)
 
 `load_history` is sourced externally (from DB) by the API layer in Phase 4. HeadCoach has no DB dependency.
 
