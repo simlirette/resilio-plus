@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
 from app.connectors.base import BaseConnector
 from app.schemas.connector import ConnectorCredential, HevyExercise, HevySet, HevyWorkout
@@ -23,8 +23,7 @@ def _parse_exercise(item: dict) -> HevyExercise:
     )
 
 
-def _parse_workout(item: dict) -> HevyWorkout:
-    start = datetime.fromisoformat(item["start_time"].replace("Z", "+00:00"))
+def _parse_workout(item: dict, start: datetime) -> HevyWorkout:
     end = datetime.fromisoformat(item["end_time"].replace("Z", "+00:00"))
     duration_seconds = int((end - start).total_seconds())
     return HevyWorkout(
@@ -62,10 +61,11 @@ class HevyConnector(BaseConnector):
                 start = datetime.fromisoformat(
                     item["start_time"].replace("Z", "+00:00")
                 )
+                # Hevy returns workouts newest-first; once we go past since, we're done
                 if start < since:
-                    return workouts  # past the date range — stop
+                    return workouts
                 if start <= until:
-                    workouts.append(_parse_workout(item))
+                    workouts.append(_parse_workout(item, start))
             total_pages = data.get("page_count", 1)
             if page >= total_pages:
                 break
