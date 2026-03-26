@@ -193,11 +193,14 @@ Implements Supplement §1.3 macro-annual periodization.
 
 ```python
 class MacroPhase(str, Enum):
-    GENERAL_PREP    = "general_prep"       # 8-12 weeks: pyramidal TID, high volume
-    SPECIFIC_PREP   = "specific_prep"      # 6-8 weeks: mixed→polarized TID
-    PRE_COMPETITION = "pre_competition"    # 3-4 weeks: polarized, strength maintenance
-    COMPETITION     = "competition"        # 1-3 weeks: tapering -40-60% volume
-    TRANSITION      = "transition"         # 2-4 weeks: active recovery
+    # Note: week-count thresholds below refer to weeks_remaining until race,
+    # not the prose duration of each phase. E.g., GENERAL_PREP covers all weeks
+    # > 22 remaining (could be many months out).
+    GENERAL_PREP    = "general_prep"       # > 22 weeks to race: pyramidal TID, high volume
+    SPECIFIC_PREP   = "specific_prep"      # 14–22 weeks to race: mixed→polarized TID
+    PRE_COMPETITION = "pre_competition"    # 7–13 weeks to race: polarized, strength maintenance
+    COMPETITION     = "competition"        # 1–6 weeks to race: tapering -40-60% volume
+    TRANSITION      = "transition"         # post-race (≤ 0 weeks): active recovery
 
 class TIDStrategy(str, Enum):
     PYRAMIDAL = "pyramidal"
@@ -268,7 +271,7 @@ class HeadCoach:
         # min() over all readiness_modifiers (Recovery Coach drives this when HRV is low)
         readiness_modifier = min(r.readiness_modifier for r in recommendations) if recommendations else 1.0
         # _modifier_to_level thresholds: green ≥ 0.9, yellow [0.6, 0.9), red < 0.6
-        readiness_level = _modifier_to_level(readiness_modifier)
+        readiness_level = self._modifier_to_level(readiness_modifier)
 
         # 7. Collect notes from all agents
         notes = [r.notes for r in recommendations if r.notes]
@@ -300,6 +303,7 @@ class HeadCoach:
         #    alphabetically later name. This is deterministic.
         # 4. If total weekly load > acwr.max_safe_weekly_load:
         #    trim sessions by dropping shortest sessions first until within budget.
+        #    Note: rule 4 operates on post-rule-2 session durations (after any 25% scale).
 ```
 
 **`_modifier_to_level` thresholds:**
