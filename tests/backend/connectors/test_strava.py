@@ -47,6 +47,21 @@ def test_exchange_code_returns_populated_credential(connector):
 
 
 @respx.mock
+def test_do_refresh_token_returns_updated_credential(connector):
+    respx.post("https://www.strava.com/oauth/token").mock(
+        return_value=httpx.Response(200, json={
+            "access_token": "refreshed_access",
+            "refresh_token": "refreshed_refresh",
+            "expires_at": 9999999998,
+        })
+    )
+    updated_cred = connector._do_refresh_token()
+    assert updated_cred.access_token == "refreshed_access"
+    assert updated_cred.refresh_token == "refreshed_refresh"
+    assert updated_cred.expires_at == 9999999998
+
+
+@respx.mock
 def test_fetch_activities_parses_fixture(connector):
     fixture = json.loads((FIXTURES_DIR / "strava_activities.json").read_text())
     respx.get("https://www.strava.com/api/v3/athlete/activities").mock(
