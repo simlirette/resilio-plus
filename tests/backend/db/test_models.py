@@ -208,3 +208,87 @@ def test_nutrition_plan_targets_json_round_trip():
         assert "rest" in parsed
         assert parsed["rest"]["macro_target"]["carbs_g_per_kg"] == 3.0
     teardown_db(engine)
+
+
+def test_connector_credentials_table_created():
+    from sqlalchemy import inspect
+    engine = make_test_engine()
+    setup_db(engine)
+    inspector = inspect(engine)
+    assert "connector_credentials" in inspector.get_table_names()
+    teardown_db(engine)
+
+
+def test_connector_credential_crud_round_trip():
+    from app.db.models import AthleteModel, ConnectorCredentialModel
+    import uuid
+    engine = make_test_engine()
+    Session = setup_db(engine)
+    athlete_id = str(uuid.uuid4())
+    cred_id = str(uuid.uuid4())
+    with Session() as session:
+        session.add(AthleteModel(**{**make_athlete_row(), "id": athlete_id}))
+        session.add(ConnectorCredentialModel(
+            id=cred_id,
+            athlete_id=athlete_id,
+            provider="strava",
+            access_token="tok",
+            refresh_token="ref",
+            expires_at=9999999999,
+            extra_json="{}",
+        ))
+        session.commit()
+        fetched = session.get(ConnectorCredentialModel, cred_id)
+        assert fetched.provider == "strava"
+        assert fetched.access_token == "tok"
+        assert fetched.athlete_id == athlete_id
+    teardown_db(engine)
+
+
+def test_connector_credential_unique_constraint():
+    from app.db.models import AthleteModel, ConnectorCredentialModel
+    from sqlalchemy.exc import IntegrityError
+    import uuid
+    engine = make_test_engine()
+    Session = setup_db(engine)
+    athlete_id = str(uuid.uuid4())
+    with Session() as session:
+        session.add(AthleteModel(**{**make_athlete_row(), "id": athlete_id}))
+        session.add(ConnectorCredentialModel(
+            id=str(uuid.uuid4()),
+            athlete_id=athlete_id,
+            provider="strava",
+            extra_json="{}",
+        ))
+        session.flush()
+        session.add(ConnectorCredentialModel(
+            id=str(uuid.uuid4()),
+            athlete_id=athlete_id,
+            provider="strava",  # duplicate (athlete_id, provider)
+            extra_json="{}",
+        ))
+        with pytest.raises(IntegrityError):
+            session.commit()
+    teardown_db(engine)
+
+
+def test_athlete_credentials_relationship():
+    from app.db.models import AthleteModel, ConnectorCredentialModel
+    import uuid
+    engine = make_test_engine()
+    Session = setup_db(engine)
+    athlete_id = str(uuid.uuid4())
+    with Session() as session:
+        session.add(AthleteModel(**{**make_athlete_row(), "id": athlete_id}))
+        session.add(ConnectorCredentialModel(
+            id=str(uuid.uuid4()), athlete_id=athlete_id, provider="strava", extra_json="{}",
+        ))
+        session.add(ConnectorCredentialModel(
+            id=str(uuid.uuid4()), athlete_id=athlete_id, provider="hevy", extra_json="{}",
+        ))
+        session.commit()
+        athlete = session.get(AthleteModel, athlete_id)
+        assert len(athlete.credentials) == 2
+        providers = {c.provider for c in athlete.credentials}
+        assert providers == {"strava", "hevy"}
+    teardown_db(engine)

@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, Date, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Column, Date, Float, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from .database import Base
@@ -33,6 +33,7 @@ class AthleteModel(Base):
     plans = relationship("TrainingPlanModel", back_populates="athlete")
     nutrition_plans = relationship("NutritionPlanModel", back_populates="athlete")
     reviews = relationship("WeeklyReviewModel", back_populates="athlete")
+    credentials = relationship("ConnectorCredentialModel", back_populates="athlete")
 
 
 class TrainingPlanModel(Base):
@@ -77,3 +78,19 @@ class WeeklyReviewModel(Base):
     # Relationships
     athlete = relationship("AthleteModel", back_populates="reviews")
     plan = relationship("TrainingPlanModel", back_populates="reviews")
+
+
+class ConnectorCredentialModel(Base):
+    __tablename__ = "connector_credentials"
+
+    id = Column(String, primary_key=True)
+    athlete_id = Column(String, ForeignKey("athletes.id"), nullable=False)
+    provider = Column(String, nullable=False)          # "strava"|"hevy"|"fatsecret"|"terra"
+    access_token = Column(Text, nullable=True)
+    refresh_token = Column(Text, nullable=True)
+    expires_at = Column(Integer, nullable=True)        # Unix timestamp
+    extra_json = Column(Text, nullable=False, default="{}")
+    # Relationships
+    athlete = relationship("AthleteModel", back_populates="credentials")
+
+    __table_args__ = (UniqueConstraint("athlete_id", "provider"),)
