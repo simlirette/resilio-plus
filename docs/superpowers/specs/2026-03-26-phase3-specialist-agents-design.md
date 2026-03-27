@@ -63,11 +63,13 @@ def compute_readiness(
 - If no valid HRV data → `hrv_delta = 0.0`
 
 **Step 2 — Sleep delta (sleep_delta):**
-- Compute `sleep_hours_mean` and `sleep_score_mean` over last 7 entries.
+- Use `TerraHealthData` fields: `sleep_duration_hours` and `sleep_score`.
+- Compute `sleep_hours_mean = mean(e.sleep_duration_hours for e in last_7 if e.sleep_duration_hours is not None)`.
+- Compute `sleep_score_mean = mean(e.sleep_score for e in last_7 if e.sleep_score is not None)`.
 - If `sleep_hours_mean ≥ 7.0` AND `sleep_score_mean ≥ 70` → `sleep_delta = 0.0`
 - Elif `sleep_hours_mean < 6.0` OR `sleep_score_mean < 50` → `sleep_delta = -0.20`
 - Else → `sleep_delta = -0.10`
-- If no sleep data → `sleep_delta = 0.0`
+- If no sleep data (both fields None for all entries) → `sleep_delta = 0.0`
 
 **Step 3 — Final modifier:**
 ```python
@@ -96,17 +98,27 @@ def estimate_vdot(activities: list[StravaActivity]) -> float
 - Return the maximum VDOT found (best recent effort).
 - No valid activities → return `35.0` (beginner fallback).
 
-**Static VDOT table (subset — full table in implementation):**
+**Static VDOT table (complete — 15 entries, pace in seconds/km for lookup):**
 
-| VDOT | Easy pace (min/km) | Threshold pace |
-|------|-------------------|----------------|
-| 30   | 7:30              | 6:30           |
-| 35   | 6:45              | 5:50           |
-| 40   | 6:10              | 5:15           |
-| 45   | 5:40              | 4:50           |
-| 50   | 5:15              | 4:30           |
-| 55   | 4:55              | 4:10           |
-| 60   | 4:35              | 3:55           |
+| VDOT | Easy pace (s/km) | Threshold pace (s/km) |
+|------|------------------|-----------------------|
+| 30   | 450              | 390                   |
+| 33   | 425              | 368                   |
+| 35   | 405              | 350                   |
+| 38   | 383              | 332                   |
+| 40   | 370              | 315                   |
+| 43   | 350              | 300                   |
+| 45   | 340              | 290                   |
+| 48   | 322              | 275                   |
+| 50   | 315              | 270                   |
+| 53   | 300              | 258                   |
+| 55   | 295              | 250                   |
+| 58   | 280              | 238                   |
+| 60   | 275              | 235                   |
+| 65   | 258              | 220                   |
+| 70   | 242              | 207                   |
+
+Lookup: find the row where `pace_per_km_seconds` is closest to `duration_seconds / (distance_meters / 1000)`. Return that row's VDOT value.
 
 ### 3.2 Running Fatigue
 
@@ -114,7 +126,9 @@ def estimate_vdot(activities: list[StravaActivity]) -> float
 def compute_running_fatigue(activities: list[StravaActivity]) -> FatigueScore
 ```
 
-From activities in the target week:
+**Input contract:** `activities` must be pre-filtered to the relevant week by the caller (e.g., the 7 days before `date_range[0]`). This function does not filter by date internally.
+
+From the provided activities:
 - `local_muscular = min(100, total_distance_km * 3.0)`
 - `cns_load = min(100, count_hiit_sessions * 20)` — HIIT = perceived_exertion ≥ 8 OR duration < 30min with high HR
 - `metabolic_cost = min(100, sum(duration_min * rpe_normalized) / 10)` where `rpe_normalized = perceived_exertion / 10`
@@ -142,9 +156,10 @@ def generate_running_sessions(
 
 **Volume budget:**
 - `base_minutes = hours_budget * 60 * volume_modifier`
-- Wave loading: `week_number % 4 == 0` → `weekly_minutes = base_minutes * 0.6` (deload)
-- Otherwise: `weekly_minutes = base_minutes * (1.0 + 0.05 * ((week_number % 4) - 1))` — 5% progressive overload per week in block
-- Tapering: `weeks_remaining ≤ 2` → `weekly_minutes = base_minutes * 0.5`
+- Wave loading — deload check **must come first**:
+  - `if week_number % 4 == 0` → `weekly_minutes = base_minutes * 0.6` (deload week)
+  - `else` → `weekly_minutes = base_minutes * (1.0 + 0.05 * ((week_number % 4) - 1))` — 5% progressive overload per week in block (week 1: ×1.0, week 2: ×1.05, week 3: ×1.10)
+- Tapering override (applied after wave loading): `if weeks_remaining ≤ 2` → `weekly_minutes = base_minutes * 0.5`
 
 **80/20 TID distribution:**
 - Easy Z1 volume: 80% of `weekly_minutes`
@@ -215,7 +230,7 @@ From workouts in target week:
   - Contains squat or deadlift → 48h
   - Upper body only → 24h
   - Light/endurance only → 12h
-- `affected_muscles` = union of muscles targeted (exercise name → muscle group lookup from volume-landmarks.json keys)
+- `affected_muscles` = union of muscles targeted. Use a static lookup dict (authored in `lifting_logic.py`) mapping exercise name keywords to muscle groups from `volume-landmarks.json` keys (e.g., "squat" → ["quads", "glutes"], "bench" → ["chest", "triceps"], "row" → ["back", "biceps"], "deadlift" → ["hamstrings", "glutes", "back"]). This lookup is not derivable from existing JSON files alone — it must be written by hand.
 - No workouts → all-zero FatigueScore.
 
 ### 4.3 Session Generation
@@ -223,6 +238,7 @@ From workouts in target week:
 ```python
 def generate_lifting_sessions(
     strength_level: StrengthLevel,
+    phase: str,                 # MacroPhase value string — used for exercise tier selection
     week_number: int,
     weeks_remaining: int,
     available_days: list[int],
@@ -261,6 +277,8 @@ def generate_lifting_sessions(
 | `upper_strength` | 75 | Heavy press/pull, Tier 2–3 if GENERAL_PREP | chest, back, shoulders, triceps, biceps |
 | `arms_hypertrophy` | 60 | Biceps/triceps/forearms, Tier 1–2 | biceps, triceps |
 
+**`arms_hypertrophy` inclusion rule:** generated only when `week_number % 3 == 0` (hypertrophy DUP priority week) AND `len(available_days) ≥ 4` (enough days to add a dedicated arms session without crowding lower/upper sessions).
+
 **Sessions per week:** 2–4 depending on `available_days` length and `hours_budget`.
 
 **weekly_load calculation:** `sum(total_sets_per_session * mean_rpe_target)`, normalized to float.
@@ -294,12 +312,14 @@ class RunningCoach(BaseAgent):
         phase = get_current_phase(context.athlete.target_race_date, context.date_range[0])
 
         # 6. Generate sessions
+        # Budget: 60% running / 40% lifting by default; reversed if primary_sport == LIFTING
+        run_ratio = 0.4 if context.athlete.primary_sport == Sport.LIFTING else 0.6
         sessions = generate_running_sessions(
             vdot=vdot,
             week_number=context.week_number,
             weeks_remaining=context.weeks_remaining,
             available_days=context.athlete.available_days,
-            hours_budget=context.athlete.hours_per_week * 0.6,  # 60% of budget to running
+            hours_budget=context.athlete.hours_per_week * run_ratio,
             volume_modifier=phase.volume_modifier,
             tid_strategy=phase.tid_recommendation,
         )
@@ -353,21 +373,30 @@ class LiftingCoach(BaseAgent):
         # Approximate: running uses 60% of hours_budget; total = hours_budget
         running_load_ratio = 0.6  # default; refined when HeadCoach passes load info
 
-        # 7. Generate sessions (40% of budget to lifting)
+        # 7. Generate sessions
+        # Budget: 40% lifting / 60% running by default; reversed if primary_sport == LIFTING
+        lift_ratio = 0.6 if context.athlete.primary_sport == Sport.LIFTING else 0.4
         sessions = generate_lifting_sessions(
             strength_level=strength_level,
+            phase=phase.phase.value,
             week_number=context.week_number,
             weeks_remaining=context.weeks_remaining,
             available_days=context.athlete.available_days,
-            hours_budget=context.athlete.hours_per_week * 0.4,
+            hours_budget=context.athlete.hours_per_week * lift_ratio,
             volume_modifier=phase.volume_modifier,
             running_load_ratio=running_load_ratio,
         )
 
-        # 8. Compute weekly_load
+        # 8. Compute weekly_load = sum(duration_min * intensity_weight per session)
+        # Intensity weights for lifting: strength=2.0, hypertrophy=1.5, endurance=1.0, arms=1.0
+        _LIFT_INTENSITY = {
+            "upper_strength": 2.0, "lower_strength": 2.0,
+            "upper_hypertrophy": 1.5, "arms_hypertrophy": 1.0,
+            "full_body_endurance": 1.0,
+        }
         weekly_load = sum(
-            len(session.notes.split()) * 5.0  # approximation; refined in implementation
-            for session in sessions
+            s.duration_min * _LIFT_INTENSITY.get(s.workout_type, 1.0)
+            for s in sessions
         )
 
         return AgentRecommendation(
@@ -377,7 +406,7 @@ class LiftingCoach(BaseAgent):
             suggested_sessions=sessions,
             readiness_modifier=readiness_modifier,
             notes=f"Level: {strength_level.value} | Phase: {phase.phase.value} | "
-                  f"DUP block: {week_number % 3}",
+                  f"DUP block: {context.week_number % 3}",
         )
 ```
 
