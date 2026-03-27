@@ -126,10 +126,13 @@ class HeadCoach:
                                    or any(a in s.workout_type for a in agents_in_conflict)]
             if len(candidate_sessions) >= 2:
                 # Drop shorter session (tiebreaker: alphabetically later sport name)
-                to_drop = min(
-                    candidate_sessions,
-                    key=lambda s: (s.duration_min, [-ord(c) for c in s.sport.value]),
-                )
+                shortest_duration = min(s.duration_min for s in candidate_sessions)
+                candidates_shortest = [s for s in candidate_sessions if s.duration_min == shortest_duration]
+                if len(candidates_shortest) == 1:
+                    to_drop = candidates_shortest[0]
+                else:
+                    # Tiebreak: drop alphabetically later sport name
+                    to_drop = max(candidates_shortest, key=lambda s: s.sport.value)
                 result = [s for s in result if s is not to_drop]
 
         return result
