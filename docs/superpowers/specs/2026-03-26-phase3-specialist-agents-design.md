@@ -130,7 +130,7 @@ def compute_running_fatigue(activities: list[StravaActivity]) -> FatigueScore
 
 From the provided activities:
 - `local_muscular = min(100, total_distance_km * 3.0)`
-- `cns_load = min(100, count_hiit_sessions * 20)` — HIIT = perceived_exertion ≥ 8 OR duration < 30min with high HR
+- `cns_load = min(100, count_hiit_sessions * 20)` — HIIT = `perceived_exertion ≥ 8` OR (`duration_seconds < 1800` AND `average_hr > 160`)
 - `metabolic_cost = min(100, sum((a.duration_seconds / 60) * rpe_normalized for a in activities) / 10)` where `rpe_normalized = perceived_exertion / 10` — note `StravaActivity` only has `duration_seconds`, so convert to minutes inline
 - `recovery_hours`:
   - Max HIIT session → 24h
@@ -186,7 +186,7 @@ def generate_running_sessions(
 | `vo2max_z3` | 45 | Z3 | 8×3min intervals with recovery |
 | `activation_z3` | 20 | Z3 | Pre-race activation only |
 
-**Day assignment:** sessions distributed across `available_days`, longest sessions on weekend days (index 5–6) when possible.
+**Day assignment:** sessions distributed across `available_days`, longest sessions on weekend days (index 5–6) when possible. If `available_days` contains no weekend days, assign longest sessions to the last available day.
 
 **WorkoutSlot `fatigue_score` field:** Each generated `WorkoutSlot` must be constructed with an explicit zeroed `FatigueScore`:
 ```python
@@ -229,7 +229,7 @@ def compute_lifting_fatigue(workouts: list[HevyWorkout]) -> FatigueScore
 From workouts in target week:
 - `total_sets = sum(len(exercise.sets) for workout in workouts for exercise in workout.exercises)`
 - `local_muscular = min(100, total_sets * 3)`
-- `tier3_sessions = count of workouts containing any Tier 3 exercise` (from exercise-database.json)
+- `tier3_sessions = count of workouts containing any Tier 3 exercise` — use key `"tier_3_low_sfr_high_cns_use_sparingly"` from `exercise-database.json`
 - `cns_load = min(100, tier3_sessions * 25)`
 - `metabolic_cost = min(100, total_sets * total_reps_mean / 50)` where `total_reps_mean` = mean reps across all sets
 - `recovery_hours`:
