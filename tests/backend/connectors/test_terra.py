@@ -65,3 +65,23 @@ def test_fetch_daily_empty_data_returns_all_none(connector):
     assert result.sleep_duration_hours is None
     assert result.steps is None
     assert result.date == date(2026, 3, 20)
+
+
+@respx.mock
+def test_fetch_daily_null_nested_fields_returns_none(connector):
+    # Terra can return null for nested dicts (not just omit the key)
+    null_fields = {
+        "status": "ok",
+        "data": [{
+            "user": {"user_id": "test_terra_user_123"},
+            "metadata": {"start_time": "2026-03-20T00:00:00+00:00"},
+            "heart_rate_data": None,
+            "sleep_durations_data": None,
+            "daily_movement": None,
+        }]
+    }
+    respx.get(TERRA_DAILY_URL).mock(return_value=httpx.Response(200, json=null_fields))
+    result = connector.fetch_daily(date(2026, 3, 20))
+    assert result.hrv_rmssd is None
+    assert result.sleep_duration_hours is None
+    assert result.steps is None

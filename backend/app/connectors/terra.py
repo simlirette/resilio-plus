@@ -21,17 +21,17 @@ def _parse_daily(data: dict, query_date: date) -> TerraHealthData:
 
     # HRV RMSSD — deeply nested; absent at any level → None
     hrv_rmssd = None
-    hr_data = item.get("heart_rate_data", {})
+    hr_data = item.get("heart_rate_data") or {}
     hrv_data = hr_data.get("summary", {}).get("hrv_rmssd_data", [])
     if hrv_data:
         hrv_rmssd = hrv_data[0].get("hrv_rmssd")
 
     # Sleep
-    sleep_secs = item.get("sleep_durations_data", {}).get("total_sleep_time")
-    sleep_hours = round(sleep_secs / 3600, 2) if sleep_secs else None
+    sleep_secs = (item.get("sleep_durations_data") or {}).get("total_sleep_time")
+    sleep_hours = round(sleep_secs / 3600, 2) if sleep_secs is not None else None
 
     # Movement
-    movement = item.get("daily_movement", {})
+    movement = item.get("daily_movement") or {}
     steps = movement.get("steps")
     active_kcal = movement.get("active_energy_burned_cal")
 
