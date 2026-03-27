@@ -1,0 +1,17 @@
+{
+  "_source": "Supplement §4.1 — Coggan power zones",
+  "zones": {
+    "Z1_active_recovery": {"percent_ftp": [0,   55],  "description": "Récupération active"},
+    "Z2_endurance":        {"percent_ftp": [56,  75],  "description": "Endurance, conversation possible"},
+    "Z3_tempo":            {"percent_ftp": [76,  90],  "description": "Tempo, effort soutenu"},
+    "Z4_threshold":        {"percent_ftp": [91,  105], "description": "Seuil lactique, ~60min soutenable"},
+    "Z5_vo2max":           {"percent_ftp": [106, 120], "description": "VO2max, 3-8min"},
+    "Z6_anaerobic":        {"percent_ftp": [121, 150], "description": "Capacité anaérobie, 30s-3min"},
+    "Z7_neuromuscular":    {"percent_ftp": [150, 9999],"description": "Sprint, <30s"}
+  },
+  "ftp_test_protocols": {
+    "20min_test": "20min all-out, FTP = 95% of average power",
+    "ramp_test":  "Increments of 25W/min, FTP = 75% of peak power reached",
+    "retest_interval_weeks": 6
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "_source": "Supplement §2.1 — Daniels/Seiler hybrid zones",
+  "zones": {
+    "Z1_easy": {
+      "description": "Endurance fondamentale, conversation facile",
+      "hr_percent_max": [60, 74],
+      "pace_reference": "Easy pace (Daniels)",
+      "lactate_mmol": [0.8, 2.0],
+      "volume_percent_weekly": [75, 80],
+      "purpose": "Base aérobie, récupération active, adaptation mitochondriale"
+    },
+    "Z2_tempo": {
+      "description": "Seuil lactique, confortablement difficile",
+      "hr_percent_max": [80, 88],
+      "pace_reference": "Tempo/Threshold pace (Daniels T-pace)",
+      "lactate_mmol": [2.0, 4.0],
+      "volume_percent_weekly": [5, 10],
+      "purpose": "Amélioration seuil lactique, économie de course"
+    },
+    "Z3_vo2max": {
+      "description": "Intervalles durs, respiration lourde",
+      "hr_percent_max": [95, 100],
+      "pace_reference": "Interval pace (Daniels I-pace)",
+      "lactate_mmol": [6.0, 10.0],
+      "volume_percent_weekly": [5, 8],
+      "purpose": "VO2max, capacité aérobie maximale"
+    },
+    "Z4_repetition": {
+      "description": "Sprints courts, vitesse pure",
+      "hr_percent_max": null,
+      "pace_reference": "Repetition pace (Daniels R-pace)",
+      "volume_percent_weekly": [2, 5],
+      "purpose": "Économie de course, recrutement fibres rapides"
+    }
+  }
+}

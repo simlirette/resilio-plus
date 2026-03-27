@@ -1,0 +1,19 @@
+{
+  "_source": "Supplement §5.1 — CSS-based swimming zones",
+  "css_formula": "(distance_400m - distance_200m) / (time_400s - time_200s)",
+  "css_description": "Critical Swim Speed = lactate threshold in swimming",
+  "zones": {
+    "Z1_technique":  {"percent_css": [0,   85],  "description": "Technique, échauffement, récupération"},
+    "Z2_endurance":  {"percent_css": [85,  95],  "description": "Endurance aérobie"},
+    "Z3_threshold":  {"percent_css": [95,  100], "description": "Seuil CSS pace"},
+    "Z4_vo2max":     {"percent_css": [100, 105], "description": "VO2max natation"},
+    "Z5_sprint":     {"percent_css": [105, 9999],"description": "Sprint, vitesse pure"}
+  },
+  "swolf_description": "SWOLF = strokes per length + time per length (lower = more efficient)",
+  "key_sessions": {
+    "threshold_set": "5-10 × 200m @ CSS pace, 15-20s rest",
+    "vo2max_set": "8 × 100m @ Z4, 20s rest",
+    "pull_set": "With paddles, focus on DPS improvement",
+    "drill_set": "Technique drills (catch-up, finger drag, fist drill)"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "_source": "Blueprint §5.6 + Supplement §6",
+  "carbs_g_per_kg": {
+    "strength_day":    [4, 5],
+    "endurance_short": [5, 6],
+    "endurance_long":  [6, 7],
+    "rest":            [3, 4]
+  },
+  "protein_g_per_kg": {
+    "daily": 1.8,
+    "dose_frequency_hours": [3, 4],
+    "dose_size_g": [20, 40],
+    "pre_sleep_casein_g": [30, 40]
+  },
+  "intra_effort": {
+    "under_60min_g_per_h": 0,
+    "60_to_150min_g_per_h": [30, 60],
+    "over_150min_g_per_h": [60, 90],
+    "over_150min_note": "Use glucose:fructose 2:1 ratio. Requires gut training.",
+    "over_3h_sodium_mg_per_h": [500, 1000]
+  },
+  "hydration": {
+    "baseline_ml_per_kg_day": [35, 40],
+    "pre_exercise_ml_per_kg_2_4h_before": [5, 7],
+    "during_ml_per_h": [400, 800],
+    "post_exercise_ml_per_kg_lost": 1500
+  },
+  "supplements_evidence_level_A": [
+    {"name": "creatine_monohydrate", "dose": "3-5g/day", "timing": "any"},
+    {"name": "caffeine", "dose": "3-6mg/kg", "timing": "30-60min pre-effort"},
+    {"name": "beta_alanine", "dose": "3.2-6.4g/day split", "timing": "with meals"},
+    {"name": "nitrate_beetroot", "dose": "6-8mmol", "timing": "2-3h pre-effort"},
+    {"name": "omega3", "dose": "2-4g EPA+DHA/day", "timing": "with meals"},
+    {"name": "vitamin_d", "dose": "1000-2000 IU/day if deficient", "timing": "any"}
+  ]
+}

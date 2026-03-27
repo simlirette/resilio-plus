@@ -1,0 +1,19 @@
+{
+  "_source": "Supplement §3.3 — SFR (Stimulus-to-Fatigue Ratio) tiers",
+  "_note": "In high running volume phases, prefer Tier 1. Tier 3 reserved for off-season.",
+  "tier_1_high_sfr_low_cns": [
+    "Machine Leg Press", "Hack Squat Machine", "Seated Leg Curl",
+    "Lat Pulldown", "Cable Row", "Machine Chest Press",
+    "Cable Lateral Raise", "Overhead Cable Tricep Extension",
+    "Incline Dumbbell Curl", "Leg Extension"
+  ],
+  "tier_2_moderate_sfr_moderate_cns": [
+    "Romanian Deadlift (DB)", "Bulgarian Split Squat",
+    "Dumbbell Bench Press", "Barbell Row", "Overhead Press (DB)",
+    "Pull-ups", "Dips"
+  ],
+  "tier_3_low_sfr_high_cns_use_sparingly": [
+    "Barbell Back Squat", "Conventional Deadlift", "Barbell Bench Press",
+    "Barbell Overhead Press", "Power Clean"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "_source": "Blueprint §5.2 + Renaissance Periodization (Israetel) MEV/MAV/MRV",
+  "_note": "hybrid_reduction = fraction to reduce MRV when running volume is high",
+  "quads":      {"MEV": 8,  "MAV": 14, "MRV": 20, "hybrid_reduction": 0.4},
+  "hamstrings": {"MEV": 6,  "MAV": 10, "MRV": 16, "hybrid_reduction": 0.3},
+  "glutes":     {"MEV": 4,  "MAV": 8,  "MRV": 16, "hybrid_reduction": 0.2},
+  "calves":     {"MEV": 8,  "MAV": 14, "MRV": 22, "hybrid_reduction": 0.2},
+  "chest":      {"MEV": 8,  "MAV": 14, "MRV": 22, "hybrid_reduction": 0.0},
+  "back":       {"MEV": 10, "MAV": 16, "MRV": 25, "hybrid_reduction": 0.0},
+  "shoulders":  {"MEV": 8,  "MAV": 14, "MRV": 22, "hybrid_reduction": 0.0},
+  "biceps":     {"MEV": 6,  "MAV": 10, "MRV": 20, "hybrid_reduction": 0.0},
+  "triceps":    {"MEV": 6,  "MAV": 10, "MRV": 20, "hybrid_reduction": 0.0},
+  "core":       {"MEV": 6,  "MAV": 10, "MRV": 16, "hybrid_reduction": 0.1}
+}
