@@ -26,7 +26,9 @@ class RunningCoach(BaseAgent):
         ]
 
         # 2. VDOT: use athlete's stored value, else estimate from full history
-        vdot = context.athlete.vdot or estimate_vdot(context.strava_activities)
+        vdot = context.athlete.vdot or estimate_vdot(
+            context.strava_activities, reference_date=context.date_range[0]
+        )
 
         # 3. Readiness modifier from Terra health data
         readiness_modifier = compute_readiness(context.terra_health)

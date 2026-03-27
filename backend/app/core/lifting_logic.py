@@ -165,8 +165,8 @@ def generate_lifting_sessions(
     }
     tier_note = _TIER_NOTE.get(phase, "Tier 1")
 
-    # Wave loading multiplier (deload check first)
-    dur_mult = 0.6 if week_number % 4 == 0 else 1.0
+    # Wave loading multiplier (deload check first), scaled by volume_modifier
+    dur_mult = volume_modifier * (0.6 if week_number % 4 == 0 else 1.0)
 
     # Hybrid reduction for lower body (quads hybrid_reduction from volume-landmarks.json)
     lower_base = 60

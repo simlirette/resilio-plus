@@ -27,7 +27,7 @@ def test_estimate_vdot_no_activities_returns_default():
 def test_estimate_vdot_from_recent_activity():
     # 10km in 3000s -> pace = 300 s/km -> VDOT table row (53, easy=300) -> VDOT 53
     activity = _run(distance_m=10000, duration_s=3000, days_ago=5)
-    assert estimate_vdot([activity]) == 53
+    assert estimate_vdot([activity], reference_date=date(2026, 4, 7)) == 53
 
 
 def test_estimate_vdot_ignores_non_run():

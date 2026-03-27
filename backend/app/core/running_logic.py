@@ -18,7 +18,10 @@ _VDOT_TABLE: list[tuple[int, int, int]] = [
 ]
 
 
-def estimate_vdot(activities: list[StravaActivity]) -> float:
+def estimate_vdot(
+    activities: list[StravaActivity],
+    reference_date: date | None = None,
+) -> float:
     """Estimate VDOT from recent run activities. Returns 35.0 (beginner) if no data.
 
     Filters to last 30 days, sport_type == "Run", distance >= 1000m.
@@ -26,7 +29,8 @@ def estimate_vdot(activities: list[StravaActivity]) -> float:
     Returns the maximum VDOT found across all valid activities.
     """
     from datetime import date as _date
-    cutoff = _date.today() - timedelta(days=30)
+    ref = reference_date or _date.today()
+    cutoff = ref - timedelta(days=30)
     runs = [
         a for a in activities
         if a.sport_type == "Run"
