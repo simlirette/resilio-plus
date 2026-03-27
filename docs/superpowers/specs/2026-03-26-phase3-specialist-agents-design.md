@@ -131,7 +131,7 @@ def compute_running_fatigue(activities: list[StravaActivity]) -> FatigueScore
 From the provided activities:
 - `local_muscular = min(100, total_distance_km * 3.0)`
 - `cns_load = min(100, count_hiit_sessions * 20)` — HIIT = perceived_exertion ≥ 8 OR duration < 30min with high HR
-- `metabolic_cost = min(100, sum(duration_min * rpe_normalized) / 10)` where `rpe_normalized = perceived_exertion / 10`
+- `metabolic_cost = min(100, sum((a.duration_seconds / 60) * rpe_normalized for a in activities) / 10)` where `rpe_normalized = perceived_exertion / 10` — note `StravaActivity` only has `duration_seconds`, so convert to minutes inline
 - `recovery_hours`:
   - Max HIIT session → 24h
   - Max tempo session (RPE 6–7) → 12h
@@ -187,6 +187,12 @@ def generate_running_sessions(
 | `activation_z3` | 20 | Z3 | Pre-race activation only |
 
 **Day assignment:** sessions distributed across `available_days`, longest sessions on weekend days (index 5–6) when possible.
+
+**WorkoutSlot `fatigue_score` field:** Each generated `WorkoutSlot` must be constructed with an explicit zeroed `FatigueScore`:
+```python
+fatigue_score=FatigueScore(local_muscular=0, cns_load=0, metabolic_cost=0, recovery_hours=0, affected_muscles=[])
+```
+The slot-level fatigue is a pass-through placeholder; the agent computes aggregate fatigue separately via `compute_running_fatigue`.
 
 **intensity_weight for weekly_load calculation:** Z1=1.0, Z2=1.5, Z3=2.0, Z4=2.5
 
@@ -274,14 +280,16 @@ def generate_lifting_sessions(
 | `upper_hypertrophy` | 60 | Chest/back/shoulders, Tier 1–2 | chest, back, shoulders |
 | `lower_strength` | 60 | Quads/hamstrings (reduced if running high) | quads, hamstrings, glutes |
 | `full_body_endurance` | 45 | Core + light compound movements | core, quads, back |
-| `upper_strength` | 75 | Heavy press/pull, Tier 2–3 if GENERAL_PREP | chest, back, shoulders, triceps, biceps |
+| `upper_strength` | 75 | Heavy press/pull, Tier 1 only in GENERAL_PREP; Tier 2–3 in SPECIFIC_PREP/TRANSITION | chest, back, shoulders, triceps, biceps |
 | `arms_hypertrophy` | 60 | Biceps/triceps/forearms, Tier 1–2 | biceps, triceps |
 
 **`arms_hypertrophy` inclusion rule:** generated only when `week_number % 3 == 0` (hypertrophy DUP priority week) AND `len(available_days) ≥ 4` (enough days to add a dedicated arms session without crowding lower/upper sessions).
 
 **Sessions per week:** 2–4 depending on `available_days` length and `hours_budget`.
 
-**weekly_load calculation:** `sum(total_sets_per_session * mean_rpe_target)`, normalized to float.
+**WorkoutSlot `fatigue_score` field:** Same as running — each slot must be constructed with a zeroed `FatigueScore(local_muscular=0, cns_load=0, metabolic_cost=0, recovery_hours=0, affected_muscles=[])`. The aggregate fatigue is computed separately via `compute_lifting_fatigue`.
+
+**weekly_load calculation:** `sum(duration_min * intensity_weight for each session)` using the `_LIFT_INTENSITY` mapping defined in §6.
 
 ---
 
@@ -291,7 +299,9 @@ Thin wrapper around core modules.
 
 ```python
 class RunningCoach(BaseAgent):
-    name = "running"
+    @property
+    def name(self) -> str:
+        return "running"
 
     def analyze(self, context: AgentContext) -> AgentRecommendation:
         # 1. Filter Strava activities to last 7 days before date_range start
@@ -349,7 +359,9 @@ class RunningCoach(BaseAgent):
 
 ```python
 class LiftingCoach(BaseAgent):
-    name = "lifting"
+    @property
+    def name(self) -> str:
+        return "lifting"
 
     def analyze(self, context: AgentContext) -> AgentRecommendation:
         # 1. Filter Hevy workouts to last 7 days before date_range start
