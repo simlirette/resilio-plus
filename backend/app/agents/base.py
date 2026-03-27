@@ -20,6 +20,8 @@ class AgentContext:
     hevy_workouts: list[HevyWorkout] = field(default_factory=list)
     terra_health: list[TerraHealthData] = field(default_factory=list)
     fatsecret_days: list[FatSecretDay] = field(default_factory=list)
+    week_number: int = 1                    # 1-based week in multi-week plan
+    weeks_remaining: int = 0               # weeks until target_race_date
 
 
 @dataclass
