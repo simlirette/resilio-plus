@@ -65,17 +65,17 @@ class AthleteCreate(BaseModel):
     ftp_watts: int | None = None
     vdot: float | None = None
     css_per_100m: float | None = None
-    sleep_hours_typical: float = 7.0
+    sleep_hours_typical: float = Field(default=7.0)
     stress_level: int = Field(default=5, ge=1, le=10)
     job_physical: bool = False
 
 
 class AthleteUpdate(BaseModel):
     name: str | None = None
-    age: int | None = None
+    age: int | None = Field(default=None, ge=14, le=100)
     sex: Literal["M", "F", "other"] | None = None
-    weight_kg: float | None = None
-    height_cm: float | None = None
+    weight_kg: float | None = Field(default=None, gt=0)
+    height_cm: float | None = Field(default=None, gt=0)
     sports: list[Sport] | None = None
     primary_sport: Sport | None = None
     goals: list[str] | None = None
@@ -89,7 +89,7 @@ class AthleteUpdate(BaseModel):
     vdot: float | None = None
     css_per_100m: float | None = None
     sleep_hours_typical: float | None = None
-    stress_level: int | None = None
+    stress_level: int | None = Field(default=None, ge=1, le=10)
     job_physical: bool | None = None
 
 
