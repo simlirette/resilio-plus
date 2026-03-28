@@ -49,7 +49,7 @@ class TrainingPlanModel(Base):
     total_weekly_hours = Column(Float, nullable=False)
     acwr = Column(Float, nullable=False)
     weekly_slots_json = Column(Text, nullable=False)
-    created_at = Column(DateTime, nullable=True,
+    created_at = Column(DateTime(timezone=True), nullable=False,
                         default=lambda: datetime.now(timezone.utc))
     # Relationships
     athlete = relationship("AthleteModel", back_populates="plans")

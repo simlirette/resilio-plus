@@ -297,6 +297,9 @@ def test_training_plan_created_at_auto_populated():
         fetched = session.get(TrainingPlanModel, plan_id)
         assert fetched.created_at is not None
         assert isinstance(fetched.created_at, datetime)
+        from datetime import timedelta
+        now = datetime.utcnow()
+        assert now - timedelta(seconds=5) < fetched.created_at <= now + timedelta(seconds=5)
     teardown_db(engine)
 
 
