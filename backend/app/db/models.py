@@ -30,7 +30,7 @@ class AthleteModel(Base):
     sports_json = Column(Text, nullable=False)
     goals_json = Column(Text, nullable=False)
     available_days_json = Column(Text, nullable=False)
-    equipment_json = Column(Text, nullable=False)
+    equipment_json = Column(Text, nullable=False, default="[]")
     # Relationships
     plans = relationship("TrainingPlanModel", back_populates="athlete")
     nutrition_plans = relationship("NutritionPlanModel", back_populates="athlete")
