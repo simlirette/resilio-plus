@@ -274,7 +274,7 @@ def test_connector_credential_unique_constraint():
 
 def test_training_plan_created_at_auto_populated():
     from app.db.models import AthleteModel, TrainingPlanModel
-    from datetime import datetime
+    from datetime import datetime, timedelta, timezone
     import uuid
     engine = make_test_engine()
     Session = setup_db(engine)
@@ -297,9 +297,10 @@ def test_training_plan_created_at_auto_populated():
         fetched = session.get(TrainingPlanModel, plan_id)
         assert fetched.created_at is not None
         assert isinstance(fetched.created_at, datetime)
-        from datetime import timedelta
-        now = datetime.utcnow()
-        assert now - timedelta(seconds=5) < fetched.created_at <= now + timedelta(seconds=5)
+        # SQLite returns naive datetimes; interpret as UTC
+        created_at_utc = fetched.created_at.replace(tzinfo=timezone.utc)
+        now = datetime.now(timezone.utc)
+        assert now - timedelta(seconds=5) < created_at_utc <= now + timedelta(seconds=5)
     teardown_db(engine)
 
 
