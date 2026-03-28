@@ -102,15 +102,7 @@ def test_plan_persisted_in_db(client):
 
 
 def test_plan_route_calls_connector_service(client):
-    # Create athlete
-    resp = client.post("/athletes", json={
-        "name": "Bob", "age": 28, "sex": "M",
-        "weight_kg": 75.0, "height_cm": 180.0,
-        "sports": ["running", "lifting"], "primary_sport": "running",
-        "goals": ["finish triathlon"], "available_days": [0, 1, 2, 3, 4, 5, 6],
-        "hours_per_week": 12.0,
-    })
-    athlete_id = resp.json()["id"]
+    athlete_id = _create_athlete(client)
 
     with patch("app.routes.plans.fetch_connector_data") as mock_fetch:
         mock_fetch.return_value = {"strava_activities": [], "hevy_workouts": []}
@@ -119,4 +111,4 @@ def test_plan_route_calls_connector_service(client):
             json={"start_date": "2026-04-07", "end_date": "2026-04-13"},
         )
         assert resp.status_code == 201
-        mock_fetch.assert_called_once_with(str(athlete_id), ANY)
+        mock_fetch.assert_called_once_with(athlete_id, ANY)

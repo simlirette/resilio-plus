@@ -57,7 +57,7 @@ def generate_plan(athlete_id: str, req: PlanRequest, db: DB) -> TrainingPlanResp
         hevy_workouts=connector_data["hevy_workouts"],
         terra_health=[],
         fatsecret_days=[],
-        week_number=1,
+        week_number=1,  # TODO: derive from athlete's plan history
         weeks_remaining=weeks_remaining,
     )
 
