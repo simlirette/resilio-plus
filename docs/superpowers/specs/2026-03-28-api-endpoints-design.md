@@ -74,10 +74,11 @@ FastAPI handles 422 validation automatically.
 
 1. Load `AthleteModel` from DB by `id` → raise `HTTPException(404)` if not found
 2. Deserialize into `AthleteProfile` (parse JSON fields, reconstruct `Sport` enums etc.)
-3. Compute `phase` string:
+3. Compute `phase` string (`PeriodizationPhase` is a dataclass, not an enum — access inner `MacroPhase` via `.phase.value`):
    ```python
    from app.core.periodization import get_current_phase
-   phase = get_current_phase(athlete_profile.target_race_date, start_date).value
+   phase_obj = get_current_phase(athlete_profile.target_race_date, start_date)
+   phase = phase_obj.phase.value   # MacroPhase string e.g. "general_prep"
    ```
 4. Compute `weeks_remaining`:
    ```python
@@ -121,7 +122,7 @@ FastAPI handles 422 validation automatically.
        athlete_id=str(athlete_profile.id),
        start_date=start_date,
        end_date=end_date,
-       phase=weekly_plan.phase.value,
+       phase=weekly_plan.phase.phase.value,   # PeriodizationPhase → MacroPhase → str
        total_weekly_hours=sum(s.duration_min for s in weekly_plan.sessions) / 60,
        acwr=weekly_plan.acwr.ratio,
        weekly_slots_json=json.dumps(
@@ -149,7 +150,7 @@ if plan is None:
 
 **Response schema (`TrainingPlanResponse`):**
 
-Define a new Pydantic response model in `backend/app/schemas/plan.py`:
+Define a new Pydantic response model in `backend/app/schemas/plan.py`. Note: `id` and `athlete_id` are `str` (not `UUID`) because `TrainingPlanModel` stores them as strings — this is intentional and differs from the existing `TrainingPlan` schema.
 ```python
 class TrainingPlanResponse(BaseModel):
     id: str
@@ -164,7 +165,7 @@ class TrainingPlanResponse(BaseModel):
     @classmethod
     def from_model(cls, m: TrainingPlanModel) -> "TrainingPlanResponse":
         import json
-        sessions = [WorkoutSlot(**s) for s in json.loads(m.weekly_slots_json)]
+        sessions = [WorkoutSlot.model_validate(s) for s in json.loads(m.weekly_slots_json)]
         return cls(
             id=m.id,
             athlete_id=m.athlete_id,
@@ -186,11 +187,11 @@ from datetime import datetime, timezone
 
 class TrainingPlanModel(Base):
     ...
-    created_at = Column(DateTime, nullable=False,
+    created_at = Column(DateTime, nullable=True,
                         default=lambda: datetime.now(timezone.utc))
 ```
 
-This is a new nullable-by-default column on SQLite; existing rows will have `NULL` but new rows will always have a value. Order by `created_at DESC` to get the most recently generated plan.
+`nullable=True` keeps SQLite compatible (no SQL-level DEFAULT clause; the Python-side `default` fires on ORM inserts). All new rows created via SQLAlchemy ORM will always have a non-null value. Order by `created_at DESC` (NULLs last) to get the most recently generated plan.
 
 ## Dependencies
 
@@ -245,7 +246,7 @@ client = TestClient(app)
 - `tests/backend/api/test_plans.py` (~8 tests):
   - `test_generate_plan_returns_201_with_sessions` — assert `weekly_plan.sessions` is non-empty and `acwr >= 0`
   - `test_generate_plan_unknown_athlete_returns_404`
-  - `test_get_plan_returns_latest` — generate two plans, assert GET returns the second one
+  - `test_get_plan_returns_latest` — generate two plans with `time.sleep(0.001)` between them to ensure distinct `created_at` values, assert GET returns the second one
   - `test_get_plan_no_plan_returns_404`
   - `test_plan_phase_matches_periodization` — assert returned `phase` matches `get_current_phase(target_race_date, start_date).value`
   - `test_plan_total_weekly_hours_positive`
