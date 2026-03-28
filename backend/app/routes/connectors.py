@@ -79,7 +79,7 @@ def strava_authorize(athlete_id: str, db: DB) -> dict:
 
 
 @router.get("/{athlete_id}/connectors/strava/callback")
-def strava_callback(athlete_id: str, code: str, db: DB, state: str | None = None) -> dict:
+def strava_callback(athlete_id: str, code: str, db: DB) -> dict:
     if db.get(AthleteModel, athlete_id) is None:
         raise HTTPException(status_code=404)
 
@@ -152,6 +152,8 @@ def list_connectors(athlete_id: str, db: DB) -> ConnectorListResponse:
 
 @router.delete("/{athlete_id}/connectors/{provider}", status_code=204)
 def delete_connector(athlete_id: str, provider: str, db: DB) -> None:
+    if db.get(AthleteModel, athlete_id) is None:
+        raise HTTPException(status_code=404)
     cred = (
         db.query(ConnectorCredentialModel)
         .filter_by(athlete_id=athlete_id, provider=provider)

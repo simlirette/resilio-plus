@@ -94,13 +94,21 @@ def test_strava_callback_upsert_updates_existing(client_and_db):
     client, session = client_and_db
     athlete_id = _create_athlete(client)
 
-    for token in ("tok_v1", "tok_v2"):
-        respx.post("https://www.strava.com/oauth/token").mock(
-            return_value=httpx.Response(200, json={
-                "access_token": token, "refresh_token": "ref", "expires_at": 9999999999,
-            })
-        )
-        client.get(f"/athletes/{athlete_id}/connectors/strava/callback?code=abc")
+    # First call: creates the credential with tok_v1
+    respx.post("https://www.strava.com/oauth/token").mock(
+        return_value=httpx.Response(200, json={
+            "access_token": "tok_v1", "refresh_token": "ref", "expires_at": 9999999999,
+        })
+    )
+    client.get(f"/athletes/{athlete_id}/connectors/strava/callback?code=abc")
+
+    # Second call: updates the existing credential with tok_v2
+    respx.post("https://www.strava.com/oauth/token").mock(
+        return_value=httpx.Response(200, json={
+            "access_token": "tok_v2", "refresh_token": "ref2", "expires_at": 9999999999,
+        })
+    )
+    client.get(f"/athletes/{athlete_id}/connectors/strava/callback?code=abc")
 
     session.expire_all()
     creds = session.query(ConnectorCredentialModel).filter_by(
