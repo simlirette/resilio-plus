@@ -1,7 +1,7 @@
 import json
 import os
 import uuid
-from typing import Annotated
+from typing import Annotated, Literal
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
@@ -151,7 +151,7 @@ def list_connectors(athlete_id: str, db: DB) -> ConnectorListResponse:
 
 
 @router.delete("/{athlete_id}/connectors/{provider}", status_code=204)
-def delete_connector(athlete_id: str, provider: str, db: DB) -> None:
+def delete_connector(athlete_id: str, provider: Literal["strava", "hevy"], db: DB) -> None:
     if db.get(AthleteModel, athlete_id) is None:
         raise HTTPException(status_code=404)
     cred = (

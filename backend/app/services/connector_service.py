@@ -66,7 +66,7 @@ def fetch_connector_data(athlete_id: str, db: Session) -> dict:
                 if connector.credential.access_token != original_token:
                     _persist_token_update(strava_model, connector.credential, db)
         except Exception:
-            logger.warning("Strava fetch failed for athlete %s", athlete_id)
+            logger.warning("Strava fetch failed for athlete %s", athlete_id, exc_info=True)
 
     # ── Hevy ─────────────────────────────────────────────────────────────────
     hevy_model = (
@@ -80,6 +80,6 @@ def fetch_connector_data(athlete_id: str, db: Session) -> dict:
             with HevyConnector(cred, client_id="", client_secret="") as connector:
                 hevy_workouts = connector.fetch_workouts(since=since, until=now)
         except Exception:
-            logger.warning("Hevy fetch failed for athlete %s", athlete_id)
+            logger.warning("Hevy fetch failed for athlete %s", athlete_id, exc_info=True)
 
     return {"strava_activities": strava_activities, "hevy_workouts": hevy_workouts}
