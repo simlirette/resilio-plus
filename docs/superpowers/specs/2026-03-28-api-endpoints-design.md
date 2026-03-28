@@ -45,10 +45,10 @@ backend/app/
 | `PUT` | `/athletes/{id}` | 200, 404 |
 | `DELETE` | `/athletes/{id}` | 204, 404 |
 
-**Schemas (already in `backend/app/schemas/athlete.py`):**
-- Input: `AthleteCreate` — all `AthleteProfile` fields except `id` (auto-generated)
-- Input: `AthleteUpdate` — all fields optional
-- Output: `AthleteResponse` — all `AthleteProfile` fields
+**Schemas (to be added to `backend/app/schemas/athlete.py`):**
+- `AthleteCreate` — all `AthleteProfile` fields except `id` (auto-generated UUID)
+- `AthleteUpdate` — all fields optional (use `Optional[T]` / `T | None = None`)
+- `AthleteResponse` — identical to `AthleteProfile` (re-export or subclass)
 
 `AthleteProfile` includes fitness markers (`max_hr`, `resting_hr`, `ftp_watts`, `vdot`, `css_per_100m`) and lifestyle fields (`sleep_hours_typical`, `stress_level`, `job_physical`). These default to `None`/sensible defaults when not provided; agents handle missing values gracefully via cold-start logic.
 
@@ -271,11 +271,12 @@ client = TestClient(app)
 
 | File | Action |
 |------|--------|
-| `backend/app/main.py` | Create |
+| `backend/app/main.py` | Create — CORS `allow_origins=["*"]` (no auth in Phase 1) |
 | `backend/app/dependencies.py` | Create |
 | `backend/app/routes/__init__.py` | Create |
 | `backend/app/routes/athletes.py` | Create |
 | `backend/app/routes/plans.py` | Create |
+| `backend/app/schemas/athlete.py` | Modify — add `AthleteCreate`, `AthleteUpdate`, `AthleteResponse` |
 | `backend/app/schemas/plan.py` | Modify — add `TrainingPlanResponse` |
 | `backend/app/db/models.py` | Modify — add `created_at` to `TrainingPlanModel` |
 | `tests/backend/api/__init__.py` | Create |
