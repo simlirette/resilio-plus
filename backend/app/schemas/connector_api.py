@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ConnectorStatus(BaseModel):
@@ -8,7 +8,7 @@ class ConnectorStatus(BaseModel):
 
 
 class HevyConnectRequest(BaseModel):
-    api_key: str
+    api_key: str = Field(..., min_length=1)
 
 
 class ConnectorListResponse(BaseModel):

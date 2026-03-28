@@ -1,3 +1,6 @@
+import pytest
+from pydantic import ValidationError
+
 from app.schemas.connector_api import ConnectorStatus, HevyConnectRequest, ConnectorListResponse
 
 
@@ -29,3 +32,8 @@ def test_connector_list_response_with_items():
         ConnectorStatus(provider="hevy", connected=True, expires_at=None),
     ])
     assert len(r.connectors) == 2
+
+
+def test_hevy_connect_request_rejects_empty_key():
+    with pytest.raises(ValidationError):
+        HevyConnectRequest(api_key="")
