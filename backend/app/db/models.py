@@ -1,4 +1,6 @@
-from sqlalchemy import Boolean, Column, Date, Float, ForeignKey, Integer, String, Text, UniqueConstraint
+from datetime import datetime, timezone
+
+from sqlalchemy import Boolean, Column, Date, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from .database import Base
@@ -47,6 +49,8 @@ class TrainingPlanModel(Base):
     total_weekly_hours = Column(Float, nullable=False)
     acwr = Column(Float, nullable=False)
     weekly_slots_json = Column(Text, nullable=False)
+    created_at = Column(DateTime, nullable=True,
+                        default=lambda: datetime.now(timezone.utc))
     # Relationships
     athlete = relationship("AthleteModel", back_populates="plans")
     reviews = relationship("WeeklyReviewModel", back_populates="plan")

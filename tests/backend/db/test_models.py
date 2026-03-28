@@ -272,6 +272,34 @@ def test_connector_credential_unique_constraint():
     teardown_db(engine)
 
 
+def test_training_plan_created_at_auto_populated():
+    from app.db.models import AthleteModel, TrainingPlanModel
+    from datetime import datetime
+    import uuid
+    engine = make_test_engine()
+    Session = setup_db(engine)
+    athlete_id = str(uuid.uuid4())
+    plan_id = str(uuid.uuid4())
+    with Session() as session:
+        session.add(AthleteModel(**{**make_athlete_row(), "id": athlete_id}))
+        session.add(TrainingPlanModel(
+            id=plan_id,
+            athlete_id=athlete_id,
+            start_date=date(2026, 4, 7),
+            end_date=date(2026, 4, 13),
+            phase="general_prep",
+            total_weekly_hours=8.0,
+            acwr=1.0,
+            weekly_slots_json="[]",
+            # created_at intentionally omitted — must auto-populate
+        ))
+        session.commit()
+        fetched = session.get(TrainingPlanModel, plan_id)
+        assert fetched.created_at is not None
+        assert isinstance(fetched.created_at, datetime)
+    teardown_db(engine)
+
+
 def test_athlete_credentials_relationship():
     from app.db.models import AthleteModel, ConnectorCredentialModel
     import uuid
