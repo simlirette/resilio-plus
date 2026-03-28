@@ -128,6 +128,7 @@ def test_strava_token_refresh_on_expiry_persisted_to_db(db_session):
     ).first()
     assert cred.access_token == "new_access"
     assert cred.expires_at == 9999999999
+    assert cred.refresh_token == "new_refresh"
 
 
 def test_fetch_strava_network_error_returns_empty(db_session):
