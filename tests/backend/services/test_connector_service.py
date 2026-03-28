@@ -143,3 +143,18 @@ def test_fetch_strava_network_error_returns_empty(db_session):
 
     assert result["strava_activities"] == []
     assert result["hevy_workouts"] == []  # Hevy had no cred, also empty
+
+
+def test_fetch_hevy_network_error_returns_empty(db_session):
+    """A network error during Hevy fetch returns [] without raising."""
+    athlete_id = _make_athlete(db_session)
+    _add_hevy_cred(db_session, athlete_id)
+
+    with respx.mock:
+        respx.get("https://api.hevyapp.com/v1/workouts").mock(
+            side_effect=httpx.ConnectError("timeout")
+        )
+        result = fetch_connector_data(athlete_id, db_session)
+
+    assert result["hevy_workouts"] == []
+    assert result["strava_activities"] == []  # no Strava cred, also empty
