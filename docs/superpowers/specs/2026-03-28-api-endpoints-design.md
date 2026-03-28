@@ -52,9 +52,21 @@ backend/app/
 
 `AthleteProfile` includes fitness markers (`max_hr`, `resting_hr`, `ftp_watts`, `vdot`, `css_per_100m`) and lifestyle fields (`sleep_hours_typical`, `stress_level`, `job_physical`). These default to `None`/sensible defaults when not provided; agents handle missing values gracefully via cold-start logic.
 
-**JSON field serialization:** `sports`, `goals`, `available_days`, `equipment` are stored as JSON strings in `AthleteModel`. Route handlers must:
-- On write: `json.dumps([v.value for v in athlete.sports])` etc.
-- On read: `json.loads(model.sports_json)` etc., then reconstruct `AthleteResponse`
+**JSON field serialization:** `sports`, `goals`, `available_days`, `equipment` are stored as JSON strings in `AthleteModel`. Route handlers must assign to the `_json` column names explicitly:
+- On write (to `AthleteModel`):
+  ```python
+  model.sports_json = json.dumps([v.value for v in data.sports])
+  model.goals_json = json.dumps(data.goals)
+  model.available_days_json = json.dumps(data.available_days)
+  model.equipment_json = json.dumps(data.equipment)
+  ```
+- On read (from `AthleteModel`):
+  ```python
+  sports = [Sport(v) for v in json.loads(model.sports_json)]
+  goals = json.loads(model.goals_json)
+  available_days = json.loads(model.available_days_json)
+  equipment = json.loads(model.equipment_json)
+  ```
 
 FastAPI handles 422 validation automatically.
 
@@ -80,7 +92,7 @@ FastAPI handles 422 validation automatically.
    phase_obj = get_current_phase(athlete_profile.target_race_date, start_date)
    phase = phase_obj.phase.value   # MacroPhase string e.g. "general_prep"
    ```
-4. Compute `weeks_remaining`:
+4. Compute `weeks_remaining` for `AgentContext` (note: `get_current_phase` internally uses -1 for no-race athletes, but `AgentContext.weeks_remaining` uses 0 — this is intentional):
    ```python
    if athlete_profile.target_race_date:
        weeks_remaining = max(0, (athlete_profile.target_race_date - start_date).days // 7)
@@ -164,7 +176,7 @@ class TrainingPlanResponse(BaseModel):
 
     @classmethod
     def from_model(cls, m: TrainingPlanModel) -> "TrainingPlanResponse":
-        import json
+        # json imported at module level in schemas/plan.py
         sessions = [WorkoutSlot.model_validate(s) for s in json.loads(m.weekly_slots_json)]
         return cls(
             id=m.id,
@@ -191,7 +203,9 @@ class TrainingPlanModel(Base):
                         default=lambda: datetime.now(timezone.utc))
 ```
 
-`nullable=True` keeps SQLite compatible (no SQL-level DEFAULT clause; the Python-side `default` fires on ORM inserts). All new rows created via SQLAlchemy ORM will always have a non-null value. Order by `created_at DESC` (NULLs last) to get the most recently generated plan.
+`nullable=True` keeps SQLite compatible (no SQL-level DEFAULT clause; the Python-side `default` fires on ORM inserts). All new rows created via SQLAlchemy ORM will always have a non-null value.
+
+Order by `created_at DESC`. Note: SQLite puts NULLs **first** in descending order (unlike PostgreSQL). This only affects pre-migration rows with `created_at=NULL` — there are none in a fresh DB. Accepted risk for Phase 1; can be addressed with `COALESCE` or a migration in a later phase.
 
 ## Dependencies
 
@@ -248,7 +262,7 @@ client = TestClient(app)
   - `test_generate_plan_unknown_athlete_returns_404`
   - `test_get_plan_returns_latest` — generate two plans with `time.sleep(0.001)` between them to ensure distinct `created_at` values, assert GET returns the second one
   - `test_get_plan_no_plan_returns_404`
-  - `test_plan_phase_matches_periodization` — assert returned `phase` matches `get_current_phase(target_race_date, start_date).value`
+  - `test_plan_phase_matches_periodization` — assert returned `phase` matches `get_current_phase(target_race_date, start_date).phase.value` (note: `.phase.value`, not `.value` — `PeriodizationPhase` is a dataclass)
   - `test_plan_total_weekly_hours_positive`
   - `test_plan_sessions_have_valid_dates` — all `WorkoutSlot.date` values fall within `[start_date, end_date]`
   - `test_plan_persisted_in_db` — after POST, query DB directly and assert row exists
