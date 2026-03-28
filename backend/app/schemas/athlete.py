@@ -45,3 +45,52 @@ class AthleteProfile(BaseModel):
     sleep_hours_typical: float = Field(default=7.0)
     stress_level: int = Field(default=5, ge=1, le=10)
     job_physical: bool = False
+
+
+class AthleteCreate(BaseModel):
+    name: str
+    age: int = Field(..., ge=14, le=100)
+    sex: Literal["M", "F", "other"]
+    weight_kg: float = Field(..., gt=0)
+    height_cm: float = Field(..., gt=0)
+    sports: list[Sport]
+    primary_sport: Sport
+    goals: list[str]
+    target_race_date: date | None = None
+    available_days: list[int] = Field(..., description="0=Mon … 6=Sun")
+    hours_per_week: float = Field(..., gt=0)
+    equipment: list[str] = Field(default_factory=list)
+    max_hr: int | None = None
+    resting_hr: int | None = None
+    ftp_watts: int | None = None
+    vdot: float | None = None
+    css_per_100m: float | None = None
+    sleep_hours_typical: float = 7.0
+    stress_level: int = Field(default=5, ge=1, le=10)
+    job_physical: bool = False
+
+
+class AthleteUpdate(BaseModel):
+    name: str | None = None
+    age: int | None = None
+    sex: Literal["M", "F", "other"] | None = None
+    weight_kg: float | None = None
+    height_cm: float | None = None
+    sports: list[Sport] | None = None
+    primary_sport: Sport | None = None
+    goals: list[str] | None = None
+    target_race_date: date | None = None
+    available_days: list[int] | None = None
+    hours_per_week: float | None = None
+    equipment: list[str] | None = None
+    max_hr: int | None = None
+    resting_hr: int | None = None
+    ftp_watts: int | None = None
+    vdot: float | None = None
+    css_per_100m: float | None = None
+    sleep_hours_typical: float | None = None
+    stress_level: int | None = None
+    job_physical: bool | None = None
+
+
+AthleteResponse = AthleteProfile
