@@ -16,6 +16,7 @@ from app.agents.running_coach import RunningCoach
 from app.core.periodization import get_current_phase
 from app.db.models import AthleteModel, TrainingPlanModel
 from app.dependencies import get_db
+from app.routes.athletes import athlete_model_to_response
 from app.schemas.athlete import AthleteProfile, Sport
 from app.schemas.plan import TrainingPlanResponse
 
@@ -29,39 +30,13 @@ class PlanRequest(BaseModel):
     end_date: date
 
 
-def _athlete_model_to_profile(m: AthleteModel) -> AthleteProfile:
-    return AthleteProfile(
-        id=UUID(m.id),
-        name=m.name,
-        age=m.age,
-        sex=m.sex,
-        weight_kg=m.weight_kg,
-        height_cm=m.height_cm,
-        sports=[Sport(v) for v in json.loads(m.sports_json)],
-        primary_sport=Sport(m.primary_sport),
-        goals=json.loads(m.goals_json),
-        target_race_date=m.target_race_date,
-        available_days=json.loads(m.available_days_json),
-        hours_per_week=m.hours_per_week,
-        equipment=json.loads(m.equipment_json),
-        max_hr=m.max_hr,
-        resting_hr=m.resting_hr,
-        ftp_watts=m.ftp_watts,
-        vdot=m.vdot,
-        css_per_100m=m.css_per_100m,
-        sleep_hours_typical=m.sleep_hours_typical,
-        stress_level=m.stress_level,
-        job_physical=m.job_physical,
-    )
-
-
 @router.post("/{athlete_id}/plan", response_model=TrainingPlanResponse, status_code=201)
 def generate_plan(athlete_id: str, req: PlanRequest, db: DB) -> TrainingPlanResponse:
     athlete_model = db.get(AthleteModel, athlete_id)
     if athlete_model is None:
         raise HTTPException(status_code=404)
 
-    athlete = _athlete_model_to_profile(athlete_model)
+    athlete = athlete_model_to_response(athlete_model)
 
     phase_obj = get_current_phase(athlete.target_race_date, req.start_date)
     phase = phase_obj.phase.value  # PeriodizationPhase → MacroPhase → str

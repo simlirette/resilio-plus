@@ -15,7 +15,7 @@ router = APIRouter(prefix="/athletes", tags=["athletes"])
 DB = Annotated[Session, Depends(get_db)]
 
 
-def _model_to_response(m: AthleteModel) -> AthleteResponse:
+def athlete_model_to_response(m: AthleteModel) -> AthleteResponse:
     return AthleteResponse(
         id=UUID(m.id),
         name=m.name,
@@ -43,7 +43,7 @@ def _model_to_response(m: AthleteModel) -> AthleteResponse:
 
 @router.get("/", response_model=list[AthleteResponse])
 def list_athletes(db: DB) -> list[AthleteResponse]:
-    return [_model_to_response(m) for m in db.query(AthleteModel).all()]
+    return [athlete_model_to_response(m) for m in db.query(AthleteModel).all()]
 
 
 @router.post("/", response_model=AthleteResponse, status_code=201)
@@ -74,7 +74,7 @@ def create_athlete(data: AthleteCreate, db: DB) -> AthleteResponse:
     db.add(model)
     db.commit()
     db.refresh(model)
-    return _model_to_response(model)
+    return athlete_model_to_response(model)
 
 
 @router.get("/{athlete_id}", response_model=AthleteResponse)
@@ -82,7 +82,7 @@ def get_athlete(athlete_id: str, db: DB) -> AthleteResponse:
     model = db.get(AthleteModel, athlete_id)
     if model is None:
         raise HTTPException(status_code=404)
-    return _model_to_response(model)
+    return athlete_model_to_response(model)
 
 
 @router.put("/{athlete_id}", response_model=AthleteResponse)
@@ -106,7 +106,7 @@ def update_athlete(athlete_id: str, data: AthleteUpdate, db: DB) -> AthleteRespo
             setattr(model, key, value)
     db.commit()
     db.refresh(model)
-    return _model_to_response(model)
+    return athlete_model_to_response(model)
 
 
 @router.delete("/{athlete_id}", status_code=204)
