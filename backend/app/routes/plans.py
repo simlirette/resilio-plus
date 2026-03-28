@@ -14,6 +14,7 @@ from app.agents.head_coach import HeadCoach
 from app.agents.lifting_coach import LiftingCoach
 from app.agents.running_coach import RunningCoach
 from app.core.periodization import get_current_phase
+from app.services.connector_service import fetch_connector_data
 from app.db.models import AthleteModel, TrainingPlanModel
 from app.dependencies import get_db
 from app.routes.athletes import athlete_model_to_response
@@ -46,12 +47,14 @@ def generate_plan(athlete_id: str, req: PlanRequest, db: DB) -> TrainingPlanResp
     else:
         weeks_remaining = 0
 
+    connector_data = fetch_connector_data(athlete_id, db)
+
     context = AgentContext(
         athlete=athlete,
         date_range=(req.start_date, req.end_date),
         phase=phase,
-        strava_activities=[],
-        hevy_workouts=[],
+        strava_activities=connector_data["strava_activities"],
+        hevy_workouts=connector_data["hevy_workouts"],
         terra_health=[],
         fatsecret_days=[],
         week_number=1,
