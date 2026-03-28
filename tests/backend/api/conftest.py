@@ -43,6 +43,28 @@ def client():
     Base.metadata.drop_all(engine)
 
 
+@pytest.fixture()
+def client_and_db():
+    """Yields (TestClient, Session) sharing the same StaticPool engine.
+    Use for tests that inspect DB state after HTTP calls.
+    StaticPool ensures all connections see the same in-memory data.
+    """
+    engine = _make_test_engine()
+    Base.metadata.create_all(engine)
+    TestSession = sessionmaker(engine)
+
+    def override_get_db():
+        with TestSession() as session:
+            yield session
+
+    app.dependency_overrides[get_db] = override_get_db
+    with TestClient(app) as c:
+        with TestSession() as session:
+            yield c, session
+    app.dependency_overrides.clear()
+    Base.metadata.drop_all(engine)
+
+
 def athlete_payload(**overrides):
     base = {
         "name": "Alice",
