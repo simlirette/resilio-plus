@@ -19,14 +19,16 @@ langgraph = "^0.2.60"
 httpx = "^0.28.1"
 python-multipart = "^0.0.20"
 PyJWT = "^2.10.1"
-passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+# pwdlib remplace passlib (abandonné). Algorithme argon2 (recommandé vs bcrypt).
+# Voir S11 pour l'implémentation auth.
+pwdlib = {extras = ["argon2"], version = "^0.2.1"}
 pandas = "^2.2.3"
 numpy = "^2.2.0"
 python-dateutil = "^2.9.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.4"
-pytest-asyncio = "^0.24.0"
+pytest-asyncio = "^0.25.0"
 pytest-cov = "^6.0.0"
 ruff = "^0.8.0"
 mypy = "^1.13.0"
