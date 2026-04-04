@@ -9,7 +9,7 @@ import uuid
 from datetime import datetime, date
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class TrainingHistory(BaseModel):
@@ -168,7 +168,7 @@ class ACWRBySport(BaseModel):
 class FatigueState(BaseModel):
     acwr: float | None = None
     acwr_trend: str | None = None
-    acwr_by_sport: ACWRBySport = ACWRBySport()
+    acwr_by_sport: ACWRBySport = Field(default_factory=ACWRBySport)
     weekly_fatigue_score: float | None = None
     fatigue_by_muscle: dict[str, float] = {}
     cns_load_7day_avg: float | None = None
@@ -203,9 +203,9 @@ class AthleteStateSchema(BaseModel):
     current_phase: CurrentPhase
     running_profile: RunningProfile
     lifting_profile: LiftingProfile
-    swimming_profile: SwimmingProfile = SwimmingProfile()
-    biking_profile: BikingProfile = BikingProfile()
+    swimming_profile: SwimmingProfile = Field(default_factory=SwimmingProfile)
+    biking_profile: BikingProfile = Field(default_factory=BikingProfile)
     nutrition_profile: NutritionProfile
-    fatigue: FatigueState = FatigueState()
-    compliance: Compliance = Compliance()
-    weekly_volumes: WeeklyVolumes = WeeklyVolumes()
+    fatigue: FatigueState = Field(default_factory=FatigueState)
+    compliance: Compliance = Field(default_factory=Compliance)
+    weekly_volumes: WeeklyVolumes = Field(default_factory=WeeklyVolumes)

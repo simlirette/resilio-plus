@@ -7,6 +7,7 @@ from datetime import date, datetime
 from uuid import UUID
 
 import pytest
+from pydantic import ValidationError
 
 from models.schemas import (
     ACWRBySport,
@@ -221,7 +222,7 @@ def test_optional_sport_profiles_default_empty():
 
 
 def test_sex_literal_rejects_invalid_value():
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         AthleteProfile(
             first_name="Test",
             age=30,
