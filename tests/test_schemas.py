@@ -13,7 +13,6 @@ from models.schemas import (
     ACWRBySport,
     AthleteProfile,
     AthleteStateSchema,
-    BikingProfile,
     Compliance,
     CurrentPhase,
     DayAvailability,
@@ -26,7 +25,6 @@ from models.schemas import (
     MacrosTarget,
     NutritionProfile,
     RunningProfile,
-    SwimmingProfile,
     TrainingHistory,
     TrainingPaces,
     VolumeLandmarks,
@@ -106,13 +104,27 @@ def _make_simon_state() -> AthleteStateSchema:
             ),
             active_sports=["running", "lifting"],
             available_days={
-                "monday": DayAvailability(available=True, max_hours=1.5, preferred_time="morning"),
-                "tuesday": DayAvailability(available=True, max_hours=1.5, preferred_time="evening"),
-                "wednesday": DayAvailability(available=True, max_hours=1.0, preferred_time="morning"),
-                "thursday": DayAvailability(available=True, max_hours=1.5, preferred_time="evening"),
-                "friday": DayAvailability(available=False, max_hours=0, preferred_time=None),
-                "saturday": DayAvailability(available=True, max_hours=2.5, preferred_time="morning"),
-                "sunday": DayAvailability(available=True, max_hours=2.0, preferred_time="morning"),
+                "monday": DayAvailability(
+                    available=True, max_hours=1.5, preferred_time="morning"
+                ),
+                "tuesday": DayAvailability(
+                    available=True, max_hours=1.5, preferred_time="evening"
+                ),
+                "wednesday": DayAvailability(
+                    available=True, max_hours=1.0, preferred_time="morning"
+                ),
+                "thursday": DayAvailability(
+                    available=True, max_hours=1.5, preferred_time="evening"
+                ),
+                "friday": DayAvailability(
+                    available=False, max_hours=0, preferred_time=None
+                ),
+                "saturday": DayAvailability(
+                    available=True, max_hours=2.5, preferred_time="morning"
+                ),
+                "sunday": DayAvailability(
+                    available=True, max_hours=2.0, preferred_time="morning"
+                ),
             },
         ),
         current_phase=CurrentPhase(

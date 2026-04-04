@@ -3,8 +3,8 @@ AGENT VIEWS — Resilio+
 Filtrage de l'AthleteState par agent (token economy §2.3 du master doc).
 Chaque agent reçoit uniquement les champs pertinents à son domaine.
 """
+from collections.abc import Callable
 from enum import Enum
-from typing import Callable
 
 from models.schemas import AthleteStateSchema
 

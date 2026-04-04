@@ -13,23 +13,22 @@ import os
 # sans avoir à lire le fichier .env (qui peut ne pas exister en CI).
 os.environ.setdefault("SECRET_KEY", "test-secret-key-set-by-conftest-do-not-use-in-prod")
 
+from datetime import date
+from uuid import UUID
+
 import pytest
 import pytest_asyncio
-from datetime import date, datetime
-from uuid import UUID, uuid4
-
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
-from models.database import Base
 from models.database import (
     Athlete,
     AthleteState,
+    Base,
     FatigueSnapshot,
     MacrocyclePhase,
     ReadinessColor,
 )
-
 
 # ─────────────────────────────────────────────
 # BASE DE DONNÉES DE TEST
@@ -248,7 +247,11 @@ async def simon_state(db_session: AsyncSession, simon_athlete: Athlete) -> Athle
         target_event_date=date(2026, 7, 15),
         running_profile=SIMON_RUNNING_PROFILE,
         lifting_profile=SIMON_LIFTING_PROFILE,
-        swimming_profile={"reference_times": {}, "technique_level": "beginner", "weekly_volume_km": 0},
+        swimming_profile={
+            "reference_times": {},
+            "technique_level": "beginner",
+            "weekly_volume_km": 0,
+        },
         biking_profile={"ftp_watts": None, "weekly_volume_km": 0},
         nutrition_profile=SIMON_NUTRITION_PROFILE,
         weekly_km_running=22.0,
