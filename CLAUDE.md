@@ -64,7 +64,7 @@ poetry run ruff check .
 |---------|--------|---------|--------|
 | **S1** | Setup | pyproject.toml, Dockerfile, Alembic, config, exercise_database.json | ✅ FAIT |
 | **S2** | Schémas | AthleteState Pydantic complet, modèles DB, migration initiale | ⬜ À FAIRE |
-| **S3** | Connecteurs | Strava OAuth + Hevy (API ou CSV fallback) | ⬜ À FAIRE |
+| **S3** | Connecteurs | Strava OAuth + Hevy (API ou CSV fallback) | ✅ FAIT |
 | **S4** | Connecteurs | USDA/Open Food Facts + Apple Health + fallbacks GPX/FIT | ⬜ À FAIRE |
 | **S5** | Agents base | Agent base class + Head Coach + `get_agent_view()` + edge cases | ⬜ À FAIRE |
 | **S6** | Running Coach | VDOT + zones + output format Runna/Garmin | ⬜ À FAIRE |
@@ -112,8 +112,12 @@ resilio-plus/
 │   └── recovery_coach/system_prompt.md  ← ✅ Existant
 │
 ├── api/
-│   └── endpoints_design.md            ← ✅ Existant (design doc)
-│   (api/main.py → S11)
+│   ├── __init__.py                    ← ✅ S3
+│   ├── main.py                        ← ✅ S3 — FastAPI stub + connectors router
+│   ├── endpoints_design.md            ← ✅ Existant (design doc)
+│   └── v1/
+│       ├── __init__.py                ← ✅ S3
+│       └── connectors.py             ← ✅ S3 — FastAPI stub + connectors router
 │
 ├── core/
 │   └── config.py                      ← ✅ S1 — Pydantic v2 SettingsConfigDict + validator
@@ -123,7 +127,7 @@ resilio-plus/
 │   └── db_session.py                  ← ✅ Existant — Engine async + session factory
 │   (athlete_state.py Pydantic → S2)
 │
-├── connectors/                        ← ⬜ S3-S4
+├── connectors/                        ← ✅ S3 — StravaConnector + HevyConnector
 │
 ├── data/
 │   ├── agent_view_map.json            ← ✅ Existant
