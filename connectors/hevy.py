@@ -49,6 +49,7 @@ class HevyConnector:
 
     async def fetch_all_since(self, api_key: str, since: datetime) -> list[dict]:
         """Pagine jusqu'à ce que updated_at < since ou page vide."""
+        since_utc = since if since.tzinfo is not None else since.replace(tzinfo=UTC)
         all_workouts: list[dict] = []
         page = 1
         while True:
@@ -62,7 +63,7 @@ class HevyConnector:
                     updated_at = datetime.fromisoformat(
                         updated_at_str.replace("Z", "+00:00")
                     )
-                    if updated_at < since.replace(tzinfo=UTC):
+                    if updated_at < since_utc:
                         done = True
                         break
                 all_workouts.append(w)
