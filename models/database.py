@@ -15,7 +15,17 @@ import enum
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import (
+    Boolean,
+    Date,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -430,12 +440,12 @@ class ConnectorCredential(TimestampMixin, Base):
     )
     provider: Mapped[str] = mapped_column(String(50), nullable=False)  # "strava" | "hevy"
 
-    # OAuth tokens (Strava)
+    # OAuth tokens (Strava) — stockage en clair (dev local). Chiffrement prévu en S14.
     access_token: Mapped[str | None] = mapped_column(Text)
     refresh_token: Mapped[str | None] = mapped_column(Text)
     token_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
-    # API key (Hevy)
+    # API key (Hevy) — stockage en clair (dev local). Chiffrement prévu en S14.
     api_key: Mapped[str | None] = mapped_column(Text)
 
     # ID externe de l'athlète chez le provider (ex: Strava athlete ID)
