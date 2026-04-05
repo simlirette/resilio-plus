@@ -157,8 +157,10 @@ class StravaConnector:
             if act.get("type") not in ("Run", "Ride", "Swim"):
                 continue
 
-            distance_km = (act.get("distance") or 0) / 1000
-            duration_s = act.get("elapsed_time") or 0
+            raw_distance = act.get("distance")
+            # for TRIMP calc
+            distance_km = (raw_distance / 1000) if raw_distance is not None else 0.0
+            duration_s = act.get("elapsed_time") or 0  # for TRIMP calc
             avg_hr = act.get("average_heartrate")
             max_hr_val = act.get("max_heartrate")
 
@@ -184,8 +186,8 @@ class StravaConnector:
                 "strava_activity_id": str(act["id"]),
                 "activity_date": activity_date,
                 "activity_type": act.get("type", "Run").lower(),
-                "distance_km": distance_km or None,
-                "duration_seconds": duration_s or None,
+                "distance_km": (raw_distance / 1000) if raw_distance is not None else None,
+                "duration_seconds": act.get("elapsed_time"),
                 "avg_pace_sec_per_km": avg_pace,
                 "avg_hr": int(avg_hr) if avg_hr else None,
                 "max_hr": int(max_hr_val) if max_hr_val else None,
@@ -193,7 +195,10 @@ class StravaConnector:
                 "trimp": trimp,
                 "strava_raw": act,
             }
-            update_set = {k: v for k, v in values.items() if k != "strava_activity_id"}
+            update_set = {
+                k: v for k, v in values.items()
+                if k not in ("strava_activity_id", "athlete_id")
+            }
             stmt = (
                 pg_insert(RunActivity)
                 .values(**values)
