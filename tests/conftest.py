@@ -12,6 +12,13 @@ import os
 # Cela permet à Settings(_env_file=None) de passer le validator de production
 # sans avoir à lire le fichier .env (qui peut ne pas exister en CI).
 os.environ.setdefault("SECRET_KEY", "test-secret-key-set-by-conftest-do-not-use-in-prod")
+os.environ.setdefault("STRAVA_CLIENT_ID", "215637")
+os.environ.setdefault("STRAVA_CLIENT_SECRET", "test_strava_secret")
+os.environ.setdefault(
+    "STRAVA_REDIRECT_URI",
+    "http://localhost:8000/api/v1/connectors/strava/callback",
+)
+os.environ.setdefault("HEVY_API_KEY", "test_hevy_key")
 
 from datetime import date
 from uuid import UUID
