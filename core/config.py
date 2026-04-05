@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     # ── USDA FoodData Central ────────────────────────
     USDA_API_KEY: str = ""
 
+    # ── Hevy API ─────────────────────────────────
+    HEVY_API_KEY: str = ""
+
     # ── Anthropic (agents) ───────────────────────────
     ANTHROPIC_API_KEY: str = ""
     ANTHROPIC_MODEL: str = "claude-sonnet-4-6"
