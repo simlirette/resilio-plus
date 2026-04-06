@@ -71,6 +71,12 @@ class GpxConnector:
             duration_seconds = int((times[-1] - times[0]).total_seconds())
             activity_date = times[0].date()
 
+        if activity_date is None:
+            raise ValueError(
+                "GPX file contains no trackpoint timestamps — "
+                "cannot determine activity date"
+            )
+
         # Avg pace
         avg_pace = (
             (duration_seconds / distance_km)
