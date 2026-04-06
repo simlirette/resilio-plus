@@ -147,6 +147,8 @@ async def hevy_sync(
     cred = await _get_credential(athlete_id, "hevy", db)
     if cred is None:
         raise HTTPException(status_code=404, detail="Hevy not connected for this athlete")
+    if cred.api_key is None:
+        raise HTTPException(status_code=400, detail="Hevy credential has no API key stored")
     since = datetime.now(tz=UTC) - timedelta(days=days)
     workouts = await _hevy.fetch_all_since(cred.api_key, since)
     synced = await _hevy.ingest_workouts(athlete_id, workouts, db)
