@@ -38,7 +38,7 @@ async def upload_gpx(
     content = await file.read()
     try:
         run = await _gpx.ingest_gpx(athlete_id, content, db)
-    except (ValueError, Exception) as e:
+    except ValueError as e:
         raise HTTPException(status_code=400, detail=f"Invalid GPX file: {e}") from e
     return {
         "activity_date": run.activity_date.isoformat() if run.activity_date else None,
@@ -58,7 +58,7 @@ async def upload_fit(
     content = await file.read()
     try:
         run = await _fit.ingest_fit(athlete_id, content, db)
-    except (ValueError, Exception) as e:
+    except ValueError as e:
         raise HTTPException(status_code=400, detail=f"Invalid FIT file: {e}") from e
     return {
         "activity_date": run.activity_date.isoformat() if run.activity_date else None,
