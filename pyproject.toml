@@ -25,6 +25,7 @@ pwdlib = {extras = ["argon2"], version = "^0.2.1"}
 pandas = "^2.2.3"
 numpy = "^2.2.0"
 python-dateutil = "^2.9.0"
+fitparse = "^1.2.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.4"
