@@ -62,14 +62,14 @@ class AppleHealthConnector:
             if k not in ("athlete_id", "snapshot_date", "fatigue_by_muscle")
         }
 
-        stmt = (
-            pg_insert(FatigueSnapshot)
-            .values(**insert_values)
-            .on_conflict_do_update(
+        insert_stmt = pg_insert(FatigueSnapshot).values(**insert_values)
+        if update_set:
+            stmt = insert_stmt.on_conflict_do_update(
                 index_elements=["athlete_id", "snapshot_date"],
                 set_=update_set,
             )
-        )
+        else:
+            stmt = insert_stmt.on_conflict_do_nothing()
         await db.execute(stmt)
         await db.flush()
 

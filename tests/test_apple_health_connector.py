@@ -11,7 +11,6 @@ from sqlalchemy import select
 from connectors.apple_health import AppleHealthConnector
 from models.database import FatigueSnapshot
 
-
 # ── test_ingest_snapshot_creates_fatigue_snapshot ────────────────────────────
 
 async def test_ingest_snapshot_creates_fatigue_snapshot(db_session, simon_athlete):
