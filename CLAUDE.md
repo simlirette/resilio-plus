@@ -66,7 +66,7 @@ poetry run ruff check .
 | **S2** | Schémas | AthleteState Pydantic complet, modèles DB, migration initiale | ⬜ À FAIRE |
 | **S3** | Connecteurs | Strava OAuth + Hevy (API ou CSV fallback) | ✅ FAIT |
 | **S4** | Connecteurs | USDA/Open Food Facts + Apple Health + fallbacks GPX/FIT | ✅ FAIT |
-| **S5** | Agents base | Agent base class + Head Coach + `get_agent_view()` + edge cases | ⬜ À FAIRE |
+| **S5** | Agents base | Agent base class + Head Coach + `get_agent_view()` + edge cases | ✅ FAIT |
 | **S6** | Running Coach | VDOT + zones + output format Runna/Garmin | ⬜ À FAIRE |
 | **S7** | Lifting Coach | Exercise DB complet (400+) + Volume Landmarks + output format Hevy | ⬜ À FAIRE |
 | **S8** | Recovery Coach | Readiness score + gate keeper + HRV pipeline | ⬜ À FAIRE |
@@ -102,12 +102,25 @@ resilio-plus/
 ├── resilio-nutrition-coach-section.md ← Section 6B Nutrition Coach
 │
 ├── agents/
+│   ├── __init__.py                    ← ✅ S5
+│   ├── base_agent.py                  ← ✅ S5 — BaseAgent ABC
 │   ├── head_coach/
+│   │   ├── __init__.py                ← ✅ S5
 │   │   ├── system_prompt.md           ← ✅ Existant
-│   │   ├── graph.py                   ← ✅ Existant (LangGraph stub)
-│   │   └── edge_cases/                ← ✅ Existant (3 scénarios)
-│   ├── lifting_coach/system_prompt.md ← ✅ Existant
-│   ├── running_coach/system_prompt.md ← ✅ Existant
+│   │   ├── graph.py                   ← ✅ S5 — nodes complets (load, detect, delegate)
+│   │   └── edge_cases/
+│   │       ├── __init__.py            ← ✅ S5 — get_alternatives_for_conflict
+│   │       ├── scenario_a_1rm_veto.py ← ✅ Existant
+│   │       ├── scenario_b_schedule_conflict.py ← ✅ Existant
+│   │       └── scenario_c_acwr_event.py ← ✅ Existant
+│   ├── running_coach/
+│   │   ├── __init__.py                ← ✅ S5
+│   │   ├── agent.py                   ← ✅ S5 — RunningCoachAgent stub
+│   │   └── system_prompt.md           ← ✅ Existant
+│   ├── lifting_coach/
+│   │   ├── __init__.py                ← ✅ S5
+│   │   ├── agent.py                   ← ✅ S5 — LiftingCoachAgent stub
+│   │   └── system_prompt.md           ← ✅ Existant
 │   ├── nutrition_coach/system_prompt.md ← ✅ Existant
 │   └── recovery_coach/system_prompt.md  ← ✅ Existant
 │
@@ -123,12 +136,15 @@ resilio-plus/
 │       └── food.py                   ← ✅ S4 — GET /food/search + /food/barcode/{barcode}
 │
 ├── core/
-│   └── config.py                      ← ✅ S1 — Pydantic v2 SettingsConfigDict + validator
+│   ├── config.py                      ← ✅ S1 — Pydantic v2 SettingsConfigDict + validator
+│   └── acwr.py                        ← ✅ S5 — compute_ewma_acwr + acwr_zone
 │
 ├── models/
 │   ├── database.py                    ← ✅ Existant — Schéma SQLAlchemy complet (8 tables)
-│   └── db_session.py                  ← ✅ Existant — Engine async + session factory
-│   (athlete_state.py Pydantic → S2)
+│   ├── db_session.py                  ← ✅ Existant — Engine async + session factory
+│   ├── schemas.py                     ← ✅ Existant — AthleteStateSchema Pydantic
+│   ├── views.py                       ← ✅ Existant — get_agent_view() + AgentType
+│   └── athlete_state.py               ← ✅ S5 — AthleteState Pydantic (LangGraph state)
 │
 ├── connectors/                        ← ✅ S3+S4 — Strava, Hevy, AppleHealth, GPX, FIT, FoodSearch
 │
@@ -146,9 +162,13 @@ resilio-plus/
 ├── training_books/                    ← ✅ Existant — 5 livres résumés
 │
 ├── tests/
-│   ├── conftest.py                    ← ✅ Existant + S1 (os.environ.setdefault SECRET_KEY)
+│   ├── conftest.py                    ← ✅ S5 — simon_pydantic_state fixture ajoutée
 │   ├── test_config.py                 ← ✅ S1 — 4 tests validator Pydantic v2
-│   └── test_exercise_database.py      ← ✅ S1 — 8 tests structure JSON
+│   ├── test_exercise_database.py      ← ✅ S1 — 8 tests structure JSON
+│   ├── test_acwr.py                   ← ✅ S5 — 5 tests ACWR EWMA
+│   ├── test_athlete_state.py          ← ✅ S5 — 3 tests AthleteState Pydantic
+│   ├── test_base_agent.py             ← ✅ S5 — 3 tests BaseAgent + stubs
+│   └── test_head_coach_graph.py       ← ✅ S5 — 4 tests graph nodes (71 tests total)
 │
 ├── docs/
 │   └── superpowers/
