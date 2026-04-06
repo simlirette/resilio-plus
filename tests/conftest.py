@@ -401,3 +401,37 @@ def simon_agent_view_lifting(simon_dict: dict) -> dict:
             "mesocycle_week": 3,
         },
     }
+
+
+@pytest.fixture
+def simon_pydantic_state():
+    """AthleteState Pydantic (LangGraph) pour Simon — sans DB."""
+    from datetime import UTC, datetime
+
+    from models.athlete_state import AthleteState as PydanticAthleteState
+
+    return PydanticAthleteState(
+        athlete_id=SIMON_ID,
+        updated_at=datetime.now(UTC),
+        profile={
+            "first_name": "Simon",
+            "age": 32,
+            "sex": "M",
+            "weight_kg": 78.5,
+            "height_cm": 178,
+            "body_fat_percent": 16.5,
+            "resting_hr": 58,
+            "max_hr_measured": 188,
+            "active_sports": ["running", "lifting"],
+            "available_days": SIMON_AVAILABLE_DAYS,
+            **SIMON_PROFILE_DATA,
+        },
+        current_phase={
+            "macrocycle": "base_building",
+            "mesocycle_week": 3,
+            "mesocycle_length": 4,
+        },
+        running_profile=SIMON_RUNNING_PROFILE,
+        lifting_profile=SIMON_LIFTING_PROFILE,
+        nutrition_profile=SIMON_NUTRITION_PROFILE,
+    )
