@@ -221,7 +221,9 @@ class FatigueSnapshot(Base):
     )
     fatigue_subjective: Mapped[int | None] = mapped_column(Integer)  # 1-10
 
-    __table_args__ = (UniqueConstraint("athlete_id", "snapshot_date"),)
+    __table_args__ = (
+        UniqueConstraint("athlete_id", "snapshot_date", name="uq_fatigue_snapshots_athlete_date"),
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
