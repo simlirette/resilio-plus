@@ -65,7 +65,7 @@ poetry run ruff check .
 | **S1** | Setup | pyproject.toml, Dockerfile, Alembic, config, exercise_database.json | ✅ FAIT |
 | **S2** | Schémas | AthleteState Pydantic complet, modèles DB, migration initiale | ⬜ À FAIRE |
 | **S3** | Connecteurs | Strava OAuth + Hevy (API ou CSV fallback) | ✅ FAIT |
-| **S4** | Connecteurs | USDA/Open Food Facts + Apple Health + fallbacks GPX/FIT | ⬜ À FAIRE |
+| **S4** | Connecteurs | USDA/Open Food Facts + Apple Health + fallbacks GPX/FIT | ✅ FAIT |
 | **S5** | Agents base | Agent base class + Head Coach + `get_agent_view()` + edge cases | ⬜ À FAIRE |
 | **S6** | Running Coach | VDOT + zones + output format Runna/Garmin | ⬜ À FAIRE |
 | **S7** | Lifting Coach | Exercise DB complet (400+) + Volume Landmarks + output format Hevy | ⬜ À FAIRE |
@@ -117,7 +117,10 @@ resilio-plus/
 │   ├── endpoints_design.md            ← ✅ Existant (design doc)
 │   └── v1/
 │       ├── __init__.py                ← ✅ S3
-│       └── connectors.py             ← ✅ S3 — FastAPI stub + connectors router
+│       ├── connectors.py             ← ✅ S3 — Strava OAuth + Hevy routes
+│       ├── apple_health.py           ← ✅ S4 — POST /apple-health/upload
+│       ├── files.py                  ← ✅ S4 — POST /files/gpx + /files/fit
+│       └── food.py                   ← ✅ S4 — GET /food/search + /food/barcode/{barcode}
 │
 ├── core/
 │   └── config.py                      ← ✅ S1 — Pydantic v2 SettingsConfigDict + validator
@@ -127,7 +130,7 @@ resilio-plus/
 │   └── db_session.py                  ← ✅ Existant — Engine async + session factory
 │   (athlete_state.py Pydantic → S2)
 │
-├── connectors/                        ← ✅ S3 — StravaConnector + HevyConnector
+├── connectors/                        ← ✅ S3+S4 — Strava, Hevy, AppleHealth, GPX, FIT, FoodSearch
 │
 ├── data/
 │   ├── agent_view_map.json            ← ✅ Existant
