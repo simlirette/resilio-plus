@@ -67,7 +67,7 @@ poetry run ruff check .
 | **S3** | Connecteurs | Strava OAuth + Hevy (API ou CSV fallback) | ✅ FAIT |
 | **S4** | Connecteurs | USDA/Open Food Facts + Apple Health + fallbacks GPX/FIT | ✅ FAIT |
 | **S5** | Agents base | Agent base class + Head Coach + `get_agent_view()` + edge cases | ✅ FAIT |
-| **S6** | Running Coach | VDOT + zones + output format Runna/Garmin | ⬜ À FAIRE |
+| **S6** | Running Coach | VDOT + zones + output format Runna/Garmin | ✅ FAIT |
 | **S7** | Lifting Coach | Exercise DB complet (400+) + Volume Landmarks + output format Hevy | ⬜ À FAIRE |
 | **S8** | Recovery Coach | Readiness score + gate keeper + HRV pipeline | ⬜ À FAIRE |
 | **S9** | Workflow | Onboarding 7 blocs + création de plan + audit conflits | ⬜ À FAIRE |
@@ -115,8 +115,9 @@ resilio-plus/
 │   │       └── scenario_c_acwr_event.py ← ✅ Existant
 │   ├── running_coach/
 │   │   ├── __init__.py                ← ✅ S5
-│   │   ├── agent.py                   ← ✅ S5 — RunningCoachAgent stub
-│   │   └── system_prompt.md           ← ✅ Existant
+│   │   ├── agent.py                   ← ✅ S6 — RunningCoachAgent (prescriber + LLM)
+│   │   ├── prescriber.py              ← ✅ S6 — RunningPrescriber (déterministe)
+│   │   └── running_coach_system_prompt.md ← ✅ Existant
 │   ├── lifting_coach/
 │   │   ├── __init__.py                ← ✅ S5
 │   │   ├── agent.py                   ← ✅ S5 — LiftingCoachAgent stub
@@ -133,11 +134,13 @@ resilio-plus/
 │       ├── connectors.py             ← ✅ S3 — Strava OAuth + Hevy routes
 │       ├── apple_health.py           ← ✅ S4 — POST /apple-health/upload
 │       ├── files.py                  ← ✅ S4 — POST /files/gpx + /files/fit
-│       └── food.py                   ← ✅ S4 — GET /food/search + /food/barcode/{barcode}
+│       ├── food.py                   ← ✅ S4 — GET /food/search + /food/barcode/{barcode}
+│       └── plan.py                   ← ✅ S6 — POST /plan/running
 │
 ├── core/
 │   ├── config.py                      ← ✅ S1 — Pydantic v2 SettingsConfigDict + validator
-│   └── acwr.py                        ← ✅ S5 — compute_ewma_acwr + acwr_zone
+│   ├── acwr.py                        ← ✅ S5 — compute_ewma_acwr + acwr_zone
+│   └── vdot.py                        ← ✅ S6 — get_vdot_paces() + format_pace()
 │
 ├── models/
 │   ├── database.py                    ← ✅ Existant — Schéma SQLAlchemy complet (8 tables)
@@ -168,7 +171,11 @@ resilio-plus/
 │   ├── test_acwr.py                   ← ✅ S5 — 5 tests ACWR EWMA
 │   ├── test_athlete_state.py          ← ✅ S5 — 3 tests AthleteState Pydantic
 │   ├── test_base_agent.py             ← ✅ S5 — 3 tests BaseAgent + stubs
-│   └── test_head_coach_graph.py       ← ✅ S5 — 4 tests graph nodes (71 tests total)
+│   ├── test_head_coach_graph.py       ← ✅ S5 — 4 tests graph nodes
+│   ├── test_vdot.py                   ← ✅ S6 — 6 tests VDOT lookup + formatters
+│   ├── test_running_prescriber.py     ← ✅ S6 — 6 tests prescriber logic
+│   ├── test_running_agent.py          ← ✅ S6 — 4 tests agent + mocked LLM
+│   └── test_plan_route.py             ← ✅ S6 — 3 tests API route (90 tests total)
 │
 ├── docs/
 │   └── superpowers/
