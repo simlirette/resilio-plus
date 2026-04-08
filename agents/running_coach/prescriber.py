@@ -5,7 +5,7 @@ Aucun appel LLM ici.
 """
 from __future__ import annotations
 
-from core.vdot import format_pace, format_pace_400m, get_vdot_paces  # noqa: F401
+from core.vdot import format_pace, get_vdot_paces  # noqa: F401
 
 _TID_CONFIG: dict[str, dict] = {
     "base_building": {
