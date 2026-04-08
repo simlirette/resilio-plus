@@ -9,6 +9,7 @@ from api.v1.apple_health import router as apple_health_router
 from api.v1.connectors import router as connectors_router
 from api.v1.files import router as files_router
 from api.v1.food import router as food_router
+from api.v1.plan import router as plan_router
 
 app = FastAPI(title="Resilio+", version="0.1.0")
 
@@ -31,4 +32,9 @@ app.include_router(
     food_router,
     prefix="/api/v1/connectors",
     tags=["food"],
+)
+app.include_router(
+    plan_router,
+    prefix="/api/v1/plan",
+    tags=["plan"],
 )
