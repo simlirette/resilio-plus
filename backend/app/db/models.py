@@ -45,11 +45,11 @@ class AthleteModel(Base):
     available_days_json = Column(Text, nullable=False)
     equipment_json = Column(Text, nullable=False, default="[]")
     # Relationships
-    user = relationship("UserModel", back_populates="athlete", uselist=False)
-    plans = relationship("TrainingPlanModel", back_populates="athlete")
-    nutrition_plans = relationship("NutritionPlanModel", back_populates="athlete")
-    reviews = relationship("WeeklyReviewModel", back_populates="athlete")
-    credentials = relationship("ConnectorCredentialModel", back_populates="athlete")
+    user = relationship("UserModel", back_populates="athlete", uselist=False, cascade="all, delete-orphan")
+    plans = relationship("TrainingPlanModel", back_populates="athlete", cascade="all, delete-orphan")
+    nutrition_plans = relationship("NutritionPlanModel", back_populates="athlete", cascade="all, delete-orphan")
+    reviews = relationship("WeeklyReviewModel", back_populates="athlete", cascade="all, delete-orphan")
+    credentials = relationship("ConnectorCredentialModel", back_populates="athlete", cascade="all, delete-orphan")
 
 
 class TrainingPlanModel(Base):

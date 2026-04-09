@@ -3,16 +3,25 @@ import uuid
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.db.models import AthleteModel
-from app.dependencies import get_db
+from app.dependencies import get_db, get_current_athlete_id
 from app.schemas.athlete import AthleteCreate, AthleteResponse, AthleteUpdate, Sport
 
 router = APIRouter(prefix="/athletes", tags=["athletes"])
 
 DB = Annotated[Session, Depends(get_db)]
+
+
+def _require_own_athlete(
+    athlete_id: str,
+    current_id: Annotated[str, Depends(get_current_athlete_id)],
+) -> str:
+    if current_id != athlete_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+    return athlete_id
 
 
 def athlete_model_to_response(m: AthleteModel) -> AthleteResponse:
@@ -78,7 +87,11 @@ def create_athlete(data: AthleteCreate, db: DB) -> AthleteResponse:
 
 
 @router.get("/{athlete_id}", response_model=AthleteResponse)
-def get_athlete(athlete_id: str, db: DB) -> AthleteResponse:
+def get_athlete(
+    athlete_id: str,
+    db: DB,
+    _: Annotated[str, Depends(_require_own_athlete)],
+) -> AthleteResponse:
     model = db.get(AthleteModel, athlete_id)
     if model is None:
         raise HTTPException(status_code=404)
@@ -86,7 +99,12 @@ def get_athlete(athlete_id: str, db: DB) -> AthleteResponse:
 
 
 @router.put("/{athlete_id}", response_model=AthleteResponse)
-def update_athlete(athlete_id: str, data: AthleteUpdate, db: DB) -> AthleteResponse:
+def update_athlete(
+    athlete_id: str,
+    data: AthleteUpdate,
+    db: DB,
+    _: Annotated[str, Depends(_require_own_athlete)],
+) -> AthleteResponse:
     model = db.get(AthleteModel, athlete_id)
     if model is None:
         raise HTTPException(status_code=404)
@@ -110,7 +128,11 @@ def update_athlete(athlete_id: str, data: AthleteUpdate, db: DB) -> AthleteRespo
 
 
 @router.delete("/{athlete_id}", status_code=204)
-def delete_athlete(athlete_id: str, db: DB) -> None:
+def delete_athlete(
+    athlete_id: str,
+    db: DB,
+    _: Annotated[str, Depends(_require_own_athlete)],
+) -> None:
     model = db.get(AthleteModel, athlete_id)
     if model is None:
         raise HTTPException(status_code=404)

@@ -3,7 +3,7 @@ import uuid
 from datetime import date, datetime, timezone
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
@@ -15,7 +15,7 @@ from app.agents.running_coach import RunningCoach
 from app.core.periodization import get_current_phase
 from app.services.connector_service import fetch_connector_data
 from app.db.models import AthleteModel, TrainingPlanModel
-from app.dependencies import get_db
+from app.dependencies import get_db, get_current_athlete_id
 from app.routes.athletes import athlete_model_to_response
 from app.schemas.athlete import AthleteProfile
 from app.schemas.plan import TrainingPlanResponse
@@ -23,6 +23,15 @@ from app.schemas.plan import TrainingPlanResponse
 router = APIRouter(prefix="/athletes", tags=["plans"])
 
 DB = Annotated[Session, Depends(get_db)]
+
+
+def _require_own(
+    athlete_id: str,
+    current_id: Annotated[str, Depends(get_current_athlete_id)],
+) -> str:
+    if current_id != athlete_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+    return athlete_id
 
 
 class PlanRequest(BaseModel):
@@ -90,7 +99,12 @@ def _create_plan_for_athlete(
 
 
 @router.post("/{athlete_id}/plan", response_model=TrainingPlanResponse, status_code=201)
-def generate_plan(athlete_id: str, req: PlanRequest, db: DB) -> TrainingPlanResponse:
+def generate_plan(
+    athlete_id: str,
+    req: PlanRequest,
+    db: DB,
+    _: Annotated[str, Depends(_require_own)],
+) -> TrainingPlanResponse:
     athlete_model = db.get(AthleteModel, athlete_id)
     if athlete_model is None:
         raise HTTPException(status_code=404)
@@ -100,7 +114,11 @@ def generate_plan(athlete_id: str, req: PlanRequest, db: DB) -> TrainingPlanResp
 
 
 @router.get("/{athlete_id}/plan", response_model=TrainingPlanResponse)
-def get_latest_plan(athlete_id: str, db: DB) -> TrainingPlanResponse:
+def get_latest_plan(
+    athlete_id: str,
+    db: DB,
+    _: Annotated[str, Depends(_require_own)],
+) -> TrainingPlanResponse:
     athlete = db.get(AthleteModel, athlete_id)
     if athlete is None:
         raise HTTPException(status_code=404, detail="Athlete not found")
