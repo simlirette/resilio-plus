@@ -1,0 +1,26 @@
+food_code,food_description_fr,food_description_en,calories,protein_g,fat_g,carbs_g,fiber_g
+1001,Flocons d'avoine cuits,Cooked oat flakes,71,2.5,1.5,12.0,1.7
+1002,Riz brun cuit,Cooked brown rice,111,2.6,0.9,23.0,1.8
+1003,Pain de blé entier,Whole wheat bread,247,9.0,3.4,41.0,6.9
+1004,Œufs entiers cuits,Whole eggs cooked,155,13.0,11.0,1.1,0.0
+1005,"Lait entier 3,25%",Whole milk 3.25%,61,3.2,3.3,4.8,0.0
+1006,Beurre non salé,Unsalted butter,717,0.9,81.0,0.1,0.0
+1007,Poitrine de poulet grillée,Grilled chicken breast,165,31.0,3.6,0.0,0.0
+1008,Saumon atlantique cuit,Cooked Atlantic salmon,208,20.0,13.0,0.0,0.0
+1009,Bœuf haché maigre cuit,Cooked lean ground beef,215,26.0,12.0,0.0,0.0
+1010,Tofu ferme,Firm tofu,76,8.1,4.8,1.9,0.3
+1011,Yogourt grec nature 0%,Plain Greek yogurt 0%,57,10.2,0.4,3.6,0.0
+1012,Lentilles cuites,Cooked lentils,116,9.0,0.4,20.0,7.9
+1013,Haricots noirs cuits,Cooked black beans,132,8.9,0.5,24.0,8.7
+1014,Poutine (fromage en grains),Poutine with cheese curds,289,9.2,14.0,32.0,2.1
+1015,Tourtière du Québec,Quebec tourtière,298,14.0,18.0,19.0,1.2
+1016,Sirop d'érable pur,Pure maple syrup,260,0.0,0.1,67.0,0.0
+1017,Cheddar québécois,Quebec cheddar cheese,403,25.0,33.0,1.3,0.0
+1018,Soupe aux pois canadienne,Canadian pea soup,80,5.5,1.8,11.0,2.8
+1019,Brocoli cuit,Cooked broccoli,35,2.4,0.4,7.2,3.3
+1020,Épinards crus,Raw spinach,23,2.9,0.4,3.6,2.2
+1021,Banane fraîche,Fresh banana,89,1.1,0.3,23.0,2.6
+1022,Pomme fraîche avec pelure,Fresh apple with skin,52,0.3,0.2,14.0,2.4
+1023,Patate douce cuite,Cooked sweet potato,90,2.0,0.1,21.0,3.3
+1024,Amandes grillées,Roasted almonds,598,21.0,52.0,19.0,12.5
+1025,Huile d'olive vierge extra,Extra virgin olive oil,884,0.0,100.0,0.0,0.0

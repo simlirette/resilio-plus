@@ -1,14 +1,16 @@
 """
-FastAPI router — recherche alimentaire USDA + Open Food Facts.
+FastAPI router — recherche alimentaire USDA + Open Food Facts + FCÉN.
 Pas d'auth requise — données publiques (JWT en S11 si nécessaire).
 """
 
 from fastapi import APIRouter, HTTPException, Query
 
+from connectors.fcen import FcenConnector
 from connectors.food_search import FoodSearchConnector
 
 router = APIRouter()
 _food = FoodSearchConnector()
+_fcen = FcenConnector()
 
 
 @router.get("/food/search")
@@ -30,3 +32,13 @@ async def food_barcode(barcode: str) -> dict:
             status_code=404, detail=f"Product with barcode {barcode} not found"
         )
     return result
+
+
+@router.get("/food/search/fcen")
+async def food_search_fcen(
+    q: str = Query(..., min_length=1),
+    limit: int = Query(default=5, ge=1, le=20),
+) -> dict:
+    """Recherche dans le Fichier canadien sur les éléments nutritifs (FCÉN / Santé Canada)."""
+    results = _fcen.search(q, limit=limit)
+    return {"results": results, "source": "fcen", "total": len(results)}
