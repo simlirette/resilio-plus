@@ -16,7 +16,7 @@ class ActualWorkout(BaseModel):
     sport: Literal["running", "lifting"]
     date: str  # "YYYY-MM-DD"
     completed: bool
-    actual_data: dict = {}
+    actual_data: dict = Field(default_factory=dict)
     # Running actual_data keys: duration_min, avg_hr, type ("easy"|"tempo"|"interval")
     # Lifting actual_data keys: duration_min, session_type ("hypertrophy"|"strength"|"power")
 
