@@ -6,6 +6,19 @@ from sqlalchemy.orm import relationship
 from .database import Base
 
 
+class UserModel(Base):
+    __tablename__ = "users"
+
+    id = Column(String, primary_key=True)
+    email = Column(String, unique=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    athlete_id = Column(String, ForeignKey("athletes.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), nullable=False,
+                        default=lambda: datetime.now(timezone.utc))
+
+    athlete = relationship("AthleteModel", back_populates="user")
+
+
 class AthleteModel(Base):
     __tablename__ = "athletes"
 
@@ -32,6 +45,7 @@ class AthleteModel(Base):
     available_days_json = Column(Text, nullable=False)
     equipment_json = Column(Text, nullable=False, default="[]")
     # Relationships
+    user = relationship("UserModel", back_populates="athlete", uselist=False)
     plans = relationship("TrainingPlanModel", back_populates="athlete")
     nutrition_plans = relationship("NutritionPlanModel", back_populates="athlete")
     reviews = relationship("WeeklyReviewModel", back_populates="athlete")
@@ -72,13 +86,18 @@ class WeeklyReviewModel(Base):
 
     id = Column(String, primary_key=True)
     athlete_id = Column(String, ForeignKey("athletes.id"), nullable=False)
-    plan_id = Column(String, ForeignKey("training_plans.id"), nullable=False)
+    plan_id = Column(String, ForeignKey("training_plans.id"), nullable=True)
     week_start = Column(Date, nullable=False)
+    week_number = Column(Integer, nullable=False, default=1)
+    planned_hours = Column(Float, nullable=False, default=0.0)
+    actual_hours = Column(Float, nullable=True)
+    acwr = Column(Float, nullable=True)
+    adjustment_applied = Column(Float, nullable=True)
     readiness_score = Column(Float, nullable=True)
     hrv_rmssd = Column(Float, nullable=True)
     sleep_hours_avg = Column(Float, nullable=True)
     athlete_comment = Column(Text, default="")
-    results_json = Column(Text, nullable=False)
+    results_json = Column(Text, nullable=False, default="{}")
     # Relationships
     athlete = relationship("AthleteModel", back_populates="reviews")
     plan = relationship("TrainingPlanModel", back_populates="reviews")
