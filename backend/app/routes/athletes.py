@@ -6,9 +6,9 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.db.models import AthleteModel
-from app.dependencies import get_db, get_current_athlete_id
-from app.schemas.athlete import AthleteCreate, AthleteResponse, AthleteUpdate, Sport
+from ..db.models import AthleteModel
+from ..dependencies import get_db, get_current_athlete_id
+from ..schemas.athlete import AthleteCreate, AthleteResponse, AthleteUpdate, Sport
 
 router = APIRouter(prefix="/athletes", tags=["athletes"])
 

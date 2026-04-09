@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from app.schemas.fatigue import FatigueScore
+from ..schemas.fatigue import FatigueScore
 
 
 @dataclass

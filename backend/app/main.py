@@ -1,12 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routes.auth import router as auth_router
-from app.routes.onboarding import router as onboarding_router
-from app.routes.athletes import router as athletes_router
-from app.routes.connectors import router as connectors_router
-from app.routes.plans import router as plans_router
-from app.routes.reviews import router as reviews_router
+from .routes.auth import router as auth_router
+from .routes.onboarding import router as onboarding_router
+from .routes.athletes import router as athletes_router
+from .routes.connectors import router as connectors_router
+from .routes.plans import router as plans_router
+from .routes.reviews import router as reviews_router
 
 app = FastAPI(title="Resilio Plus API", version="0.1.0")
 

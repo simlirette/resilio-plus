@@ -5,10 +5,10 @@ from datetime import date, timedelta
 from enum import Enum
 from pathlib import Path
 
-from app.schemas.athlete import Sport
-from app.schemas.connector import HevyWorkout
-from app.schemas.fatigue import FatigueScore
-from app.schemas.plan import WorkoutSlot
+from ..schemas.athlete import Sport
+from ..schemas.connector import HevyWorkout
+from ..schemas.fatigue import FatigueScore
+from ..schemas.plan import WorkoutSlot
 
 # Load data files at module import time
 _REPO_ROOT = Path(__file__).resolve().parents[3]

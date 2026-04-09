@@ -6,12 +6,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
-from app.core.acwr import compute_acwr
-from app.db.models import AthleteModel, TrainingPlanModel, WeeklyReviewModel
-from app.dependencies import get_db, get_current_athlete_id
-from app.schemas.plan import TrainingPlanResponse
-from app.schemas.review import WeekStatusResponse, WeeklyReviewRequest, WeeklyReviewResponse
-from app.services.connector_service import fetch_connector_data
+from ..core.acwr import compute_acwr
+from ..db.models import AthleteModel, TrainingPlanModel, WeeklyReviewModel
+from ..dependencies import get_db, get_current_athlete_id
+from ..schemas.plan import TrainingPlanResponse
+from ..schemas.review import WeekStatusResponse, WeeklyReviewRequest, WeeklyReviewResponse
+from ..services.connector_service import fetch_connector_data
 
 router = APIRouter(prefix="/athletes", tags=["reviews"])
 

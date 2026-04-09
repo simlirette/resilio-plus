@@ -4,8 +4,8 @@ from dataclasses import dataclass, field
 from datetime import date
 from enum import Enum
 
-from app.agents.base import AgentRecommendation
-from app.schemas.plan import WorkoutSlot
+from ..agents.base import AgentRecommendation
+from ..schemas.plan import WorkoutSlot
 
 
 class ConflictSeverity(str, Enum):

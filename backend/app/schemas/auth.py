@@ -2,8 +2,8 @@ from datetime import date
 
 from pydantic import BaseModel, Field
 
-from app.schemas.athlete import AthleteCreate, AthleteResponse
-from app.schemas.plan import TrainingPlanResponse
+from .athlete import AthleteCreate, AthleteResponse
+from .plan import TrainingPlanResponse
 
 
 class LoginRequest(BaseModel):

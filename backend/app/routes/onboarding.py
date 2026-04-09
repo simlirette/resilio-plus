@@ -6,13 +6,13 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.core.security import create_access_token, hash_password
-from app.db.models import AthleteModel, UserModel
-from app.dependencies import get_db
-from app.routes.athletes import athlete_model_to_response
-from app.routes.plans import _create_plan_for_athlete
-from app.schemas.auth import OnboardingRequest, OnboardingResponse
-from app.schemas.plan import TrainingPlanResponse
+from ..core.security import create_access_token, hash_password
+from ..db.models import AthleteModel, UserModel
+from ..dependencies import get_db
+from ..routes.athletes import athlete_model_to_response
+from ..routes.plans import _create_plan_for_athlete
+from ..schemas.auth import OnboardingRequest, OnboardingResponse
+from ..schemas.plan import TrainingPlanResponse
 
 router = APIRouter(prefix="/athletes", tags=["onboarding"])
 

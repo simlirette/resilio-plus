@@ -8,17 +8,17 @@ from pydantic import BaseModel
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
-from app.agents.base import AgentContext
-from app.agents.head_coach import HeadCoach
-from app.agents.lifting_coach import LiftingCoach
-from app.agents.running_coach import RunningCoach
-from app.core.periodization import get_current_phase
-from app.services.connector_service import fetch_connector_data
-from app.db.models import AthleteModel, TrainingPlanModel
-from app.dependencies import get_db, get_current_athlete_id
-from app.routes.athletes import athlete_model_to_response
-from app.schemas.athlete import AthleteProfile
-from app.schemas.plan import TrainingPlanResponse
+from ..agents.base import AgentContext
+from ..agents.head_coach import HeadCoach
+from ..agents.lifting_coach import LiftingCoach
+from ..agents.running_coach import RunningCoach
+from ..core.periodization import get_current_phase
+from ..services.connector_service import fetch_connector_data
+from ..db.models import AthleteModel, TrainingPlanModel
+from ..dependencies import get_db, get_current_athlete_id
+from ..routes.athletes import athlete_model_to_response
+from ..schemas.athlete import AthleteProfile
+from ..schemas.plan import TrainingPlanResponse
 
 router = APIRouter(prefix="/athletes", tags=["plans"])
 

@@ -4,8 +4,8 @@ from urllib.parse import urlencode, quote
 
 import httpx
 
-from app.connectors.base import BaseConnector, ConnectorAPIError
-from app.schemas.connector import ConnectorCredential, StravaActivity, StravaLap
+from ..connectors.base import BaseConnector, ConnectorAPIError
+from ..schemas.connector import ConnectorCredential, StravaActivity, StravaLap
 
 STRAVA_BASE = "https://www.strava.com/api/v3"
 STRAVA_TOKEN_URL = "https://www.strava.com/oauth/token"

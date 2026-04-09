@@ -7,11 +7,11 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.connectors.strava import StravaConnector
-from app.db.models import AthleteModel, ConnectorCredentialModel
-from app.dependencies import get_db
-from app.schemas.connector import ConnectorCredential
-from app.schemas.connector_api import (
+from ..connectors.strava import StravaConnector
+from ..db.models import AthleteModel, ConnectorCredentialModel
+from ..dependencies import get_db
+from ..schemas.connector import ConnectorCredential
+from ..schemas.connector_api import (
     ConnectorListResponse,
     ConnectorStatus,
     HevyConnectRequest,

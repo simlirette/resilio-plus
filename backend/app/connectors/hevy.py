@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from app.connectors.base import BaseConnector
-from app.schemas.connector import ConnectorCredential, HevyExercise, HevySet, HevyWorkout
+from ..connectors.base import BaseConnector
+from ..schemas.connector import ConnectorCredential, HevyExercise, HevySet, HevyWorkout
 
 HEVY_BASE = "https://api.hevyapp.com/v1"
 PAGE_SIZE = 10

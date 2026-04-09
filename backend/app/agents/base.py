@@ -4,10 +4,10 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import date
 
-from app.schemas.athlete import AthleteProfile
-from app.schemas.connector import FatSecretDay, HevyWorkout, StravaActivity, TerraHealthData
-from app.schemas.fatigue import FatigueScore
-from app.schemas.plan import WorkoutSlot
+from ..schemas.athlete import AthleteProfile
+from ..schemas.connector import FatSecretDay, HevyWorkout, StravaActivity, TerraHealthData
+from ..schemas.fatigue import FatigueScore
+from ..schemas.plan import WorkoutSlot
 
 
 @dataclass
