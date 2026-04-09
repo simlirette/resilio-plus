@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from app.agents.base import AgentContext, AgentRecommendation, BaseAgent
-from app.core.periodization import get_current_phase
-from app.core.readiness import compute_readiness
-from app.core.running_logic import (
+from ..agents.base import AgentContext, AgentRecommendation, BaseAgent
+from ..core.periodization import get_current_phase
+from ..core.readiness import compute_readiness
+from ..core.running_logic import (
     compute_running_fatigue, estimate_vdot, generate_running_sessions,
 )
-from app.schemas.athlete import Sport
+from ..schemas.athlete import Sport
 
 
 class RunningCoach(BaseAgent):

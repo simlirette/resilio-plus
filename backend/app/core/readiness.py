@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.schemas.connector import TerraHealthData
+from ..schemas.connector import TerraHealthData
 
 
 def compute_readiness(

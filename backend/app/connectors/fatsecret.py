@@ -1,8 +1,8 @@
 import time
 from datetime import date
 
-from app.connectors.base import BaseConnector
-from app.schemas.connector import ConnectorCredential, FatSecretDay, FatSecretMeal
+from ..connectors.base import BaseConnector
+from ..schemas.connector import ConnectorCredential, FatSecretDay, FatSecretMeal
 
 FATSECRET_API_URL = "https://platform.fatsecret.com/rest/server.api"
 FATSECRET_TOKEN_URL = "https://oauth.fatsecret.com/connect/token"

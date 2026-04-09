@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from app.agents.base import AgentContext, AgentRecommendation, BaseAgent
-from app.core.lifting_logic import (
+from ..agents.base import AgentContext, AgentRecommendation, BaseAgent
+from ..core.lifting_logic import (
     compute_lifting_fatigue, estimate_strength_level, generate_lifting_sessions,
 )
-from app.core.periodization import get_current_phase
-from app.core.readiness import compute_readiness
-from app.schemas.athlete import Sport
+from ..core.periodization import get_current_phase
+from ..core.readiness import compute_readiness
+from ..schemas.athlete import Sport
 
 
 class LiftingCoach(BaseAgent):

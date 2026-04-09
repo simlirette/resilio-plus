@@ -2,28 +2,36 @@ import json
 import uuid
 from datetime import date, datetime, timezone
 from typing import Annotated
-from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
-from app.agents.base import AgentContext
-from app.agents.head_coach import HeadCoach
-from app.agents.lifting_coach import LiftingCoach
-from app.agents.running_coach import RunningCoach
-from app.core.periodization import get_current_phase
-from app.services.connector_service import fetch_connector_data
-from app.db.models import AthleteModel, TrainingPlanModel
-from app.dependencies import get_db
-from app.routes.athletes import athlete_model_to_response
-from app.schemas.athlete import AthleteProfile, Sport
-from app.schemas.plan import TrainingPlanResponse
+from ..agents.base import AgentContext
+from ..agents.head_coach import HeadCoach
+from ..agents.lifting_coach import LiftingCoach
+from ..agents.running_coach import RunningCoach
+from ..core.periodization import get_current_phase
+from ..services.connector_service import fetch_connector_data
+from ..db.models import AthleteModel, TrainingPlanModel
+from ..dependencies import get_db, get_current_athlete_id
+from ..routes.athletes import athlete_model_to_response
+from ..schemas.athlete import AthleteProfile
+from ..schemas.plan import TrainingPlanResponse
 
 router = APIRouter(prefix="/athletes", tags=["plans"])
 
 DB = Annotated[Session, Depends(get_db)]
+
+
+def _require_own(
+    athlete_id: str,
+    current_id: Annotated[str, Depends(get_current_athlete_id)],
+) -> str:
+    if current_id != athlete_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+    return athlete_id
 
 
 class PlanRequest(BaseModel):
@@ -31,33 +39,40 @@ class PlanRequest(BaseModel):
     end_date: date
 
 
-@router.post("/{athlete_id}/plan", response_model=TrainingPlanResponse, status_code=201)
-def generate_plan(athlete_id: str, req: PlanRequest, db: DB) -> TrainingPlanResponse:
-    athlete_model = db.get(AthleteModel, athlete_id)
-    if athlete_model is None:
-        raise HTTPException(status_code=404)
-
-    athlete = athlete_model_to_response(athlete_model)
-
-    phase_obj = get_current_phase(athlete.target_race_date, req.start_date)
-    phase = phase_obj.phase.value  # PeriodizationPhase → MacroPhase → str
+def _create_plan_for_athlete(
+    athlete_id: str,
+    athlete: AthleteProfile,
+    start_date: date,
+    end_date: date,
+    db: Session,
+) -> TrainingPlanModel:
+    """Generate and persist a training plan. Returns the saved TrainingPlanModel."""
+    phase_obj = get_current_phase(athlete.target_race_date, start_date)
+    phase = phase_obj.phase.value
 
     if athlete.target_race_date:
-        weeks_remaining = max(0, (athlete.target_race_date - req.start_date).days // 7)
+        weeks_remaining = max(0, (athlete.target_race_date - start_date).days // 7)
     else:
         weeks_remaining = 0
+
+    week_number = (
+        db.query(TrainingPlanModel)
+        .filter(TrainingPlanModel.athlete_id == athlete_id)
+        .count()
+        + 1
+    )
 
     connector_data = fetch_connector_data(athlete_id, db)
 
     context = AgentContext(
         athlete=athlete,
-        date_range=(req.start_date, req.end_date),
+        date_range=(start_date, end_date),
         phase=phase,
         strava_activities=connector_data["strava_activities"],
         hevy_workouts=connector_data["hevy_workouts"],
         terra_health=[],
         fatsecret_days=[],
-        week_number=1,  # TODO: derive from athlete's plan history
+        week_number=week_number,
         weeks_remaining=weeks_remaining,
     )
 
@@ -67,9 +82,9 @@ def generate_plan(athlete_id: str, req: PlanRequest, db: DB) -> TrainingPlanResp
     plan_model = TrainingPlanModel(
         id=str(uuid.uuid4()),
         athlete_id=athlete_id,
-        start_date=req.start_date,
-        end_date=req.end_date,
-        phase=weekly_plan.phase.phase.value,  # PeriodizationPhase → MacroPhase → str
+        start_date=start_date,
+        end_date=end_date,
+        phase=weekly_plan.phase.phase.value,
         total_weekly_hours=sum(s.duration_min for s in weekly_plan.sessions) / 60,
         acwr=weekly_plan.acwr.ratio,
         weekly_slots_json=json.dumps(
@@ -80,11 +95,30 @@ def generate_plan(athlete_id: str, req: PlanRequest, db: DB) -> TrainingPlanResp
     db.add(plan_model)
     db.commit()
     db.refresh(plan_model)
+    return plan_model
+
+
+@router.post("/{athlete_id}/plan", response_model=TrainingPlanResponse, status_code=201)
+def generate_plan(
+    athlete_id: str,
+    req: PlanRequest,
+    db: DB,
+    _: Annotated[str, Depends(_require_own)],
+) -> TrainingPlanResponse:
+    athlete_model = db.get(AthleteModel, athlete_id)
+    if athlete_model is None:
+        raise HTTPException(status_code=404)
+    athlete = athlete_model_to_response(athlete_model)
+    plan_model = _create_plan_for_athlete(athlete_id, athlete, req.start_date, req.end_date, db)
     return TrainingPlanResponse.from_model(plan_model)
 
 
 @router.get("/{athlete_id}/plan", response_model=TrainingPlanResponse)
-def get_latest_plan(athlete_id: str, db: DB) -> TrainingPlanResponse:
+def get_latest_plan(
+    athlete_id: str,
+    db: DB,
+    _: Annotated[str, Depends(_require_own)],
+) -> TrainingPlanResponse:
     athlete = db.get(AthleteModel, athlete_id)
     if athlete is None:
         raise HTTPException(status_code=404, detail="Athlete not found")

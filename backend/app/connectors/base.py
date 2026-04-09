@@ -10,7 +10,7 @@ from tenacity import (
     wait_exponential,
 )
 
-from app.schemas.connector import ConnectorCredential
+from ..schemas.connector import ConnectorCredential
 
 
 class ConnectorError(Exception):

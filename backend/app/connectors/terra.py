@@ -1,7 +1,7 @@
 from datetime import date
 
-from app.connectors.base import BaseConnector
-from app.schemas.connector import ConnectorCredential, TerraHealthData
+from ..connectors.base import BaseConnector
+from ..schemas.connector import ConnectorCredential, TerraHealthData
 
 TERRA_BASE = "https://api.tryterra.co/v2"
 

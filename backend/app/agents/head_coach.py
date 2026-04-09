@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from app.agents.base import AgentContext, AgentRecommendation, BaseAgent
-from app.core.acwr import ACWRResult, ACWRStatus, compute_acwr
-from app.core.conflict import Conflict, ConflictSeverity, detect_conflicts
-from app.core.fatigue import GlobalFatigue, aggregate_fatigue
-from app.core.periodization import PeriodizationPhase, get_current_phase
-from app.schemas.plan import WorkoutSlot
+from ..agents.base import AgentContext, AgentRecommendation, BaseAgent
+from ..core.acwr import ACWRResult, ACWRStatus, compute_acwr
+from ..core.conflict import Conflict, ConflictSeverity, detect_conflicts
+from ..core.fatigue import GlobalFatigue, aggregate_fatigue
+from ..core.periodization import PeriodizationPhase, get_current_phase
+from ..schemas.plan import WorkoutSlot
 
 
 @dataclass

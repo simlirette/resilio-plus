@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 
-from app.core.periodization import TIDStrategy
-from app.schemas.athlete import Sport
-from app.schemas.connector import StravaActivity
-from app.schemas.fatigue import FatigueScore
-from app.schemas.plan import WorkoutSlot
+from ..core.periodization import TIDStrategy
+from ..schemas.athlete import Sport
+from ..schemas.connector import StravaActivity
+from ..schemas.fatigue import FatigueScore
+from ..schemas.plan import WorkoutSlot
 
 # VDOT lookup table (Jack Daniels, simplified)
 # (vdot, easy_pace_s_per_km, threshold_pace_s_per_km)

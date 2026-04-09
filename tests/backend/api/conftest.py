@@ -79,3 +79,49 @@ def athlete_payload(**overrides):
         "hours_per_week": 10.0,
     }
     return {**base, **overrides}
+
+
+from datetime import date as _date
+
+
+def onboarding_payload(**overrides):
+    base = {
+        "name": "Alice",
+        "age": 30,
+        "sex": "F",
+        "weight_kg": 60.0,
+        "height_cm": 168.0,
+        "sports": ["running", "lifting"],
+        "primary_sport": "running",
+        "goals": ["run sub-4h marathon"],
+        "available_days": [0, 2, 4, 6],
+        "hours_per_week": 10.0,
+        "email": "alice@test.com",
+        "password": "password123",
+        "plan_start_date": str(_date.today()),
+    }
+    return {**base, **overrides}
+
+
+@pytest.fixture()
+def authed_client():
+    """TestClient with Bearer token pre-set for Alice. Yields (client, athlete_id)."""
+    engine = _make_test_engine()
+    Base.metadata.create_all(engine)
+    TestSession = sessionmaker(engine)
+
+    def override_get_db():
+        with TestSession() as session:
+            yield session
+
+    app.dependency_overrides[get_db] = override_get_db
+    with TestClient(app) as c:
+        resp = c.post("/athletes/onboarding", json=onboarding_payload())
+        assert resp.status_code == 201, resp.text
+        body = resp.json()
+        token = body["access_token"]
+        athlete_id = body["athlete"]["id"]
+        c.headers.update({"Authorization": f"Bearer {token}"})
+        yield c, athlete_id
+    app.dependency_overrides.clear()
+    Base.metadata.drop_all(engine)

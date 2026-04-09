@@ -6,10 +6,10 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from app.connectors.hevy import HevyConnector
-from app.connectors.strava import StravaConnector
-from app.db.models import ConnectorCredentialModel
-from app.schemas.connector import ConnectorCredential, HevyWorkout, StravaActivity
+from ..connectors.hevy import HevyConnector
+from ..connectors.strava import StravaConnector
+from ..db.models import ConnectorCredentialModel
+from ..schemas.connector import ConnectorCredential, HevyWorkout, StravaActivity
 
 logger = logging.getLogger(__name__)
 
