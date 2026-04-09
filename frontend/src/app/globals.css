@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+html {
+  background-color: #020617; /* slate-950 */
+  color: #f1f5f9; /* slate-100 */
+}
