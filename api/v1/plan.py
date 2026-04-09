@@ -11,6 +11,7 @@ from agents.lifting_coach.agent import LiftingCoachAgent
 from agents.nutrition_coach.agent import NutritionCoachAgent
 from agents.recovery_coach.agent import RecoveryCoachAgent
 from agents.running_coach.agent import RunningCoachAgent
+from agents.swimming_coach.agent import SwimmingCoachAgent
 from models.athlete_state import AthleteState
 
 router = APIRouter()
@@ -98,4 +99,25 @@ def generate_nutrition_plan(body: NutritionPlanRequest) -> dict:
         raise HTTPException(status_code=422, detail=str(e)) from e
 
     agent = NutritionCoachAgent()
+    return agent.run(state)
+
+
+class SwimmingPlanRequest(BaseModel):
+    athlete_state: dict
+
+
+@router.post("/swimming")
+def generate_swimming_plan(body: SwimmingPlanRequest) -> dict:
+    """
+    Génère un plan de natation hebdomadaire.
+
+    Body: {"athlete_state": <AthleteState as dict>}
+    Returns: plan dict avec sessions[], css_sec_per_100m, coaching_notes.
+    """
+    try:
+        state = AthleteState.model_validate(body.athlete_state)
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=str(e)) from e
+
+    agent = SwimmingCoachAgent()
     return agent.run(state)

@@ -289,3 +289,50 @@ def test_post_nutrition_plan_invalid_body():
     )
 
     assert response.status_code == 422
+
+
+_MOCK_SWIMMING_PLAN = {
+    "agent": "swimming_coach",
+    "technique_level": "beginner",
+    "css_sec_per_100m": 150.0,
+    "weekly_volume_km": 0.0,
+    "sessions": [],
+    "coaching_notes": [],
+    "notes": "Note test.",
+}
+
+
+def test_post_swimming_plan_returns_200(simon_pydantic_state):
+    """POST /api/v1/plan/swimming avec payload valide → 200 + plan JSON."""
+    from api.main import app
+
+    client = TestClient(app)
+
+    with patch("api.v1.plan.SwimmingCoachAgent") as mock_cls:
+        mock_agent = MagicMock()
+        mock_agent.run.return_value = _MOCK_SWIMMING_PLAN
+        mock_cls.return_value = mock_agent
+
+        response = client.post(
+            "/api/v1/plan/swimming",
+            json={"athlete_state": simon_pydantic_state.model_dump(mode="json")},
+        )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["agent"] == "swimming_coach"
+    assert "sessions" in data
+
+
+def test_post_swimming_plan_invalid_body():
+    """POST avec athlete_state invalide → 422 Unprocessable Entity."""
+    from api.main import app
+
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/plan/swimming",
+        json={"athlete_state": {"invalid_field": "bad_data"}},
+    )
+
+    assert response.status_code == 422
