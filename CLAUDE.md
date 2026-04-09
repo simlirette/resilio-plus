@@ -107,7 +107,7 @@ resilio-plus/
 │   ├── head_coach/
 │   │   ├── __init__.py                ← ✅ S5
 │   │   ├── system_prompt.md           ← ✅ Existant
-│   │   ├── graph.py                   ← ✅ S10 — + build_weekly_review_graph() + singleton
+│   │   ├── graph.py                   ← ✅ S16 — + swimming/biking in _AGENT_REGISTRY + node_nutrition_prescription réel
 │   │   ├── resolver.py                ← ✅ S9 — ConflictResolver (ACWR + overlap flags)
 │   │   ├── merger.py                  ← ✅ S9 — PlanMerger (unified weekly plan)
 │   │   ├── weekly_nodes.py            ← ✅ S10 — nodes H1-H4 (collect, analyze, adjust, report)
@@ -131,6 +131,16 @@ resilio-plus/
 │   │   ├── prescriber.py              ← ✅ S15 — NutritionPrescriber (TDEE Mifflin-St Jeor, macros g/kg, 7-day schedule)
 │   │   ├── agent.py                   ← ✅ S15 — NutritionCoachAgent (prescriber + LLM clinical note)
 │   │   └── nutrition_coach_system_prompt.md ← ✅ Existant
+│   ├── swimming_coach/
+│   │   ├── __init__.py                ← ✅ S16
+│   │   ├── prescriber.py              ← ✅ S16 — SwimmingPrescriber (CSS zones, technique/aerobic/threshold)
+│   │   ├── agent.py                   ← ✅ S16 — SwimmingCoachAgent (prescriber + LLM note)
+│   │   └── swimming_coach_system_prompt.md ← ✅ S16
+│   ├── biking_coach/
+│   │   ├── __init__.py                ← ✅ S16
+│   │   ├── prescriber.py              ← ✅ S16 — BikingPrescriber (Coggan 7-zone FTP, endurance/tempo/vo2max)
+│   │   ├── agent.py                   ← ✅ S16 — BikingCoachAgent (prescriber + LLM note)
+│   │   └── biking_coach_system_prompt.md ← ✅ S16
 │   └── recovery_coach/
 │       ├── __init__.py                ← ✅ S8
 │       ├── agent.py                   ← ✅ S8 — RecoveryCoachAgent (prescriber + LLM notes)
@@ -150,7 +160,7 @@ resilio-plus/
 │       ├── apple_health.py           ← ✅ S4 — POST /apple-health/upload
 │       ├── files.py                  ← ✅ S4 — POST /files/gpx + /files/fit
 │       ├── food.py                   ← ✅ S4 — GET /food/search + /food/barcode/{barcode}
-│       ├── plan.py                   ← ✅ S6–S8+S15 — POST /plan/running, /lifting, /recovery, /nutrition
+│       ├── plan.py                   ← ✅ S6–S8+S15+S16 — POST /plan/running, /lifting, /recovery, /nutrition, /swimming, /biking
 │       └── workflow.py               ← ✅ S10 — + POST /workflow/weekly-review
 │
 ├── core/
@@ -191,7 +201,7 @@ resilio-plus/
 │   ├── test_acwr.py                   ← ✅ S5 — 5 tests ACWR EWMA
 │   ├── test_athlete_state.py          ← ✅ S5 — 3 tests AthleteState Pydantic
 │   ├── test_base_agent.py             ← ✅ S5 — 3 tests BaseAgent + stubs
-│   ├── test_head_coach_graph.py       ← ✅ S5 — 4 tests graph nodes
+│   ├── test_head_coach_graph.py       ← ✅ S16 — 8 tests graph nodes (incl. swimming/biking dispatch + nutrition node)
 │   ├── test_vdot.py                   ← ✅ S6 — 6 tests VDOT lookup + formatters
 │   ├── test_running_prescriber.py     ← ✅ S6 — 6 tests prescriber logic
 │   ├── test_running_agent.py          ← ✅ S6 — 4 tests agent + mocked LLM
@@ -209,7 +219,11 @@ resilio-plus/
 │   ├── test_security.py               ← ✅ S11 — 4 tests security functions
 │   ├── test_auth_route.py             ← ✅ S11 — 6 tests auth routes
 │   ├── test_nutrition_prescriber.py   ← ✅ S15 — 8 tests NutritionPrescriber
-│   └── test_nutrition_agent.py        ← ✅ S15 — 4 tests NutritionCoachAgent (171 tests total)
+│   ├── test_nutrition_agent.py        ← ✅ S15 — 4 tests NutritionCoachAgent
+│   ├── test_swimming_prescriber.py    ← ✅ S16 — 11 tests SwimmingPrescriber (CSS zones)
+│   ├── test_swimming_agent.py         ← ✅ S16 — 5 tests SwimmingCoachAgent
+│   ├── test_biking_prescriber.py      ← ✅ S16 — 20 tests BikingPrescriber (Coggan FTP)
+│   └── test_biking_agent.py           ← ✅ S16 — 4 tests BikingCoachAgent (219 tests total)
 │
 ├── docs/
 │   └── superpowers/
@@ -267,10 +281,7 @@ resilio-plus/
 
 | Composant | Priorité | Description |
 |-----------|----------|-------------|
-| **Swimming Coach** | Haute | `agents/swimming_coach/` — prescriber (CSS zones) + agent + route POST /plan/swimming |
-| **Biking Coach** | Haute | `agents/biking_coach/` — prescriber (Coggan FTP zones) + agent + route POST /plan/biking |
 | **Pipelines de sync** | Haute | Tâches périodiques (ou webhook) pour importer Strava → `run_activities` et Hevy → `lifting_sessions`/`lifting_sets` en DB |
-| **Orchestration LangGraph complète** | Haute | `agents/head_coach/graph.py` a des nodes stub — câbler la délégation réelle vers les 7 agents et la fusion PlanMerger dans le graphe |
 | **FCÉN Santé Canada** | Basse | Connector CSV Santé Canada pour aliments du marché québécois |
 
 ### Frontend
@@ -281,7 +292,7 @@ resilio-plus/
 | **Page plan nutrition** | Haute | `/dashboard/plan/nutrition` n'existe pas — afficher le plan 7 jours produit par NutritionCoachAgent |
 | **Calendrier → plan réel** | Haute | Le calendrier affiche des données mockées — brancher sur POST /plan/running + /lifting pour générer/afficher le vrai plan de la semaine |
 | **UI connecteurs** | Moyenne | Page settings pour connecter Strava (bouton OAuth) et Hevy (champ API key) — routes backend existent déjà |
-| **Page plan swimming/biking** | Basse | Dépend de la livraison des agents Swimming/Biking |
+| **Page plan swimming/biking** | Moyenne | Agents livrés en S16 — pages `/dashboard/plan/swimming` et `/dashboard/plan/biking` à créer |
 
 ### Infrastructure
 
