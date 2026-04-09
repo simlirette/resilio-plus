@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.routes.auth import router as auth_router
+from app.routes.onboarding import router as onboarding_router
 from app.routes.athletes import router as athletes_router
 from app.routes.connectors import router as connectors_router
 from app.routes.plans import router as plans_router
@@ -17,6 +18,7 @@ app.add_middleware(
 )
 
 app.include_router(auth_router)
+app.include_router(onboarding_router)   # MUST be before athletes_router
 app.include_router(athletes_router)
 app.include_router(connectors_router)
 app.include_router(plans_router)
