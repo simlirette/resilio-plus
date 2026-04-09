@@ -31,9 +31,13 @@ def node_wr_analyze(state: WeeklyReviewState) -> WeeklyReviewState:
 
 def node_wr_adjust(state: WeeklyReviewState) -> WeeklyReviewState:
     """H3: ACWR recalculation + adjustment recommendations."""
-    daily_loads: list[float] = state.athlete_state.constraint_matrix.schedule.get(
-        "_daily_loads_28d", []
-    )
+    if not state.analysis:
+        return state
+
+    daily_loads: list[float] = [
+        float(x)
+        for x in state.athlete_state.constraint_matrix.schedule.get("_daily_loads_28d", [])
+    ]
     # Capture ACWR before overwriting it
     state.acwr_before = state.athlete_state.fatigue.acwr
 
