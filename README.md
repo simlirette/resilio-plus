@@ -88,17 +88,3 @@ Les agents de Resilio+ ne s'appuient pas sur des hallucinations de LLM, mais sur
 4.  **Résolution :** Le Head Coach applique la matrice de contraintes (Circuit Breaker) pour résoudre les chevauchements et l'interférence.
 5.  **Déploiement :** Les séances validées sont exportées (Hevy-compatible JSON, Garmin/Runna-compatible JSON).
 
-## 🛠 Installation & Développement
-
-*Détails à venir suite à l'initialisation de l'environnement avec Claude Code / Superpowers.*
-
-```bash
-# Clone the repository
-git clone [https://github.com/](https://github.com/)[TON_USER]/resilio-plus.git
-cd resilio-plus
-
-# Set up environment variables
-cp .env.example .env
-
-# Build and run containers
-docker-compose up --build
