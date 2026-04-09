@@ -141,6 +141,8 @@ function PlanDetail({ title, plan, sport }: { title: string; plan: PlanResult | 
 export default function CalendarPage() {
   const [runPlan, setRunPlan] = useState<PlanResult | null>(null);
   const [liftPlan, setLiftPlan] = useState<PlanResult | null>(null);
+  const [swimPlan, setSwimPlan] = useState<PlanResult | null>(null);
+  const [bikePlan, setBikePlan] = useState<PlanResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -148,12 +150,16 @@ export default function CalendarPage() {
     setLoading(true);
     setError("");
     try {
-      const [run, lift] = await Promise.all([
+      const [run, lift, swim, bike] = await Promise.all([
         api.post<PlanResult>("/plan/running", { athlete_state: SIMON_ATHLETE_STATE }),
         api.post<PlanResult>("/plan/lifting", { athlete_state: SIMON_ATHLETE_STATE }),
+        api.post<PlanResult>("/plan/swimming", { athlete_state: SIMON_ATHLETE_STATE }),
+        api.post<PlanResult>("/plan/biking", { athlete_state: SIMON_ATHLETE_STATE }),
       ]);
       setRunPlan(run);
       setLiftPlan(lift);
+      setSwimPlan(swim);
+      setBikePlan(bike);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur lors du chargement du plan");
     } finally {
@@ -175,7 +181,7 @@ export default function CalendarPage() {
   addSessions(runPlan, "running");
   addSessions(liftPlan, "lifting");
 
-  const hasPlan = runPlan !== null || liftPlan !== null;
+  const hasPlan = runPlan !== null || liftPlan !== null || swimPlan !== null || bikePlan !== null;
 
   return (
     <div className="space-y-6">
@@ -237,11 +243,27 @@ export default function CalendarPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <PlanDetail title="Plan course" plan={runPlan} sport="running" />
           <PlanDetail title="Plan musculation" plan={liftPlan} sport="lifting" />
+          {swimPlan && (
+            <div className="bg-slate-900 border border-slate-800 rounded-lg p-4 space-y-2">
+              <h3 className="text-sm font-semibold text-slate-300">Plan natation</h3>
+              <p className="text-xs text-slate-400">
+                {(swimPlan.sessions ?? []).length} séance(s) disponible(s)
+              </p>
+            </div>
+          )}
+          {bikePlan && (
+            <div className="bg-slate-900 border border-slate-800 rounded-lg p-4 space-y-2">
+              <h3 className="text-sm font-semibold text-slate-300">Plan vélo</h3>
+              <p className="text-xs text-slate-400">
+                {(bikePlan.sessions ?? []).length} séance(s) disponible(s)
+              </p>
+            </div>
+          )}
         </div>
       )}
 
       {hasPlan && (
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <Link
             href="/dashboard/plan/running"
             className="px-4 py-2 text-sm rounded bg-emerald-700 hover:bg-emerald-600 text-white transition-colors"
@@ -253,6 +275,24 @@ export default function CalendarPage() {
             className="px-4 py-2 text-sm rounded bg-blue-700 hover:bg-blue-600 text-white transition-colors"
           >
             Détail musculation →
+          </Link>
+          <Link
+            href="/dashboard/plan/nutrition"
+            className="px-4 py-2 text-sm rounded bg-violet-700 hover:bg-violet-600 text-white transition-colors"
+          >
+            Détail nutrition →
+          </Link>
+          <Link
+            href="/dashboard/plan/swimming"
+            className="px-4 py-2 text-sm rounded bg-cyan-700 hover:bg-cyan-600 text-white transition-colors"
+          >
+            Détail natation →
+          </Link>
+          <Link
+            href="/dashboard/plan/biking"
+            className="px-4 py-2 text-sm rounded bg-orange-700 hover:bg-orange-600 text-white transition-colors"
+          >
+            Détail vélo →
           </Link>
         </div>
       )}

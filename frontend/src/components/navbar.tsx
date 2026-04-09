@@ -43,6 +43,9 @@ export default function Navbar() {
         <Link href="/dashboard/chat" className={linkClass("/dashboard/chat")}>
           Chat
         </Link>
+        <Link href="/dashboard/settings" className={linkClass("/dashboard/settings")}>
+          Paramètres
+        </Link>
       </div>
 
       <div className="flex items-center gap-3">
