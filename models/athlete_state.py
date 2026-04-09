@@ -53,3 +53,8 @@ class AthleteState(AthleteStateSchema):
     # ── Circuit breaker résolution de conflits ───────────────────────────────
     resolution_iterations: int = 0
     conflicts_resolved: bool = True
+
+    # ── S9 — Résultats des nœuds orchestration ───────────────────────────────
+    recovery_verdict: dict | None = None
+    unified_plan: dict | None = None
+    conflict_log: list[str] = Field(default_factory=list)
