@@ -3,7 +3,6 @@ import pytest
 
 from models.weekly_review import ActualWorkout
 
-
 # ── helpers ──────────────────────────────────────────────────────────────────
 
 def _run(date="2026-04-07", completed=True, duration_min=60, workout_type="easy", avg_hr=None):

@@ -6,7 +6,6 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from core.acwr import compute_ewma_acwr
 from models.weekly_review import ActualWorkout
 
 # ── TRIMP intensity factors ───────────────────────────────────────────────────
