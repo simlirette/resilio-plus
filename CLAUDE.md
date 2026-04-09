@@ -72,7 +72,7 @@ poetry run ruff check .
 | **S8** | Recovery Coach | Readiness score (5 facteurs) + gate keeper + RecoveryCoachAgent | ✅ FAIT |
 | **S9** | Workflow | Constraint matrix + ConflictResolver + PlanMerger + graph stub nodes + workflow API | ✅ FAIT |
 | **S10** | Workflow | WeeklyReviewLoop H1-H4 — TRIMP, ACWR recalc, ajustements + POST /weekly-review | ✅ FAIT |
-| **S11** | Backend | FastAPI endpoints + OpenAPI docs + auth | ⬜ À FAIRE |
+| **S11** | Backend | FastAPI endpoints + OpenAPI docs + auth | ✅ FAIT |
 | **S12** | Frontend | Next.js — Dashboard + calendrier + chat | ⬜ À FAIRE |
 | **S13** | Frontend | Next.js — Suivi hebdo + pages détail | ⬜ À FAIRE |
 | **S14** | Intégration | Docker + tests E2E + polish | ⬜ À FAIRE |
@@ -135,10 +135,13 @@ resilio-plus/
 │
 ├── api/
 │   ├── __init__.py                    ← ✅ S3
-│   ├── main.py                        ← ✅ S3 — FastAPI stub + connectors router
+│   ├── main.py                        ← ✅ S11 — + CORS + auth + athletes routers + OpenAPI metadata
+│   ├── deps.py                        ← ✅ S11 — get_current_athlete dependency
 │   ├── endpoints_design.md            ← ✅ Existant (design doc)
 │   └── v1/
 │       ├── __init__.py                ← ✅ S3
+│       ├── auth.py                    ← ✅ S11 — POST /auth/register + /auth/login
+│       ├── athletes.py                ← ✅ S11 — GET /athletes/me
 │       ├── connectors.py             ← ✅ S3 — Strava OAuth + Hevy routes
 │       ├── apple_health.py           ← ✅ S4 — POST /apple-health/upload
 │       ├── files.py                  ← ✅ S4 — POST /files/gpx + /files/fit
@@ -151,10 +154,11 @@ resilio-plus/
 │   ├── acwr.py                        ← ✅ S5 — compute_ewma_acwr + acwr_zone
 │   ├── vdot.py                        ← ✅ S6 — get_vdot_paces() + format_pace()
 │   ├── constraint_matrix.py           ← ✅ S9 — build_constraint_matrix()
+│   ├── security.py                    ← ✅ S11 — hash_password, verify_password, JWT create/decode
 │   └── weekly_review.py               ← ✅ S10 — WeeklyAnalyzer + WeeklyAdjuster
 │
 ├── models/
-│   ├── database.py                    ← ✅ Existant — Schéma SQLAlchemy complet (8 tables)
+│   ├── database.py                    ← ✅ S11 — + email + password_hash sur Athlete
 │   ├── db_session.py                  ← ✅ Existant — Engine async + session factory
 │   ├── schemas.py                     ← ✅ Existant — AthleteStateSchema Pydantic
 │   ├── views.py                       ← ✅ Existant — get_agent_view() + AgentType
@@ -197,7 +201,9 @@ resilio-plus/
 │   ├── test_plan_merger.py            ← ✅ S9 — 3 tests PlanMerger
 │   ├── test_workflow_route.py         ← ✅ S9 — 4 tests workflow API
 │   ├── test_weekly_review.py          ← ✅ S10 — 6 tests WeeklyAnalyzer + WeeklyAdjuster
-│   └── test_weekly_review_route.py    ← ✅ S10 — 3 tests POST /weekly-review (147 tests total)
+│   ├── test_weekly_review_route.py    ← ✅ S10 — 3 tests POST /weekly-review
+│   ├── test_security.py               ← ✅ S11 — 4 tests security functions
+│   └── test_auth_route.py             ← ✅ S11 — 6 tests auth routes (157 tests total)
 │
 ├── docs/
 │   └── superpowers/
