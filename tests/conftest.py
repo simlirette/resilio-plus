@@ -228,6 +228,8 @@ async def simon_athlete(db_session: AsyncSession) -> Athlete:
     """Athlète Simon persisté en base de test."""
     athlete = Athlete(
         id=SIMON_ID,
+        email="simon@resilio.test",
+        password_hash="$argon2id$hashed_placeholder",
         first_name="Simon",
         age=32,
         sex="M",

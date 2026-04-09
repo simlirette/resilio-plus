@@ -93,6 +93,8 @@ class Athlete(TimestampMixin, Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
+    email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     first_name: Mapped[str] = mapped_column(String(100), nullable=False)
     age: Mapped[int] = mapped_column(Integer, nullable=False)
     sex: Mapped[str] = mapped_column(String(1), nullable=False)       # "M" | "F"
