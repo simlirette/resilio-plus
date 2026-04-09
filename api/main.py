@@ -2,6 +2,9 @@
 FastAPI application — Resilio+
 S11: auth JWT, CORS middleware, OpenAPI metadata.
 """
+import logging
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -13,8 +16,23 @@ from api.v1.files import router as files_router
 from api.v1.food import router as food_router
 from api.v1.plan import router as plan_router
 from api.v1.workflow import router as workflow_router
+from core.sync_scheduler import setup_scheduler
+
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):  # type: ignore[type-arg]
+    scheduler = setup_scheduler()
+    scheduler.start()
+    logger.info("Sync scheduler started")
+    yield
+    scheduler.shutdown(wait=False)
+    logger.info("Sync scheduler stopped")
+
 
 app = FastAPI(
+    lifespan=lifespan,
     title="Resilio+",
     version="0.11.0",
     description=(

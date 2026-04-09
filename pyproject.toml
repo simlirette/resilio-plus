@@ -26,6 +26,7 @@ pandas = "^2.2.3"
 numpy = "^2.2.0"
 python-dateutil = "^2.9.0"
 fitparse = "^1.2.0"
+apscheduler = ">=3.10,<4"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.4"
