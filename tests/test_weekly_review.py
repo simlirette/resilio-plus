@@ -63,3 +63,47 @@ def test_analyzer_trimp_running_easy():
     assert result["trimp_by_sport"]["running"] == pytest.approx(60.0)
     assert result["week_loads"][0] == pytest.approx(60.0)  # Monday = index 0
     assert len(result["week_loads"]) == 7
+
+
+# ── WeeklyAdjuster ────────────────────────────────────────────────────────────
+
+def test_adjuster_low_completion_suggests_reduction():
+    """completion_rate=0.5, no history → adjustments has volume_reduction."""
+    from core.weekly_review import WeeklyAdjuster
+
+    analysis = {"completion_rate": 0.5, "week_loads": [0.0] * 7}
+    adjustments, acwr_new = WeeklyAdjuster().adjust(analysis, [], None)
+    assert acwr_new is None  # no history → no ACWR
+    types = [a["type"] for a in adjustments]
+    assert "volume_reduction" in types
+    vol = next(a for a in adjustments if a["type"] == "volume_reduction")
+    assert vol["reason"] == "low_completion"
+    assert vol["pct"] == 10
+
+
+def test_adjuster_acwr_danger_suggests_rest():
+    """21 days×10 + 7 days×40 → ACWR>1.5 → rest_week adjustment."""
+    from core.weekly_review import WeeklyAdjuster
+
+    daily_loads_28d = [10.0] * 21
+    week_loads = [40.0] * 7
+    analysis = {"completion_rate": 0.9, "week_loads": week_loads}
+    adjustments, acwr_new = WeeklyAdjuster().adjust(analysis, daily_loads_28d, None)
+    assert acwr_new is not None
+    assert acwr_new > 1.5
+    types = [a["type"] for a in adjustments]
+    assert "rest_week" in types
+    assert "intensity_reduction" not in types  # rule 2 fires, rule 3 skipped
+
+
+def test_adjuster_healthy_load_no_adjustments():
+    """completion_rate=0.9, ACWR≈1.02 → adjustments=[]."""
+    from core.weekly_review import WeeklyAdjuster
+
+    daily_loads_28d = [50.0] * 21
+    week_loads = [52.0] * 7
+    analysis = {"completion_rate": 0.9, "week_loads": week_loads}
+    adjustments, acwr_new = WeeklyAdjuster().adjust(analysis, daily_loads_28d, None)
+    assert acwr_new is not None
+    assert 0.8 <= acwr_new <= 1.3
+    assert adjustments == []

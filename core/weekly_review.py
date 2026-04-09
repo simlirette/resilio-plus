@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from core.acwr import compute_ewma_acwr
 from models.weekly_review import ActualWorkout
 
 # ── TRIMP intensity factors ───────────────────────────────────────────────────
@@ -106,3 +107,56 @@ class WeeklyAnalyzer:
             "trimp_by_sport": trimp_by_sport,
             "week_loads": week_loads,
         }
+
+
+class WeeklyAdjuster:
+    def adjust(
+        self,
+        analysis: dict,
+        daily_loads_28d: list[float],
+        fatigue_state,  # FatigueState | None — reserved for future use
+    ) -> tuple[list[dict], float | None]:
+        """
+        Recalculate ACWR and generate adjustment recommendations.
+
+        Args:
+            analysis: output of WeeklyAnalyzer.analyze()
+            daily_loads_28d: existing 28-day load history from constraint_matrix
+            fatigue_state: state.fatigue (reserved, not used in V1 calculation)
+
+        Returns:
+            (adjustments, acwr_new)
+            - adjustments: list of {type, reason, pct?}
+            - acwr_new: recalculated float, or None if no history
+        """
+        week_loads: list[float] = analysis["week_loads"]
+
+        # ── ACWR recalculation ────────────────────────────────────────────────
+        if not daily_loads_28d:
+            acwr_new = None
+        else:
+            updated = (daily_loads_28d + week_loads)[-28:]
+            _, _, acwr_new = compute_ewma_acwr(updated)
+
+        # ── Adjustment rules (evaluated in order, all that apply) ─────────────
+        adjustments: list[dict] = []
+        completion_rate: float = analysis["completion_rate"]
+
+        # Rule 1: low completion
+        if completion_rate < 0.70:
+            adjustments.append({"type": "volume_reduction", "reason": "low_completion", "pct": 10})
+
+        # Rules 2-4: ACWR-based (skip if no history)
+        if acwr_new is not None:
+            if acwr_new > 1.5:
+                adjustments.append({"type": "rest_week", "reason": "acwr_danger"})
+            elif acwr_new > 1.3:
+                adjustments.append(
+                    {"type": "intensity_reduction", "reason": "acwr_caution", "pct": 15}
+                )
+            elif acwr_new < 0.8:
+                adjustments.append(
+                    {"type": "volume_increase", "reason": "acwr_low", "pct": 10}
+                )
+
+        return adjustments, acwr_new
