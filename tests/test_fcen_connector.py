@@ -28,7 +28,7 @@ def test_search_case_insensitive(connector):
     """Recherche insensible à la casse."""
     lower = connector.search("poulet", limit=5)
     upper = connector.search("POULET", limit=5)
-    assert len(lower) == len(upper)
+    assert lower == upper
 
 
 def test_search_limit_respected(connector):
