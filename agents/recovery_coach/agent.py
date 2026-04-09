@@ -48,14 +48,20 @@ class RecoveryCoachAgent(BaseAgent):
         factors = verdict["factors"]
 
         user_content = (
-            f"Readiness Score : {verdict['readiness_score']}/100 → {verdict['color'].upper()}.\n"
-            f"HRV RMSSD : {fatigue.get('hrv_rmssd_today')} ms "
-            f"(baseline {fatigue.get('hrv_rmssd_baseline')} ms) → score {factors['hrv_score']}/100.\n"
-            f"Sommeil : {fatigue.get('sleep_hours_last_night')}h, "
-            f"qualité {fatigue.get('sleep_quality_subjective')}/10 → score {factors['sleep_score']}/100.\n"
-            f"ACWR global : {fatigue.get('acwr')} → score {factors['acwr_score']}/100.\n"
-            f"FC repos : {fatigue.get('hr_rest_today')} bpm → score {factors['hr_rest_score']}/100.\n"
-            f"Fatigue subjective : {fatigue.get('fatigue_subjective')}/10 → score {factors['subjective_score']}/100.\n"
+            f"Readiness Score : {verdict['readiness_score']}/100"
+            f" → {verdict['color'].upper()}.\n"
+            f"HRV RMSSD : {fatigue.get('hrv_rmssd_today')} ms"
+            f" (baseline {fatigue.get('hrv_rmssd_baseline')} ms)"
+            f" → score {factors['hrv_score']}/100.\n"
+            f"Sommeil : {fatigue.get('sleep_hours_last_night')}h,"
+            f" qualité {fatigue.get('sleep_quality_subjective')}/10"
+            f" → score {factors['sleep_score']}/100.\n"
+            f"ACWR global : {fatigue.get('acwr')}"
+            f" → score {factors['acwr_score']}/100.\n"
+            f"FC repos : {fatigue.get('hr_rest_today')} bpm"
+            f" → score {factors['hr_rest_score']}/100.\n"
+            f"Fatigue subjective : {fatigue.get('fatigue_subjective')}/10"
+            f" → score {factors['subjective_score']}/100.\n"
             f"Surentraînement détecté : {verdict['overtraining_alert']}.\n"
             "Génère un constat biométrique en 1-2 phrases. Factuel. Chiffré. Zéro encouragement."
         )

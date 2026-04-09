@@ -17,7 +17,7 @@ def test_agent_returns_readiness_score(simon_pydantic_state):
         result = agent.run(simon_pydantic_state)
 
     assert "readiness_score" in result
-    assert isinstance(result["readiness_score"], (int, float))
+    assert isinstance(result["readiness_score"], int | float)
 
 
 def test_agent_returns_valid_color(simon_pydantic_state):
