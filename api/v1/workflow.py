@@ -10,7 +10,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from agents.head_coach.graph import head_coach_graph
+from agents.head_coach.graph import head_coach_graph, weekly_review_graph
 from core.constraint_matrix import build_constraint_matrix
 from models.athlete_state import AthleteState
 
@@ -93,6 +93,33 @@ def resume_plan(body: ResumeRequest):
 
     unified_plan = result.get("unified_plan") if isinstance(result, dict) else None
     return {"status": "complete", "unified_plan": unified_plan}
+
+
+class WeeklyReviewRequest(BaseModel):
+    athlete_state: dict
+    actual_workouts: list[dict] = []
+
+
+@router.post("/weekly-review")
+def weekly_review(body: WeeklyReviewRequest) -> dict:
+    """
+    Run the weekly review loop (H1-H4).
+
+    Body: {"athlete_state": <AthleteState as dict>, "actual_workouts": [<ActualWorkout as dict>]}
+    Returns: report dict with completion_rate, ACWR update, adjustments, next_week_notes.
+    """
+    try:
+        state = AthleteState.model_validate(body.athlete_state)
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=str(e)) from e
+
+    from models.weekly_review import ActualWorkout, WeeklyReviewState
+
+    workouts = [ActualWorkout.model_validate(w) for w in body.actual_workouts]
+    review_state = WeeklyReviewState(athlete_state=state, actual_workouts=workouts)
+
+    result = weekly_review_graph.invoke(review_state)
+    return result["report"] if isinstance(result, dict) else result.report
 
 
 @router.post("/onboarding/init")
