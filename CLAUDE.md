@@ -169,7 +169,8 @@ resilio-plus/
 │   ├── vdot.py                        ← ✅ S6 — get_vdot_paces() + format_pace()
 │   ├── constraint_matrix.py           ← ✅ S9 — build_constraint_matrix()
 │   ├── security.py                    ← ✅ S11 — hash_password, verify_password, JWT create/decode
-│   └── weekly_review.py               ← ✅ S10 — WeeklyAnalyzer + WeeklyAdjuster
+│   ├── weekly_review.py               ← ✅ S10 — WeeklyAnalyzer + WeeklyAdjuster
+│   └── sync_scheduler.py              ← ✅ S17 — APScheduler 6h — sync_all_strava + sync_all_hevy
 │
 ├── models/
 │   ├── database.py                    ← ✅ S11 — + email + password_hash sur Athlete
@@ -218,12 +219,13 @@ resilio-plus/
 │   ├── test_weekly_review_route.py    ← ✅ S10 — 3 tests POST /weekly-review
 │   ├── test_security.py               ← ✅ S11 — 4 tests security functions
 │   ├── test_auth_route.py             ← ✅ S11 — 6 tests auth routes
+│   ├── test_sync_scheduler.py         ← ✅ S17 — 6 tests sync scheduler (Strava + Hevy periodic)
 │   ├── test_nutrition_prescriber.py   ← ✅ S15 — 8 tests NutritionPrescriber
 │   ├── test_nutrition_agent.py        ← ✅ S15 — 4 tests NutritionCoachAgent
 │   ├── test_swimming_prescriber.py    ← ✅ S16 — 11 tests SwimmingPrescriber (CSS zones)
 │   ├── test_swimming_agent.py         ← ✅ S16 — 5 tests SwimmingCoachAgent
 │   ├── test_biking_prescriber.py      ← ✅ S16 — 20 tests BikingPrescriber (Coggan FTP)
-│   └── test_biking_agent.py           ← ✅ S16 — 4 tests BikingCoachAgent (219 tests total)
+│   └── test_biking_agent.py           ← ✅ S16 — 4 tests BikingCoachAgent (226 tests total)
 │
 ├── docs/
 │   └── superpowers/
@@ -266,8 +268,8 @@ resilio-plus/
 
 | Service | Méthode primaire | Fallback | Statut |
 |---------|-----------------|---------|--------|
-| Strava | OAuth2 (`connectors/strava.py`, routes dans `api/v1/connectors.py`) | GPX/FIT (`connectors/gpx.py`, `connectors/fit.py`) | ✅ Credentials + sync endpoint — ⚠️ pas de pipeline auto vers DB |
-| Hevy | API key (`connectors/hevy.py`, routes dans `api/v1/connectors.py`) | CSV export → parser | ✅ Credentials stockés — ⚠️ pas de pipeline auto vers DB |
+| Strava | OAuth2 (`connectors/strava.py`, routes dans `api/v1/connectors.py`) | GPX/FIT (`connectors/gpx.py`, `connectors/fit.py`) | ✅ Credentials + sync endpoint + pipeline auto 6h (`core/sync_scheduler.py`) |
+| Hevy | API key (`connectors/hevy.py`, routes dans `api/v1/connectors.py`) | CSV export → parser | ✅ Credentials stockés + pipeline auto 6h (`core/sync_scheduler.py`) |
 | Apple Health | JSON upload (`connectors/apple_health.py`) | — | ✅ POST /apple-health/upload opérationnel |
 | USDA FoodData | API REST (`connectors/food_search.py`) | Cache local JSON | ✅ GET /food/search opérationnel |
 | Open Food Facts | API REST (`connectors/food_search.py`) | — | ✅ GET /food/barcode/{barcode} opérationnel |
@@ -281,7 +283,6 @@ resilio-plus/
 
 | Composant | Priorité | Description |
 |-----------|----------|-------------|
-| **Pipelines de sync** | Haute | Tâches périodiques (ou webhook) pour importer Strava → `run_activities` et Hevy → `lifting_sessions`/`lifting_sets` en DB |
 | **FCÉN Santé Canada** | Basse | Connector CSV Santé Canada pour aliments du marché québécois |
 
 ### Frontend
