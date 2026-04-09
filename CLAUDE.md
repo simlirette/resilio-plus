@@ -63,7 +63,7 @@ poetry run ruff check .
 | Session | Module | Livrable | Statut |
 |---------|--------|---------|--------|
 | **S1** | Setup | pyproject.toml, Dockerfile, Alembic, config, exercise_database.json | ✅ FAIT |
-| **S2** | Schémas | AthleteState Pydantic complet, modèles DB, migration initiale | ⬜ À FAIRE |
+| **S2** | Schémas | AthleteState Pydantic complet, modèles DB, migration initiale | ✅ FAIT |
 | **S3** | Connecteurs | Strava OAuth + Hevy (API ou CSV fallback) | ✅ FAIT |
 | **S4** | Connecteurs | USDA/Open Food Facts + Apple Health + fallbacks GPX/FIT | ✅ FAIT |
 | **S5** | Agents base | Agent base class + Head Coach + `get_agent_view()` + edge cases | ✅ FAIT |
@@ -96,7 +96,7 @@ resilio-plus/
 ├── alembic/
 │   ├── env.py                         ← ✅ S1 — Async PostgreSQL (asyncpg)
 │   ├── script.py.mako                 ← ✅ S1
-│   └── versions/                      ← ⬜ Première migration en S2
+│   └── versions/                      ← ✅ S2 — 4 migrations (initial + connector_credentials + fatigue unique + email/password_hash)
 │
 ├── resilio-master-v2.md               ← Document maître (lire en second)
 ├── resilio-nutrition-coach-section.md ← Section 6B Nutrition Coach
