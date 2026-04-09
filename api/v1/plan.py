@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from agents.lifting_coach.agent import LiftingCoachAgent
+from agents.nutrition_coach.agent import NutritionCoachAgent
 from agents.recovery_coach.agent import RecoveryCoachAgent
 from agents.running_coach.agent import RunningCoachAgent
 from models.athlete_state import AthleteState
@@ -76,4 +77,25 @@ def generate_recovery_plan(body: RecoveryPlanRequest) -> dict:
         raise HTTPException(status_code=422, detail=str(e)) from e
 
     agent = RecoveryCoachAgent()
+    return agent.run(state)
+
+
+class NutritionPlanRequest(BaseModel):
+    athlete_state: dict
+
+
+@router.post("/nutrition")
+def generate_nutrition_plan(body: NutritionPlanRequest) -> dict:
+    """
+    Génère le plan nutritionnel hebdomadaire (7 jours).
+
+    Body: {"athlete_state": <AthleteState as dict>}
+    Returns: plan dict avec daily_plans[], weekly_summary, notes.
+    """
+    try:
+        state = AthleteState.model_validate(body.athlete_state)
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=str(e)) from e
+
+    agent = NutritionCoachAgent()
     return agent.run(state)

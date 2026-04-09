@@ -234,3 +234,58 @@ def test_post_recovery_plan_agent_receives_state(simon_pydantic_state):
 
     assert len(received_states) == 1
     assert isinstance(received_states[0], AthleteState)
+
+
+_MOCK_NUTRITION_PLAN = {
+    "agent": "nutrition_coach",
+    "weekly_summary": {
+        "tdee_estimated": 2700,
+        "avg_macros_g": {"protein_g": 157, "carbs_g": 353, "fat_g": 71},
+        "active_supplements": ["creatine_5g"],
+        "dietary_restrictions": [],
+    },
+    "daily_plans": [
+        {
+            "day": "Monday", "day_type": "lifting_only",
+            "kcal_target": 2700, "macros_g": {"protein_g": 157, "carbs_g": 353, "fat_g": 71},
+            "fiber_g_target": 30, "hydration_ml": 3344, "timing": {},
+        }
+    ] * 7,
+    "notes": "Note de test.",
+}
+
+
+def test_post_nutrition_plan_returns_200(simon_pydantic_state):
+    """POST /api/v1/plan/nutrition avec payload valide → 200 + plan JSON."""
+    from api.main import app
+
+    client = TestClient(app)
+
+    with patch("api.v1.plan.NutritionCoachAgent") as mock_cls:
+        mock_agent = MagicMock()
+        mock_agent.run.return_value = _MOCK_NUTRITION_PLAN
+        mock_cls.return_value = mock_agent
+
+        response = client.post(
+            "/api/v1/plan/nutrition",
+            json={"athlete_state": simon_pydantic_state.model_dump(mode="json")},
+        )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["agent"] == "nutrition_coach"
+    assert "daily_plans" in data
+
+
+def test_post_nutrition_plan_invalid_body():
+    """POST avec athlete_state invalide → 422 Unprocessable Entity."""
+    from api.main import app
+
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/plan/nutrition",
+        json={"athlete_state": {"invalid_field": "bad_data"}},
+    )
+
+    assert response.status_code == 422

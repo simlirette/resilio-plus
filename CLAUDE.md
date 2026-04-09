@@ -76,7 +76,7 @@ poetry run ruff check .
 | **S12** | Frontend | Next.js — Dashboard + calendrier + chat | ✅ FAIT |
 | **S13** | Frontend | Next.js — Suivi hebdo + pages détail | ✅ FAIT |
 | **S14** | Intégration | Docker + tests E2E + polish | ✅ FAIT |
-| **S15** | Nutrition Coach | USDA/OFF/FCÉN + NLP meal input + macros + race-week | ⬜ À FAIRE |
+| **S15** | Nutrition Coach | NutritionPrescriber + NutritionCoachAgent + POST /plan/nutrition | ✅ FAIT |
 
 ---
 
@@ -126,7 +126,11 @@ resilio-plus/
 │   │   ├── agent.py                   ← ✅ S7 — LiftingCoachAgent (prescriber + LLM notes)
 │   │   ├── prescriber.py              ← ✅ S7 — LiftingPrescriber (DUP, MEV/MRV hybrid, Hevy output)
 │   │   └── system_prompt.md           ← ✅ Existant
-│   ├── nutrition_coach/system_prompt.md ← ✅ Existant
+│   ├── nutrition_coach/
+│   │   ├── __init__.py                ← ✅ S15
+│   │   ├── prescriber.py              ← ✅ S15 — NutritionPrescriber (TDEE Mifflin-St Jeor, macros g/kg, 7-day schedule)
+│   │   ├── agent.py                   ← ✅ S15 — NutritionCoachAgent (prescriber + LLM clinical note)
+│   │   └── nutrition_coach_system_prompt.md ← ✅ Existant
 │   └── recovery_coach/
 │       ├── __init__.py                ← ✅ S8
 │       ├── agent.py                   ← ✅ S8 — RecoveryCoachAgent (prescriber + LLM notes)
@@ -146,7 +150,7 @@ resilio-plus/
 │       ├── apple_health.py           ← ✅ S4 — POST /apple-health/upload
 │       ├── files.py                  ← ✅ S4 — POST /files/gpx + /files/fit
 │       ├── food.py                   ← ✅ S4 — GET /food/search + /food/barcode/{barcode}
-│       ├── plan.py                   ← ✅ S6–S8 — POST /plan/running, /lifting, /recovery
+│       ├── plan.py                   ← ✅ S6–S8+S15 — POST /plan/running, /lifting, /recovery, /nutrition
 │       └── workflow.py               ← ✅ S10 — + POST /workflow/weekly-review
 │
 ├── core/
@@ -203,7 +207,9 @@ resilio-plus/
 │   ├── test_weekly_review.py          ← ✅ S10 — 6 tests WeeklyAnalyzer + WeeklyAdjuster
 │   ├── test_weekly_review_route.py    ← ✅ S10 — 3 tests POST /weekly-review
 │   ├── test_security.py               ← ✅ S11 — 4 tests security functions
-│   └── test_auth_route.py             ← ✅ S11 — 6 tests auth routes (157 tests total)
+│   ├── test_auth_route.py             ← ✅ S11 — 6 tests auth routes
+│   ├── test_nutrition_prescriber.py   ← ✅ S15 — 8 tests NutritionPrescriber
+│   └── test_nutrition_agent.py        ← ✅ S15 — 4 tests NutritionCoachAgent (171 tests total)
 │
 ├── docs/
 │   └── superpowers/
