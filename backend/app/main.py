@@ -6,6 +6,7 @@ from app.routes.onboarding import router as onboarding_router
 from app.routes.athletes import router as athletes_router
 from app.routes.connectors import router as connectors_router
 from app.routes.plans import router as plans_router
+from app.routes.reviews import router as reviews_router
 
 app = FastAPI(title="Resilio Plus API", version="0.1.0")
 
@@ -22,3 +23,4 @@ app.include_router(onboarding_router)   # MUST be before athletes_router
 app.include_router(athletes_router)
 app.include_router(connectors_router)
 app.include_router(plans_router)
+app.include_router(reviews_router)
