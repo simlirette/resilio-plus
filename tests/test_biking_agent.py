@@ -20,7 +20,7 @@ def test_agent_type():
     assert agent.agent_type == AgentType.biking_coach
 
 
-def test_prescribe_returns_notes_key(simon_pydantic_state):
+def test_prescribe_returns_notes_key():
     """prescribe() retourne bien une clé 'notes' (str)."""
     from agents.biking_coach.agent import BikingCoachAgent
 
@@ -44,7 +44,7 @@ def test_prescribe_returns_notes_key(simon_pydantic_state):
     assert isinstance(result["notes"], str)
 
 
-def test_prescribe_sessions_structure(simon_pydantic_state):
+def test_prescribe_sessions_structure():
     """prescribe() retourne une clé 'sessions' (liste)."""
     from agents.biking_coach.agent import BikingCoachAgent
 
@@ -69,7 +69,7 @@ def test_prescribe_sessions_structure(simon_pydantic_state):
     assert len(result["sessions"]) == 2
 
 
-def test_get_coaching_notes_calls_llm(simon_pydantic_state):
+def test_get_coaching_notes_calls_llm():
     """_get_coaching_notes() appelle client.messages.create avec model='claude-sonnet-4-6'."""
     from agents.biking_coach.agent import BikingCoachAgent
 
@@ -102,7 +102,7 @@ def test_get_coaching_notes_calls_llm(simon_pydantic_state):
     assert call_kwargs.kwargs["model"] == "claude-sonnet-4-6"
 
 
-def test_agent_handles_llm_failure(simon_pydantic_state):
+def test_agent_handles_llm_failure():
     """Si le LLM lève une exception, notes='' et pas de crash."""
     from agents.biking_coach.agent import BikingCoachAgent
 

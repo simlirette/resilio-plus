@@ -138,11 +138,11 @@ def test_session_types_four(prescriber):
 # ── Session content ───────────────────────────────────────────────────────────
 
 def test_endurance_session_short_volume(prescriber):
-    """Volume < 30 km → endurance session 60 min."""
+    """Volume < 30 km → endurance session 65 min (10 warmup + 45 Z2 + 10 cooldown)."""
     plan = prescriber.prescribe({"biking_profile": {"ftp_watts": None, "weekly_volume_km": 20.0}})
     session = plan["sessions"][0]
     assert session["session_type"] == "endurance"
-    assert session["duration_minutes"] == 60
+    assert session["duration_minutes"] == 65
 
 
 def test_endurance_session_normal_volume(prescriber):

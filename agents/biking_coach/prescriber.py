@@ -149,7 +149,6 @@ class BikingPrescriber:
         """
         short = weekly_volume_km < 30
         z2_minutes = 45 if short else 70
-        total_minutes = 60 if short else 90
 
         blocks = [
             {
@@ -171,6 +170,8 @@ class BikingPrescriber:
                 "description": "Récupération active",
             },
         ]
+
+        total_minutes = sum(b["duration_minutes"] for b in blocks)
 
         return {
             "session_number": session_number,
