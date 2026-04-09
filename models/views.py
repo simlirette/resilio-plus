@@ -127,7 +127,7 @@ def _nutrition_view(state: AthleteStateSchema) -> dict:
 def _recovery_view(state: AthleteStateSchema) -> dict:
     return {
         "identity": state.profile.model_dump(
-            include={"first_name", "age", "sex", "weight_kg"}
+            include={"first_name", "age", "sex", "weight_kg", "resting_hr"}
         ),
         "constraints": {
             "injuries_history": [i.model_dump() for i in state.profile.injuries_history]

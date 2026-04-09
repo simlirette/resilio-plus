@@ -6,7 +6,7 @@ Utilisé pour valider les données JSONB et filtrer l'AthleteState par agent via
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, date
+from datetime import date, datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -178,6 +178,7 @@ class FatigueState(BaseModel):
     sleep_hours_last_night: float | None = None
     sleep_quality_subjective: int | None = None
     fatigue_subjective: int | None = None
+    hr_rest_today: int | None = None
 
 
 class Compliance(BaseModel):
