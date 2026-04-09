@@ -1,8 +1,9 @@
 """
 Workflow routes — api/v1/workflow.py
-POST /workflow/plan         : run the full Head Coach LangGraph workflow
-POST /workflow/plan/resume  : resume an interrupted workflow
-POST /workflow/onboarding/init : initialize AthleteState with constraint matrix
+POST /workflow/plan              : run the full Head Coach LangGraph workflow
+POST /workflow/plan/resume       : resume an interrupted workflow
+POST /workflow/onboarding/init   : initialize AthleteState with constraint matrix
+POST /workflow/weekly-review     : run the H1-H4 weekly review loop
 """
 from uuid import uuid4
 
@@ -13,6 +14,7 @@ from pydantic import BaseModel
 from agents.head_coach.graph import head_coach_graph, weekly_review_graph
 from core.constraint_matrix import build_constraint_matrix
 from models.athlete_state import AthleteState
+from models.weekly_review import ActualWorkout, WeeklyReviewState
 
 router = APIRouter()
 
@@ -112,8 +114,6 @@ def weekly_review(body: WeeklyReviewRequest) -> dict:
         state = AthleteState.model_validate(body.athlete_state)
     except Exception as e:
         raise HTTPException(status_code=422, detail=str(e)) from e
-
-    from models.weekly_review import ActualWorkout, WeeklyReviewState
 
     workouts = [ActualWorkout.model_validate(w) for w in body.actual_workouts]
     review_state = WeeklyReviewState(athlete_state=state, actual_workouts=workouts)
