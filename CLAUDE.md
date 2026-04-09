@@ -68,7 +68,7 @@ poetry run ruff check .
 | **S4** | Connecteurs | USDA/Open Food Facts + Apple Health + fallbacks GPX/FIT | ✅ FAIT |
 | **S5** | Agents base | Agent base class + Head Coach + `get_agent_view()` + edge cases | ✅ FAIT |
 | **S6** | Running Coach | VDOT + zones + output format Runna/Garmin | ✅ FAIT |
-| **S7** | Lifting Coach | Exercise DB complet (400+) + Volume Landmarks + output format Hevy | ⬜ À FAIRE |
+| **S7** | Lifting Coach | Exercise DB (75+ exercices) + LiftingPrescriber (DUP) + LiftingCoachAgent + output format Hevy | ✅ FAIT |
 | **S8** | Recovery Coach | Readiness score + gate keeper + HRV pipeline | ⬜ À FAIRE |
 | **S9** | Workflow | Onboarding 7 blocs + création de plan + audit conflits | ⬜ À FAIRE |
 | **S10** | Workflow | Boucle hebdomadaire + matrice vivante + suivi | ⬜ À FAIRE |
@@ -120,7 +120,8 @@ resilio-plus/
 │   │   └── running_coach_system_prompt.md ← ✅ Existant
 │   ├── lifting_coach/
 │   │   ├── __init__.py                ← ✅ S5
-│   │   ├── agent.py                   ← ✅ S5 — LiftingCoachAgent stub
+│   │   ├── agent.py                   ← ✅ S7 — LiftingCoachAgent (prescriber + LLM notes)
+│   │   ├── prescriber.py              ← ✅ S7 — LiftingPrescriber (DUP, MEV/MRV hybrid, Hevy output)
 │   │   └── system_prompt.md           ← ✅ Existant
 │   ├── nutrition_coach/system_prompt.md ← ✅ Existant
 │   └── recovery_coach/system_prompt.md  ← ✅ Existant
@@ -153,7 +154,7 @@ resilio-plus/
 │
 ├── data/
 │   ├── agent_view_map.json            ← ✅ Existant
-│   ├── exercise_database.json         ← ✅ S1 — 23 exercices-clés (400+ en S7)
+│   ├── exercise_database.json         ← ✅ S7 — 75+ exercices (DUP, Tier 1-3, Hevy IDs)
 │   ├── food_database_cache.json       ← ✅ Existant
 │   ├── muscle_overlap.json            ← ✅ Existant
 │   ├── nutrition_targets.json         ← ✅ Existant
@@ -175,7 +176,9 @@ resilio-plus/
 │   ├── test_vdot.py                   ← ✅ S6 — 6 tests VDOT lookup + formatters
 │   ├── test_running_prescriber.py     ← ✅ S6 — 6 tests prescriber logic
 │   ├── test_running_agent.py          ← ✅ S6 — 4 tests agent + mocked LLM
-│   └── test_plan_route.py             ← ✅ S6 — 3 tests API route (90 tests total)
+│   ├── test_plan_route.py             ← ✅ S7 — 6 tests API route (running + lifting)
+│   ├── test_lifting_prescriber.py     ← ✅ S7 — 6 tests LiftingPrescriber
+│   └── test_lifting_agent.py          ← ✅ S7 — 4 tests LiftingCoachAgent (107 tests total)
 │
 ├── docs/
 │   └── superpowers/
