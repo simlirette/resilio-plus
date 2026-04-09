@@ -7,6 +7,7 @@ POST /plan/recovery : verdict gate keeper — readiness score + modification par
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from agents.biking_coach.agent import BikingCoachAgent
 from agents.lifting_coach.agent import LiftingCoachAgent
 from agents.nutrition_coach.agent import NutritionCoachAgent
 from agents.recovery_coach.agent import RecoveryCoachAgent
@@ -120,4 +121,25 @@ def generate_swimming_plan(body: SwimmingPlanRequest) -> dict:
         raise HTTPException(status_code=422, detail=str(e)) from e
 
     agent = SwimmingCoachAgent()
+    return agent.run(state)
+
+
+class BikingPlanRequest(BaseModel):
+    athlete_state: dict
+
+
+@router.post("/biking")
+def generate_biking_plan(body: BikingPlanRequest) -> dict:
+    """
+    Génère un plan vélo hebdomadaire.
+
+    Body: {"athlete_state": <AthleteState as dict>}
+    Returns: plan dict avec sessions[], ftp_watts, coaching_notes.
+    """
+    try:
+        state = AthleteState.model_validate(body.athlete_state)
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=str(e)) from e
+
+    agent = BikingCoachAgent()
     return agent.run(state)
