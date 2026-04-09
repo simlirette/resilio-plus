@@ -71,7 +71,7 @@ poetry run ruff check .
 | **S7** | Lifting Coach | Exercise DB (75+ exercices) + LiftingPrescriber (DUP) + LiftingCoachAgent + output format Hevy | ✅ FAIT |
 | **S8** | Recovery Coach | Readiness score (5 facteurs) + gate keeper + RecoveryCoachAgent | ✅ FAIT |
 | **S9** | Workflow | Constraint matrix + ConflictResolver + PlanMerger + graph stub nodes + workflow API | ✅ FAIT |
-| **S10** | Workflow | Boucle hebdomadaire + matrice vivante + suivi | ⬜ À FAIRE |
+| **S10** | Workflow | WeeklyReviewLoop H1-H4 — TRIMP, ACWR recalc, ajustements + POST /weekly-review | ✅ FAIT |
 | **S11** | Backend | FastAPI endpoints + OpenAPI docs + auth | ⬜ À FAIRE |
 | **S12** | Frontend | Next.js — Dashboard + calendrier + chat | ⬜ À FAIRE |
 | **S13** | Frontend | Next.js — Suivi hebdo + pages détail | ⬜ À FAIRE |
@@ -107,9 +107,10 @@ resilio-plus/
 │   ├── head_coach/
 │   │   ├── __init__.py                ← ✅ S5
 │   │   ├── system_prompt.md           ← ✅ Existant
-│   │   ├── graph.py                   ← ✅ S9 — nodes complets (recovery gate, resolve, merge)
+│   │   ├── graph.py                   ← ✅ S10 — + build_weekly_review_graph() + singleton
 │   │   ├── resolver.py                ← ✅ S9 — ConflictResolver (ACWR + overlap flags)
 │   │   ├── merger.py                  ← ✅ S9 — PlanMerger (unified weekly plan)
+│   │   ├── weekly_nodes.py            ← ✅ S10 — nodes H1-H4 (collect, analyze, adjust, report)
 │   │   └── edge_cases/
 │   │       ├── __init__.py            ← ✅ S5 — get_alternatives_for_conflict
 │   │       ├── scenario_a_1rm_veto.py ← ✅ Existant
@@ -143,20 +144,22 @@ resilio-plus/
 │       ├── files.py                  ← ✅ S4 — POST /files/gpx + /files/fit
 │       ├── food.py                   ← ✅ S4 — GET /food/search + /food/barcode/{barcode}
 │       ├── plan.py                   ← ✅ S6–S8 — POST /plan/running, /lifting, /recovery
-│       └── workflow.py               ← ✅ S9 — POST /workflow/plan, /plan/resume, /onboarding/init
+│       └── workflow.py               ← ✅ S10 — + POST /workflow/weekly-review
 │
 ├── core/
 │   ├── config.py                      ← ✅ S1 — Pydantic v2 SettingsConfigDict + validator
 │   ├── acwr.py                        ← ✅ S5 — compute_ewma_acwr + acwr_zone
 │   ├── vdot.py                        ← ✅ S6 — get_vdot_paces() + format_pace()
-│   └── constraint_matrix.py           ← ✅ S9 — build_constraint_matrix()
+│   ├── constraint_matrix.py           ← ✅ S9 — build_constraint_matrix()
+│   └── weekly_review.py               ← ✅ S10 — WeeklyAnalyzer + WeeklyAdjuster
 │
 ├── models/
 │   ├── database.py                    ← ✅ Existant — Schéma SQLAlchemy complet (8 tables)
 │   ├── db_session.py                  ← ✅ Existant — Engine async + session factory
 │   ├── schemas.py                     ← ✅ Existant — AthleteStateSchema Pydantic
 │   ├── views.py                       ← ✅ Existant — get_agent_view() + AgentType
-│   └── athlete_state.py               ← ✅ S5 — AthleteState Pydantic (LangGraph state)
+│   ├── athlete_state.py               ← ✅ S5 — AthleteState Pydantic (LangGraph state)
+│   └── weekly_review.py               ← ✅ S10 — ActualWorkout + WeeklyReviewState
 │
 ├── connectors/                        ← ✅ S3+S4 — Strava, Hevy, AppleHealth, GPX, FIT, FoodSearch
 │
@@ -192,7 +195,9 @@ resilio-plus/
 │   ├── test_constraint_matrix.py      ← ✅ S9 — 5 tests build_constraint_matrix
 │   ├── test_conflict_resolver.py      ← ✅ S9 — 4 tests ConflictResolver
 │   ├── test_plan_merger.py            ← ✅ S9 — 3 tests PlanMerger
-│   └── test_workflow_route.py         ← ✅ S9 — 4 tests workflow API (138 tests total)
+│   ├── test_workflow_route.py         ← ✅ S9 — 4 tests workflow API
+│   ├── test_weekly_review.py          ← ✅ S10 — 6 tests WeeklyAnalyzer + WeeklyAdjuster
+│   └── test_weekly_review_route.py    ← ✅ S10 — 3 tests POST /weekly-review (147 tests total)
 │
 ├── docs/
 │   └── superpowers/
