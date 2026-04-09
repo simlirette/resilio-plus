@@ -1,34 +1,57 @@
-# agents/lifting_coach/agent.py
 """
-Lifting Coach Agent — S5 stub sans appel LLM.
-S6/S7 : prescribe() sera remplacé par un appel Anthropic avec system_prompt.
+Lifting Coach Agent — agents/lifting_coach/agent.py
+Orchestre LiftingPrescriber (déterministe) + Anthropic LLM (coaching_notes).
+S7 : remplace le stub S5.
 """
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import anthropic
 
 from agents.base_agent import BaseAgent
+from agents.lifting_coach.prescriber import LiftingPrescriber
+from core.config import settings
 from models.views import AgentType
+
+_SYSTEM_PROMPT = (Path(__file__).parent / "system_prompt.md.txt").read_text()
 
 
 class LiftingCoachAgent(BaseAgent):
-    """Agent Lifting Coach — stub déterministe S5."""
+    """Lifting Coach — prescription DUP + notes qualitatives via LLM."""
 
     agent_type = AgentType.lifting_coach
 
+    def __init__(self) -> None:
+        self._prescriber = LiftingPrescriber()
+        self._client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+
     def prescribe(self, view: dict) -> dict:
-        """
-        S5 : stub déterministe sans LLM.
-        Retourne une séance upper body basée sur le split de l'athlète.
-        """
-        split = view.get("lifting_profile", {}).get("training_split", "upper_lower")
-        return {
-            "agent": "lifting_coach",
-            "sessions": [
-                {
-                    "day": "monday",
-                    "type": "upper_body",
-                    "description": f"Upper Body — {split} split, Tier 1",
-                    "exercises": ["Bench Press", "Pull-up", "OHP"],
-                }
-            ],
-            "sessions_prescribed": 3,
-            "notes": "S5 stub — prescription LLM en S7.",
-        }
+        plan = self._prescriber.build_week_plan(view)
+        plan["coaching_notes"] = self._get_coaching_notes(view, plan)
+        return plan
+
+    def _get_coaching_notes(self, view: dict, plan: dict) -> list[str]:
+        """Appel LLM Anthropic pour notes qualitatives. Fallback = [] si exception."""
+        user_content = (
+            f"Génère 3-5 coaching_notes techniques CONCISES pour ce plan de musculation :\n"
+            f"{json.dumps(plan, ensure_ascii=False, indent=2)}\n\n"
+            f"Contexte athlète :\n{json.dumps(view, ensure_ascii=False, indent=2)}"
+        )
+        try:
+            message = self._client.messages.create(
+                model=settings.ANTHROPIC_MODEL,
+                max_tokens=512,
+                system=_SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": user_content}],
+            )
+            text = message.content[0].text
+            lines = [
+                line.strip().lstrip("-•*").strip()
+                for line in text.split("\n")
+                if line.strip()
+            ]
+            return [line for line in lines if line][:5]
+        except Exception:
+            return []
