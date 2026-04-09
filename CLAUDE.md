@@ -74,7 +74,7 @@ poetry run ruff check .
 | **S10** | Workflow | WeeklyReviewLoop H1-H4 — TRIMP, ACWR recalc, ajustements + POST /weekly-review | ✅ FAIT |
 | **S11** | Backend | FastAPI endpoints + OpenAPI docs + auth | ✅ FAIT |
 | **S12** | Frontend | Next.js — Dashboard + calendrier + chat | ✅ FAIT |
-| **S13** | Frontend | Next.js — Suivi hebdo + pages détail | ⬜ À FAIRE |
+| **S13** | Frontend | Next.js — Suivi hebdo + pages détail | ✅ FAIT |
 | **S14** | Intégration | Docker + tests E2E + polish | ⬜ À FAIRE |
 | **S15** | Nutrition Coach | USDA/OFF/FCÉN + NLP meal input + macros + race-week | ⬜ À FAIRE |
 
@@ -223,10 +223,14 @@ resilio-plus/
 │       │   └── dashboard/
 │       │       ├── layout.tsx         ← Protected layout + Navbar
 │       │       ├── page.tsx           ← Profile card (GET /athletes/me)
-│       │       ├── calendar/page.tsx  ← Weekly grid (POST /plan/running + /lifting)
-│       │       └── chat/page.tsx      ← Chat UI shell (stub)
+│       │       ├── calendar/page.tsx       ← Weekly grid + links to plan detail pages
+│       │       ├── chat/page.tsx           ← Chat UI shell (stub)
+│       │       ├── weekly-review/page.tsx  ← ✅ S13 — Workout logger + ACWR report
+│       │       └── plan/
+│       │           ├── running/page.tsx    ← ✅ S13 — Running plan detail (sessions + paces)
+│       │           └── lifting/page.tsx    ← ✅ S13 — Lifting plan detail (Hevy exercise table)
 │       ├── lib/api.ts                 ← Typed fetch wrapper + JWT localStorage
-│       └── components/navbar.tsx      ← Top nav (links + logout)
+│       └── components/navbar.tsx      ← Top nav (Dashboard/Calendrier/Bilan/Chat + logout)
 ```
 
 ---

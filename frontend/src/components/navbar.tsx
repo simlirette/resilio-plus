@@ -37,6 +37,9 @@ export default function Navbar() {
         <Link href="/dashboard/calendar" className={linkClass("/dashboard/calendar")}>
           Calendrier
         </Link>
+        <Link href="/dashboard/weekly-review" className={linkClass("/dashboard/weekly-review")}>
+          Bilan
+        </Link>
         <Link href="/dashboard/chat" className={linkClass("/dashboard/chat")}>
           Chat
         </Link>

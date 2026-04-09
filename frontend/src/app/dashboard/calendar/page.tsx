@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { api } from "@/lib/api";
 
 // Simon demo athlete state — matches tests/conftest.py
@@ -236,6 +237,23 @@ export default function CalendarPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <PlanDetail title="Plan course" plan={runPlan} sport="running" />
           <PlanDetail title="Plan musculation" plan={liftPlan} sport="lifting" />
+        </div>
+      )}
+
+      {hasPlan && (
+        <div className="flex gap-3">
+          <Link
+            href="/dashboard/plan/running"
+            className="px-4 py-2 text-sm rounded bg-emerald-700 hover:bg-emerald-600 text-white transition-colors"
+          >
+            Détail course →
+          </Link>
+          <Link
+            href="/dashboard/plan/lifting"
+            className="px-4 py-2 text-sm rounded bg-blue-700 hover:bg-blue-600 text-white transition-colors"
+          >
+            Détail musculation →
+          </Link>
         </div>
       )}
     </div>
