@@ -58,7 +58,7 @@ poetry run ruff check .
 
 ---
 
-## ÉTAT D'AVANCEMENT — 18 SESSIONS
+## ÉTAT D'AVANCEMENT — 19 SESSIONS
 
 | Session | Module | Livrable | Statut |
 |---------|--------|---------|--------|
@@ -80,6 +80,7 @@ poetry run ruff check .
 | **S16** | Swimming + Biking + Orchestration | SwimmingCoachAgent + BikingCoachAgent + LangGraph câblé | ✅ FAIT |
 | **S17** | Sync scheduler | APScheduler 6h Strava + Hevy — pipeline auto vers DB | ✅ FAIT |
 | **S18** | Finition backend | FCÉN Santé Canada + alembic entrypoint Docker + E2E Playwright étendu | ✅ FAIT |
+| **S19** | Frontend complet | Chat HiTL + plan nutrition/swimming/biking + settings connecteurs + navbar | ✅ FAIT |
 
 ---
 
@@ -260,14 +261,18 @@ resilio-plus/
 │       │   └── dashboard/
 │       │       ├── layout.tsx         ← Protected layout + Navbar
 │       │       ├── page.tsx           ← Profile card (GET /athletes/me)
-│       │       ├── calendar/page.tsx       ← Weekly grid + links to plan detail pages
-│       │       ├── chat/page.tsx           ← Chat UI shell (stub)
+│       │       ├── calendar/page.tsx       ← ✅ S19 — Weekly grid + run/lift/swim/bike/nutrition links
+│       │       ├── chat/page.tsx           ← ✅ S19 — Head Coach HiTL chat (POST /workflow/plan)
+│       │       ├── settings/page.tsx       ← ✅ S19 — Strava OAuth + Hevy API key connect/disconnect
 │       │       ├── weekly-review/page.tsx  ← ✅ S13 — Workout logger + ACWR report
 │       │       └── plan/
 │       │           ├── running/page.tsx    ← ✅ S13 — Running plan detail (sessions + paces)
-│       │           └── lifting/page.tsx    ← ✅ S13 — Lifting plan detail (Hevy exercise table)
+│       │           ├── lifting/page.tsx    ← ✅ S13 — Lifting plan detail (Hevy exercise table)
+│       │           ├── nutrition/page.tsx  ← ✅ S19 — 7-day macros/timing from NutritionCoachAgent
+│       │           ├── swimming/page.tsx   ← ✅ S19 — CSS zones + technique/aerobic/threshold sessions
+│       │           └── biking/page.tsx     ← ✅ S19 — FTP zones + blocks/TSS from BikingCoachAgent
 │       ├── lib/api.ts                 ← Typed fetch wrapper + JWT localStorage
-│       └── components/navbar.tsx      ← Top nav (Dashboard/Calendrier/Bilan/Chat + logout)
+│       └── components/navbar.tsx      ← ✅ S19 — Top nav (Dashboard/Calendrier/Bilan/Chat/Paramètres + logout)
 ```
 
 ---
@@ -293,13 +298,7 @@ resilio-plus/
 
 ### Frontend
 
-| Composant | Priorité | Description |
-|-----------|----------|-------------|
-| **Chat page** | Haute | `/dashboard/chat` est un shell stub — brancher sur POST /workflow/weekly-review ou un endpoint LLM Head Coach |
-| **Page plan nutrition** | Haute | `/dashboard/plan/nutrition` n'existe pas — afficher le plan 7 jours produit par NutritionCoachAgent |
-| **Calendrier → plan réel** | Haute | Le calendrier affiche des données mockées — brancher sur POST /plan/running + /lifting pour générer/afficher le vrai plan de la semaine |
-| **UI connecteurs** | Moyenne | Page settings pour connecter Strava (bouton OAuth) et Hevy (champ API key) — routes backend existent déjà |
-| **Page plan swimming/biking** | Moyenne | Agents livrés en S16 — pages `/dashboard/plan/swimming` et `/dashboard/plan/biking` à créer |
+*Frontend complet — aucun item restant.*
 
 ### Infrastructure
 
