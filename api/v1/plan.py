@@ -2,11 +2,13 @@
 Plan routes — api/v1/plan.py
 POST /plan/running : plan de course hebdomadaire Runna/Garmin-compatible.
 POST /plan/lifting : plan de musculation hebdomadaire Hevy-compatible.
+POST /plan/recovery : verdict gate keeper — readiness score + modification params.
 """
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from agents.lifting_coach.agent import LiftingCoachAgent
+from agents.recovery_coach.agent import RecoveryCoachAgent
 from agents.running_coach.agent import RunningCoachAgent
 from models.athlete_state import AthleteState
 
@@ -52,4 +54,26 @@ def generate_lifting_plan(body: LiftingPlanRequest) -> dict:
         raise HTTPException(status_code=422, detail=str(e)) from e
 
     agent = LiftingCoachAgent()
+    return agent.run(state)
+
+
+class RecoveryPlanRequest(BaseModel):
+    athlete_state: dict
+
+
+@router.post("/recovery")
+def generate_recovery_plan(body: RecoveryPlanRequest) -> dict:
+    """
+    Évalue la capacité physiologique de l'athlète — verdict gate keeper.
+
+    Body: {"athlete_state": <AthleteState as dict>}
+    Returns: verdict dict avec readiness_score, color, factors, modification_params,
+             overtraining_alert, notes.
+    """
+    try:
+        state = AthleteState.model_validate(body.athlete_state)
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=str(e)) from e
+
+    agent = RecoveryCoachAgent()
     return agent.run(state)
