@@ -69,7 +69,7 @@ poetry run ruff check .
 | **S5** | Agents base | Agent base class + Head Coach + `get_agent_view()` + edge cases | ✅ FAIT |
 | **S6** | Running Coach | VDOT + zones + output format Runna/Garmin | ✅ FAIT |
 | **S7** | Lifting Coach | Exercise DB (75+ exercices) + LiftingPrescriber (DUP) + LiftingCoachAgent + output format Hevy | ✅ FAIT |
-| **S8** | Recovery Coach | Readiness score + gate keeper + HRV pipeline | ⬜ À FAIRE |
+| **S8** | Recovery Coach | Readiness score (5 facteurs) + gate keeper + RecoveryCoachAgent | ✅ FAIT |
 | **S9** | Workflow | Onboarding 7 blocs + création de plan + audit conflits | ⬜ À FAIRE |
 | **S10** | Workflow | Boucle hebdomadaire + matrice vivante + suivi | ⬜ À FAIRE |
 | **S11** | Backend | FastAPI endpoints + OpenAPI docs + auth | ⬜ À FAIRE |
@@ -124,7 +124,11 @@ resilio-plus/
 │   │   ├── prescriber.py              ← ✅ S7 — LiftingPrescriber (DUP, MEV/MRV hybrid, Hevy output)
 │   │   └── system_prompt.md           ← ✅ Existant
 │   ├── nutrition_coach/system_prompt.md ← ✅ Existant
-│   └── recovery_coach/system_prompt.md  ← ✅ Existant
+│   └── recovery_coach/
+│       ├── __init__.py                ← ✅ S8
+│       ├── agent.py                   ← ✅ S8 — RecoveryCoachAgent (prescriber + LLM notes)
+│       ├── prescriber.py              ← ✅ S8 — RecoveryPrescriber (5 facteurs, gate keeper)
+│       └── recovery_coach_system_prompt.md ← ✅ Existant
 │
 ├── api/
 │   ├── __init__.py                    ← ✅ S3
@@ -176,9 +180,11 @@ resilio-plus/
 │   ├── test_vdot.py                   ← ✅ S6 — 6 tests VDOT lookup + formatters
 │   ├── test_running_prescriber.py     ← ✅ S6 — 6 tests prescriber logic
 │   ├── test_running_agent.py          ← ✅ S6 — 4 tests agent + mocked LLM
-│   ├── test_plan_route.py             ← ✅ S7 — 6 tests API route (running + lifting)
+│   ├── test_plan_route.py             ← ✅ S8 — 9 tests API route (running + lifting + recovery)
 │   ├── test_lifting_prescriber.py     ← ✅ S7 — 6 tests LiftingPrescriber
-│   └── test_lifting_agent.py          ← ✅ S7 — 4 tests LiftingCoachAgent (107 tests total)
+│   ├── test_lifting_agent.py          ← ✅ S7 — 4 tests LiftingCoachAgent
+│   ├── test_recovery_prescriber.py    ← ✅ S8 — 8 tests RecoveryPrescriber
+│   └── test_recovery_agent.py         ← ✅ S8 — 4 tests RecoveryCoachAgent (122 tests total)
 │
 ├── docs/
 │   └── superpowers/
