@@ -115,7 +115,11 @@ def weekly_review(body: WeeklyReviewRequest) -> dict:
     except Exception as e:
         raise HTTPException(status_code=422, detail=str(e)) from e
 
-    workouts = [ActualWorkout.model_validate(w) for w in body.actual_workouts]
+    try:
+        workouts = [ActualWorkout.model_validate(w) for w in body.actual_workouts]
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=str(e)) from e
+
     review_state = WeeklyReviewState(athlete_state=state, actual_workouts=workouts)
 
     result = weekly_review_graph.invoke(review_state)
