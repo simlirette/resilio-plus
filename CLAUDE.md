@@ -58,7 +58,7 @@ poetry run ruff check .
 
 ---
 
-## ÉTAT D'AVANCEMENT — 15 SESSIONS
+## ÉTAT D'AVANCEMENT — 18 SESSIONS
 
 | Session | Module | Livrable | Statut |
 |---------|--------|---------|--------|
@@ -77,6 +77,9 @@ poetry run ruff check .
 | **S13** | Frontend | Next.js — Suivi hebdo + pages détail | ✅ FAIT |
 | **S14** | Intégration | Docker + tests E2E + polish | ✅ FAIT |
 | **S15** | Nutrition Coach | NutritionPrescriber + NutritionCoachAgent + POST /plan/nutrition | ✅ FAIT |
+| **S16** | Swimming + Biking + Orchestration | SwimmingCoachAgent + BikingCoachAgent + LangGraph câblé | ✅ FAIT |
+| **S17** | Sync scheduler | APScheduler 6h Strava + Hevy — pipeline auto vers DB | ✅ FAIT |
+| **S18** | Finition backend | FCÉN Santé Canada + alembic entrypoint Docker + E2E Playwright étendu | ✅ FAIT |
 
 ---
 
@@ -186,6 +189,7 @@ resilio-plus/
 │   ├── agent_view_map.json            ← ✅ Existant
 │   ├── exercise_database.json         ← ✅ S7 — 75+ exercices (DUP, Tier 1-3, Hevy IDs)
 │   ├── food_database_cache.json       ← ✅ Existant
+│   └── fcen_nutrients.csv             ← ✅ S18 — 25 aliments canadiens (FCÉN Santé Canada)
 │   ├── muscle_overlap.json            ← ✅ Existant
 │   ├── nutrition_targets.json         ← ✅ Existant
 │   ├── running_zones.json             ← ✅ Existant
@@ -225,7 +229,9 @@ resilio-plus/
 │   ├── test_swimming_prescriber.py    ← ✅ S16 — 11 tests SwimmingPrescriber (CSS zones)
 │   ├── test_swimming_agent.py         ← ✅ S16 — 5 tests SwimmingCoachAgent
 │   ├── test_biking_prescriber.py      ← ✅ S16 — 20 tests BikingPrescriber (Coggan FTP)
-│   └── test_biking_agent.py           ← ✅ S16 — 4 tests BikingCoachAgent (226 tests total)
+│   ├── test_biking_agent.py           ← ✅ S16 — 4 tests BikingCoachAgent
+│   ├── test_fcen_connector.py         ← ✅ S18 — 7 tests FcenConnector (CSV FCÉN)
+│   └── test_food_route.py             ← ✅ S18 — 2 tests GET /food/search/fcen (235 tests total)
 │
 ├── docs/
 │   └── superpowers/
@@ -241,7 +247,9 @@ resilio-plus/
 │   ├── .env.local.example             ← ✅ S14 — NEXT_PUBLIC_API_URL doc
 │   ├── e2e/
 │   │   ├── auth.spec.ts               ← ✅ S14 — Login + register render tests
-│   │   └── dashboard.spec.ts          ← ✅ S14 — Protected redirect tests
+│   │   ├── dashboard.spec.ts          ← ✅ S14 — Protected redirect tests (/dashboard, /calendar)
+│   │   ├── protected-routes.spec.ts   ← ✅ S18 — Redirects: chat, weekly-review, plan/running, plan/lifting
+│   │   └── public-pages.spec.ts       ← ✅ S18 — Register public + 404 handling
 │   ├── package.json                   ← Next.js 15.5, React 19, Tailwind v4, Playwright
 │   └── src/
 │       ├── app/
@@ -281,9 +289,7 @@ resilio-plus/
 
 ### Backend
 
-| Composant | Priorité | Description |
-|-----------|----------|-------------|
-| **FCÉN Santé Canada** | Basse | Connector CSV Santé Canada pour aliments du marché québécois |
+*Backend complet — aucun item restant.*
 
 ### Frontend
 
@@ -297,10 +303,7 @@ resilio-plus/
 
 ### Infrastructure
 
-| Composant | Priorité | Description |
-|-----------|----------|-------------|
-| **`alembic upgrade head` en prod** | Haute | 4 migrations existent mais n'ont jamais été exécutées contre une vraie DB PostgreSQL |
-| **Tests E2E supplémentaires** | Moyenne | Playwright couvre login/register/redirect — ajouter happy-path plan generation |
+*Infrastructure complète — aucun item restant.*
 
 ---
 
