@@ -41,11 +41,18 @@ from agents.head_coach.edge_cases.scenario_c_acwr_event import (
 )
 from agents.head_coach.merger import PlanMerger
 from agents.head_coach.resolver import ConflictResolver
+from agents.head_coach.weekly_nodes import (
+    node_wr_adjust,
+    node_wr_analyze,
+    node_wr_collect,
+    node_wr_report,
+)
 from agents.lifting_coach.agent import LiftingCoachAgent
 from agents.recovery_coach.agent import RecoveryCoachAgent
 from agents.running_coach.agent import RunningCoachAgent
 from core.acwr import compute_ewma_acwr
 from models.athlete_state import AthleteState
+from models.weekly_review import WeeklyReviewState
 
 # ─────────────────────────────────────────────
 # HELPERS
@@ -489,16 +496,20 @@ def build_head_coach_graph() -> StateGraph:
 
 def build_weekly_review_graph() -> StateGraph:
     """
-    Graph simplifié pour le suivi hebdomadaire.
-    Différent du graph de création de plan initial.
-    TODO Session 10 : implémenter complètement.
+    Graph H1-H4 du weekly review.
+    Stateless single-pass — pas de MemorySaver, pas d'interrupt.
     """
-    # H1: Collecte (pull Strava, Hevy, Apple Health)
-    # H2: Analyse prévu vs réalisé
-    # H3: ACWR update + matrice vivante + ajustements
-    # H4: Rapport + feedback utilisateur
-    # H5: Planification semaine suivante
-    pass
+    builder = StateGraph(WeeklyReviewState)
+    builder.add_node("wr_collect", node_wr_collect)
+    builder.add_node("wr_analyze", node_wr_analyze)
+    builder.add_node("wr_adjust",  node_wr_adjust)
+    builder.add_node("wr_report",  node_wr_report)
+    builder.add_edge(START, "wr_collect")
+    builder.add_edge("wr_collect", "wr_analyze")
+    builder.add_edge("wr_analyze", "wr_adjust")
+    builder.add_edge("wr_adjust",  "wr_report")
+    builder.add_edge("wr_report",  END)
+    return builder.compile()  # No checkpointer — stateless single-pass
 
 
 # ─────────────────────────────────────────────
@@ -507,3 +518,4 @@ def build_weekly_review_graph() -> StateGraph:
 
 # Instancier une seule fois au démarrage de l'application
 head_coach_graph = build_head_coach_graph()
+weekly_review_graph = build_weekly_review_graph()
