@@ -70,7 +70,7 @@ poetry run ruff check .
 | **S6** | Running Coach | VDOT + zones + output format Runna/Garmin | ✅ FAIT |
 | **S7** | Lifting Coach | Exercise DB (75+ exercices) + LiftingPrescriber (DUP) + LiftingCoachAgent + output format Hevy | ✅ FAIT |
 | **S8** | Recovery Coach | Readiness score (5 facteurs) + gate keeper + RecoveryCoachAgent | ✅ FAIT |
-| **S9** | Workflow | Onboarding 7 blocs + création de plan + audit conflits | ⬜ À FAIRE |
+| **S9** | Workflow | Constraint matrix + ConflictResolver + PlanMerger + graph stub nodes + workflow API | ✅ FAIT |
 | **S10** | Workflow | Boucle hebdomadaire + matrice vivante + suivi | ⬜ À FAIRE |
 | **S11** | Backend | FastAPI endpoints + OpenAPI docs + auth | ⬜ À FAIRE |
 | **S12** | Frontend | Next.js — Dashboard + calendrier + chat | ⬜ À FAIRE |
@@ -107,7 +107,9 @@ resilio-plus/
 │   ├── head_coach/
 │   │   ├── __init__.py                ← ✅ S5
 │   │   ├── system_prompt.md           ← ✅ Existant
-│   │   ├── graph.py                   ← ✅ S5 — nodes complets (load, detect, delegate)
+│   │   ├── graph.py                   ← ✅ S9 — nodes complets (recovery gate, resolve, merge)
+│   │   ├── resolver.py                ← ✅ S9 — ConflictResolver (ACWR + overlap flags)
+│   │   ├── merger.py                  ← ✅ S9 — PlanMerger (unified weekly plan)
 │   │   └── edge_cases/
 │   │       ├── __init__.py            ← ✅ S5 — get_alternatives_for_conflict
 │   │       ├── scenario_a_1rm_veto.py ← ✅ Existant
@@ -140,12 +142,14 @@ resilio-plus/
 │       ├── apple_health.py           ← ✅ S4 — POST /apple-health/upload
 │       ├── files.py                  ← ✅ S4 — POST /files/gpx + /files/fit
 │       ├── food.py                   ← ✅ S4 — GET /food/search + /food/barcode/{barcode}
-│       └── plan.py                   ← ✅ S6 — POST /plan/running
+│       ├── plan.py                   ← ✅ S6–S8 — POST /plan/running, /lifting, /recovery
+│       └── workflow.py               ← ✅ S9 — POST /workflow/plan, /plan/resume, /onboarding/init
 │
 ├── core/
 │   ├── config.py                      ← ✅ S1 — Pydantic v2 SettingsConfigDict + validator
 │   ├── acwr.py                        ← ✅ S5 — compute_ewma_acwr + acwr_zone
-│   └── vdot.py                        ← ✅ S6 — get_vdot_paces() + format_pace()
+│   ├── vdot.py                        ← ✅ S6 — get_vdot_paces() + format_pace()
+│   └── constraint_matrix.py           ← ✅ S9 — build_constraint_matrix()
 │
 ├── models/
 │   ├── database.py                    ← ✅ Existant — Schéma SQLAlchemy complet (8 tables)
@@ -184,7 +188,11 @@ resilio-plus/
 │   ├── test_lifting_prescriber.py     ← ✅ S7 — 6 tests LiftingPrescriber
 │   ├── test_lifting_agent.py          ← ✅ S7 — 4 tests LiftingCoachAgent
 │   ├── test_recovery_prescriber.py    ← ✅ S8 — 8 tests RecoveryPrescriber
-│   └── test_recovery_agent.py         ← ✅ S8 — 4 tests RecoveryCoachAgent (122 tests total)
+│   ├── test_recovery_agent.py         ← ✅ S8 — 4 tests RecoveryCoachAgent
+│   ├── test_constraint_matrix.py      ← ✅ S9 — 5 tests build_constraint_matrix
+│   ├── test_conflict_resolver.py      ← ✅ S9 — 4 tests ConflictResolver
+│   ├── test_plan_merger.py            ← ✅ S9 — 3 tests PlanMerger
+│   └── test_workflow_route.py         ← ✅ S9 — 4 tests workflow API (138 tests total)
 │
 ├── docs/
 │   └── superpowers/
