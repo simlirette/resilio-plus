@@ -252,12 +252,43 @@ resilio-plus/
 
 | Service | Méthode primaire | Fallback | Statut |
 |---------|-----------------|---------|--------|
-| Hevy | API REST (si dispo) | CSV export → parser | ⬜ S3 |
-| Strava | API OAuth | GPX / FIT file import | ⬜ S3 |
-| Apple Health | HealthKit / Terra API | Input manuel JSON | ⬜ S4 |
-| USDA FoodData | API REST gratuite | Cache local JSON | ⬜ S15 |
-| Open Food Facts | API REST gratuite | Cache local JSON | ⬜ S15 |
-| FCÉN Santé Canada | CSV téléchargeable | Cache local JSON | ⬜ S15 |
+| Strava | OAuth2 (`connectors/strava.py`, routes dans `api/v1/connectors.py`) | GPX/FIT (`connectors/gpx.py`, `connectors/fit.py`) | ✅ Credentials + sync endpoint — ⚠️ pas de pipeline auto vers DB |
+| Hevy | API key (`connectors/hevy.py`, routes dans `api/v1/connectors.py`) | CSV export → parser | ✅ Credentials stockés — ⚠️ pas de pipeline auto vers DB |
+| Apple Health | JSON upload (`connectors/apple_health.py`) | — | ✅ POST /apple-health/upload opérationnel |
+| USDA FoodData | API REST (`connectors/food_search.py`) | Cache local JSON | ✅ GET /food/search opérationnel |
+| Open Food Facts | API REST (`connectors/food_search.py`) | — | ✅ GET /food/barcode/{barcode} opérationnel |
+| FCÉN Santé Canada | CSV Santé Canada | — | ⬜ Non implémenté |
+
+---
+
+## CE QUI RESTE À FAIRE
+
+### Backend
+
+| Composant | Priorité | Description |
+|-----------|----------|-------------|
+| **Swimming Coach** | Haute | `agents/swimming_coach/` — prescriber (CSS zones) + agent + route POST /plan/swimming |
+| **Biking Coach** | Haute | `agents/biking_coach/` — prescriber (Coggan FTP zones) + agent + route POST /plan/biking |
+| **Pipelines de sync** | Haute | Tâches périodiques (ou webhook) pour importer Strava → `run_activities` et Hevy → `lifting_sessions`/`lifting_sets` en DB |
+| **Orchestration LangGraph complète** | Haute | `agents/head_coach/graph.py` a des nodes stub — câbler la délégation réelle vers les 7 agents et la fusion PlanMerger dans le graphe |
+| **FCÉN Santé Canada** | Basse | Connector CSV Santé Canada pour aliments du marché québécois |
+
+### Frontend
+
+| Composant | Priorité | Description |
+|-----------|----------|-------------|
+| **Chat page** | Haute | `/dashboard/chat` est un shell stub — brancher sur POST /workflow/weekly-review ou un endpoint LLM Head Coach |
+| **Page plan nutrition** | Haute | `/dashboard/plan/nutrition` n'existe pas — afficher le plan 7 jours produit par NutritionCoachAgent |
+| **Calendrier → plan réel** | Haute | Le calendrier affiche des données mockées — brancher sur POST /plan/running + /lifting pour générer/afficher le vrai plan de la semaine |
+| **UI connecteurs** | Moyenne | Page settings pour connecter Strava (bouton OAuth) et Hevy (champ API key) — routes backend existent déjà |
+| **Page plan swimming/biking** | Basse | Dépend de la livraison des agents Swimming/Biking |
+
+### Infrastructure
+
+| Composant | Priorité | Description |
+|-----------|----------|-------------|
+| **`alembic upgrade head` en prod** | Haute | 4 migrations existent mais n'ont jamais été exécutées contre une vraie DB PostgreSQL |
+| **Tests E2E supplémentaires** | Moyenne | Playwright couvre login/register/redirect — ajouter happy-path plan generation |
 
 ---
 
