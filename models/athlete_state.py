@@ -57,4 +57,5 @@ class AthleteState(AthleteStateSchema):
     # ── S9 — Résultats des nœuds orchestration ───────────────────────────────
     recovery_verdict: dict | None = None
     unified_plan: dict | None = None
+    # Written by node_resolve_conflicts; str entries (vs decision_log which is list[dict])
     conflict_log: list[str] = Field(default_factory=list)

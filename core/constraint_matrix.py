@@ -24,6 +24,10 @@ def build_constraint_matrix(state: AthleteState) -> dict:
           "running_days":   int,
           "lifting_days":   int,
         }
+
+    Note:
+        Only "running" and "lifting" are scheduled. Other active_sports values
+        (e.g., "swimming", "cycling") are not handled in this phase.
     """
     available_days: list[str] = [
         day for day in _DAY_ORDER
@@ -61,12 +65,7 @@ def build_constraint_matrix(state: AthleteState) -> dict:
 def _is_available(state: AthleteState, day: str) -> bool:
     """Return True if the athlete is available on this day."""
     day_info = state.profile.available_days.get(day)
-    if day_info is None:
-        return False
-    # DayAvailability instance (after Pydantic coercion) or plain dict
-    if hasattr(day_info, "available"):
-        return bool(day_info.available)
-    return bool(day_info.get("available", False))
+    return bool(day_info.available) if day_info is not None else False
 
 
 def _pick_non_consecutive(days: list[str], count: int) -> list[str]:
