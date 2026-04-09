@@ -50,9 +50,8 @@ def node_wr_adjust(state: WeeklyReviewState) -> WeeklyReviewState:
     state.acwr_after = acwr_new
 
     # Update the living constraint matrix with this week's loads
-    if state.analysis:
-        updated_loads = (daily_loads + state.analysis["week_loads"])[-28:]
-        state.athlete_state.constraint_matrix.schedule["_daily_loads_28d"] = updated_loads
+    updated_loads = (daily_loads + state.analysis["week_loads"])[-28:]
+    state.athlete_state.constraint_matrix.schedule["_daily_loads_28d"] = updated_loads
 
     # Sync fatigue.acwr forward
     if acwr_new is not None:
