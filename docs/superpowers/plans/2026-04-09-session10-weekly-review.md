@@ -156,10 +156,10 @@ def test_analyzer_partial_completion():
 
 
 def test_analyzer_trimp_running_easy():
-    """Easy run 60 min → TRIMP=60 (factor 1.0). 2026-04-07 is a Monday → week_loads[0]=60."""
+    """Easy run 60 min → TRIMP=60 (factor 1.0). 2026-04-06 is a Monday → week_loads[0]=60."""
     from core.weekly_review import WeeklyAnalyzer
 
-    workout = _run("2026-04-07", duration_min=60, workout_type="easy")
+    workout = _run("2026-04-06", duration_min=60, workout_type="easy")
     result = WeeklyAnalyzer().analyze([], [workout])
     assert result["trimp_total"] == pytest.approx(60.0)
     assert result["trimp_by_sport"]["running"] == pytest.approx(60.0)
