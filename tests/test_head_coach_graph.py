@@ -50,3 +50,56 @@ def test_node_detect_acwr_danger(simon_pydantic_state):
     assert len(danger) == 1
     assert danger[0]["layer"] == "fatigue"
     assert danger[0]["acwr"] == 1.6
+
+
+def test_node_delegate_dispatches_swimming(simon_pydantic_state):
+    """node_delegate_to_agents appelle SwimmingCoachAgent si active_sports=[swimming]."""
+    from unittest.mock import MagicMock, patch
+    from agents.head_coach.graph import node_delegate_to_agents
+
+    simon_pydantic_state.profile.active_sports = ["swimming"]
+    mock_plan = {"agent": "swimming_coach", "sessions": []}
+
+    with patch("agents.head_coach.graph._AGENT_REGISTRY", {
+        "swimming": MagicMock(run=MagicMock(return_value=mock_plan))
+    }):
+        result = node_delegate_to_agents(simon_pydantic_state)
+
+    assert "swimming" in result.partial_plans
+    assert result.partial_plans["swimming"]["agent"] == "swimming_coach"
+
+
+def test_node_delegate_dispatches_biking(simon_pydantic_state):
+    """node_delegate_to_agents appelle BikingCoachAgent si active_sports=[biking]."""
+    from unittest.mock import MagicMock, patch
+    from agents.head_coach.graph import node_delegate_to_agents
+
+    simon_pydantic_state.profile.active_sports = ["biking"]
+    mock_plan = {"agent": "biking_coach", "sessions": []}
+
+    with patch("agents.head_coach.graph._AGENT_REGISTRY", {
+        "biking": MagicMock(run=MagicMock(return_value=mock_plan))
+    }):
+        result = node_delegate_to_agents(simon_pydantic_state)
+
+    assert "biking" in result.partial_plans
+    assert result.partial_plans["biking"]["agent"] == "biking_coach"
+
+
+def test_node_nutrition_prescription_stores_result(simon_pydantic_state):
+    """node_nutrition_prescription stocke le plan nutrition dans unified_plan."""
+    from unittest.mock import MagicMock, patch
+    from agents.head_coach.graph import node_nutrition_prescription
+
+    simon_pydantic_state.unified_plan = {"running": {}, "lifting": {}}
+    mock_plan = {"agent": "nutrition_coach", "daily_plans": [], "notes": ""}
+
+    with patch("agents.head_coach.graph.NutritionCoachAgent") as mock_cls:
+        mock_agent = MagicMock()
+        mock_agent.run.return_value = mock_plan
+        mock_cls.return_value = mock_agent
+
+        result = node_nutrition_prescription(simon_pydantic_state)
+
+    assert "nutrition" in result.unified_plan
+    assert result.unified_plan["nutrition"]["agent"] == "nutrition_coach"

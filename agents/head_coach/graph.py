@@ -47,9 +47,12 @@ from agents.head_coach.weekly_nodes import (
     node_wr_collect,
     node_wr_report,
 )
+from agents.biking_coach.agent import BikingCoachAgent
 from agents.lifting_coach.agent import LiftingCoachAgent
+from agents.nutrition_coach.agent import NutritionCoachAgent
 from agents.recovery_coach.agent import RecoveryCoachAgent
 from agents.running_coach.agent import RunningCoachAgent
+from agents.swimming_coach.agent import SwimmingCoachAgent
 from core.acwr import compute_ewma_acwr
 from models.athlete_state import AthleteState
 from models.weekly_review import WeeklyReviewState
@@ -73,6 +76,8 @@ def _load_muscle_overlap() -> dict:
 _AGENT_REGISTRY: dict[str, object] = {
     "running": RunningCoachAgent(),
     "lifting": LiftingCoachAgent(),
+    "swimming": SwimmingCoachAgent(),
+    "biking": BikingCoachAgent(),
 }
 
 # ─────────────────────────────────────────────
@@ -321,7 +326,11 @@ def node_nutrition_prescription(state: AthleteState) -> AthleteState:
     Nœud 9 : Nutrition Coach prescrit les macros et repas.
     Reçoit le plan d'entraînement VALIDÉ — jamais en parallèle.
     """
-    # TODO Session 15 : implémenter le Nutrition Coach
+    if state.unified_plan is None:
+        state.unified_plan = {}
+    agent = NutritionCoachAgent()
+    result = agent.run(state)
+    state.unified_plan["nutrition"] = result
     return state
 
 
