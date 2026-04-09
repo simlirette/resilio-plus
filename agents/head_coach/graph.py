@@ -21,6 +21,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
 
+from agents.biking_coach.agent import BikingCoachAgent
 from agents.head_coach.edge_cases.scenario_a_1rm_veto import (
     detect as detect_scenario_a,
 )
@@ -47,7 +48,6 @@ from agents.head_coach.weekly_nodes import (
     node_wr_collect,
     node_wr_report,
 )
-from agents.biking_coach.agent import BikingCoachAgent
 from agents.lifting_coach.agent import LiftingCoachAgent
 from agents.nutrition_coach.agent import NutritionCoachAgent
 from agents.recovery_coach.agent import RecoveryCoachAgent

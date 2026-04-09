@@ -103,3 +103,22 @@ def test_node_nutrition_prescription_stores_result(simon_pydantic_state):
 
     assert "nutrition" in result.unified_plan
     assert result.unified_plan["nutrition"]["agent"] == "nutrition_coach"
+
+
+def test_node_nutrition_prescription_handles_none_unified_plan(simon_pydantic_state):
+    """node_nutrition_prescription initialise unified_plan si None avant d'y écrire."""
+    from unittest.mock import MagicMock, patch
+    from agents.head_coach.graph import node_nutrition_prescription
+
+    simon_pydantic_state.unified_plan = None
+    mock_plan = {"agent": "nutrition_coach", "daily_plans": [], "notes": ""}
+
+    with patch("agents.head_coach.graph.NutritionCoachAgent") as mock_cls:
+        mock_agent = MagicMock()
+        mock_agent.run.return_value = mock_plan
+        mock_cls.return_value = mock_agent
+
+        result = node_nutrition_prescription(simon_pydantic_state)
+
+    assert result.unified_plan is not None
+    assert "nutrition" in result.unified_plan
