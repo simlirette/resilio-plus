@@ -39,7 +39,10 @@ from agents.head_coach.edge_cases.scenario_c_acwr_event import (
 from agents.head_coach.edge_cases.scenario_c_acwr_event import (
     run as run_scenario_c,
 )
+from agents.head_coach.merger import PlanMerger
+from agents.head_coach.resolver import ConflictResolver
 from agents.lifting_coach.agent import LiftingCoachAgent
+from agents.recovery_coach.agent import RecoveryCoachAgent
 from agents.running_coach.agent import RunningCoachAgent
 from core.acwr import compute_ewma_acwr
 from models.athlete_state import AthleteState
@@ -90,10 +93,16 @@ def node_recovery_gate(state: AthleteState) -> AthleteState:
     """
     Nœud 2 : Recovery Coach évalue le readiness du jour.
     Calcule le Readiness Score et détermine vert/jaune/rouge.
-    Modifie l'AthleteState avec fatigue.recovery_score_today et readiness_color.
+    Stocke le verdict dans state.recovery_verdict.
+    Met à jour state.fatigue.recovery_score_today pour la compatibilité aval.
     """
-    # TODO Session 8 : implémenter le calcul complet du Readiness Score
-    # Formule : HRV(30%) + Sommeil(25%) + ACWR(25%) + FC repos(10%) + Subjectif(10%)
+    agent = RecoveryCoachAgent()
+    verdict = agent.run(state)
+    state.recovery_verdict = verdict
+    # Keep recovery_score_today in sync for node_recovery_blocked display
+    score = verdict.get("readiness_score")
+    if score is not None:
+        state.fatigue.recovery_score_today = float(score)
     return state
 
 
@@ -277,25 +286,26 @@ def node_delegate_to_agents(state: AthleteState) -> AthleteState:
 def node_resolve_conflicts(state: AthleteState) -> AthleteState:
     """
     Nœud 7 : Résoudre les conflits inter-agents.
-    Menu de résolution (dans l'ordre) :
-    1. Swap de jours
-    2. Changer le split
-    3. Réduire l'intensité (Z3→Z2, Tier 3→Tier 1)
-    4. Réduire le volume (-20-30%)
-    5. Substituer les exercices
-    6. Supprimer la séance (dernier recours)
-    Circuit breaker : max 2 itérations.
+    Appelle ConflictResolver sur les plans partiels issus de node_delegate_to_agents.
+    Incrémente resolution_iterations pour le circuit breaker.
     """
-    # TODO Session 9 : implémenter la résolution complète
+    resolver = ConflictResolver()
+    resolved, log = resolver.resolve(state, state.partial_plans)
+    state.partial_plans = resolved
+    state.conflict_log = log
+    state.resolution_iterations += 1
+    # Resolver has applied all available modifications — proceed to merge
+    state.conflicts_resolved = True
     return state
 
 
 def node_merge_plans(state: AthleteState) -> AthleteState:
     """
     Nœud 8 : Fusionner les plans partiels en un plan unifié.
-    Valider que le plan respecte la constraint_matrix.
+    Stocke le résultat dans state.unified_plan.
     """
-    # TODO Session 9 : implémenter la fusion
+    merger = PlanMerger()
+    state.unified_plan = merger.merge(state, state.partial_plans, state.conflict_log)
     return state
 
 
@@ -343,10 +353,11 @@ def route_after_recovery_gate(
 ) -> Literal["check_edge_cases", "recovery_blocked"]:
     """
     Après le Recovery Gate : si veto ROUGE absolu → fin (repos forcé).
-    Sinon : continuer vers la détection de conflits.
+    Sinon : continuer vers la vérification des edge cases.
+    Uses recovery_verdict.color to avoid None crash on recovery_score_today.
     """
-    if state.fatigue.recovery_score_today < 30:
-        # Score < 30 = veto absolu, même le Head Coach ne peut pas override
+    verdict = state.recovery_verdict
+    if verdict and verdict.get("color") == "red":
         return "recovery_blocked"
     return "check_edge_cases"
 
