@@ -126,7 +126,31 @@ async def test_sync_all_strava_handles_per_athlete_failure() -> None:
 
 
 # ─────────────────────────────────────────────
-# Test 5 — hevy skips credentials with no api_key (DB-level filter)
+# Test 5 — hevy per-athlete failure is caught, ingest not called
+# ─────────────────────────────────────────────
+
+@pytest.mark.asyncio
+async def test_sync_all_hevy_handles_per_athlete_failure() -> None:
+    cred = _make_fake_hevy_cred()
+    mock_session = _make_mock_session([cred])
+    mock_factory = MagicMock(return_value=mock_session)
+
+    with patch("core.sync_scheduler.AsyncSessionFactory", mock_factory):
+        with patch("core.sync_scheduler._hevy") as mock_hevy:
+            mock_hevy.fetch_all_since = AsyncMock(
+                side_effect=RuntimeError("Hevy API down")
+            )
+            mock_hevy.ingest_workouts = AsyncMock(return_value=0)
+
+            # Must not raise
+            await sync_all_hevy()
+
+    # ingest should NOT have been called since fetch raised
+    mock_hevy.ingest_workouts.assert_not_called()
+
+
+# ─────────────────────────────────────────────
+# Test 6 — hevy skips credentials with no api_key (DB-level filter)
 # ─────────────────────────────────────────────
 
 @pytest.mark.asyncio
