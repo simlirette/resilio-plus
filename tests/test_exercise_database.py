@@ -83,3 +83,61 @@ def test_master_doc_exercises_present():
     present_ids = {ex["exercise_id"] for ex in db}
     missing = known_ids - present_ids
     assert not missing, f"Master doc exercises missing from DB: {missing}"
+
+
+# Alias mapping for test_all_muscles_covered
+_LANDMARK_TO_DB_MUSCLE = {
+    "back_lats": "back",
+    "shoulders_lateral": "shoulders",
+    "quadriceps": "quadriceps",
+    "hamstrings": "hamstrings",
+    "glutes": "glutes",
+    "calves": "calves",
+    "chest": "chest",
+    "biceps": "biceps",
+    "triceps": "triceps",
+    "core": "core",
+    "hip_external_rotators": "hip_external_rotators",
+}
+
+
+def test_exercise_db_has_75_exercises():
+    """DB doit avoir >= 75 exercices après expansion S7."""
+    db = load_db()
+    assert len(db) >= 75, f"Expected >= 75 exercises, got {len(db)}"
+
+
+def test_all_exercises_have_hevy_id():
+    """Chaque exercice doit avoir hevy_exercise_id (peut être vide string mais doit exister)."""
+    db = load_db()
+    for ex in db:
+        assert "hevy_exercise_id" in ex, f"Missing hevy_exercise_id: {ex['name']}"
+
+
+def test_tier1_sfr_above_7():
+    """Tous les exercices Tier 1 doivent avoir sfr_score >= 7."""
+    db = load_db()
+    for ex in db:
+        if ex["tier"] == 1:
+            assert ex["sfr_score"] >= 7, (
+                f"Tier 1 exercise '{ex['name']}' has sfr_score {ex['sfr_score']} < 7"
+            )
+
+
+def test_all_muscles_covered():
+    """Au moins 1 exercice par muscle group des volume_landmarks."""
+    import json as _json
+    from pathlib import Path as _Path
+
+    landmarks_path = _Path(__file__).parent.parent / "data" / "volume_landmarks.json"
+    with open(landmarks_path, encoding="utf-8") as f:
+        landmarks = _json.load(f)
+
+    db = load_db()
+    db_muscles = {ex["muscle_primary"] for ex in db}
+
+    for landmark_muscle in landmarks["muscles"]:
+        db_muscle = _LANDMARK_TO_DB_MUSCLE.get(landmark_muscle, landmark_muscle)
+        assert db_muscle in db_muscles, (
+            f"No exercise in DB for landmark muscle '{landmark_muscle}' (maps to '{db_muscle}')"
+        )

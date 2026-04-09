@@ -372,5 +372,786 @@
       "Fatigue CNS maximale — utiliser avec parcimonie chez les hybrides"
     ],
     "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "MACHINE-CHEST-PRESS-001",
+    "name": "Machine Chest Press",
+    "tier": 1,
+    "muscle_primary": "chest",
+    "muscle_secondary": ["shoulders", "triceps"],
+    "equipment": ["machines"],
+    "movement_pattern": "horizontal_push",
+    "sfr_score": 9,
+    "form_cues_fr": [
+      "Siège réglé pour alignement prise / épaules",
+      "Poussée horizontale explosive, retour contrôlé 2s"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "PEC-DECK-001",
+    "name": "Pec Deck",
+    "tier": 1,
+    "muscle_primary": "chest",
+    "muscle_secondary": [],
+    "equipment": ["machines"],
+    "movement_pattern": "isolation_fly",
+    "sfr_score": 9,
+    "form_cues_fr": [
+      "Étirement maximal en position ouverte",
+      "Contraction complète au centre, pause 1s"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "DB-BENCH-PRESS-001",
+    "name": "Dumbbell Bench Press",
+    "tier": 2,
+    "muscle_primary": "chest",
+    "muscle_secondary": ["shoulders", "triceps"],
+    "equipment": ["dumbbells", "bench"],
+    "movement_pattern": "horizontal_push",
+    "sfr_score": 7,
+    "form_cues_fr": [
+      "Haltères alignés avec les pectoraux en bas",
+      "Descente contrôlée 2s, poussée explosive"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "BARBELL-INCLINE-PRESS-001",
+    "name": "Barbell Incline Press",
+    "tier": 3,
+    "muscle_primary": "chest",
+    "muscle_secondary": ["shoulders", "triceps"],
+    "equipment": ["barbell", "bench"],
+    "movement_pattern": "horizontal_push",
+    "sfr_score": 6,
+    "form_cues_fr": [
+      "Banc à 30-45°, omoplates rétractées",
+      "Barre descend vers le haut de la poitrine"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "DB-FLY-FLAT-001",
+    "name": "Dumbbell Fly (Flat)",
+    "tier": 1,
+    "muscle_primary": "chest",
+    "muscle_secondary": [],
+    "equipment": ["dumbbells", "bench"],
+    "movement_pattern": "isolation_fly",
+    "sfr_score": 9,
+    "form_cues_fr": [
+      "Légère flexion des coudes fixe tout au long",
+      "Étirement profond des pectoraux en bas",
+      "Contraction au sommet en rapprochant les haltères"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "MACHINE-ROW-001",
+    "name": "Machine Row",
+    "tier": 1,
+    "muscle_primary": "back",
+    "muscle_secondary": ["biceps"],
+    "equipment": ["machines"],
+    "movement_pattern": "horizontal_pull",
+    "sfr_score": 9,
+    "form_cues_fr": [
+      "Poitrine contre le coussin, dos droit",
+      "Tire vers les hanches, pause 1s en contraction"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "DB-ROW-001",
+    "name": "Dumbbell Row",
+    "tier": 2,
+    "muscle_primary": "back",
+    "muscle_secondary": ["biceps", "forearms"],
+    "equipment": ["dumbbells"],
+    "movement_pattern": "horizontal_pull",
+    "sfr_score": 7,
+    "form_cues_fr": [
+      "Buste parallèle au sol, dos plat",
+      "Tire l'haltère vers la hanche, coude près du corps"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "CHEST-SUPPORTED-ROW-001",
+    "name": "Chest-Supported Row",
+    "tier": 2,
+    "muscle_primary": "back",
+    "muscle_secondary": ["biceps"],
+    "equipment": ["dumbbells", "bench"],
+    "movement_pattern": "horizontal_pull",
+    "sfr_score": 7,
+    "form_cues_fr": [
+      "Poitrine appuyée sur le banc incliné pour éliminer l'élan",
+      "Tire les coudes en arrière et en haut"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "T-BAR-ROW-001",
+    "name": "T-Bar Row",
+    "tier": 3,
+    "muscle_primary": "back",
+    "muscle_secondary": ["biceps", "forearms"],
+    "equipment": ["barbell"],
+    "movement_pattern": "horizontal_pull",
+    "sfr_score": 6,
+    "form_cues_fr": [
+      "Buste à 45°, dos plat, genoux légèrement fléchis",
+      "Tire vers la poitrine sans élan des hanches"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "DB-LATERAL-RAISE-001",
+    "name": "DB Lateral Raise",
+    "tier": 2,
+    "muscle_primary": "shoulders",
+    "muscle_secondary": [],
+    "equipment": ["dumbbells"],
+    "movement_pattern": "isolation_raise",
+    "sfr_score": 7,
+    "form_cues_fr": [
+      "Légère flexion du coude (15°), coude mène le mouvement",
+      "Monte jusqu'à parallèle, descente contrôlée 2s"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "DB-OVERHEAD-PRESS-001",
+    "name": "DB Overhead Press",
+    "tier": 2,
+    "muscle_primary": "shoulders",
+    "muscle_secondary": ["triceps"],
+    "equipment": ["dumbbells"],
+    "movement_pattern": "vertical_push",
+    "sfr_score": 7,
+    "form_cues_fr": [
+      "Haltères à hauteur des épaules, coudes à 90°",
+      "Presse au-dessus de la tête sans verrouiller les coudes"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "BARBELL-OHP-001",
+    "name": "Barbell Overhead Press",
+    "tier": 3,
+    "muscle_primary": "shoulders",
+    "muscle_secondary": ["triceps", "core"],
+    "equipment": ["barbell"],
+    "movement_pattern": "vertical_push",
+    "sfr_score": 6,
+    "form_cues_fr": [
+      "Prise légèrement plus large que les épaules",
+      "Pousse la barre verticalement, tête en arrière puis en avant"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "MACHINE-SHOULDER-PRESS-001",
+    "name": "Machine Shoulder Press",
+    "tier": 1,
+    "muscle_primary": "shoulders",
+    "muscle_secondary": ["triceps"],
+    "equipment": ["machines"],
+    "movement_pattern": "vertical_push",
+    "sfr_score": 9,
+    "form_cues_fr": [
+      "Siège réglé pour que les poignées soient à hauteur des épaules",
+      "Presse explosif, retour contrôlé 2s"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "REVERSE-FLY-MACHINE-001",
+    "name": "Reverse Fly Machine",
+    "tier": 1,
+    "muscle_primary": "shoulders",
+    "muscle_secondary": ["rear_delts"],
+    "equipment": ["machines"],
+    "movement_pattern": "isolation_fly",
+    "sfr_score": 9,
+    "form_cues_fr": [
+      "Poitrine contre le coussin, bras légèrement fléchis",
+      "Écarte les bras en arrière jusqu'à alignement des épaules"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "REAR-DELT-FLY-MACHINE-001",
+    "name": "Rear Delt Fly Machine",
+    "tier": 1,
+    "muscle_primary": "shoulders",
+    "muscle_secondary": ["rear_delts"],
+    "equipment": ["machines"],
+    "movement_pattern": "isolation_fly",
+    "sfr_score": 9,
+    "form_cues_fr": [
+      "Saisit les poignées en pronation pour cibler les deltoïdes postérieurs",
+      "Pause 1s en position ouverte pour maximiser la contraction"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "MACHINE-PREACHER-CURL-001",
+    "name": "Machine Preacher Curl",
+    "tier": 1,
+    "muscle_primary": "biceps",
+    "muscle_secondary": [],
+    "equipment": ["machines"],
+    "movement_pattern": "isolation_curl",
+    "sfr_score": 9,
+    "form_cues_fr": [
+      "Coudes appuyés sur le coussin, étirement complet en bas",
+      "Contraction maximale en haut, pause 1s"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "CABLE-CURL-001",
+    "name": "Cable Curl",
+    "tier": 1,
+    "muscle_primary": "biceps",
+    "muscle_secondary": [],
+    "equipment": ["cables"],
+    "movement_pattern": "isolation_curl",
+    "sfr_score": 9,
+    "form_cues_fr": [
+      "Tension constante grâce au câble tout au long du mouvement",
+      "Coudes fixes, flexion complète avec supination"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "BARBELL-CURL-001",
+    "name": "Barbell Curl",
+    "tier": 2,
+    "muscle_primary": "biceps",
+    "muscle_secondary": ["forearms"],
+    "equipment": ["barbell"],
+    "movement_pattern": "isolation_curl",
+    "sfr_score": 7,
+    "form_cues_fr": [
+      "Coudes fixes le long du corps",
+      "Pas de balancement du torse pour tricher"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "DB-HAMMER-CURL-001",
+    "name": "DB Hammer Curl",
+    "tier": 2,
+    "muscle_primary": "biceps",
+    "muscle_secondary": ["forearms"],
+    "equipment": ["dumbbells"],
+    "movement_pattern": "isolation_curl",
+    "sfr_score": 7,
+    "form_cues_fr": [
+      "Prise neutre (pouce vers le haut) tout au long",
+      "Cible le brachial et le brachio-radial"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "BAYESIAN-CABLE-CURL-001",
+    "name": "Bayesian Cable Curl",
+    "tier": 1,
+    "muscle_primary": "biceps",
+    "muscle_secondary": [],
+    "equipment": ["cables"],
+    "movement_pattern": "isolation_curl",
+    "sfr_score": 9,
+    "form_cues_fr": [
+      "Câble derrière le corps — étirement maximal du chef long",
+      "Coude en avant pour maximiser la contraction en haut"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "EZ-BAR-CURL-001",
+    "name": "EZ Bar Curl",
+    "tier": 2,
+    "muscle_primary": "biceps",
+    "muscle_secondary": ["forearms"],
+    "equipment": ["barbell"],
+    "movement_pattern": "isolation_curl",
+    "sfr_score": 7,
+    "form_cues_fr": [
+      "Prise semi-pronation pour moins de stress au poignet",
+      "Amplitude complète, coudes fixes"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "DB-SKULL-CRUSHER-001",
+    "name": "DB Skull Crusher",
+    "tier": 2,
+    "muscle_primary": "triceps",
+    "muscle_secondary": [],
+    "equipment": ["dumbbells", "bench"],
+    "movement_pattern": "isolation_extension",
+    "sfr_score": 7,
+    "form_cues_fr": [
+      "Coudes pointés vers le plafond, fixes",
+      "Descends les haltères vers les tempes, extension explosive"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "CLOSE-GRIP-BP-001",
+    "name": "Close-Grip Bench Press",
+    "tier": 3,
+    "muscle_primary": "triceps",
+    "muscle_secondary": ["chest", "shoulders"],
+    "equipment": ["barbell", "bench"],
+    "movement_pattern": "horizontal_push",
+    "sfr_score": 6,
+    "form_cues_fr": [
+      "Prise légèrement plus étroite que les épaules",
+      "Coudes près du corps, descente vers le bas de la poitrine"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "MACHINE-TRICEP-DIP-001",
+    "name": "Machine Tricep Dip",
+    "tier": 1,
+    "muscle_primary": "triceps",
+    "muscle_secondary": [],
+    "equipment": ["machines"],
+    "movement_pattern": "isolation_extension",
+    "sfr_score": 9,
+    "form_cues_fr": [
+      "Corps vertical pour cibler principalement les triceps",
+      "Extension complète en bas, retour contrôlé 2s"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "ROPE-PUSHDOWN-001",
+    "name": "Rope Tricep Pushdown",
+    "tier": 1,
+    "muscle_primary": "triceps",
+    "muscle_secondary": [],
+    "equipment": ["cables"],
+    "movement_pattern": "isolation_extension",
+    "sfr_score": 9,
+    "form_cues_fr": [
+      "Écarte la corde en bas pour contraction maximale",
+      "Coudes fixes le long du corps"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "LEG-EXTENSION-001",
+    "name": "Leg Extension",
+    "tier": 1,
+    "muscle_primary": "quadriceps",
+    "muscle_secondary": [],
+    "equipment": ["machines"],
+    "movement_pattern": "isolation_extension",
+    "sfr_score": 9,
+    "form_cues_fr": [
+      "Extension complète, pause 1s en haut",
+      "Contrôle la descente 2-3s pour travail excentrique"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "WALKING-LUNGES-001",
+    "name": "Walking Lunges",
+    "tier": 2,
+    "muscle_primary": "quadriceps",
+    "muscle_secondary": ["glutes", "hamstrings"],
+    "equipment": ["dumbbells"],
+    "movement_pattern": "lunge",
+    "sfr_score": 7,
+    "form_cues_fr": [
+      "Pas large, genou avant au-dessus du pied",
+      "Torse droit, abdos engagés tout au long"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "BARBELL-FRONT-SQUAT-001",
+    "name": "Barbell Front Squat",
+    "tier": 3,
+    "muscle_primary": "quadriceps",
+    "muscle_secondary": ["glutes", "core"],
+    "equipment": ["barbell"],
+    "movement_pattern": "squat",
+    "sfr_score": 5,
+    "form_cues_fr": [
+      "Barre sur les deltoïdes antérieurs, coudes hauts",
+      "Torse très vertical — plus difficile techniquement que le back squat"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "GOBLET-SQUAT-001",
+    "name": "Goblet Squat",
+    "tier": 2,
+    "muscle_primary": "quadriceps",
+    "muscle_secondary": ["glutes", "core"],
+    "equipment": ["dumbbells"],
+    "movement_pattern": "squat",
+    "sfr_score": 8,
+    "form_cues_fr": [
+      "Haltère tenu contre la poitrine, coudes pointés vers le bas",
+      "Descends profond, genoux écartés en ligne avec les pieds"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "LYING-LEG-CURL-001",
+    "name": "Lying Leg Curl",
+    "tier": 1,
+    "muscle_primary": "hamstrings",
+    "muscle_secondary": [],
+    "equipment": ["machines"],
+    "movement_pattern": "isolation_curl",
+    "sfr_score": 9,
+    "form_cues_fr": [
+      "Hanches plaquées contre le coussin",
+      "Contraction maximale en haut, descente contrôlée 2s"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "NORDIC-CURL-001",
+    "name": "Nordic Curl",
+    "tier": 2,
+    "muscle_primary": "hamstrings",
+    "muscle_secondary": [],
+    "equipment": ["machines", "bench"],
+    "movement_pattern": "isolation_curl",
+    "sfr_score": 7,
+    "form_cues_fr": [
+      "Chutes contrôlées vers l'avant, freiner avec les ischio",
+      "Exercice excentrique très efficace pour la prévention des blessures"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "RDL-BARBELL-001",
+    "name": "Romanian Deadlift (Barbell)",
+    "tier": 3,
+    "muscle_primary": "hamstrings",
+    "muscle_secondary": ["glutes", "lower_back"],
+    "equipment": ["barbell"],
+    "movement_pattern": "hinge",
+    "sfr_score": 6,
+    "form_cues_fr": [
+      "Dos plat, barre glisse le long des jambes",
+      "Hanches en arrière jusqu'à étirement des ischio"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "SUMO-DEADLIFT-001",
+    "name": "Sumo Deadlift",
+    "tier": 3,
+    "muscle_primary": "hamstrings",
+    "muscle_secondary": ["glutes", "quadriceps", "back"],
+    "equipment": ["barbell"],
+    "movement_pattern": "hinge",
+    "sfr_score": 6,
+    "form_cues_fr": [
+      "Pieds larges, orteils pointés vers l'extérieur",
+      "Genoux en ligne avec les orteils, torse plus vertical que le deadlift conventionnel"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "HIP-THRUST-MACHINE-001",
+    "name": "Hip Thrust (Machine)",
+    "tier": 1,
+    "muscle_primary": "glutes",
+    "muscle_secondary": ["hamstrings"],
+    "equipment": ["machines"],
+    "movement_pattern": "isolation_push",
+    "sfr_score": 9,
+    "form_cues_fr": [
+      "Extension complète des hanches en haut, contraction des fessiers",
+      "Retour contrôlé sans toucher le sol"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "HIP-THRUST-BARBELL-001",
+    "name": "Hip Thrust (Barbell)",
+    "tier": 2,
+    "muscle_primary": "glutes",
+    "muscle_secondary": ["hamstrings"],
+    "equipment": ["barbell", "bench"],
+    "movement_pattern": "isolation_push",
+    "sfr_score": 7,
+    "form_cues_fr": [
+      "Épaules appuyées sur le banc, barre au niveau des hanches",
+      "Pousse les hanches vers le haut jusqu'à alignement corps-cuisses"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "CABLE-KICKBACK-001",
+    "name": "Cable Kickback",
+    "tier": 1,
+    "muscle_primary": "glutes",
+    "muscle_secondary": [],
+    "equipment": ["cables"],
+    "movement_pattern": "isolation_push",
+    "sfr_score": 9,
+    "form_cues_fr": [
+      "Attache à la cheville, câble bas",
+      "Extension de la hanche vers l'arrière, contraction du fessier"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "ABDUCTOR-MACHINE-001",
+    "name": "Abductor Machine",
+    "tier": 1,
+    "muscle_primary": "glutes",
+    "muscle_secondary": ["hip_external_rotators"],
+    "equipment": ["machines"],
+    "movement_pattern": "isolation_raise",
+    "sfr_score": 9,
+    "form_cues_fr": [
+      "Écarte les jambes contre la résistance",
+      "Contraction maximale en position ouverte, retour lent"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "STEP-UP-001",
+    "name": "Step-Up",
+    "tier": 2,
+    "muscle_primary": "glutes",
+    "muscle_secondary": ["quadriceps", "hamstrings"],
+    "equipment": ["dumbbells", "bench"],
+    "movement_pattern": "lunge",
+    "sfr_score": 7,
+    "form_cues_fr": [
+      "Marche haute (40-50cm) pour maximiser l'activation des fessiers",
+      "Pousse à travers le talon du pied avant"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "CABLE-PULL-THROUGH-001",
+    "name": "Cable Pull-Through",
+    "tier": 1,
+    "muscle_primary": "glutes",
+    "muscle_secondary": ["hamstrings"],
+    "equipment": ["cables"],
+    "movement_pattern": "hinge",
+    "sfr_score": 8,
+    "form_cues_fr": [
+      "Câble bas entre les jambes, penche le torse en avant",
+      "Extension des hanches explosive en se redressant"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "SEATED-CALF-RAISE-001",
+    "name": "Seated Calf Raise",
+    "tier": 1,
+    "muscle_primary": "calves",
+    "muscle_secondary": [],
+    "equipment": ["machines"],
+    "movement_pattern": "isolation_raise",
+    "sfr_score": 9,
+    "form_cues_fr": [
+      "Cible le soléaire (profond) — genou à 90°",
+      "Étirement complet en bas, contraction et pause 1s en haut"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "CALF-PRESS-LEG-PRESS-001",
+    "name": "Calf Press (Leg Press)",
+    "tier": 1,
+    "muscle_primary": "calves",
+    "muscle_secondary": [],
+    "equipment": ["machines"],
+    "movement_pattern": "isolation_raise",
+    "sfr_score": 9,
+    "form_cues_fr": [
+      "Pieds en bas de la plateforme, orteils sur le bord",
+      "Amplitude complète — talon vers le bas, pointe vers le haut"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "STANDING-CALF-RAISE-DB-001",
+    "name": "Standing Calf Raise (Dumbbell)",
+    "tier": 2,
+    "muscle_primary": "calves",
+    "muscle_secondary": [],
+    "equipment": ["dumbbells"],
+    "movement_pattern": "isolation_raise",
+    "sfr_score": 7,
+    "form_cues_fr": [
+      "Talon sur une marche pour étirement complet en bas",
+      "Monte sur la pointe des pieds, contraction au sommet"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "STANDING-CALF-RAISE-BB-001",
+    "name": "Standing Calf Raise (Barbell)",
+    "tier": 3,
+    "muscle_primary": "calves",
+    "muscle_secondary": [],
+    "equipment": ["barbell"],
+    "movement_pattern": "isolation_raise",
+    "sfr_score": 5,
+    "form_cues_fr": [
+      "Barre sur les trapèzes comme un squat",
+      "Amplitude complète — nécessite bonnes chevilles"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "CABLE-CRUNCH-001",
+    "name": "Cable Crunch",
+    "tier": 2,
+    "muscle_primary": "core",
+    "muscle_secondary": [],
+    "equipment": ["cables"],
+    "movement_pattern": "core",
+    "sfr_score": 7,
+    "form_cues_fr": [
+      "À genoux, corde derrière la tête",
+      "Flex le torse vers le bas en arrondissant le dos"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "HANGING-LEG-RAISE-001",
+    "name": "Hanging Leg Raise",
+    "tier": 2,
+    "muscle_primary": "core",
+    "muscle_secondary": ["hip_flexors"],
+    "equipment": ["pull_up_bar"],
+    "movement_pattern": "core",
+    "sfr_score": 7,
+    "form_cues_fr": [
+      "Suspendu à la barre, soulève les jambes jusqu'à 90°",
+      "Contrôle la descente, ne balance pas"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "DEAD-BUG-001",
+    "name": "Dead Bug",
+    "tier": 1,
+    "muscle_primary": "core",
+    "muscle_secondary": [],
+    "equipment": [],
+    "movement_pattern": "core",
+    "sfr_score": 9,
+    "form_cues_fr": [
+      "Dos plat contre le sol tout au long",
+      "Étend bras opposé et jambe opposée simultanément"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "PALLOF-PRESS-001",
+    "name": "Pallof Press",
+    "tier": 1,
+    "muscle_primary": "core",
+    "muscle_secondary": [],
+    "equipment": ["cables"],
+    "movement_pattern": "core",
+    "sfr_score": 9,
+    "form_cues_fr": [
+      "Câble à hauteur de poitrine, résiste à la rotation",
+      "Pousse et ramène les mains lentement"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "PLANK-001",
+    "name": "Plank",
+    "tier": 1,
+    "muscle_primary": "core",
+    "muscle_secondary": ["shoulders"],
+    "equipment": [],
+    "movement_pattern": "core",
+    "sfr_score": 8,
+    "form_cues_fr": [
+      "Corps aligné de la tête aux talons",
+      "Abdos et fessiers contractés, respiration régulière"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "SIDE-PLANK-001",
+    "name": "Side Plank",
+    "tier": 1,
+    "muscle_primary": "core",
+    "muscle_secondary": ["glutes"],
+    "equipment": [],
+    "movement_pattern": "core",
+    "sfr_score": 8,
+    "form_cues_fr": [
+      "Corps en ligne droite de la tête aux pieds",
+      "Hanches élevées, pas de rotation du bassin"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "CLAMSHELL-001",
+    "name": "Clamshell",
+    "tier": 1,
+    "muscle_primary": "hip_external_rotators",
+    "muscle_secondary": ["glutes"],
+    "equipment": [],
+    "movement_pattern": "prevention",
+    "sfr_score": 9,
+    "form_cues_fr": [
+      "Allongé sur le côté, genoux fléchis à 45°",
+      "Ouvre le genou vers le haut sans bouger le bassin"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "SIDE-LYING-ABDUCTION-001",
+    "name": "Side-lying Hip Abduction",
+    "tier": 1,
+    "muscle_primary": "hip_external_rotators",
+    "muscle_secondary": ["glutes"],
+    "equipment": [],
+    "movement_pattern": "prevention",
+    "sfr_score": 9,
+    "form_cues_fr": [
+      "Jambe supérieure levée à 30-45°, orteils pointés vers l'avant",
+      "Mouvement lent et contrôlé, sans balancement"
+    ],
+    "hevy_exercise_id": ""
+  },
+  {
+    "exercise_id": "BANDED-HIP-EXT-ROT-001",
+    "name": "Banded Hip External Rotation",
+    "tier": 1,
+    "muscle_primary": "hip_external_rotators",
+    "muscle_secondary": ["glutes"],
+    "equipment": ["resistance_band"],
+    "movement_pattern": "prevention",
+    "sfr_score": 9,
+    "form_cues_fr": [
+      "Élastique autour des genoux, pieds écartés",
+      "Rotation externe contre la résistance, maintien 2s"
+    ],
+    "hevy_exercise_id": ""
   }
 ]
