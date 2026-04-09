@@ -75,7 +75,7 @@ poetry run ruff check .
 | **S11** | Backend | FastAPI endpoints + OpenAPI docs + auth | ✅ FAIT |
 | **S12** | Frontend | Next.js — Dashboard + calendrier + chat | ✅ FAIT |
 | **S13** | Frontend | Next.js — Suivi hebdo + pages détail | ✅ FAIT |
-| **S14** | Intégration | Docker + tests E2E + polish | ⬜ À FAIRE |
+| **S14** | Intégration | Docker + tests E2E + polish | ✅ FAIT |
 | **S15** | Nutrition Coach | USDA/OFF/FCÉN + NLP meal input + macros + race-week | ⬜ À FAIRE |
 
 ---
@@ -212,8 +212,15 @@ resilio-plus/
 │       └── plans/
 │           └── 2026-04-03-session1-setup.md
 │
-├── frontend/                          ← ✅ S12 — Next.js 15 (TypeScript + Tailwind v4)
-│   ├── package.json                   ← Next.js 15.5, React 19, Tailwind v4
+├── frontend/                          ← ✅ S14 — Full-stack Docker + Playwright E2E
+│   ├── Dockerfile                     ← ✅ S14 — Multi-stage (deps → builder → runner)
+│   ├── .dockerignore                  ← ✅ S14 — Exclude node_modules/.next from context
+│   ├── playwright.config.ts           ← ✅ S14 — Playwright config (chromium, port 4321)
+│   ├── .env.local.example             ← ✅ S14 — NEXT_PUBLIC_API_URL doc
+│   ├── e2e/
+│   │   ├── auth.spec.ts               ← ✅ S14 — Login + register render tests
+│   │   └── dashboard.spec.ts          ← ✅ S14 — Protected redirect tests
+│   ├── package.json                   ← Next.js 15.5, React 19, Tailwind v4, Playwright
 │   └── src/
 │       ├── app/
 │       │   ├── layout.tsx             ← Root layout (Inter font, dark bg)
