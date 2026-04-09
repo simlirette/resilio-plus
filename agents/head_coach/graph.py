@@ -121,8 +121,8 @@ def node_detect_conflicts(state: AthleteState) -> AthleteState:
         if avail.available
     ]
     sessions_planned = sum(
-        1 for sessions in state.constraint_matrix.schedule.values()
-        if isinstance(sessions, dict) and sessions.get("assigned")
+        1 for day_info in state.constraint_matrix.schedule.values()
+        if isinstance(day_info, dict) and day_info.get("sessions")
     )
     if sessions_planned > len(available_days):
         conflicts.append({
