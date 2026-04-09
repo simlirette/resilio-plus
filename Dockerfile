@@ -29,8 +29,10 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Copier le code source
 COPY . .
 
+RUN chmod +x scripts/entrypoint.sh
+
 EXPOSE 8000
 
 # En prod : uvicorn sans --reload
 # En dev : docker-compose override avec --reload
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["scripts/entrypoint.sh"]
