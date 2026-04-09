@@ -73,7 +73,7 @@ poetry run ruff check .
 | **S9** | Workflow | Constraint matrix + ConflictResolver + PlanMerger + graph stub nodes + workflow API | ✅ FAIT |
 | **S10** | Workflow | WeeklyReviewLoop H1-H4 — TRIMP, ACWR recalc, ajustements + POST /weekly-review | ✅ FAIT |
 | **S11** | Backend | FastAPI endpoints + OpenAPI docs + auth | ✅ FAIT |
-| **S12** | Frontend | Next.js — Dashboard + calendrier + chat | ⬜ À FAIRE |
+| **S12** | Frontend | Next.js — Dashboard + calendrier + chat | ✅ FAIT |
 | **S13** | Frontend | Next.js — Suivi hebdo + pages détail | ⬜ À FAIRE |
 | **S14** | Intégration | Docker + tests E2E + polish | ⬜ À FAIRE |
 | **S15** | Nutrition Coach | USDA/OFF/FCÉN + NLP meal input + macros + race-week | ⬜ À FAIRE |
@@ -212,7 +212,21 @@ resilio-plus/
 │       └── plans/
 │           └── 2026-04-03-session1-setup.md
 │
-└── frontend/                          ← ⬜ S12-S13
+├── frontend/                          ← ✅ S12 — Next.js 15 (TypeScript + Tailwind v4)
+│   ├── package.json                   ← Next.js 15.5, React 19, Tailwind v4
+│   └── src/
+│       ├── app/
+│       │   ├── layout.tsx             ← Root layout (Inter font, dark bg)
+│       │   ├── page.tsx               ← Redirect → /dashboard
+│       │   ├── login/page.tsx         ← Login form → POST /auth/login
+│       │   ├── register/page.tsx      ← Register form → POST /auth/register
+│       │   └── dashboard/
+│       │       ├── layout.tsx         ← Protected layout + Navbar
+│       │       ├── page.tsx           ← Profile card (GET /athletes/me)
+│       │       ├── calendar/page.tsx  ← Weekly grid (POST /plan/running + /lifting)
+│       │       └── chat/page.tsx      ← Chat UI shell (stub)
+│       ├── lib/api.ts                 ← Typed fetch wrapper + JWT localStorage
+│       └── components/navbar.tsx      ← Top nav (links + logout)
 ```
 
 ---
