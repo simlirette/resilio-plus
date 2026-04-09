@@ -64,11 +64,11 @@ class BikingCoachAgent(BaseAgent):
         try:
             response = self._client.messages.create(
                 model="claude-sonnet-4-6",
-                max_tokens=150,
+                max_tokens=200,
                 system=_SYSTEM_PROMPT,
                 messages=[{"role": "user", "content": user_content}],
             )
             raw = response.content[0].text.strip()
-            return raw[:500]
+            return raw[:600]
         except Exception:
             return ""

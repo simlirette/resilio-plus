@@ -249,11 +249,9 @@ class BikingPrescriber:
         """
         Session VO2max :
         Z1 10min warmup → 5×(Z5 3min + Z2 3min) → Z1 10min cooldown
-        Total : 10 + 30 + 10 = 50 min (warmup + 5 intervals + cooldown)
-        Wait — 10 + 5*(3+3) + 10 = 10 + 30 + 10 = 50 min
-        Per spec: "Duration: 60 min" but 10+5*6+10=50. We follow the blocks.
-        The spec says 60 min but the blocks add to 50. We'll use sum of blocks
-        as the duration (truthful).
+        Total : 10 + 5*(3+3) + 10 = 50 min.
+        duration_minutes is computed as sum(b["duration_minutes"] for b in blocks),
+        which is the arithmetically correct value (50 min).
         """
         blocks = [
             {

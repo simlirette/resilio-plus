@@ -165,3 +165,15 @@ def test_session_numbers_are_sequential(prescriber):
     plan = prescriber.prescribe({"biking_profile": {"ftp_watts": None, "weekly_volume_km": 100.0}})
     numbers = [s["session_number"] for s in plan["sessions"]]
     assert numbers == [1, 2, 3]
+
+
+def test_session_blocks_use_rpe_when_no_ftp(prescriber):
+    """Sans FTP, les blocs utilisent des cibles RPE plutôt que des watts."""
+    plan = prescriber.prescribe({"biking_profile": {"ftp_watts": None, "weekly_volume_km": 40.0}})
+    assert len(plan["sessions"]) >= 1
+    first_session = plan["sessions"][0]
+    for block in first_session["blocks"]:
+        target = block.get("watts_or_rpe", "")
+        # RPE targets should not contain " W" (watt notation)
+        assert " W" not in target, f"Expected RPE target, got: {target}"
+        assert "RPE" in target or "/" in target, f"Expected RPE notation, got: {target}"
