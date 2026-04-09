@@ -55,6 +55,7 @@ class WeeklyReviewState(BaseModel):
     # Written by graph nodes
     analysis: dict | None = None         # WeeklyAnalyzer output
     adjustments: list[dict] = Field(default_factory=list)  # WeeklyAdjuster output
+    acwr_before: float | None = None     # ACWR captured before node_wr_adjust overwrites it
     acwr_after: float | None = None      # Recalculated ACWR
     report: dict | None = None           # Final report
 ```
@@ -174,6 +175,7 @@ def node_wr_adjust(state: WeeklyReviewState) -> WeeklyReviewState:
         daily_loads,
         state.athlete_state.fatigue,
     )
+    state.acwr_before = state.athlete_state.fatigue.acwr   # capture before overwrite
     state.adjustments = adjustments
     state.acwr_after = acwr_new
     # Update the living matrix with this week's loads
@@ -193,7 +195,7 @@ def node_wr_report(state: WeeklyReviewState) -> WeeklyReviewState:
         "sessions_completed": state.analysis.get("sessions_completed", 0) if state.analysis else 0,
         "sessions_planned": state.analysis.get("sessions_planned", 0) if state.analysis else 0,
         "trimp_total": state.analysis.get("trimp_total", 0.0) if state.analysis else 0.0,
-        "acwr_before": state.athlete_state.fatigue.acwr,
+        "acwr_before": state.acwr_before,
         "acwr_after": state.acwr_after,
         "adjustments": state.adjustments,
         "next_week_notes": _get_weekly_notes(state),  # LLM, "" on failure
