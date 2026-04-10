@@ -2,9 +2,9 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: resilio
-      POSTGRES_PASSWORD: resilio
-      POSTGRES_DB: resilio_db
+      POSTGRES_USER: ${POSTGRES_USER:-resilio}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-resilio}
+      POSTGRES_DB: ${POSTGRES_DB:-resilio_db}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -27,7 +27,7 @@ services:
       - ./.bmad-core:/app/.bmad-core
     environment:
       PYTHONPATH: /app/backend
-      DATABASE_URL: postgresql+psycopg2://resilio:resilio@db:5432/resilio_db
+      DATABASE_URL: postgresql+psycopg2://resilio:${POSTGRES_PASSWORD:-resilio}@db:5432/resilio_db
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       STRAVA_CLIENT_ID: ${STRAVA_CLIENT_ID:-}
       STRAVA_CLIENT_SECRET: ${STRAVA_CLIENT_SECRET:-}

@@ -77,16 +77,19 @@ def make_athlete_row():
     }
 
 
-def test_all_four_tables_created():
+def test_all_seven_tables_created():
     from sqlalchemy import inspect
     engine = make_test_engine()
     setup_db(engine)
     inspector = inspect(engine)
     table_names = inspector.get_table_names()
+    assert "users" in table_names
     assert "athletes" in table_names
     assert "training_plans" in table_names
     assert "nutrition_plans" in table_names
     assert "weekly_reviews" in table_names
+    assert "connector_credentials" in table_names
+    assert "session_logs" in table_names
     teardown_db(engine)
 
 
@@ -322,4 +325,63 @@ def test_athlete_credentials_relationship():
         assert len(athlete.credentials) == 2
         providers = {c.provider for c in athlete.credentials}
         assert providers == {"strava", "hevy"}
+    teardown_db(engine)
+
+
+def test_session_log_crud():
+    from app.db.models import AthleteModel, SessionLogModel
+    import json
+    import uuid
+    from datetime import datetime, timezone
+    engine = make_test_engine()
+    Session = setup_db(engine)
+    athlete_id = str(uuid.uuid4())
+    log_id = str(uuid.uuid4())
+    with Session() as session:
+        session.add(AthleteModel(**{**make_athlete_row(), "id": athlete_id}))
+        session.commit()
+        log = SessionLogModel(
+            id=log_id,
+            athlete_id=athlete_id,
+            plan_id=None,
+            session_id="sess-001",
+            actual_duration_min=45,
+            skipped=False,
+            actual_data_json=json.dumps({"source": "manual"}),
+            logged_at=datetime.now(timezone.utc),
+        )
+        session.add(log)
+        session.commit()
+        fetched = session.get(SessionLogModel, log_id)
+        assert fetched is not None
+        assert fetched.session_id == "sess-001"
+        assert fetched.actual_duration_min == 45
+    teardown_db(engine)
+
+
+def test_session_log_athlete_relationship():
+    from app.db.models import AthleteModel, SessionLogModel
+    import json
+    import uuid
+    from datetime import datetime, timezone
+    engine = make_test_engine()
+    Session = setup_db(engine)
+    athlete_id = str(uuid.uuid4())
+    with Session() as session:
+        session.add(AthleteModel(**{**make_athlete_row(), "id": athlete_id}))
+        session.commit()
+        session.add(SessionLogModel(
+            id=str(uuid.uuid4()),
+            athlete_id=athlete_id,
+            plan_id=None,
+            session_id="sess-rel-001",
+            actual_duration_min=30,
+            skipped=False,
+            actual_data_json="{}",
+            logged_at=datetime.now(timezone.utc),
+        ))
+        session.commit()
+        athlete = session.get(AthleteModel, athlete_id)
+        assert len(athlete.session_logs) == 1
+        assert athlete.session_logs[0].session_id == "sess-rel-001"
     teardown_db(engine)

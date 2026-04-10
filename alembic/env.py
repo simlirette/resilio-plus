@@ -6,8 +6,8 @@ from sqlalchemy import engine_from_config, pool
 from alembic import context
 
 # Import Base + all models so Alembic sees the metadata
-from backend.app.db.database import Base  # noqa
-from backend.app.db import models  # noqa — registers all ORM classes
+from app.db.database import Base  # noqa
+from app.db import models  # noqa — registers all ORM classes
 
 config = context.config
 

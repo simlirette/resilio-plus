@@ -50,6 +50,7 @@ class AthleteModel(Base):
     nutrition_plans = relationship("NutritionPlanModel", back_populates="athlete", cascade="all, delete-orphan")
     reviews = relationship("WeeklyReviewModel", back_populates="athlete", cascade="all, delete-orphan")
     credentials = relationship("ConnectorCredentialModel", back_populates="athlete", cascade="all, delete-orphan")
+    session_logs = relationship("SessionLogModel", back_populates="athlete", cascade="all, delete-orphan")
 
 
 class TrainingPlanModel(Base):
@@ -124,7 +125,7 @@ class SessionLogModel(Base):
 
     id = Column(String, primary_key=True)
     athlete_id = Column(String, ForeignKey("athletes.id"), nullable=False)
-    plan_id = Column(String, ForeignKey("training_plans.id"), nullable=False)
+    plan_id = Column(String, ForeignKey("training_plans.id"), nullable=True)
     session_id = Column(String, nullable=False, index=True)
     actual_duration_min = Column(Integer, nullable=True)
     skipped = Column(Boolean, nullable=False, default=False)
@@ -133,5 +134,9 @@ class SessionLogModel(Base):
     actual_data_json = Column(Text, nullable=False, default="{}")
     logged_at = Column(DateTime(timezone=True), nullable=False,
                        default=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    athlete = relationship("AthleteModel", back_populates="session_logs")
+    plan = relationship("TrainingPlanModel")
 
     __table_args__ = (UniqueConstraint("athlete_id", "session_id"),)
