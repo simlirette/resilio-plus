@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 from ..agents.base import AgentContext, AgentRecommendation, BaseAgent
+from ..core.hormonal import get_running_adjustments
 from ..core.periodization import get_current_phase
 from ..core.readiness import compute_readiness
 from ..core.running_logic import (
@@ -64,6 +65,27 @@ class RunningCoach(BaseAgent):
             for s in sessions
         )
 
+        # V3: apply cycle phase adjustments if hormonal profile is enabled
+        cycle_notes = ""
+        hp = context.hormonal_profile
+        if hp is not None and hp.enabled and hp.current_phase is not None:
+            adj = get_running_adjustments(hp.current_phase)
+            flags = []
+            if adj["replace_intervals_with_z2"]:
+                flags.append("intervals->Z2")
+            if adj["avoid_direction_changes"]:
+                flags.append("avoid-dir-changes")
+            if adj["increase_hydration"]:
+                flags.append("hydration++")
+            if adj["avoid_heat"]:
+                flags.append("avoid-heat")
+            flag_str = " ".join(flags)
+            cycle_notes = (
+                f" | Cycle({hp.current_phase})"
+                + (f": {flag_str}" if flags else "")
+                + f" — {adj['notes']}"
+            )
+
         return AgentRecommendation(
             agent_name=self.name,
             fatigue_score=fatigue_score,
@@ -73,5 +95,6 @@ class RunningCoach(BaseAgent):
             notes=(
                 f"VDOT {vdot:.0f} | Phase: {phase.phase.value} | "
                 f"Week: {context.week_number} | Weeks remaining: {context.weeks_remaining}"
+                f"{cycle_notes}"
             ),
         )

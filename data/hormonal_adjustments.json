@@ -1,0 +1,89 @@
+{
+  "menstrual": {
+    "days": [1, 5],
+    "lifting": {
+      "rpe_offset": -1,
+      "no_1rm": true,
+      "notes": "RPE cible réduit de 1 point, pas de 1RM attempts. Tolérance à la douleur réduite."
+    },
+    "running": {
+      "replace_intervals_with_z2": true,
+      "avoid_direction_changes": false,
+      "increase_hydration": false,
+      "avoid_heat": false,
+      "notes": "Remplacer les fractionnés intensifs par Z2 si douleurs importantes."
+    },
+    "nutrition": {
+      "protein_extra_g_per_kg": 0.0,
+      "calories_extra": 0,
+      "supplements": ["iron", "magnesium", "omega3"],
+      "notes": "Augmenter fer (viande rouge, épinards), magnésium, oméga-3."
+    }
+  },
+  "follicular": {
+    "days": [6, 13],
+    "lifting": {
+      "rpe_offset": 0,
+      "no_1rm": false,
+      "pr_week": true,
+      "notes": "Phase optimale pour gains de force. Semaine idéale pour PR attempts et sessions lourdes."
+    },
+    "running": {
+      "replace_intervals_with_z2": false,
+      "avoid_direction_changes": false,
+      "increase_hydration": false,
+      "avoid_heat": false,
+      "high_intensity_optimal": true,
+      "notes": "Fractionnés à haute intensité — timing optimal. Récupération la plus rapide du cycle."
+    },
+    "nutrition": {
+      "protein_extra_g_per_kg": 0.0,
+      "calories_extra": 0,
+      "supplements": [],
+      "notes": "Glucides modérés OK, sensibilité insuline favorise le stockage glycogène."
+    }
+  },
+  "ovulation": {
+    "days": [14, 15],
+    "lifting": {
+      "rpe_offset": 0,
+      "no_1rm": false,
+      "ligament_risk_note": true,
+      "notes": "Force et puissance au maximum. Maximiser performance mais insister sur la technique — risque ligamentaire accru."
+    },
+    "running": {
+      "replace_intervals_with_z2": false,
+      "avoid_direction_changes": true,
+      "increase_hydration": false,
+      "avoid_heat": false,
+      "notes": "Éviter les changements de direction brusques et terrains instables — laxité ligamentaire élevée."
+    },
+    "nutrition": {
+      "protein_extra_g_per_kg": 0.0,
+      "calories_extra": 0,
+      "supplements": [],
+      "notes": "Maintenir hydratation optimale (rétention d'eau possible)."
+    }
+  },
+  "luteal": {
+    "days": [16, 28],
+    "lifting": {
+      "rpe_offset": -1,
+      "no_1rm": false,
+      "notes": "Volume maintenu, intensité réduite progressivement, RPE cible -1 en fin de phase. Catabolisme musculaire augmenté."
+    },
+    "running": {
+      "replace_intervals_with_z2": false,
+      "avoid_direction_changes": false,
+      "increase_hydration": true,
+      "avoid_heat": true,
+      "notes": "Hydratation augmentée, éviter les séances dans la chaleur. Thermorégulation moins efficace."
+    },
+    "nutrition": {
+      "protein_extra_g_per_kg": 0.2,
+      "calories_extra": 200,
+      "supplements": ["iron", "magnesium"],
+      "notes": "Protéines +0.2g/kg/jour, calories légèrement augmentées (+200 kcal), fer et magnésium."
+    }
+  }
+}

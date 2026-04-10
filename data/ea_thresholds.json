@@ -1,0 +1,19 @@
+{
+  "female": {
+    "optimal_min_kcal_per_kg_ffm": 45,
+    "suboptimal_min_kcal_per_kg_ffm": 30,
+    "critical_threshold_kcal_per_kg_ffm": 30,
+    "reds_consecutive_days": 3
+  },
+  "male": {
+    "optimal_min_kcal_per_kg_ffm": 45,
+    "suboptimal_min_kcal_per_kg_ffm": 25,
+    "critical_threshold_kcal_per_kg_ffm": 25,
+    "reds_consecutive_days": 3
+  },
+  "status_labels": {
+    "optimal": "EA > 45 kcal/kg FFM — aucune action requise",
+    "suboptimal": "EA 25-45 kcal/kg FFM — alerte Nutrition Coach",
+    "critical": "EA < seuil critique — veto Recovery Coach + alerte RED-S"
+  }
+}

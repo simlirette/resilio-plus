@@ -51,6 +51,10 @@ class AthleteModel(Base):
     reviews = relationship("WeeklyReviewModel", back_populates="athlete", cascade="all, delete-orphan")
     credentials = relationship("ConnectorCredentialModel", back_populates="athlete", cascade="all, delete-orphan")
     session_logs = relationship("SessionLogModel", back_populates="athlete", cascade="all, delete-orphan")
+    # V3 relationships
+    energy_snapshots = relationship("EnergySnapshotModel", back_populates="athlete", cascade="all, delete-orphan")
+    hormonal_profile = relationship("HormonalProfileModel", back_populates="athlete", uselist=False, cascade="all, delete-orphan")
+    allostatic_entries = relationship("AllostaticEntryModel", back_populates="athlete", cascade="all, delete-orphan")
 
 
 class TrainingPlanModel(Base):
@@ -140,3 +144,12 @@ class SessionLogModel(Base):
     plan = relationship("TrainingPlanModel")
 
     __table_args__ = (UniqueConstraint("athlete_id", "session_id"),)
+
+
+# Import V3 models so SQLAlchemy's mapper registry can resolve the
+# back-references declared on AthleteModel above.
+from app.models.schemas import (  # noqa: E402, F401
+    AllostaticEntryModel,
+    EnergySnapshotModel,
+    HormonalProfileModel,
+)
