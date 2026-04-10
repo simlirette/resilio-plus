@@ -1,0 +1,47 @@
+{
+  "search_query": "Extraction de règles de prévention des blessures et de gestion de l'entraînement à partir d'articles scientifiques",
+  "target_agent": "Head Coach",
+  "source_articles_used": [
+    "Muscle, Neuromuscular, and Cardiac Damage in Trail Running: A Systematic Review.",
+    "Acute to chronic workload ratio (ACWR) for predicting sports injury risk: a systematic review and meta-analysis.",
+    "Kinetic Variables as Indicators of Lower Limb Indirect Injury Risk in Professional Soccer: A Systematic Review.",
+    "Adherence to Strength Training and Lower Rates of Sports Injury in Contact Sports: A Systematic Review and Meta-analysis."
+  ],
+  "extracted_rules": [
+    {
+      "rule_name": "Gestion du stress en trail running",
+      "category": "Récupération, Prévention des blessures",
+      "condition": "Si un athlète participe à du trail running, en particulier avec une charge excentrique élevée.",
+      "action": "Surveiller les marqueurs biochimiques et neuromusculaires.",
+      "formula_or_value": "N/A"
+    },
+    {
+      "rule_name": "Prédiction du risque de blessure par le ratio charge aiguë/chronique (ACWR)",
+      "category": "Prévention des blessures, Gestion de la charge d'entraînement",
+      "condition": "Si l'objectif est de gérer la charge d'entraînement et de prédire le risque de blessures sportives.",
+      "action": "Utiliser le ratio charge aiguë/chronique (ACWR).",
+      "formula_or_value": "ACWR"
+    },
+    {
+      "rule_name": "Surveillance des variables cinétiques pour le risque de blessure des membres inférieurs",
+      "category": "Prévention des blessures, Force musculaire",
+      "condition": "Si l'on évalue le risque de blessures musculo-squelettiques indirectes des membres inférieurs chez les joueurs de football.",
+      "action": "Surveiller les variables cinétiques, en particulier les mesures de force isocinétique (force excentrique des ischio-jambiers, couple concentrique des quadriceps).",
+      "formula_or_value": "N/A"
+    },
+    {
+      "rule_name": "Évaluation intégrée du risque de blessure",
+      "category": "Prévention des blessures, Gestion de la charge d'entraînement",
+      "condition": "Si l'on évalue le risque de blessure.",
+      "action": "Intégrer les données cinétiques avec des indicateurs contextuels tels que le bien-être, la fatigue et la charge d'entraînement.",
+      "formula_or_value": "N/A"
+    },
+    {
+      "rule_name": "Entraînement en force pour la prévention des blessures",
+      "category": "Prévention des blessures, Force musculaire",
+      "condition": "Si l'objectif est de prévenir les blessures sportives, en particulier dans les sports de contact.",
+      "action": "Mettre en œuvre et assurer l'adhésion à l'entraînement en force.",
+      "formula_or_value": "N/A"
+    }
+  ]
+}

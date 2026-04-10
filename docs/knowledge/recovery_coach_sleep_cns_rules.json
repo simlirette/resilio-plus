@@ -1,0 +1,76 @@
+{
+  "search_query": "Sleep and recovery strategies for athletes",
+  "target_agent": "Recovery Coach",
+  "source_articles_used": [
+    "The effectiveness of dance interventions on sleep quality: a systematic review and meta-analysis.",
+    "Effectiveness of aerobic exercise in fibromyalgia: A systematic review and network meta-analysis.",
+    "The Role of Sleep on Physical and Cognitive Performance of Ultra-Endurance Athletes: A Systematic Review.",
+    "Circadian Rhythm and Sleep Disturbances in Young Adult Athletes: A Review About Risk Factors, Consequences, and Interventions.",
+    "Meta-analysis of the Effect of Yogic Techniques on Melatonin Levels: Implications for Sleep Health."
+  ],
+  "extracted_rules": [
+    {
+      "rule_name": "Dance for Sleep Quality Improvement",
+      "category": "Sleep",
+      "condition": "An individual experiences sleep disturbances or seeks to improve overall sleep quality.",
+      "action": "Incorporate dance interventions into their regular routine.",
+      "formula_or_value": "Evidence supports benefits"
+    },
+    {
+      "rule_name": "Aerobic Exercise for Enhanced Sleep Quality",
+      "category": "Sleep",
+      "condition": "An individual, particularly those with conditions like fibromyalgia, experiences sleep disturbances.",
+      "action": "Engage in regular aerobic exercise.",
+      "formula_or_value": "Widely recommended, evidence supports benefits"
+    },
+    {
+      "rule_name": "Pre-Competition Sleep Extension for Physical Performance",
+      "category": "Performance Recovery",
+      "condition": "An ultra-endurance athlete is preparing for a competition.",
+      "action": "Extend sleep duration the night before the event.",
+      "formula_or_value": "Extended sleep"
+    },
+    {
+      "rule_name": "Intra-Competition Napping for Cognitive Performance",
+      "category": "Performance Recovery",
+      "condition": "An ultra-endurance athlete is experiencing cognitive fatigue during competition.",
+      "action": "Take mid-race naps.",
+      "formula_or_value": "Mid-race naps"
+    },
+    {
+      "rule_name": "Importance of Pre-Race Sleep Quality for Cognition",
+      "category": "Performance Recovery",
+      "condition": "An ultra-endurance athlete aims to optimize cognitive performance during competition.",
+      "action": "Prioritize and ensure high sleep quality in the period leading up to the race.",
+      "formula_or_value": "Positively associated"
+    },
+    {
+      "rule_name": "Sleep Duration for Athletic Performance and Mental Health",
+      "category": "Sleep, Mental Health",
+      "condition": "A young adult athlete seeks to enhance athletic performance and support mental health.",
+      "action": "Extend overall sleep duration.",
+      "formula_or_value": "Could enhance athletic performance and support mental health"
+    },
+    {
+      "rule_name": "Consequences of Inadequate Sleep in Athletes",
+      "category": "Sleep, Performance, Mental Health",
+      "condition": "An athlete experiences inadequate sleep.",
+      "action": "Be aware that this can lead to reduced reaction times and mental health problems such as depressive symptoms and anxiety.",
+      "formula_or_value": "Reduced reaction times, mental health problems"
+    },
+    {
+      "rule_name": "Risk Factors for Sleep Disturbances in Athletes",
+      "category": "Sleep",
+      "condition": "An athlete's schedule includes early morning practice sessions, late night games, or travel across time zones (jet lag).",
+      "action": "Recognize these as significant risk factors for sleep and circadian rhythm disturbances and implement mitigating strategies.",
+      "formula_or_value": "Early morning practice sessions, late night games, jet lag"
+    },
+    {
+      "rule_name": "Yoga for Melatonin Enhancement and Sleep Quality",
+      "category": "Sleep",
+      "condition": "An individual seeks a non-pharmacological approach to enhance sleep health.",
+      "action": "Regularly practice yogic techniques, including meditation and mantra chanting.",
+      "formula_or_value": "Pooled SMD of 0.37 (95% - CI: [0.09; 0.66]) on melatonin levels"
+    }
+  ]
+}
