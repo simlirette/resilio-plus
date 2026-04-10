@@ -26,6 +26,7 @@ export default function LogSessionPage() {
   const [skipped, setSkipped] = useState(false)
   const [duration, setDuration] = useState('')
   const [rpe, setRpe] = useState('')
+  const [rpeEnabled, setRpeEnabled] = useState(false)
   const [notes, setNotes] = useState('')
   // Sport-specific
   const [paceMin, setPaceMin] = useState('')
@@ -46,7 +47,7 @@ export default function LogSessionPage() {
         if (s.log) {
           setSkipped(s.log.skipped)
           if (s.log.actual_duration_min) setDuration(String(s.log.actual_duration_min))
-          if (s.log.rpe) setRpe(String(s.log.rpe))
+          if (s.log.rpe) { setRpe(String(s.log.rpe)); setRpeEnabled(true) }
           if (s.log.notes) setNotes(s.log.notes)
         } else {
           // Pre-fill duration with planned
@@ -86,7 +87,7 @@ export default function LogSessionPage() {
       await api.logSession(athleteId, sessionId, {
         actual_duration_min: skipped ? undefined : (duration ? parseInt(duration) : undefined),
         skipped,
-        rpe: !skipped && rpe ? parseInt(rpe) : undefined,
+        rpe: !skipped && rpeEnabled && rpe ? parseInt(rpe) : undefined,
         notes: notes.trim() || undefined,
         actual_data: buildActualData(),
       })
@@ -148,21 +149,34 @@ export default function LogSessionPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="rpe">
-                      RPE <span className="text-muted-foreground text-xs">(1–10) {rpe ? `— ${RPE_LABELS[parseInt(rpe)] ?? ''}` : ''}</span>
-                    </Label>
-                    <Input
-                      id="rpe"
-                      type="range"
-                      min={1}
-                      max={10}
-                      value={rpe || '5'}
-                      onChange={e => setRpe(e.target.value)}
-                      className="cursor-pointer"
-                    />
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>1 · Easy</span><span>10 · Max</span>
+                    <div className="flex items-center gap-3">
+                      <input
+                        id="rpe-enabled"
+                        type="checkbox"
+                        checked={rpeEnabled}
+                        onChange={e => { setRpeEnabled(e.target.checked); if (!rpe) setRpe('5') }}
+                        className="h-4 w-4 rounded border-input"
+                      />
+                      <Label htmlFor="rpe-enabled" className="cursor-pointer">
+                        Record RPE <span className="text-muted-foreground text-xs">(1–10) {rpeEnabled && rpe ? `— ${RPE_LABELS[parseInt(rpe)] ?? ''}` : ''}</span>
+                      </Label>
                     </div>
+                    {rpeEnabled && (
+                      <>
+                        <Input
+                          id="rpe"
+                          type="range"
+                          min={1}
+                          max={10}
+                          value={rpe || '5'}
+                          onChange={e => setRpe(e.target.value)}
+                          className="cursor-pointer"
+                        />
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>1 · Easy</span><span>10 · Max</span>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* Sport-specific fields */}

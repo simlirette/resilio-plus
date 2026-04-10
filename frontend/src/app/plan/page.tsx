@@ -6,7 +6,6 @@ import { useAuth } from '@/lib/auth'
 import { api, ApiError, type TrainingPlanResponse, type WorkoutSlot } from '@/lib/api'
 import { ProtectedRoute } from '@/components/protected-route'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 
 const SPORT_COLORS: Record<string, string> = {

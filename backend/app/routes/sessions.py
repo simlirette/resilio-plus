@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from ..db.models import AthleteModel, SessionLogModel, TrainingPlanModel
@@ -190,18 +190,19 @@ def get_history(
         .all()
     )
 
+    # Single GROUP BY query instead of N per-plan COUNT queries
+    log_counts: dict[str, int] = dict(
+        db.query(SessionLogModel.plan_id, func.count())
+        .filter(SessionLogModel.athlete_id == athlete_id)
+        .group_by(SessionLogModel.plan_id)
+        .all()
+    )
+
     summaries: list[WeekSummary] = []
     for i, plan in enumerate(plans):
         slots = json.loads(plan.weekly_slots_json)
         sessions_total = len(slots)
-        sessions_logged = (
-            db.query(SessionLogModel)
-            .filter(
-                SessionLogModel.athlete_id == athlete_id,
-                SessionLogModel.plan_id == plan.id,
-            )
-            .count()
-        )
+        sessions_logged = log_counts.get(plan.id, 0)
         completion_pct = (
             round(sessions_logged / sessions_total * 100, 1)
             if sessions_total > 0
