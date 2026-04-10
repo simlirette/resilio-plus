@@ -8,14 +8,28 @@ A **Head Coach AI** orchestrates 7 specialist agents to create personalized, per
 
 ## Quick Start — Docker
 
+**Prerequisites:** Docker Desktop (or Docker Engine + Compose plugin)
+
 ```bash
 git clone <repo-url> resilio-plus && cd resilio-plus
+
+# 1. Copy environment file and set your secrets
+cp .env.example .env
+# Edit .env — at minimum set POSTGRES_PASSWORD and JWT_SECRET
+
+# 2. Build and start all services
 docker compose build
 docker compose up
 ```
 
-- Backend API: http://localhost:8000/docs
-- Frontend: http://localhost:3000
+| Service | URL |
+|---------|-----|
+| Backend API + interactive docs | http://localhost:8000/docs |
+| Frontend | http://localhost:3000 |
+| PostgreSQL | localhost:5432 (user: resilio, db: resilio) |
+
+Tables are created automatically on first startup. To stop: `docker compose down`.
+To reset the database: `docker compose down -v` (removes the postgres volume).
 
 ---
 
@@ -26,16 +40,35 @@ docker compose up
 ```bash
 # Backend
 poetry install
+# Create tables (SQLite, stored in data/resilio.db)
+python -c "from backend.app.db.database import Base, engine; from backend.app.db import models; Base.metadata.create_all(engine)"
 poetry run uvicorn backend.app.main:app --reload
 
 # Frontend (new terminal)
 cd frontend && npm install && npm run dev
 ```
 
-> **First run:** Create the database before starting uvicorn:
-> ```bash
-> python -c "from backend.app.db.database import Base, engine; from backend.app.db import models; Base.metadata.create_all(engine)"
-> ```
+The backend defaults to SQLite when `DATABASE_URL` is not set — no postgres needed for local dev.
+
+---
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and fill in the values before running docker compose.
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `POSTGRES_PASSWORD` | Yes (Docker) | Password for the postgres `resilio` user |
+| `DATABASE_URL` | Auto-set | Full postgres DSN (set by docker-compose; leave blank for local SQLite) |
+| `JWT_SECRET` | Yes | Secret key for JWT token signing — use a long random string in production |
+| `STRAVA_CLIENT_ID` | Optional | Strava OAuth app client ID |
+| `STRAVA_CLIENT_SECRET` | Optional | Strava OAuth app secret |
+| `STRAVA_REDIRECT_URI` | Optional | Strava callback URL (default: `http://localhost:8000/auth/strava/callback`) |
+| `HEVY_API_KEY` | Optional | Hevy Pro API key |
+| `FATSECRET_CLIENT_ID` | Optional | FatSecret OAuth2 client ID |
+| `FATSECRET_CLIENT_SECRET` | Optional | FatSecret OAuth2 client secret |
+| `TERRA_API_KEY` | Optional | Terra API key (Apple Health gateway) |
+| `TERRA_DEV_ID` | Optional | Terra developer ID |
 
 ---
 
@@ -95,10 +128,11 @@ Full interactive docs: http://localhost:8000/docs
 
 | Layer | Technology |
 |-------|-----------|
-| Backend | Python 3.11+, FastAPI, SQLAlchemy, SQLite |
+| Backend | Python 3.11+, FastAPI, SQLAlchemy, PostgreSQL (Docker) / SQLite (local) |
 | Frontend | Next.js 15, TypeScript, Tailwind CSS, shadcn/ui |
 | Auth | JWT (python-jose), bcrypt passwords |
-| Testing | pytest (backend, 286 tests), Vitest + RTL (frontend, 26 tests) |
+| Unit/Integration tests | pytest (backend, 291 tests), Vitest + RTL (frontend, 26 tests) |
+| E2E tests | Playwright (browser), pytest (API workflow) |
 | Dev tools | Poetry, Docker Compose |
 
 ---
@@ -113,15 +147,19 @@ resilio-plus/
 │   ├── connectors/       # Strava, Hevy, FatSecret, Apple Health (via Terra)
 │   ├── routes/           # HTTP endpoints
 │   ├── schemas/          # Pydantic models
-│   └── db/               # SQLAlchemy models + SQLite engine
+│   └── db/               # SQLAlchemy models + engine (postgres/SQLite)
 ├── frontend/             # Next.js App Router
-│   └── src/app/          # login, onboarding, dashboard, plan, review pages
+│   ├── src/app/          # login, onboarding, dashboard, plan, review pages
+│   └── e2e/              # Playwright browser E2E tests
 ├── resilio/              # Legacy CLI (read-only — running coach tools)
 ├── .bmad-core/data/      # JSON knowledge bases (volume landmarks, exercise DB…)
 ├── tests/
-│   ├── backend/          # Unit + integration tests (286 passing)
-│   └── e2e/              # End-to-end workflow tests (6 passing)
-└── docker-compose.yml
+│   ├── backend/          # Unit + integration tests (291 passing)
+│   └── e2e/              # API workflow E2E tests (6 passing)
+├── docker-compose.yml    # backend + frontend + postgres
+├── Dockerfile.backend
+├── Dockerfile.frontend
+└── .env.example          # Template — copy to .env before docker compose
 ```
 
 ---
@@ -132,11 +170,16 @@ resilio-plus/
 # Run all backend tests
 poetry run pytest tests/ -q
 
-# Run frontend tests
+# Run only E2E API workflow tests
+poetry run pytest tests/e2e/ -v
+
+# Run frontend unit tests
 cd frontend && npm test
 
-# Run only E2E tests
-poetry run pytest tests/e2e/ -v
+# Run Playwright browser E2E tests
+cd frontend
+npx playwright install --with-deps chromium   # first time only
+npm run test:e2e
 
 # Backend with auto-reload
 poetry run uvicorn backend.app.main:app --reload
