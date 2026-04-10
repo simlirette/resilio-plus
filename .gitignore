@@ -223,4 +223,5 @@ docs/artifacts/
 # Development & testing scripts (local utilities)
 scripts/*
 !scripts/README.md
+!scripts/docker-entrypoint-backend.sh
 .worktrees/
