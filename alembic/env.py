@@ -11,12 +11,13 @@ Commandes utiles :
 import asyncio
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy.ext.asyncio import create_async_engine
+
+from alembic import context
+from core.config import settings
 
 # Import Base pour que autogenerate détecte toutes les tables de database.py
 from models.database import Base  # noqa: F401
-from core.config import settings
 
 config = context.config
 

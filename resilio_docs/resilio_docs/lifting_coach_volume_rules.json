@@ -1,0 +1,84 @@
+{
+  "search_query": "Extraction de règles d'entraînement de la littérature scientifique pour un coach de musculation",
+  "target_agent": "Lifting Coach",
+  "source_articles_used": [
+    "Acute and Chronic Effects of Drop-Set Training: A Meta-Analysis and Systematic Review.",
+    "Does Sprint Interval Training Cause Interference in Concurrent Training? A Meta-Analysis Study.",
+    "Effects of Advanced Resistance Training Systems on Muscle Hypertrophy and Strength in Recreationally Trained Adults: A Systematic Review and Meta-Analysis.",
+    "Creatine supplementation and resistance training: a comparison between novice and experienced lifters - a systematic review and dose-response meta-analysis.",
+    "Effects of blood flow restriction interval training on aerobic, anaerobic capacity, and muscle strength in healthy adults: a systematic review and meta-analysis.",
+    "The Resistance Training Dose Response: Meta-Regressions Exploring the Effects of Weekly Volume and Frequency on Muscle Hypertrophy and Strength Gains."
+  ],
+  "extracted_rules": [
+    {
+      "rule_name": "Efficacité des Drop-Sets",
+      "category": "Hypertrophie, Force",
+      "condition": "Si l'objectif est l'hypertrophie et la force, et que l'efficacité temporelle est un facteur.",
+      "action": "Utiliser l'entraînement en drop-sets.",
+      "formula_or_value": "méthode efficace et rapide"
+    },
+    {
+      "rule_name": "Interférence SIT et Force",
+      "category": "Interférence, Force, Puissance",
+      "condition": "Si un athlète effectue un entraînement concurrentiel incluant de l'entraînement par intervalles de sprint (SIT) et de la musculation.",
+      "action": "Ne pas s'attendre à une diminution des gains de force ou de puissance.",
+      "formula_or_value": "pas de différence significative"
+    },
+    {
+      "rule_name": "SIT et Performance de Saut",
+      "category": "Puissance",
+      "condition": "Si l'objectif est d'améliorer la performance de saut dans un entraînement concurrentiel avec SIT.",
+      "action": "Intégrer des protocoles de sprint courts.",
+      "formula_or_value": "≤10 secondes"
+    },
+    {
+      "rule_name": "Avantage des Systèmes d'Entraînement Avancés pour la Force Maximale",
+      "category": "Force",
+      "condition": "Si l'objectif principal est d'améliorer la force maximale.",
+      "action": "Envisager d'incorporer des systèmes d'entraînement de résistance avancés.",
+      "formula_or_value": "g = 0.351 (bénéfice modéré)"
+    },
+    {
+      "rule_name": "Avantage Hypertrophique du Rest-Pause",
+      "category": "Hypertrophie",
+      "condition": "Si l'objectif est l'hypertrophie et que l'on considère des méthodes avancées.",
+      "action": "Incorporer l'entraînement en rest-pause.",
+      "formula_or_value": "avantage modeste"
+    },
+    {
+      "rule_name": "Entraînement Basé sur la Vitesse et Surcharge Excentrique pour la Force",
+      "category": "Force",
+      "condition": "Si l'objectif principal est l'amélioration de la force.",
+      "action": "Utiliser l'entraînement basé sur la vitesse et la surcharge excentrique.",
+      "formula_or_value": "contribuent principalement à la force"
+    },
+    {
+      "rule_name": "Comparabilité des Méthodes Avancées (Volume et Effort Équivalents)",
+      "category": "Hypertrophie, Force",
+      "condition": "Si le volume et l'effort sont équivalents entre les méthodes avancées et traditionnelles.",
+      "action": "S'attendre à des adaptations similaires en hypertrophie et en force avec les drop-sets, l'entraînement contrôlé par le tempo et les protocoles de type cluster par rapport aux séries traditionnelles.",
+      "formula_or_value": "adaptations comparables"
+    },
+    {
+      "rule_name": "Supplémentation en Créatine pour la Masse Maigre",
+      "category": "Nutrition, Hypertrophie",
+      "condition": "Si un individu suit un entraînement de résistance et vise à augmenter la masse maigre.",
+      "action": "Envisager la supplémentation en créatine.",
+      "formula_or_value": "bien établi pour l'amélioration de la masse maigre"
+    },
+    {
+      "rule_name": "BFR à Faible Intensité pour Hypertrophie et Force",
+      "category": "Hypertrophie, Force",
+      "condition": "Si l'objectif est d'améliorer l'hypertrophie musculaire et la force, et que l'entraînement de haute intensité n'est pas réalisable ou souhaité.",
+      "action": "Mettre en œuvre l'entraînement avec restriction du flux sanguin (BFR) combiné à un entraînement de résistance de faible intensité.",
+      "formula_or_value": "aussi efficace que l'entraînement de haute intensité"
+    },
+    {
+      "rule_name": "Volume Hebdomadaire et Gains Musculaires",
+      "category": "Hypertrophie, Force",
+      "condition": "Si l'objectif est d'améliorer l'hypertrophie musculaire et la force.",
+      "action": "Augmenter le volume hebdomadaire de séries.",
+      "formula_or_value": "volume hebdomadaire de séries plus élevé"
+    }
+  ]
+}

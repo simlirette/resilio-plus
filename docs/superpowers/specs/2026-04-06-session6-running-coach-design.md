@@ -262,7 +262,7 @@ from agents.running_coach.prescriber import RunningPrescriber
 from core.config import settings
 from models.views import AgentType
 
-_SYSTEM_PROMPT = (Path(__file__).parent / "system_prompt.md").read_text()
+_SYSTEM_PROMPT = (Path(__file__).parent / "running_coach_system_prompt.md").read_text()
 
 class RunningCoachAgent(BaseAgent):
     agent_type = AgentType.running_coach

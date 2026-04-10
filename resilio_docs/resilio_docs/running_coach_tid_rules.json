@@ -1,0 +1,24 @@
+{
+  "search_query": "règles d'entraînement pour coureurs d'endurance basées sur la distribution d'intensité",
+  "target_agent": "Running Coach",
+  "source_articles_used": [
+    "The Effect of Polarized Training Intensity Distribution on Maximal Oxygen Uptake and Work Economy Among Endurance Athletes: A Systematic Review.",
+    "Training-intensity Distribution on Middle- and Long-distance Runners: A Systematic Review."
+  ],
+  "extracted_rules": [
+    {
+      "rule_name": "Distribution d'intensité d'entraînement polarisée (POL)",
+      "category": "Distribution d'intensité",
+      "condition": "Si l'objectif est d'améliorer la VO2max, la VO2peak et l'économie de travail chez les athlètes d'endurance.",
+      "action": "Adopter une distribution d'intensité d'entraînement polarisée.",
+      "formula_or_value": "15-20% d'entraînement à haute intensité (HIT) et 75-80% d'entraînement à basse intensité (LIT)."
+    },
+    {
+      "rule_name": "Optimisation des adaptations à l'entraînement d'endurance",
+      "category": "Distribution d'intensité",
+      "condition": "Pour optimiser les adaptations à l'entraînement d'endurance chez les coureurs de moyenne et longue distance.",
+      "action": "Combiner un volume élevé d'entraînement à basse intensité avec un faible volume d'entraînement au seuil et d'entraînement par intervalles à haute intensité.",
+      "formula_or_value": "≥ 70% du volume total d'entraînement à basse intensité et ≤ 30% au seuil et à haute intensité."
+    }
+  ]
+}

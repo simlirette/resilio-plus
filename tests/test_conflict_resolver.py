@@ -1,11 +1,11 @@
 """Tests for agents/head_coach/resolver.py — ConflictResolver."""
-import pytest
 
 
 def _make_minimal_state(acwr: float):
     """Create a minimal AthleteState with given ACWR."""
     from datetime import UTC, datetime
     from uuid import UUID
+
     from models.athlete_state import AthleteState
 
     state = AthleteState(

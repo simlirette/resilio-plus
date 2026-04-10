@@ -1,0 +1,80 @@
+
+> frontend@0.1.0 test:e2e
+> playwright test
+
+
+Running 2 tests using 2 workers
+
+  ✘  1 [chromium] › e2e\auth.spec.ts:15:7 › Register page › renders registration form with required fields (5.3s)
+  ✘  2 [chromium] › e2e\auth.spec.ts:4:7 › Login page › renders login form with required fields (5.5s)
+
+
+  1) [chromium] › e2e\auth.spec.ts:4:7 › Login page › renders login form with required fields ──────
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByPlaceholder('simon@example.com')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByPlaceholder('simon@example.com')[22m
+
+
+      4 |   test("renders login form with required fields", async ({ page }) => {
+      5 |     await page.goto("/login");
+    > 6 |     await expect(page.getByPlaceholder("simon@example.com")).toBeVisible();
+        |                                                              ^
+      7 |     await expect(
+      8 |       page.getByRole("button", { name: "Se connecter" })
+      9 |     ).toBeVisible();
+        at C:\resilio-plus\frontend\e2e\auth.spec.ts:6:62
+
+    Error Context: test-results\auth-Login-page-renders-login-form-with-required-fields-chromium\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\auth-Login-page-renders-login-form-with-required-fields-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\auth-Login-page-renders-login-form-with-required-fields-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [chromium] › e2e\auth.spec.ts:15:7 › Register page › renders registration form with required fields 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByPlaceholder('Simon')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByPlaceholder('Simon')[22m
+
+
+      15 |   test("renders registration form with required fields", async ({ page }) => {
+      16 |     await page.goto("/register");
+    > 17 |     await expect(page.getByPlaceholder("Simon")).toBeVisible();
+         |                                                  ^
+      18 |     await expect(
+      19 |       page.getByRole("button", { name: "Créer mon compte" })
+      20 |     ).toBeVisible();
+        at C:\resilio-plus\frontend\e2e\auth.spec.ts:17:50
+
+    Error Context: test-results\auth-Register-page-renders-25ac0-n-form-with-required-fields-chromium\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\auth-Register-page-renders-25ac0-n-form-with-required-fields-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\auth-Register-page-renders-25ac0-n-form-with-required-fields-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    [chromium] › e2e\auth.spec.ts:4:7 › Login page › renders login form with required fields ───────
+    [chromium] › e2e\auth.spec.ts:15:7 › Register page › renders registration form with required fields 

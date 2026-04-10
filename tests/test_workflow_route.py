@@ -1,7 +1,6 @@
 """Tests for POST /api/v1/workflow routes. Graph always mocked — no real LangGraph run."""
 from unittest.mock import MagicMock, patch
 
-
 _MOCK_UNIFIED_PLAN = {
     "agent": "head_coach",
     "week": 3,
@@ -15,8 +14,9 @@ _MOCK_UNIFIED_PLAN = {
 
 def test_post_plan_returns_200_complete(simon_pydantic_state):
     """POST /api/v1/workflow/plan with healthy state → 200 + unified_plan."""
-    from api.main import app
     from fastapi.testclient import TestClient
+
+    from api.main import app
 
     client = TestClient(app)
 
@@ -41,8 +41,9 @@ def test_post_plan_returns_200_complete(simon_pydantic_state):
 
 def test_post_plan_returns_202_on_interrupt(simon_pydantic_state):
     """POST /api/v1/workflow/plan when graph is interrupted → 202 + thread_id."""
-    from api.main import app
     from fastapi.testclient import TestClient
+
+    from api.main import app
 
     client = TestClient(app)
 
@@ -70,8 +71,9 @@ def test_post_plan_returns_202_on_interrupt(simon_pydantic_state):
 
 def test_post_plan_invalid_body():
     """POST /api/v1/workflow/plan with invalid athlete_state → 422."""
-    from api.main import app
     from fastapi.testclient import TestClient
+
+    from api.main import app
 
     client = TestClient(app)
 
@@ -85,8 +87,9 @@ def test_post_plan_invalid_body():
 
 def test_post_resume_plan_complete(simon_pydantic_state):
     """POST /api/v1/workflow/plan/resume with valid thread_id → 200 complete."""
-    from api.main import app
     from fastapi.testclient import TestClient
+
+    from api.main import app
 
     client = TestClient(app)
 

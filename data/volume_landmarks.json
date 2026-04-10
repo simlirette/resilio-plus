@@ -1,0 +1,159 @@
+{
+  "description": "Volume Landmarks par groupe musculaire — Adapté Athlètes Hybrides",
+  "source": "Israetel/RP Hypertrophy (adaptations hybrides) — resilio-master-v2.md Section 6.2",
+  "units": "séries effectives par semaine",
+  "definitions": {
+    "mev": "Minimum Effective Volume — seuil minimum pour stimuler la croissance",
+    "mav": "Maximum Adaptive Volume — volume optimal pour la croissance",
+    "mrv_standard": "Maximum Recoverable Volume — limite pour un athlète non-hybride",
+    "mrv_hybrid": "Maximum Recoverable Volume — limite ajustée pour athlète hybride (avec course)",
+    "running_contribution": "Volume indirect apporté par la course (non compté dans les séries de gym)"
+  },
+  "critical_rules": [
+    "Si le volume de course augmente (phase build/peak), le MRV hybride des membres inférieurs BAISSE",
+    "Les groupes non impactés par la course conservent leur MRV standard",
+    "Toujours travailler entre MEV et MRV hybride — jamais en dessous du MEV, jamais au-dessus du MRV hybride",
+    "Pendant une phase peak course : membres inférieurs → MEV uniquement"
+  ],
+  "phase_adjustments": {
+    "base_building": {
+      "lower_body_mrv_multiplier": 1.0,
+      "note": "Volume course bas — MRV hybride membres inférieurs normal"
+    },
+    "build": {
+      "lower_body_mrv_multiplier": 0.85,
+      "note": "Volume course moyen — réduire MRV membres inférieurs de 15%"
+    },
+    "peak": {
+      "lower_body_mrv_multiplier": 0.70,
+      "note": "Volume course élevé — réduire MRV membres inférieurs de 30%"
+    },
+    "taper": {
+      "lower_body_mrv_multiplier": 0.60,
+      "note": "Semaine taper — membres inférieurs au MEV uniquement"
+    }
+  },
+  "muscles": {
+    "quadriceps": {
+      "mev": 6,
+      "mav": 10,
+      "mrv_standard": 18,
+      "mrv_hybrid": 12,
+      "running_contribution": "élevé",
+      "notes": "Course = volume additionnel significatif. Compter environ 4-6 séries équivalentes par 10km de course.",
+      "exercises_tier1": ["Leg Press", "Hack Squat", "Leg Extension"],
+      "exercises_tier2": ["Bulgarian Split Squat", "Walking Lunges"],
+      "exercises_tier3": ["Barbell Back Squat", "Barbell Front Squat"]
+    },
+    "hamstrings": {
+      "mev": 4,
+      "mav": 8,
+      "mrv_standard": 16,
+      "mrv_hybrid": 10,
+      "running_contribution": "modéré",
+      "notes": "Course stimule surtout les ischio en excentrique. Compter 2-3 séries équivalentes par 10km.",
+      "exercises_tier1": ["Seated Leg Curl", "Lying Leg Curl"],
+      "exercises_tier2": ["Romanian Deadlift (DB)", "Nordic Curl"],
+      "exercises_tier3": ["Romanian Deadlift (Barbell)", "Sumo Deadlift"]
+    },
+    "glutes": {
+      "mev": 0,
+      "mav": 4,
+      "mrv_standard": 12,
+      "mrv_hybrid": 6,
+      "running_contribution": "modéré",
+      "notes": "Souvent suffisamment stimulés par course + squats/fentes. Prioriser les abducteurs pour prévention valgus.",
+      "exercises_tier1": ["Hip Thrust (Machine)", "Cable Kickback", "Abductor Machine"],
+      "exercises_tier2": ["Hip Thrust (Barbell)", "Step-Up"],
+      "exercises_tier3": []
+    },
+    "calves": {
+      "mev": 4,
+      "mav": 8,
+      "mrv_standard": 14,
+      "mrv_hybrid": 5,
+      "running_contribution": "très élevé",
+      "notes": "La course fournit un volume massif en excentrique. En phase build/peak, MEV gym seulement.",
+      "exercises_tier1": ["Seated Calf Raise", "Calf Press (Leg Press)"],
+      "exercises_tier2": ["Standing Calf Raise (Dumbbell)"],
+      "exercises_tier3": ["Standing Calf Raise (Barbell)"]
+    },
+    "chest": {
+      "mev": 6,
+      "mav": 14,
+      "mrv_standard": 22,
+      "mrv_hybrid": 18,
+      "running_contribution": "nul",
+      "notes": "Non impacté par la course. MRV légèrement réduit pour laisser de la récupération CNS.",
+      "exercises_tier1": ["Machine Chest Press", "Cable Fly", "Pec Deck"],
+      "exercises_tier2": ["Dumbbell Bench Press", "Incline DB Press", "Dips"],
+      "exercises_tier3": ["Barbell Bench Press", "Barbell Incline Press"]
+    },
+    "back_lats": {
+      "mev": 6,
+      "mav": 14,
+      "mrv_standard": 22,
+      "mrv_hybrid": 18,
+      "running_contribution": "nul",
+      "notes": "Non impacté par la course. Volume élevé possible.",
+      "exercises_tier1": ["Lat Pulldown", "Cable Row (Seated)", "Machine Row"],
+      "exercises_tier2": ["Dumbbell Row", "Chest-Supported Row", "Pull-ups"],
+      "exercises_tier3": ["Barbell Row", "T-Bar Row"]
+    },
+    "shoulders_lateral": {
+      "mev": 6,
+      "mav": 12,
+      "mrv_standard": 20,
+      "mrv_hybrid": 14,
+      "running_contribution": "nul",
+      "notes": "Focus sur le faisceau latéral pour l'esthétique et la santé de l'épaule.",
+      "exercises_tier1": ["Cable Lateral Raise", "Machine Shoulder Press", "Face Pull"],
+      "exercises_tier2": ["DB Lateral Raise", "DB Overhead Press"],
+      "exercises_tier3": ["Barbell Overhead Press"]
+    },
+    "biceps": {
+      "mev": 4,
+      "mav": 10,
+      "mrv_standard": 16,
+      "mrv_hybrid": 12,
+      "running_contribution": "nul",
+      "notes": "Volume indirect des exercices de dos = environ 30-40% du volume direct.",
+      "exercises_tier1": ["Incline DB Curl", "Machine Preacher Curl", "Cable Curl"],
+      "exercises_tier2": ["Barbell Curl", "DB Hammer Curl"],
+      "exercises_tier3": []
+    },
+    "triceps": {
+      "mev": 4,
+      "mav": 8,
+      "mrv_standard": 14,
+      "mrv_hybrid": 10,
+      "running_contribution": "nul",
+      "notes": "Volume indirect des exercices de poitrine = environ 40-50% du volume direct.",
+      "exercises_tier1": ["Cable Tricep Pushdown", "Overhead Cable Extension", "Machine Dip"],
+      "exercises_tier2": ["Dips", "DB Skull Crusher"],
+      "exercises_tier3": []
+    },
+    "core": {
+      "mev": 0,
+      "mav": 4,
+      "mrv_standard": 10,
+      "mrv_hybrid": 4,
+      "running_contribution": "modéré",
+      "notes": "Running + barbell compounds (deadlift, squat) = volume indirect important. Priorité aux anti-rotation.",
+      "exercises_tier1": ["Plank variations", "Dead Bug", "Pallof Press"],
+      "exercises_tier2": ["Ab Wheel Rollout", "Cable Crunch"],
+      "exercises_tier3": []
+    },
+    "hip_external_rotators": {
+      "mev": 2,
+      "mav": 4,
+      "mrv_standard": 6,
+      "mrv_hybrid": 6,
+      "running_contribution": "nul",
+      "notes": "CRITIQUE pour prévention blessures course (protection valgus genou). Toujours inclure 2 séries/semaine.",
+      "exercises_tier1": ["Banded Hip External Rotation", "Clamshell", "Side-lying Hip Abduction"],
+      "exercises_tier2": ["Cable Hip Abduction"],
+      "exercises_tier3": []
+    }
+  }
+}

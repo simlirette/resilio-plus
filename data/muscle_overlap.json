@@ -1,0 +1,169 @@
+{
+  "description": "Matrice de chevauchement musculaire inter-sports — Source de vérité pour la détection de conflits",
+  "source": "resilio-master-v2.md Section 4.5 + physiologie du sport",
+  "conflict_rule": "Conflit = même groupe musculaire sollicité à HAUTE intensité dans un intervalle < 24h",
+  "intensity_levels": {
+    "high": "RPE >= 7 ou Zone 3 cardio — génère des dommages musculaires significatifs",
+    "medium": "RPE 5-6 ou Zone 2 cardio — récupération partielle requise (12h)",
+    "low": "RPE <= 4 ou Zone 1 cardio — pas de conflit musculaire"
+  },
+  "session_types": {
+    "running_easy": {
+      "intensity": "low",
+      "muscles_high": [],
+      "muscles_medium": ["calves", "hip_flexors"],
+      "muscles_low": ["quadriceps", "hamstrings", "glutes"],
+      "cns_load": 10,
+      "notes": "Easy pace (Z1) — quasi pas de conflit musculaire avec le lifting"
+    },
+    "running_long": {
+      "intensity": "medium",
+      "muscles_high": ["calves", "hip_flexors"],
+      "muscles_medium": ["quadriceps", "hamstrings", "glutes"],
+      "muscles_low": [],
+      "cns_load": 35,
+      "notes": "Long run > 90 min génère des dommages cumulatifs même à basse intensité"
+    },
+    "running_tempo": {
+      "intensity": "high",
+      "muscles_high": ["quadriceps", "hamstrings", "calves", "glutes", "hip_flexors"],
+      "muscles_medium": [],
+      "muscles_low": [],
+      "cns_load": 55,
+      "notes": "Threshold pace — conflit majeur avec tout travail jambes dans les 24h"
+    },
+    "running_intervals": {
+      "intensity": "high",
+      "muscles_high": ["quadriceps", "hamstrings", "calves", "glutes", "hip_flexors"],
+      "muscles_medium": [],
+      "muscles_low": [],
+      "cns_load": 70,
+      "cns_note": "Charge CNS maximale — interdit le lendemain de tout exercice Tier 3",
+      "notes": "I-pace/R-pace — le plus fort conflit possible avec le lifting jambes"
+    },
+    "running_recovery": {
+      "intensity": "low",
+      "muscles_high": [],
+      "muscles_medium": [],
+      "muscles_low": ["calves", "hip_flexors"],
+      "cns_load": 5,
+      "notes": "Récupération active — aucun conflit musculaire"
+    },
+    "cycling_easy": {
+      "intensity": "low",
+      "muscles_high": [],
+      "muscles_medium": ["quadriceps", "glutes"],
+      "muscles_low": ["hamstrings", "calves"],
+      "cns_load": 15,
+      "notes": "Moins d'impact que la course — pas de phase d'atterrissage"
+    },
+    "cycling_intervals": {
+      "intensity": "high",
+      "muscles_high": ["quadriceps", "hamstrings", "glutes"],
+      "muscles_medium": ["calves"],
+      "muscles_low": [],
+      "cns_load": 60,
+      "notes": "HIIT vélo — conflit significatif avec lifting jambes"
+    },
+    "swimming_easy": {
+      "intensity": "low",
+      "muscles_high": [],
+      "muscles_medium": ["lats", "shoulders", "triceps"],
+      "muscles_low": ["core", "biceps"],
+      "cns_load": 15,
+      "notes": "Moins d'interférence que course ou vélo — pas de dommages excentriques"
+    },
+    "swimming_intervals": {
+      "intensity": "high",
+      "muscles_high": ["lats", "shoulders", "triceps"],
+      "muscles_medium": ["core", "biceps"],
+      "muscles_low": [],
+      "cns_load": 45,
+      "notes": "Conflit avec lifting upper body dans les 12-24h"
+    },
+    "lifting_upper_force": {
+      "intensity": "high",
+      "muscles_high": ["chest", "back_lats", "shoulders", "triceps", "biceps"],
+      "muscles_medium": [],
+      "muscles_low": [],
+      "cns_load": 60,
+      "notes": "Barbell compounds (bench, row) — haute charge CNS"
+    },
+    "lifting_upper_hypertrophy": {
+      "intensity": "high",
+      "muscles_high": ["chest", "back_lats", "shoulders", "triceps", "biceps"],
+      "muscles_medium": [],
+      "muscles_low": [],
+      "cns_load": 40,
+      "notes": "Machines et câbles — charge CNS modérée, récupération plus rapide"
+    },
+    "lifting_lower_force": {
+      "intensity": "high",
+      "muscles_high": ["quadriceps", "hamstrings", "glutes", "calves"],
+      "muscles_medium": [],
+      "muscles_low": [],
+      "cns_load": 75,
+      "notes": "Squat barbell/deadlift — charge CNS maximale. Incompatible avec running_intervals <48h"
+    },
+    "lifting_lower_hypertrophy": {
+      "intensity": "high",
+      "muscles_high": ["quadriceps", "hamstrings", "glutes"],
+      "muscles_medium": ["calves"],
+      "muscles_low": [],
+      "cns_load": 45,
+      "notes": "Leg press/machine — meilleur choix en phase build course"
+    },
+    "lifting_full_body": {
+      "intensity": "high",
+      "muscles_high": ["quadriceps", "hamstrings", "glutes", "chest", "back_lats", "shoulders"],
+      "muscles_medium": ["triceps", "biceps", "calves"],
+      "muscles_low": [],
+      "cns_load": 65,
+      "notes": "Full body — conflit avec TOUT type de course dans les 24h"
+    }
+  },
+  "conflict_matrix": {
+    "description": "Paires de séances en conflit si < 24h d'intervalle (haute intensité des deux côtés)",
+    "high_conflicts": [
+      ["running_intervals", "lifting_lower_force"],
+      ["running_intervals", "lifting_lower_hypertrophy"],
+      ["running_tempo", "lifting_lower_force"],
+      ["running_tempo", "lifting_lower_hypertrophy"],
+      ["running_long", "lifting_lower_force"],
+      ["cycling_intervals", "lifting_lower_force"],
+      ["cycling_intervals", "lifting_lower_hypertrophy"],
+      ["swimming_intervals", "lifting_upper_force"],
+      ["swimming_intervals", "lifting_upper_hypertrophy"],
+      ["lifting_lower_force", "running_intervals"],
+      ["lifting_full_body", "running_tempo"]
+    ],
+    "medium_conflicts_12h": [
+      ["running_long", "lifting_lower_hypertrophy"],
+      ["running_easy", "lifting_lower_force"],
+      ["cycling_easy", "lifting_lower_force"]
+    ],
+    "no_conflicts": [
+      ["running_easy", "lifting_upper_force"],
+      ["running_easy", "lifting_upper_hypertrophy"],
+      ["running_recovery", "lifting_upper_force"],
+      ["swimming_easy", "lifting_lower_force"],
+      ["swimming_easy", "running_easy"]
+    ]
+  },
+  "sequencing_rules": {
+    "same_day_force_before_endurance": {
+      "rule": "Si double séance le même jour : force/lifting TOUJOURS avant endurance",
+      "minimum_gap_hours": 3,
+      "rationale": "Préserve les gains neuromusculaires, évite l'inhibition mTOR post-endurance"
+    },
+    "hiit_plus_lifting_forbidden": {
+      "rule": "HIIT cardio + lifting haute intensité le même jour = interférence maximale",
+      "exception": "Uniquement si l'un des deux est dégradé en Z1 ou Tier 1 RPE 6"
+    },
+    "swimming_exception": {
+      "rule": "La natation génère moins d'interférence que course/vélo",
+      "rationale": "Pas de phase d'atterrissage, moins de dommages musculaires excentriques",
+      "practical": "Natation + lifting le même jour acceptable si intensité modérée"
+    }
+  }
+}

@@ -1,11 +1,11 @@
 """Tests for core/constraint_matrix.py — build_constraint_matrix()."""
-import pytest
 
 
 def _make_state(available_days: dict, lifting_sessions: int):
     """Helper: minimal AthleteState with custom availability."""
     from datetime import UTC, datetime
     from uuid import UUID
+
     from models.athlete_state import AthleteState
 
     return AthleteState(

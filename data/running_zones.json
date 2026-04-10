@@ -1,0 +1,165 @@
+{
+  "description": "Zones d'intensité course — FC et allure — par modèle",
+  "source": "resilio-master-v2.md Section 3.2 + Seiler (3 zones) + Daniels (5 zones)",
+  "usage": {
+    "primary_model": "seiler_3_zones",
+    "note": "Le modèle Seiler 3 zones est utilisé pour la distribution TID (pyramidal/polarisé). Les zones Daniels 5 zones sont utilisées pour la prescription d'allures."
+  },
+  "hr_zone_models": {
+    "seiler_3_zones": {
+      "description": "Modèle polarisé Seiler — basé sur les seuils lactiques LT1 et LT2",
+      "reference": "Seiler S. (2010) — What is Best Practice for Training Intensity and Duration Distribution in Endurance Athletes?",
+      "zones": {
+        "Z1": {
+          "name": "Sous-seuil (below LT1)",
+          "pct_max_hr": { "min": 60, "max": 77 },
+          "description": "Intensité aérobie pure — conversation possible sans effort",
+          "lactate_mmol": "< 2.0",
+          "perceived_effort": "très facile — on peut chanter",
+          "training_effect": "adaptation aérobie de base, mitochondriogenèse",
+          "corresponds_to_daniels": ["E", "L"]
+        },
+        "Z2": {
+          "name": "Entre les seuils (LT1 à LT2)",
+          "pct_max_hr": { "min": 77, "max": 90 },
+          "description": "Zone grise — à utiliser avec parcimonie (modèle pyramidal) ou à éviter (modèle polarisé)",
+          "lactate_mmol": "2.0 - 4.0",
+          "perceived_effort": "modéré — phrases courtes possibles",
+          "training_effect": "améliore le seuil lactique mais génère beaucoup de fatigue",
+          "corresponds_to_daniels": ["M", "T"],
+          "tid_note": "Pyramidal : 10-15% du volume. Polarisé : < 5% du volume."
+        },
+        "Z3": {
+          "name": "Au-dessus du seuil (above LT2)",
+          "pct_max_hr": { "min": 90, "max": 100 },
+          "description": "Haute intensité — VO2max et au-delà",
+          "lactate_mmol": "> 4.0",
+          "perceived_effort": "difficile à très difficile — respiration lourde",
+          "training_effect": "VO2max, économie de course, vitesse",
+          "corresponds_to_daniels": ["I", "R"],
+          "tid_note": "Pyramidal : 5-10% du volume. Polarisé : 15-20% du volume."
+        }
+      },
+      "tid_models": {
+        "pyramidal": {
+          "Z1_pct": 75, "Z2_pct": 15, "Z3_pct": 10,
+          "phase": "base_building",
+          "description": "Phase de construction — gros volume, intensité modérée"
+        },
+        "polarized": {
+          "Z1_pct": 80, "Z2_pct": 5, "Z3_pct": 15,
+          "phase": "build_peak",
+          "description": "Phase compétitive — peu de zone grise, polarisation max-intensité"
+        },
+        "threshold": {
+          "Z1_pct": 55, "Z2_pct": 30, "Z3_pct": 15,
+          "phase": "specific_short_event",
+          "description": "Court terme spécifique — utile pour 5k/10k en approche finale"
+        }
+      }
+    },
+    "daniels_5_zones": {
+      "description": "Modèle Daniels — basé sur le VDOT et les allures d'entraînement",
+      "reference": "Daniels J. — Daniels Running Formula",
+      "zones": {
+        "E": {
+          "name": "Easy (E)",
+          "pct_max_hr": { "min": 59, "max": 74 },
+          "vdot_zone": "Easy pace",
+          "description": "Course facile — base aérobie et récupération active",
+          "duration_min": { "min": 30, "max": 75 },
+          "weekly_pct_min": 60,
+          "notes": "Minimum 60% du volume hebdomadaire. Peut tenir une conversation."
+        },
+        "M": {
+          "name": "Marathon (M)",
+          "pct_max_hr": { "min": 74, "max": 84 },
+          "vdot_zone": "Marathon pace",
+          "description": "Allure marathon — simulation de course longue",
+          "usage": "Finish des Long Runs, Progression Runs",
+          "notes": "Entre Easy et Tempo — conversation difficile mais possible"
+        },
+        "T": {
+          "name": "Threshold (T)",
+          "pct_max_hr": { "min": 82, "max": 91 },
+          "vdot_zone": "Threshold pace",
+          "description": "Allure seuil lactique — confortablement difficile",
+          "duration_continuous_min": { "min": 20, "max": 40 },
+          "cruise_intervals": "3-5 × 5-10 min avec 1-2 min récup jog",
+          "notes": "Quelques mots possibles mais pas une conversation"
+        },
+        "I": {
+          "name": "Interval (I)",
+          "pct_max_hr": { "min": 95, "max": 100 },
+          "vdot_zone": "Interval pace",
+          "description": "Allure VO2max — développement de la capacité aérobie maximale",
+          "rep_duration_min": { "min": 3, "max": 5 },
+          "reps": { "min": 4, "max": 6 },
+          "recovery": "jog égal à la durée de l'intervalle",
+          "notes": "Respiration lourde mais contrôlée. Arrêt si ralentissement > 5s vs rep 1."
+        },
+        "R": {
+          "name": "Repetition (R)",
+          "pct_max_hr": "non applicable — effort maximal court",
+          "vdot_zone": "Repetition pace",
+          "description": "Vitesse et économie de course — neuromuscular speed work",
+          "rep_distance_m": [200, 300, 400],
+          "reps": { "min": 8, "max": 12 },
+          "recovery": "repos complet — marche/jog 60-90s",
+          "notes": "Rapide et relâché. Pas de tension. Récupération complète obligatoire."
+        }
+      }
+    }
+  },
+  "hr_zone_calculator": {
+    "method": "pct_max_hr",
+    "max_hr_formulas": {
+      "tanaka": {
+        "formula": "208 - (0.7 × age)",
+        "recommended_for": "population générale adulte",
+        "note": "Plus précis que Fox (220-age) pour les 40+ ans"
+      },
+      "fox": {
+        "formula": "220 - age",
+        "recommended_for": "estimation rapide",
+        "note": "Surestimer chez les jeunes, sous-estimer chez les seniors"
+      },
+      "measured": {
+        "method": "Test d'effort maximal ou sprint tout-out final de course",
+        "recommended_for": "toujours préférer la FC max mesurée à la calculée"
+      }
+    }
+  },
+  "key_formulas": {
+    "vdot_from_5k_time": {
+      "description": "Estimer le VDOT à partir du temps au 5km",
+      "example": "5km en 28:30 ≈ VDOT 38 → allures dans vdot_paces.json",
+      "note": "Utiliser vdot_paces.json pour la table complète"
+    },
+    "acwr_running": {
+      "formula": "charge_7_jours / moyenne_charge_28_jours",
+      "charge_metric": "TSS (Training Stress Score) ou km hebdomadaires",
+      "sweet_spot": "0.8 - 1.3",
+      "critical": "> 1.5 → réduction de charge obligatoire",
+      "method": "EWMA (Exponentially Weighted Moving Average) recommandé sur Rolling Average"
+    },
+    "tss_running": {
+      "formula": "TSS = (durée_sec × NGP × IF) / (FTP × 3600) × 100",
+      "note": "NGP = Normalized Graded Pace, IF = Intensity Factor. Alternative simple : km × facteur_intensité."
+    }
+  },
+  "injury_prevention_rules": {
+    "shin_splints_history": {
+      "max_volume_increase_pct_per_week": 7,
+      "note": "Réduit de 10% à 7% en cas d'antécédents de périostite tibiale"
+    },
+    "cadence_target": {
+      "steps_per_minute": { "min": 170, "max": 180 },
+      "rationale": "Réduit l'impact par foulée et le risque de blessure au genou"
+    },
+    "long_run_max_pct_weekly_volume": 33,
+    "weekly_volume_increase_max_pct": 10,
+    "mandatory_deload_frequency_weeks": 4,
+    "deload_volume_reduction_pct": 25
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "search_query": "Extraire les consensus clairs, les protocoles mathématiques et les règles applicables concernant la nutrition pour les athlètes d'endurance.",
+  "target_agent": "Nutrition Coach",
+  "source_articles_used": [
+    "Interest of carbohydrate consumption during endurance exercise: a systematic review of systematic and meta-analyses of RCTs.",
+    "Effects of Low-Carbohydrate and Ketogenic Diets on Aerobic Performance in Trained Athletes: A Systematic Review and Meta-Analysis.",
+    "Forensic Perspective of Unintentional Doping, Cardiovascular Health, and the Role of Nutrition in Competitive Sports.",
+    "Carbohydrate ingestion during prolonged exercise and net skeletal muscle glycogen utilization: a meta-analysis.",
+    "Artificial Intelligence in Endurance Sports: Metabolic, Recovery, and Nutritional Perspectives.",
+    "Nutritional strategies for minimizing gastrointestinal symptoms during endurance exercise: systematic review of the literature.",
+    "Effects of carbohydrate supplementation on the performance of endurance athletes: A systematic review."
+  ],
+  "extracted_rules": [
+    {
+      "rule_name": "Consommation de glucides pour la performance d'endurance",
+      "category": "Performance Nutrition",
+      "condition": "Si un athlète est engagé dans un exercice d'endurance.",
+      "action": "Assurer un apport quotidien adéquat en glucides avant, pendant et après l'exercice pour maintenir les réserves de glycogène et optimiser la performance d'endurance.",
+      "formula_or_value": "Apport quotidien adéquat en glucides"
+    },
+    {
+      "rule_name": "Épargne du glycogène musculaire par l'ingestion de glucides",
+      "category": "Performance Nutrition",
+      "condition": "Si un athlète ingère des glucides pendant un exercice d'endurance prolongé.",
+      "action": "Attendre une réduction de l'utilisation nette du glycogène musculaire squelettique.",
+      "formula_or_value": "~24 mmol·kg-1 de poids sec de glycogène musculaire épargné pendant ~100 min d'exercice"
+    },
+    {
+      "rule_name": "Régimes faibles en glucides et cétogènes pour la performance aérobie",
+      "category": "Stratégie Diététique",
+      "condition": "Si un athlète entraîné adopte un régime faible en glucides (≤130 g·jour-1 ou ≤25% de l'énergie totale) ou cétogène (<50 g·jour-1 ou <10% de l'énergie totale).",
+      "action": "L'athlète peut atteindre une adaptation métabolique avec des résultats de performance aérobie maintenus ou améliorés.",
+      "formula_or_value": "Faible en glucides (≤130 g·jour-1 ou ≤25% de l'énergie totale) ou cétogène (<50 g·jour-1 ou <10% de l'énergie totale)"
+    },
+    {
+      "rule_name": "Stratégies nutritionnelles pour la performance et la santé cardiovasculaire (alternative au dopage)",
+      "category": "Performance et Santé / Anti-Dopage",
+      "condition": "Si un athlète cherche à améliorer la performance d'endurance et la santé cardiovasculaire de manière sûre, en évitant les substances améliorant la performance (PESs).",
+      "action": "Mettre en œuvre des stratégies nutritionnelles basées sur des preuves.",
+      "formula_or_value": "La charge en glucides, l'apport optimisé en protéines, la supplémentation en oméga-3 et l'hydratation ont amélioré l'endurance de 8-12%, réduit la fréquence cardiaque au repos de ~3 bpm et abaissé le cholestérol LDL."
+    },
+    {
+      "rule_name": "Minimisation des symptômes gastro-intestinaux",
+      "category": "Performance Nutrition / Santé",
+      "condition": "Si un athlète éprouve des symptômes gastro-intestinaux (GI) pendant l'exercice d'endurance.",
+      "action": "Mettre en œuvre des stratégies nutritionnelles pour atténuer les troubles gastro-intestinaux.",
+      "formula_or_value": "Solutions nutritionnelles spécifiques pour atténuer les symptômes GI (détails non spécifiés dans l'abstract)"
+    },
+    {
+      "rule_name": "Gestion personnalisée des glucides via l'IA et le CGM",
+      "category": "Stratégie Nutritionnelle Avancée / Technologie",
+      "condition": "Si un athlète d'endurance recherche une gestion précise des glucides pendant des événements prolongés.",
+      "action": "Utiliser la surveillance continue du glucose (CGM) combinée à des algorithmes d'IA.",
+      "formula_or_value": "Non applicable (méthode/outil)"
+    }
+  ]
+}

@@ -1,0 +1,241 @@
+{
+  "description": "Cache local des aliments fréquents — Fallback quand les APIs sont indisponibles",
+  "sources": {
+    "usda": "USDA FoodData Central — api.nal.usda.gov",
+    "off": "Open Food Facts — world.openfoodfacts.org/api",
+    "fcen": "Fichier Canadien sur les Éléments Nutritifs (Santé Canada)"
+  },
+  "version": "1.0",
+  "last_updated": "2026-04-03",
+  "cache_policy": {
+    "refresh_frequency_days": 30,
+    "note": "Ce cache contient les aliments les plus fréquents pour un athlète hybride québécois. Compléter avec les APIs en temps réel pour les aliments non listés.",
+    "priority": "API USDA > API Open Food Facts > Cache FCÉN > Ce fichier"
+  },
+  "units": "pour 100g sauf indication contraire",
+  "categories": {
+    "proteins": {
+      "chicken_breast_cooked": {
+        "name_fr": "Poitrine de poulet cuite",
+        "source": "USDA",
+        "per_100g": { "kcal": 165, "protein_g": 31.0, "carbs_g": 0.0, "fat_g": 3.6, "fiber_g": 0.0 },
+        "common_portions": { "120g": { "kcal": 198, "protein_g": 37.2 }, "150g": { "kcal": 248, "protein_g": 46.5 } }
+      },
+      "ground_beef_lean_cooked": {
+        "name_fr": "Boeuf haché maigre cuit (90/10)",
+        "source": "USDA",
+        "per_100g": { "kcal": 215, "protein_g": 26.1, "carbs_g": 0.0, "fat_g": 11.8, "fiber_g": 0.0 }
+      },
+      "salmon_fillet_cooked": {
+        "name_fr": "Filet de saumon cuit",
+        "source": "USDA",
+        "per_100g": { "kcal": 208, "protein_g": 20.4, "carbs_g": 0.0, "fat_g": 13.4, "fiber_g": 0.0 },
+        "omega3_g_per_100g": 2.6
+      },
+      "tuna_canned_water": {
+        "name_fr": "Thon en conserve dans l'eau",
+        "source": "USDA",
+        "per_100g": { "kcal": 86, "protein_g": 19.4, "carbs_g": 0.0, "fat_g": 0.6, "fiber_g": 0.0 }
+      },
+      "egg_large": {
+        "name_fr": "Oeuf entier large",
+        "source": "USDA",
+        "per_100g": { "kcal": 155, "protein_g": 12.6, "carbs_g": 1.1, "fat_g": 10.6, "fiber_g": 0.0 },
+        "per_egg_50g": { "kcal": 77, "protein_g": 6.3, "carbs_g": 0.6, "fat_g": 5.3 }
+      },
+      "cottage_cheese_2pct": {
+        "name_fr": "Fromage cottage 2%",
+        "source": "FCEN",
+        "per_100g": { "kcal": 86, "protein_g": 11.1, "carbs_g": 3.4, "fat_g": 2.5, "fiber_g": 0.0 },
+        "casein_note": "Riche en caséine — idéal avant le sommeil pour MPS nocturne"
+      },
+      "greek_yogurt_plain_0pct": {
+        "name_fr": "Yogourt grec nature 0%",
+        "source": "FCEN",
+        "per_100g": { "kcal": 59, "protein_g": 10.2, "carbs_g": 3.6, "fat_g": 0.4, "fiber_g": 0.0 },
+        "per_200g_serving": { "kcal": 118, "protein_g": 20.4 }
+      },
+      "whey_protein_powder": {
+        "name_fr": "Protéine whey en poudre (générique)",
+        "source": "generic",
+        "per_30g_scoop": { "kcal": 120, "protein_g": 24.0, "carbs_g": 3.0, "fat_g": 1.5, "fiber_g": 0.0 },
+        "note": "Valeurs approximatives — vérifier l'étiquette du produit spécifique"
+      }
+    },
+    "carbohydrates": {
+      "white_rice_cooked": {
+        "name_fr": "Riz blanc cuit",
+        "source": "USDA",
+        "per_100g": { "kcal": 130, "protein_g": 2.7, "carbs_g": 28.2, "fat_g": 0.3, "fiber_g": 0.4 },
+        "glycemic_index": 73,
+        "common_portions": { "150g": { "kcal": 195, "carbs_g": 42.3 }, "200g": { "kcal": 260, "carbs_g": 56.4 } }
+      },
+      "white_pasta_cooked": {
+        "name_fr": "Pâtes blanches cuites",
+        "source": "USDA",
+        "per_100g": { "kcal": 158, "protein_g": 5.8, "carbs_g": 30.9, "fat_g": 0.9, "fiber_g": 1.8 },
+        "glycemic_index": 49
+      },
+      "oats_rolled_dry": {
+        "name_fr": "Flocons d'avoine secs",
+        "source": "USDA",
+        "per_100g": { "kcal": 389, "protein_g": 16.9, "carbs_g": 66.3, "fat_g": 6.9, "fiber_g": 10.6 },
+        "per_80g_serving_cooked": { "kcal": 147, "carbs_g": 25.5, "protein_g": 5.1 },
+        "glycemic_index": 55
+      },
+      "banana_medium": {
+        "name_fr": "Banane moyenne",
+        "source": "USDA",
+        "per_100g": { "kcal": 89, "protein_g": 1.1, "carbs_g": 22.8, "fat_g": 0.3, "fiber_g": 2.6 },
+        "per_medium_120g": { "kcal": 107, "carbs_g": 27.4 },
+        "glycemic_index": 51,
+        "note": "Excellente source de potassium et glucides pré/intra-effort"
+      },
+      "white_bread_slice": {
+        "name_fr": "Pain blanc (tranche 30g)",
+        "source": "FCEN",
+        "per_100g": { "kcal": 265, "protein_g": 9.4, "carbs_g": 49.5, "fat_g": 3.2, "fiber_g": 2.1 },
+        "per_slice_30g": { "kcal": 79, "carbs_g": 14.9 },
+        "glycemic_index": 75
+      },
+      "bagel_plain": {
+        "name_fr": "Bagel nature (105g)",
+        "source": "FCEN",
+        "per_100g": { "kcal": 257, "protein_g": 9.8, "carbs_g": 50.1, "fat_g": 1.6, "fiber_g": 2.1 },
+        "per_bagel_105g": { "kcal": 270, "carbs_g": 52.6 },
+        "glycemic_index": 72,
+        "note": "Idéal matin de compétition — faible résidu intestinal"
+      },
+      "sweet_potato_cooked": {
+        "name_fr": "Patate douce cuite",
+        "source": "USDA",
+        "per_100g": { "kcal": 86, "protein_g": 1.6, "carbs_g": 20.1, "fat_g": 0.1, "fiber_g": 3.0 },
+        "glycemic_index": 61,
+        "note": "Riche en bêta-carotène et potassium — bon choix post-entraînement"
+      },
+      "honey": {
+        "name_fr": "Miel",
+        "source": "USDA",
+        "per_100g": { "kcal": 304, "protein_g": 0.3, "carbs_g": 82.4, "fat_g": 0.0, "fiber_g": 0.2 },
+        "per_tbsp_21g": { "kcal": 64, "carbs_g": 17.3 },
+        "glycemic_index": 61,
+        "note": "Mélange glucose/fructose naturel — bon pour intra-effort"
+      },
+      "sports_gel_generic": {
+        "name_fr": "Gel énergétique (générique 40g)",
+        "source": "generic",
+        "per_gel_40g": { "kcal": 100, "protein_g": 0.0, "carbs_g": 25.0, "fat_g": 0.0, "fiber_g": 0.0 },
+        "note": "Valeurs approximatives. Vérifier l'étiquette. Typiquement 20-25g glucides/gel."
+      }
+    },
+    "fats": {
+      "peanut_butter_natural": {
+        "name_fr": "Beurre d'arachide naturel",
+        "source": "USDA",
+        "per_100g": { "kcal": 598, "protein_g": 22.2, "carbs_g": 13.8, "fat_g": 51.4, "fiber_g": 6.0 },
+        "per_tbsp_16g": { "kcal": 96, "protein_g": 3.6, "fat_g": 8.2 }
+      },
+      "almond_butter": {
+        "name_fr": "Beurre d'amande",
+        "source": "USDA",
+        "per_100g": { "kcal": 614, "protein_g": 21.0, "carbs_g": 18.8, "fat_g": 55.5, "fiber_g": 10.3 },
+        "per_tbsp_16g": { "kcal": 98, "protein_g": 3.4, "fat_g": 8.9 }
+      },
+      "olive_oil": {
+        "name_fr": "Huile d'olive extra-vierge",
+        "source": "USDA",
+        "per_100g": { "kcal": 884, "protein_g": 0.0, "carbs_g": 0.0, "fat_g": 100.0, "fiber_g": 0.0 },
+        "per_tbsp_13g": { "kcal": 115, "fat_g": 13.0 }
+      },
+      "avocado": {
+        "name_fr": "Avocat",
+        "source": "USDA",
+        "per_100g": { "kcal": 160, "protein_g": 2.0, "carbs_g": 8.5, "fat_g": 14.7, "fiber_g": 6.7 },
+        "per_half_75g": { "kcal": 120, "fat_g": 11.0 }
+      }
+    },
+    "dairy": {
+      "milk_2pct": {
+        "name_fr": "Lait 2% (250ml)",
+        "source": "FCEN",
+        "per_100ml": { "kcal": 52, "protein_g": 3.4, "carbs_g": 5.0, "fat_g": 2.0, "fiber_g": 0.0 },
+        "per_250ml": { "kcal": 130, "protein_g": 8.5, "carbs_g": 12.5 }
+      }
+    },
+    "vegetables": {
+      "broccoli_cooked": {
+        "name_fr": "Brocoli cuit",
+        "source": "USDA",
+        "per_100g": { "kcal": 35, "protein_g": 2.4, "carbs_g": 7.2, "fat_g": 0.4, "fiber_g": 3.3 }
+      },
+      "spinach_raw": {
+        "name_fr": "Épinards crus",
+        "source": "USDA",
+        "per_100g": { "kcal": 23, "protein_g": 2.9, "carbs_g": 3.6, "fat_g": 0.4, "fiber_g": 2.2 }
+      }
+    },
+    "beverages": {
+      "coffee_black": {
+        "name_fr": "Café noir (250ml)",
+        "source": "USDA",
+        "per_250ml": { "kcal": 5, "protein_g": 0.3, "carbs_g": 0.0, "fat_g": 0.1, "fiber_g": 0.0 },
+        "caffeine_mg_per_250ml": 95
+      },
+      "isotonic_drink_generic": {
+        "name_fr": "Boisson isotonique (500ml)",
+        "source": "generic",
+        "per_500ml": { "kcal": 135, "carbs_g": 34.0, "sodium_mg": 500 },
+        "note": "Valeurs approximatives. Typiquement 6-8% glucides."
+      },
+      "orange_juice": {
+        "name_fr": "Jus d'orange 100% pur (250ml)",
+        "source": "FCEN",
+        "per_250ml": { "kcal": 112, "protein_g": 1.7, "carbs_g": 26.0, "fat_g": 0.5 },
+        "glycemic_index": 50
+      }
+    }
+  },
+  "common_meals": {
+    "pre_lifting_breakfast": {
+      "name": "Overnight oats pré-lifting",
+      "items": [
+        { "food": "oats_rolled_dry", "qty_g": 80 },
+        { "food": "milk_2pct", "qty_ml": 200 },
+        { "food": "banana_medium", "qty_g": 120 },
+        { "food": "almond_butter", "qty_g": 16 }
+      ],
+      "totals": { "kcal": 520, "protein_g": 18, "carbs_g": 78, "fat_g": 16 }
+    },
+    "post_workout_smoothie": {
+      "name": "Smoothie récupération",
+      "items": [
+        { "food": "whey_protein_powder", "qty_g": 30 },
+        { "food": "milk_2pct", "qty_ml": 300 },
+        { "food": "banana_medium", "qty_g": 120 },
+        { "food": "honey", "qty_g": 21 }
+      ],
+      "totals": { "kcal": 450, "protein_g": 35, "carbs_g": 68, "fat_g": 5 }
+    },
+    "pre_race_morning": {
+      "name": "Petit-déjeuner matin de course",
+      "items": [
+        { "food": "bagel_plain", "qty_g": 105 },
+        { "food": "honey", "qty_g": 21 },
+        { "food": "banana_medium", "qty_g": 120 },
+        { "food": "coffee_black", "qty_ml": 250 }
+      ],
+      "totals": { "kcal": 441, "protein_g": 10, "carbs_g": 96, "fat_g": 2 },
+      "timing": "2-3h avant le départ"
+    },
+    "bedtime_casein": {
+      "name": "Collation pré-sommeil (caséine)",
+      "items": [
+        { "food": "cottage_cheese_2pct", "qty_g": 250 },
+        { "food": "almond_butter", "qty_g": 16 },
+        { "food": "honey", "qty_g": 10 }
+      ],
+      "totals": { "kcal": 320, "protein_g": 32, "carbs_g": 22, "fat_g": 12 },
+      "note": "Caséine à digestion lente — optimise la MPS nocturne"
+    }
+  }
+}

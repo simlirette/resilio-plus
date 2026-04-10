@@ -1,0 +1,229 @@
+{
+  "description": "Macros cibles par type de journée d'entraînement — Nutrition Coach",
+  "source": "resilio-nutrition-coach-section.md Section 6B.3 + ISSN Position Stands",
+  "units": {
+    "carbs_g_per_kg": "grammes de glucides par kg de poids corporel",
+    "protein_g_per_kg": "grammes de protéines par kg de poids corporel",
+    "fat_g_per_kg": "grammes de lipides par kg de poids corporel"
+  },
+  "critical_rules": [
+    "Glucides < 3g/kg un jour d'entraînement intense = limite absolue — ne jamais passer en dessous",
+    "Déficit calorique max 500 kcal/jour en phase d'entraînement — jamais plus",
+    "Protéines réparties en 4-5 prises de 30-40g pour maximiser la MPS (synthèse protéique musculaire)",
+    "Fibres réduites à < 15g/jour la veille d'une compétition pour limiter les risques GI",
+    "Les macros en g/kg s'appliquent au poids corporel ACTUEL, pas au poids cible"
+  ],
+  "day_types": {
+    "rest": {
+      "label": "Jour de repos",
+      "description": "Aucune séance planifiée",
+      "carbs_g_per_kg": { "min": 3.0, "max": 4.0, "target": 3.5 },
+      "protein_g_per_kg": { "min": 1.6, "max": 2.0, "target": 1.8 },
+      "fat_g_per_kg": { "min": 1.0, "max": 1.2, "target": 1.1 },
+      "fiber_g": { "min": 25, "max": 35 },
+      "meal_focus": "Aliments entiers, haute densité micronutritionnelle. Privilégier légumes, fruits, légumineuses.",
+      "timing_priority": "aucun timing critique — repas réguliers sur la journée"
+    },
+    "lifting_only": {
+      "label": "Lifting seul",
+      "description": "Séance de musculation uniquement (aucune cardio)",
+      "carbs_g_per_kg": { "min": 4.0, "max": 5.0, "target": 4.5 },
+      "protein_g_per_kg": { "min": 1.8, "max": 2.2, "target": 2.0 },
+      "fat_g_per_kg": { "min": 0.8, "max": 1.0, "target": 0.9 },
+      "fiber_g": { "min": 25, "max": 35 },
+      "meal_focus": "Protéines en 4-5 prises de 30-40g. Glucides complexes autour de la séance.",
+      "timing_priority": "pré-séance (2-3h avant) et post-séance (30-60 min après)",
+      "pre_workout": {
+        "timing_hours_before": 2,
+        "carbs_g_per_kg": 1.0,
+        "protein_g": 25,
+        "fat_low": true,
+        "fiber_low": true,
+        "example": "Riz blanc 150g + poulet 100g"
+      },
+      "post_workout": {
+        "timing_minutes_after": 45,
+        "carbs_g_per_kg": 1.0,
+        "protein_g": 35,
+        "carbs_protein_ratio": "3:1",
+        "example": "Smoothie : whey 30g + banane + 300ml lait + 2 c.s. miel"
+      }
+    },
+    "easy_run": {
+      "label": "Course facile (< 60 min)",
+      "description": "Easy Run ou Recovery Run sous 60 minutes",
+      "carbs_g_per_kg": { "min": 4.0, "max": 5.0, "target": 4.5 },
+      "protein_g_per_kg": { "min": 1.6, "max": 2.0, "target": 1.8 },
+      "fat_g_per_kg": { "min": 0.8, "max": 1.0, "target": 0.9 },
+      "fiber_g": { "min": 25, "max": 35 },
+      "meal_focus": "Pas de nutrition intra-effort requise. Eau suffisante.",
+      "timing_priority": "faible — pas de fenêtre critique",
+      "intra_workout": {
+        "required": false,
+        "hydration_ml_per_hour": 400,
+        "carbs_g_per_hour": 0
+      }
+    },
+    "long_run": {
+      "label": "Course longue (> 90 min)",
+      "description": "Long Run ou Progression Run dépassant 90 minutes",
+      "carbs_g_per_kg": { "min": 6.0, "max": 8.0, "target": 7.0 },
+      "protein_g_per_kg": { "min": 1.6, "max": 2.0, "target": 1.8 },
+      "fat_g_per_kg": { "min": 0.8, "max": 1.0, "target": 0.9 },
+      "fiber_g": { "min": 20, "max": 30 },
+      "meal_focus": "Charge en glucides la veille. Petit-déjeuner riche en glucides à faible IG le matin.",
+      "timing_priority": "critique — intra-effort obligatoire",
+      "pre_workout": {
+        "timing_hours_before": 2.5,
+        "carbs_g_per_kg": 1.5,
+        "protein_g": 20,
+        "fat_low": true,
+        "fiber_low": true,
+        "example": "Bagel blanc + beurre d'amande léger + banane"
+      },
+      "intra_workout": {
+        "required": true,
+        "carbs_g_per_hour": { "60_90min": 30, "90_150min": 45, "over_150min": 60 },
+        "glucose_fructose_ratio": "2:1 pour > 60g/heure",
+        "hydration_ml_per_hour": 600,
+        "sodium_mg_per_liter": 700,
+        "example_90min": "1 gel (22g glucides) à 45min + eau",
+        "example_120min": "1 gel toutes les 30 min + boisson isotonique"
+      },
+      "post_workout": {
+        "timing_minutes_after": 30,
+        "carbs_g_per_kg": 1.2,
+        "protein_g": 30,
+        "example": "Smoothie récupération + repas complet dans les 2h"
+      }
+    },
+    "intensity_run": {
+      "label": "Course intense (intervalles/tempo)",
+      "description": "Séance de Tempo Run, Intervals (I-pace), ou Repetitions",
+      "carbs_g_per_kg": { "min": 5.0, "max": 7.0, "target": 6.0 },
+      "protein_g_per_kg": { "min": 1.6, "max": 2.0, "target": 1.8 },
+      "fat_g_per_kg": { "min": 0.8, "max": 1.0, "target": 0.9 },
+      "fiber_g": { "min": 20, "max": 30 },
+      "meal_focus": "Glucides 2-3h avant critique. Post-effort fenêtre de récupération prioritaire.",
+      "timing_priority": "très élevé — pré et post séance critiques",
+      "pre_workout": {
+        "timing_hours_before": 2.5,
+        "carbs_g_per_kg": 1.5,
+        "protein_g": 20,
+        "fat_low": true,
+        "fiber_low": true,
+        "example": "Pâtes blanches 200g + sauce légère + 1 banane"
+      },
+      "intra_workout": {
+        "required": false,
+        "note": "Séances < 60 min généralement — eau uniquement",
+        "carbs_g_per_hour": 0,
+        "hydration_ml_per_hour": 500
+      },
+      "post_workout": {
+        "timing_minutes_after": 30,
+        "carbs_g_per_kg": 1.0,
+        "protein_g": 35,
+        "example": "Riz + thon + légumes dans l'heure suivante"
+      }
+    },
+    "double_session": {
+      "label": "Double entraînement (lifting + course)",
+      "description": "Journée avec deux séances — lifting ET course",
+      "carbs_g_per_kg": { "min": 6.0, "max": 8.0, "target": 7.0 },
+      "protein_g_per_kg": { "min": 2.0, "max": 2.2, "target": 2.1 },
+      "fat_g_per_kg": { "min": 0.8, "max": 1.0, "target": 0.9 },
+      "fiber_g": { "min": 20, "max": 30 },
+      "meal_focus": "Repas entre les deux séances critique. Récupération express si < 4h entre les séances.",
+      "timing_priority": "maximum — 4 fenêtres nutritionnelles dans la journée",
+      "recovery_express": {
+        "condition": "Si < 4h entre les deux séances",
+        "carbs_g_per_kg_per_hour": 1.2,
+        "protein_g": 30,
+        "note": "Commencer à manger immédiatement après la première séance"
+      },
+      "caloric_adjustment": "+300-500 kcal vs journée lifting seul"
+    },
+    "pre_competition": {
+      "label": "Pré-compétition (J-2 à J-1)",
+      "description": "Carb loading 2 jours avant l'événement",
+      "carbs_g_per_kg": { "min": 8.0, "max": 10.0, "target": 9.0 },
+      "protein_g_per_kg": { "min": 1.4, "max": 1.6, "target": 1.5 },
+      "fat_g_per_kg": { "min": 0.5, "max": 0.7, "target": 0.6 },
+      "fiber_g": { "min": 5, "max": 15, "note": "Réduire au maximum" },
+      "meal_focus": "Sources glucides à faible résidu : riz blanc, pâtes blanches, pain blanc, bananes, miel, jus de fruits.",
+      "timing_priority": "charge glucidique continue sur la journée",
+      "forbidden_foods": [
+        "aliments riches en fibres (légumineuses, crucifères)",
+        "graisses en excès",
+        "aliments nouveaux jamais testés",
+        "alcool",
+        "caféine excessive (si sensible)"
+      ]
+    },
+    "race_day_morning": {
+      "label": "Matin de compétition",
+      "description": "Repas 2-4h avant le départ",
+      "carbs_g_per_kg": { "min": 1.0, "max": 4.0, "target": 2.5,
+        "note": "Ajuster selon la durée d'attente avant le départ" },
+      "protein_g_per_kg": { "min": 0.3, "max": 0.5, "target": 0.4 },
+      "fat_g_per_kg": { "min": 0.1, "max": 0.3, "target": 0.2 },
+      "fiber_g": { "min": 0, "max": 5 },
+      "meal_focus": "Aliments testés à l'entraînement UNIQUEMENT. Zéro expérimentation le jour J.",
+      "example_2h_before_start": "Bagel blanc + confiture + banane + café si habituel",
+      "example_4h_before_start": "Flocons d'avoine + lait + miel + 1 oeuf"
+    }
+  },
+  "hydration_targets": {
+    "baseline_ml_per_kg_per_day": { "min": 35, "max": 40 },
+    "pre_exercise_ml_per_kg": { "timing_hours_before": 2, "amount": 6 },
+    "during_exercise_ml_per_hour": { "min": 400, "max": 800,
+      "note": "Ajuster selon température et sudation" },
+    "post_exercise_ml_per_kg_lost": 1.5,
+    "sodium_during_exercise_mg_per_liter": { "min": 500, "max": 1000,
+      "required_above_minutes": 60 },
+    "urine_color_target": "jaune paille clair (indicateur pratique)"
+  },
+  "supplements_level_a_evidence": {
+    "creatine_monohydrate": {
+      "dose_g_per_day": 5,
+      "timing": "n'importe quand — pas de timing critique",
+      "loading_phase": "optionnel — 20g/jour pendant 5 jours si résultats rapides souhaités",
+      "benefits": ["force", "puissance", "récupération", "masse maigre"],
+      "note": "Prise de poids hydrique initiale 1-2kg — normal"
+    },
+    "caffeine": {
+      "dose_mg_per_kg": { "min": 3, "max": 6 },
+      "timing_min_before_exercise": 45,
+      "benefits": ["endurance", "puissance", "réduction RPE perçu"],
+      "contraindications": "Éviter après 14h si sensible au sommeil",
+      "note": "Tolérance individuelle variable — tester à l'entraînement d'abord"
+    },
+    "beta_alanine": {
+      "dose_g_per_day": { "min": 3.2, "max": 6.4 },
+      "timing": "doses fractionnées pour limiter la paresthésie",
+      "onset_weeks": 4,
+      "benefits": ["tamponne l'acidité musculaire", "efforts 1-10 min"],
+      "side_effects": "Picotements (paresthésie) = normal et inoffensif"
+    },
+    "dietary_nitrate_beetroot": {
+      "dose_mmol": { "min": 6, "max": 8 },
+      "equivalent_juice_ml": 500,
+      "timing_hours_before": 2.5,
+      "benefits": ["économie de course +1-3%", "VO2 submaximal réduit"],
+      "note": "Efficacité réduite chez les athlètes d'élite — surtout utile chez récréatif/intermédiaire"
+    },
+    "vitamin_d": {
+      "dose_IU_per_day": { "min": 1000, "max": 2000 },
+      "timing": "avec un repas contenant des graisses",
+      "benefits": ["santé osseuse", "immunitaire", "peut améliorer la force si déficient"],
+      "note": "Doser la 25(OH)D avant de supplémenter — seulement si < 30 ng/mL"
+    },
+    "omega3_epa_dha": {
+      "dose_g_per_day": { "min": 2, "max": 4 },
+      "timing": "avec un repas",
+      "benefits": ["anti-inflammatoire", "récupération post-effort concurrent"],
+      "note": "Éviter > 5g/jour (risque de saignement)"
+    }
+  }
+}

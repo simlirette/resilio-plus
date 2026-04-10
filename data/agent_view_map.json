@@ -1,0 +1,193 @@
+{
+  "description": "Vues partielles d'AthleteState par agent — Token Economy",
+  "source": "resilio-master-v2.md Section 2.3",
+  "principle": "get_agent_view(athlete_state, agent_type) est la seule porte d'entrée. Les agents ne reçoivent jamais l'AthleteState brut.",
+  "implementation_note": "Chaque clé correspond à un chemin dans l'AthleteState. Utiliser extract_fields(state, view) pour filtrer.",
+  "views": {
+    "head_coach": {
+      "access": "FULL",
+      "description": "Accès complet — seul agent avec autorité d'écriture",
+      "fields": ["*"]
+    },
+    "running_coach": {
+      "access": "PARTIAL",
+      "description": "Profil course + fatigue pertinente + phase",
+      "fields": [
+        "profile.first_name",
+        "profile.age",
+        "profile.sex",
+        "profile.weight_kg",
+        "profile.height_cm",
+        "profile.goals",
+        "profile.injuries_history",
+        "profile.equipment",
+        "profile.available_days",
+        "running_profile",
+        "fatigue.acwr_by_sport.running",
+        "fatigue.hrv_rmssd_today",
+        "fatigue.hrv_rmssd_baseline",
+        "fatigue.recovery_score_today",
+        "fatigue.sleep_hours_last_night",
+        "current_phase"
+      ],
+      "excluded": [
+        "lifting_profile",
+        "swimming_profile",
+        "biking_profile",
+        "nutrition_profile",
+        "fatigue.fatigue_by_muscle",
+        "fatigue.cns_load_7day_avg",
+        "compliance"
+      ]
+    },
+    "lifting_coach": {
+      "access": "PARTIAL",
+      "description": "Profil lifting + fatigue musculaire + CNS + phase",
+      "fields": [
+        "profile.first_name",
+        "profile.age",
+        "profile.sex",
+        "profile.weight_kg",
+        "profile.height_cm",
+        "profile.goals",
+        "profile.injuries_history",
+        "profile.equipment",
+        "profile.available_days",
+        "lifting_profile",
+        "fatigue.acwr_by_sport.lifting",
+        "fatigue.fatigue_by_muscle",
+        "fatigue.cns_load_7day_avg",
+        "fatigue.recovery_score_today",
+        "fatigue.hrv_rmssd_today",
+        "current_phase"
+      ],
+      "excluded": [
+        "running_profile",
+        "swimming_profile",
+        "biking_profile",
+        "nutrition_profile",
+        "fatigue.acwr_by_sport.running",
+        "fatigue.acwr_by_sport.biking",
+        "fatigue.acwr_by_sport.swimming"
+      ]
+    },
+    "swimming_coach": {
+      "access": "PARTIAL",
+      "description": "Profil natation + récupération de base + phase",
+      "fields": [
+        "profile.first_name",
+        "profile.age",
+        "profile.sex",
+        "profile.weight_kg",
+        "profile.goals",
+        "profile.injuries_history",
+        "profile.equipment",
+        "swimming_profile",
+        "fatigue.hrv_rmssd_today",
+        "fatigue.recovery_score_today",
+        "current_phase"
+      ],
+      "excluded": [
+        "running_profile",
+        "lifting_profile",
+        "biking_profile",
+        "nutrition_profile",
+        "fatigue.fatigue_by_muscle",
+        "fatigue.cns_load_7day_avg",
+        "fatigue.acwr_by_sport"
+      ]
+    },
+    "biking_coach": {
+      "access": "PARTIAL",
+      "description": "Profil vélo + ACWR vélo + récupération + phase",
+      "fields": [
+        "profile.first_name",
+        "profile.age",
+        "profile.sex",
+        "profile.weight_kg",
+        "profile.goals",
+        "profile.injuries_history",
+        "profile.equipment",
+        "biking_profile",
+        "fatigue.acwr_by_sport.biking",
+        "fatigue.hrv_rmssd_today",
+        "fatigue.recovery_score_today",
+        "current_phase"
+      ],
+      "excluded": [
+        "running_profile",
+        "lifting_profile",
+        "swimming_profile",
+        "nutrition_profile",
+        "fatigue.fatigue_by_muscle",
+        "fatigue.cns_load_7day_avg"
+      ]
+    },
+    "nutrition_coach": {
+      "access": "PARTIAL",
+      "description": "Profil nutrition + volumes hebdomadaires tous sports + phase",
+      "fields": [
+        "profile.first_name",
+        "profile.age",
+        "profile.sex",
+        "profile.weight_kg",
+        "profile.height_cm",
+        "profile.goals",
+        "profile.constraints",
+        "nutrition_profile",
+        "weekly_volumes.running_km",
+        "weekly_volumes.lifting_sessions",
+        "weekly_volumes.swimming_km",
+        "weekly_volumes.biking_km",
+        "weekly_volumes.total_training_hours",
+        "current_phase"
+      ],
+      "excluded": [
+        "running_profile.training_paces",
+        "lifting_profile.volume_landmarks",
+        "lifting_profile.current_volume_per_muscle",
+        "swimming_profile",
+        "biking_profile.ftp_watts",
+        "fatigue.fatigue_by_muscle",
+        "fatigue.cns_load_7day_avg"
+      ]
+    },
+    "recovery_coach": {
+      "access": "PARTIAL",
+      "description": "Fatigue complète + volumes hebdomadaires + compliance + phase",
+      "fields": [
+        "profile.first_name",
+        "profile.age",
+        "profile.sex",
+        "profile.weight_kg",
+        "profile.resting_hr",
+        "profile.max_hr_measured",
+        "profile.injuries_history",
+        "fatigue",
+        "weekly_volumes",
+        "compliance",
+        "current_phase"
+      ],
+      "excluded": [
+        "running_profile.training_paces",
+        "lifting_profile.volume_landmarks",
+        "lifting_profile.current_volume_per_muscle",
+        "swimming_profile",
+        "biking_profile",
+        "nutrition_profile",
+        "profile.goals",
+        "profile.equipment"
+      ]
+    }
+  },
+  "weekly_volumes_computed": {
+    "description": "Champs calculés automatiquement et exposés aux agents concernés",
+    "fields": {
+      "running_km": "Volume course hebdomadaire en km",
+      "lifting_sessions": "Nombre de séances lifting cette semaine",
+      "swimming_km": "Volume natation hebdomadaire en km",
+      "biking_km": "Volume vélo hebdomadaire en km",
+      "total_training_hours": "Heures totales d'entraînement cette semaine (tous sports)"
+    }
+  }
+}

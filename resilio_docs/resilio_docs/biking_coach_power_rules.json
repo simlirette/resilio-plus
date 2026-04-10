@@ -1,0 +1,82 @@
+{
+  "search_query": "Agis comme un physiologiste de l'exercice. Lis ces résumés d'études scientifiques. Extrais les consensus clairs, les protocoles mathématiques et les règles applicables. TÂCHES IMPORTANTES : 1. Assigne ces règles à l'agent : Biking Coach 2. Liste les titres de tous les articles que tu as effectivement utilisés pour formuler tes règles dans 'source_articles_used'.",
+  "target_agent": "Biking Coach",
+  "source_articles_used": [
+    "One Size Does Not Fit All: A Meta-Analysis of 115 Trials Comparing High-Intensity Interval and Moderate-to-Vigorous-Intensity Continuous Training Across Diverse Participants, Protocols, and Outcomes.",
+    "Effects of Bike-Fitting on Lower Back Pain in Cyclists: A Systematic Review.",
+    "Effect of caffeine ingestion on cycling performance: a systematic review and meta-analysis.",
+    "Effects of Acute Caffeine Ingestion on Repeated Sprint Ability: A Systematic Review and Meta-Analysis."
+  ],
+  "extracted_rules": [
+    {
+      "rule_name": "Supériorité du HIIT pour la VO2max et la puissance anaérobie",
+      "category": "Entraînement",
+      "condition": "Si l'objectif est d'améliorer la consommation maximale d'oxygène (VO2max) ou la puissance anaérobie moyenne",
+      "action": "Alors l'entraînement par intervalles de haute intensité (HIIT) est supérieur à l'entraînement continu d'intensité modérée à vigoureuse (MVICT).",
+      "formula_or_value": "VO2max relative (g=0.39), VO2max absolue (g=0.29), puissance aérobie maximale/vitesse (g=0.31), puissance anaérobie moyenne (g=0.47)"
+    },
+    {
+      "rule_name": "Efficacité du HIIT en cyclisme pour la VO2max",
+      "category": "Entraînement",
+      "condition": "Si le mode d'entraînement est le cyclisme et que l'objectif est d'améliorer la consommation maximale d'oxygène (VO2max)",
+      "action": "Alors l'entraînement par intervalles de haute intensité (HIIT) est efficace.",
+      "formula_or_value": "g=0.29 (amélioration de la VO2max)"
+    },
+    {
+      "rule_name": "Comparabilité HIIT/MVICT pour certains seuils et économie",
+      "category": "Entraînement",
+      "condition": "Si l'objectif est d'améliorer les seuils d'intensité, l'économie d'exercice ou la performance physique générale",
+      "action": "Alors l'entraînement par intervalles de haute intensité (HIIT) et l'entraînement continu d'intensité modérée à vigoureuse (MVICT) montrent des résultats comparables.",
+      "formula_or_value": "Pas de différence significative (g entre -0.06 et 0.54)"
+    },
+    {
+      "rule_name": "Réduction de la douleur lombaire par l'ajustement du vélo",
+      "category": "Prévention des blessures / Ergonomie",
+      "condition": "Si un cycliste souffre de douleurs lombaires (LBP) ou d'inconfort",
+      "action": "Alors un ajustement personnalisé et dynamique du vélo, adapté aux exigences de la charge de travail, doit être effectué.",
+      "formula_or_value": "Réductions significatives de la LBP ou de l'inconfort"
+    },
+    {
+      "rule_name": "Amélioration de la performance cycliste par la caféine",
+      "category": "Nutrition / Performance",
+      "condition": "Si un cycliste vise à améliorer la performance cycliste (réduire le temps d'achèvement, augmenter la puissance moyenne)",
+      "action": "Alors l'ingestion aiguë de caféine est efficace.",
+      "formula_or_value": "Réduction du temps d'achèvement (SMD=-0.36), augmentation de la puissance moyenne (SMD=0.29)"
+    },
+    {
+      "rule_name": "Dosage de caféine pour la performance cycliste générale",
+      "category": "Nutrition / Performance",
+      "condition": "Si un cycliste ingère de la caféine pour améliorer la performance cycliste générale (réduction du temps d'achèvement)",
+      "action": "Alors une faible dose de caféine est recommandée.",
+      "formula_or_value": "≤3 mg/kg de poids corporel (plus efficace que 4-6 mg/kg)"
+    },
+    {
+      "rule_name": "Moment d'ingestion de caféine pour la performance cycliste générale",
+      "category": "Nutrition / Performance",
+      "condition": "Si un cycliste ingère de la caféine pour améliorer la performance cycliste",
+      "action": "Alors elle doit être ingérée environ une heure avant l'exercice.",
+      "formula_or_value": "Environ 1 heure avant l'exercice"
+    },
+    {
+      "rule_name": "Amélioration de la puissance de pointe en sprint répété par la caféine",
+      "category": "Nutrition / Performance",
+      "condition": "Si un cycliste vise à améliorer la puissance de pointe en sprint répété (RSA PPO)",
+      "action": "Alors l'ingestion aiguë de caféine est efficace.",
+      "formula_or_value": "Augmentation significative de la RSA PPO (WMD, 5.28)"
+    },
+    {
+      "rule_name": "Dosage de caféine pour la puissance de pointe en sprint répété",
+      "category": "Nutrition / Performance",
+      "condition": "Si un cycliste ingère de la caféine pour améliorer la puissance de pointe en sprint répété (RSA PPO)",
+      "action": "Alors une dose plus élevée de caféine est recommandée pour de meilleurs bénéfices ergogéniques.",
+      "formula_or_value": "≥6 mg/kg de poids corporel (WMD, 6.67)"
+    },
+    {
+      "rule_name": "Efficacité accrue de la caféine pour le RSA en cyclisme",
+      "category": "Nutrition / Performance",
+      "condition": "Si l'objectif est d'améliorer la capacité de sprint répété (RSA) avec l'ingestion de caféine",
+      "action": "Alors l'amélioration est plus prononcée dans les protocoles de RSA basés sur le cyclisme par rapport à la course à pied.",
+      "formula_or_value": "WMD, 8.77 (cyclisme) vs WMD, 4.56 (course)"
+    }
+  ]
+}
