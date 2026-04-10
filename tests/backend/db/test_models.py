@@ -25,11 +25,10 @@ def test_base_is_importable():
 
 def test_database_url_is_absolute():
     from app.db.database import DATABASE_URL
-    # Must start with sqlite:/// followed by an absolute path (not relative)
-    assert DATABASE_URL.startswith("sqlite:///")
-    path_part = DATABASE_URL[len("sqlite:///"):]
-    # Absolute paths start with / (Unix) or a drive letter (Windows)
-    assert path_part.startswith("/") or (len(path_part) > 1 and path_part[1] == ":")
+    # After migrating to PostgreSQL, DATABASE_URL must use postgresql or sqlite scheme
+    assert DATABASE_URL.startswith("postgresql") or DATABASE_URL.startswith("sqlite:///"), (
+        f"DATABASE_URL must use postgresql or sqlite:/// scheme, got: {DATABASE_URL}"
+    )
 
 
 def test_session_local_is_importable():

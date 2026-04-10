@@ -1,5 +1,20 @@
-# docker-compose.yml
 services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: resilio
+      POSTGRES_PASSWORD: resilio
+      POSTGRES_DB: resilio_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U resilio -d resilio_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+
   backend:
     build:
       context: .
@@ -7,14 +22,19 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      # Persist SQLite DB across container restarts
-      - ./data:/app/data
-      # Live-reload: mount source so uvicorn --reload picks up changes
       - ./backend:/app/backend
       - ./resilio:/app/resilio
       - ./.bmad-core:/app/.bmad-core
     environment:
       PYTHONPATH: /app/backend
+      DATABASE_URL: postgresql+psycopg2://resilio:resilio@db:5432/resilio_db
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      STRAVA_CLIENT_ID: ${STRAVA_CLIENT_ID:-}
+      STRAVA_CLIENT_SECRET: ${STRAVA_CLIENT_SECRET:-}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-change-in-production}
+    depends_on:
+      db:
+        condition: service_healthy
 
   frontend:
     build:
@@ -23,7 +43,6 @@ services:
     ports:
       - "4000:3000"
     volumes:
-      # Live-reload: mount source (excludes node_modules via anonymous volume)
       - ./frontend:/app
       - /app/node_modules
       - /app/.next
@@ -31,3 +50,6 @@ services:
       WATCHPACK_POLLING: "true"
     depends_on:
       - backend
+
+volumes:
+  postgres_data:
