@@ -26,6 +26,9 @@ from ..schemas.connector_api import (
 
 router = APIRouter(prefix="/athletes", tags=["connectors"])
 
+# Standalone OAuth router (no athlete_id in path — Strava redirect URI must be fixed)
+oauth_router = APIRouter(prefix="/connectors", tags=["connectors-oauth"])
+
 DB = Annotated[Session, Depends(get_db)]
 
 
@@ -621,3 +624,74 @@ def delete_connector(athlete_id: str, provider: Literal["strava", "hevy"], db: D
         raise HTTPException(status_code=404)
     db.delete(cred)
     db.commit()
+
+
+# ── Strava standalone OAuth endpoints ────────────────────────────────────────
+# These are global (no athlete_id in path) so the Strava redirect_uri
+# can be a fixed URL like http://localhost:8000/connectors/strava/callback
+# The athlete_id is passed as the OAuth `state` parameter.
+
+
+@oauth_router.get("/strava/auth")
+def strava_auth(athlete_id: str, db: DB) -> dict:
+    """
+    GET /connectors/strava/auth?athlete_id=<id>
+
+    Returns the Strava OAuth authorization URL.
+    Redirect the user's browser to `auth_url`.
+    """
+    if db.get(AthleteModel, athlete_id) is None:
+        raise HTTPException(status_code=404, detail="Athlete not found")
+
+    cred = ConnectorCredential(
+        athlete_id=athlete_id,  # type: ignore[arg-type]
+        provider="strava",
+    )
+    client_id = os.getenv("STRAVA_CLIENT_ID", "")
+    if not client_id or client_id == "CHANGEME":
+        raise HTTPException(
+            status_code=503,
+            detail="Strava not configured — set STRAVA_CLIENT_ID in .env",
+        )
+
+    with StravaConnector(cred, client_id=client_id, client_secret="") as connector:
+        auth_url = connector.get_auth_url()
+
+    auth_url += f"&state={athlete_id}"
+    return {"auth_url": auth_url}
+
+
+@oauth_router.get("/strava/callback")
+def strava_callback_global(code: str, state: str, db: DB) -> dict:
+    """
+    GET /connectors/strava/callback?code=<code>&state=<athlete_id>
+
+    Exchanges the authorization code for tokens and stores them.
+    Strava redirects here after the athlete grants access.
+    """
+    athlete_id = state
+    if db.get(AthleteModel, athlete_id) is None:
+        raise HTTPException(status_code=404, detail="Athlete not found")
+
+    cred = ConnectorCredential(
+        athlete_id=athlete_id,  # type: ignore[arg-type]
+        provider="strava",
+    )
+    client_id = os.getenv("STRAVA_CLIENT_ID", "")
+    client_secret = os.getenv("STRAVA_CLIENT_SECRET", "")
+
+    try:
+        with StravaConnector(cred, client_id=client_id, client_secret=client_secret) as connector:
+            updated = connector.exchange_code(code)
+    except httpx.HTTPStatusError:
+        raise HTTPException(status_code=502, detail="Strava token exchange failed")
+
+    _upsert_credential(
+        athlete_id=athlete_id,
+        provider="strava",
+        access_token=updated.access_token,
+        refresh_token=updated.refresh_token,
+        expires_at=updated.expires_at,
+        db=db,
+    )
+    return {"connected": True, "athlete_id": athlete_id}
