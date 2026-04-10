@@ -13,25 +13,27 @@ Ce document définit les 5 phases restantes pour compléter la vision du bluepri
 
 ---
 
-## État actuel (v1.0.0)
+## État actuel (v1.0.0 + Phases 7-8)
 
-### Backend — Construit
-- Head Coach, Running Coach, Lifting Coach
-- Core : ACWR, fatigue, periodization, conflict detection, readiness
-- Routes : athletes, auth, onboarding, plans, reviews, connectors
-- Connecteurs : Strava OAuth (actif), Hevy (classe), FatSecret (classe), Terra (classe)
-- JWT auth, SQLite, Docker Compose
+### Backend — Construit (Phases 0–8)
+- Head Coach + 7 agents spécialistes (Running, Lifting, Swimming, Biking, Nutrition, Recovery)
+- Core : ACWR, fatigue, periodization, conflict detection, readiness, goal_analysis, biking/swimming/nutrition/recovery logic
+- Routes : athletes, auth, onboarding, plans, reviews, sessions, nutrition, recovery, connectors
+- Connecteurs : Strava OAuth (actif), Hevy (implémenté), Terra (implémenté), FatSecret (classe — hors scope)
+- JWT auth, SQLite, Docker Compose, 7 tables DB
+- Tests : 1243+ passing, 7 E2E scenarios
 
-### Frontend — Construit
-- Login, onboarding (3 étapes), dashboard basique, liste du plan, review hebdo
-- Dark/light theme, auth context, protected routes
+### Frontend — Construit (Phases 4–8)
+- Login, onboarding (3 étapes), dashboard, plan, review, session detail, session log, history
+- Dark/light theme, auth context, protected routes, Top Nav avec History
 
 ---
 
-## Phase 7 — Agents manquants
+## Phase 7 — Agents manquants ✅ COMPLÈTE
 
 **Scope :** Backend uniquement  
-**Priorité :** ★★★★★
+**Priorité :** ★★★★★  
+**Status :** Livré — commits `cea0565`→`6c45cf0` sur `main`
 
 Compléter les 4 agents manquants du blueprint. Sans eux, le plan est vide pour les athlètes cyclistes, nageurs, ou ceux avec des besoins nutritionnels et de récupération spécifiques.
 
@@ -52,11 +54,12 @@ Compléter les 4 agents manquants du blueprint. Sans eux, le plan est vide pour 
 
 ---
 
-## Phase 8 — Boucle quotidienne
+## Phase 8 — Boucle quotidienne ✅ COMPLÈTE
 
 **Scope :** Full stack (backend + frontend)  
 **Priorité :** ★★★★★  
-**Dépend de :** Phase 7 (sessions enrichies par les nouveaux agents)
+**Dépend de :** Phase 7 (sessions enrichies par les nouveaux agents)  
+**Status :** Livré — commits `28a328b`→`7fb144d` sur `main`
 
 La boucle quotidienne de l'athlète : voir les détails exacts de sa séance, logger ce qu'il a réellement fait. Ferme la boucle feedback qui rend le coaching adaptatif.
 
@@ -149,13 +152,13 @@ Features de puissance et polish final pour une expérience coaching premium.
 
 ## Récapitulatif
 
-| Phase | Scope | Contenu | Priorité |
-|-------|-------|---------|----------|
-| 7 | Backend | Biking + Swimming + Nutrition + Recovery agents | ★★★★★ |
-| 8 | Full stack | Session detail + logging + historique | ★★★★★ |
-| 9 | Full stack | Connecteurs Hevy/FatSecret/Terra + Settings UI | ★★★★☆ |
-| 10 | Frontend+ | Analytics charts (ACWR, CTL/ATL/TSB, progression) | ★★★★☆ |
-| 11 | Full stack | Profil, customisation, alertes, nutrition, notifications | ★★★☆☆ |
+| Phase | Scope | Contenu | Priorité | Status |
+|-------|-------|---------|----------|--------|
+| 7 | Backend | Biking + Swimming + Nutrition + Recovery agents | ★★★★★ | ✅ Complète |
+| 8 | Full stack | Session detail + logging + historique | ★★★★★ | ✅ Complète |
+| 9 | Full stack | Connecteurs Hevy/Terra/Strava + Settings UI | ★★★★☆ | ❌ À faire |
+| 10 | Frontend+ | Analytics charts (ACWR, CTL/ATL/TSB, progression) | ★★★★☆ | ❌ À faire |
+| 11 | Full stack | Profil, customisation, alertes, nutrition, notifications | ★★★☆☆ | ❌ À faire |
 
 ## Logique de dépendances
 
