@@ -136,11 +136,12 @@ function EnergyAvailabilityCard() {
 
 // ── Custom Tooltip ────────────────────────────────────────────────────────
 
-function ChartTooltip({ active, payload, label }: {
-  active?: boolean
-  payload?: { value: number; color: string; name: string }[]
-  label?: string
-}) {
+function ChartTooltip(props: Record<string, unknown>) {
+  const { active, payload, label } = props as {
+    active?: boolean
+    payload?: ReadonlyArray<{ value: number; color: string; name: string }>
+    label?: string
+  }
   if (!active || !payload?.length) return null
   return (
     <div

@@ -4,7 +4,7 @@ import {
   HORMONAL_DEMO,
   CYCLE_PHASES,
   CYCLE_ADJUSTMENTS_TODAY,
-} from '../../../../../mock-data/simon'
+} from '../../../../mock-data/simon'
 
 // ── Phase info helper ─────────────────────────────────────────────────────
 
