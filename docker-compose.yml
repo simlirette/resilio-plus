@@ -1,0 +1,32 @@
+# docker-compose.yml
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persist SQLite DB across container restarts
+      - ./data:/app/data
+      # Live-reload: mount source so uvicorn --reload picks up changes
+      - ./backend:/app/backend
+      - ./resilio:/app/resilio
+    environment:
+      PYTHONPATH: /app/backend
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      # Live-reload: mount source (excludes node_modules via anonymous volume)
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      WATCHPACK_POLLING: "true"
+    depends_on:
+      - backend
