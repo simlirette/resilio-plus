@@ -29,9 +29,13 @@ services:
       PYTHONPATH: /app/backend
       DATABASE_URL: postgresql+psycopg2://resilio:${POSTGRES_PASSWORD:-resilio}@db:5432/resilio_db
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
       STRAVA_CLIENT_ID: ${STRAVA_CLIENT_ID:-}
       STRAVA_CLIENT_SECRET: ${STRAVA_CLIENT_SECRET:-}
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-change-in-production}
+      HEVY_API_KEY: ${HEVY_API_KEY:-}
+      TERRA_API_KEY: ${TERRA_API_KEY:-}
+      TERRA_DEV_ID: ${TERRA_DEV_ID:-}
+      FOOD_API_KEY: ${FOOD_API_KEY:-}
     depends_on:
       db:
         condition: service_healthy
