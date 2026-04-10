@@ -235,3 +235,4 @@ scripts/*
 !scripts/README.md
 !scripts/docker-entrypoint-backend.sh
 .worktrees/
+resilio_dev.db
