@@ -17,7 +17,8 @@ RUN pip install --no-cache-dir \
     "sqlalchemy>=2.0,<3.0" \
     "python-jose[cryptography]>=3.3,<4.0" \
     "passlib[bcrypt]>=1.7,<2.0" \
-    "bcrypt>=3.2.0,<5.0"
+    "bcrypt>=3.2.0,<5.0" \
+    "psycopg2-binary>=2.9,<3.0"
 
 # Copy source — resilio/ is the legacy CLI package; backend/ is the FastAPI app
 COPY resilio/ ./resilio/

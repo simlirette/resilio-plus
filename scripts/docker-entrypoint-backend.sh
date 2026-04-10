@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-# Create SQLite tables if they don't exist (idempotent)
+# Create DB tables if they don't exist (idempotent; works for both SQLite and postgres)
 python -c "
 from app.db.database import Base, engine
 from app.db import models  # noqa — registers all ORM classes with Base

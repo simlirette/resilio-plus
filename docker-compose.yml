@@ -1,5 +1,21 @@
 # docker-compose.yml
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: resilio
+      POSTGRES_USER: resilio
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-resilio_dev}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U resilio"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   backend:
     build:
       context: .
@@ -7,21 +23,32 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      # Persist SQLite DB across container restarts
-      - ./data:/app/data
       # Live-reload: mount source so uvicorn --reload picks up changes
       - ./backend:/app/backend
       - ./resilio:/app/resilio
       - ./.bmad-core:/app/.bmad-core
     environment:
       PYTHONPATH: /app/backend
+      DATABASE_URL: postgresql://resilio:${POSTGRES_PASSWORD:-resilio_dev}@postgres:5432/resilio
+      JWT_SECRET: ${JWT_SECRET:-resilio-dev-secret}
+      STRAVA_CLIENT_ID: ${STRAVA_CLIENT_ID:-}
+      STRAVA_CLIENT_SECRET: ${STRAVA_CLIENT_SECRET:-}
+      STRAVA_REDIRECT_URI: ${STRAVA_REDIRECT_URI:-http://localhost:8000/auth/strava/callback}
+      HEVY_API_KEY: ${HEVY_API_KEY:-}
+      FATSECRET_CLIENT_ID: ${FATSECRET_CLIENT_ID:-}
+      FATSECRET_CLIENT_SECRET: ${FATSECRET_CLIENT_SECRET:-}
+      TERRA_API_KEY: ${TERRA_API_KEY:-}
+      TERRA_DEV_ID: ${TERRA_DEV_ID:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   frontend:
     build:
       context: .
       dockerfile: Dockerfile.frontend
     ports:
-      - "4000:3000"
+      - "3000:3000"
     volumes:
       # Live-reload: mount source (excludes node_modules via anonymous volume)
       - ./frontend:/app
@@ -29,5 +56,9 @@ services:
       - /app/.next
     environment:
       WATCHPACK_POLLING: "true"
+      NEXT_PUBLIC_API_URL: http://localhost:8000
     depends_on:
       - backend
+
+volumes:
+  postgres_data:
