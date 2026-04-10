@@ -1,0 +1,72 @@
+{
+  "version": "1.0",
+  "phases": {
+    "menstrual": {
+      "days": "1-5",
+      "intensity_cap": 0.90,
+      "rpe_adjustment": -1,
+      "pr_attempts_allowed": false,
+      "ligament_risk_note": false,
+      "nutrition_adjustments": {
+        "iron_priority": true,
+        "magnesium_priority": true,
+        "omega3_priority": true,
+        "calorie_adjustment_kcal": 0
+      },
+      "recovery_veto_threshold_adjustment": -10,
+      "notes": "Prostaglandines élevées, tolérance douleur réduite, récupération ralentie"
+    },
+    "follicular": {
+      "days": "6-13",
+      "intensity_cap": 1.0,
+      "rpe_adjustment": 0,
+      "pr_attempts_allowed": true,
+      "ligament_risk_note": false,
+      "nutrition_adjustments": {
+        "iron_priority": false,
+        "magnesium_priority": false,
+        "omega3_priority": false,
+        "calorie_adjustment_kcal": 0
+      },
+      "recovery_veto_threshold_adjustment": 0,
+      "notes": "Phase optimale. Estrogène en hausse, sensibilité insuline maximale, récupération rapide"
+    },
+    "ovulation": {
+      "days": "14-15",
+      "intensity_cap": 1.0,
+      "rpe_adjustment": 0,
+      "pr_attempts_allowed": true,
+      "ligament_risk_note": true,
+      "nutrition_adjustments": {
+        "iron_priority": false,
+        "magnesium_priority": false,
+        "omega3_priority": false,
+        "calorie_adjustment_kcal": 0
+      },
+      "recovery_veto_threshold_adjustment": 0,
+      "notes": "Force maximale. Risque ligamentaire augmenté (laxité estrogène). Insister sur la technique."
+    },
+    "luteal": {
+      "days": "16-28",
+      "intensity_cap_early": 0.95,
+      "intensity_cap_late": 0.85,
+      "rpe_adjustment": -1,
+      "pr_attempts_allowed": false,
+      "ligament_risk_note": false,
+      "nutrition_adjustments": {
+        "iron_priority": false,
+        "magnesium_priority": true,
+        "omega3_priority": false,
+        "protein_increase_g_per_kg": 0.2,
+        "calorie_adjustment_kcal": 200
+      },
+      "recovery_veto_threshold_adjustment": 0,
+      "notes": "Progestérone élevée, catabolisme musculaire accru, thermorégulation réduite. Hydratation +"
+    }
+  },
+  "sources": [
+    "McNulty et al. Int J Sports Physiol Perform 2020",
+    "Huiberts et al. Sports Med 2024 - interférence membres inférieurs",
+    "Romero-Moraleda et al. 2019 - cycle et performance musculaire"
+  ]
+}
