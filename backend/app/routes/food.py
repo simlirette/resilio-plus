@@ -18,11 +18,19 @@ from typing import Annotated
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from ..connectors.fcen import FcenConnector
+
+# Singleton — loaded once at startup
+_FCEN = FcenConnector()
+
 from ..db.models import AthleteModel
 from ..dependencies import get_db, get_current_athlete_id
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/athletes", tags=["food"])
+
+# Standalone food router (no athlete_id required)
+food_public_router = APIRouter(prefix="/food", tags=["food"])
 
 # ---------------------------------------------------------------------------
 # Load local cache once at module import
@@ -198,3 +206,42 @@ async def _off_barcode(barcode: str) -> dict | None:
         }
     except Exception:
         return None
+
+
+# ---------------------------------------------------------------------------
+# Public food search (no athlete_id — used by frontend food search UI)
+# ---------------------------------------------------------------------------
+
+@food_public_router.get("/search")
+def public_food_search(
+    q: Annotated[str, Query(min_length=1, description="Food name to search")],
+    limit: int = 20,
+) -> list[dict]:
+    """
+    GET /food/search?q=poulet
+
+    Search FCÉN (Health Canada) database. No authentication required.
+    Returns macros + key micros per 100g.
+    """
+    results = _FCEN.search(q, limit=limit)
+    return [
+        {
+            "food_id": r.food_id,
+            "name": r.name_fr,
+            "name_en": r.name_en,
+            "per_100g": {
+                "calories_kcal": r.energy_kcal,
+                "protein_g": r.protein_g,
+                "fat_g": r.fat_g,
+                "carb_g": r.carb_g,
+                "fiber_g": r.fiber_g,
+                "sugar_g": r.sugar_g,
+                "sodium_mg": r.sodium_mg,
+                "calcium_mg": r.calcium_mg,
+                "iron_mg": r.iron_mg,
+                "vitamin_c_mg": r.vitamin_c_mg,
+            },
+            "source": "fcen",
+        }
+        for r in results
+    ]
