@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import pathlib
 from datetime import date, timedelta
 
 from ..core.periodization import TIDStrategy
@@ -8,7 +10,90 @@ from ..schemas.connector import StravaActivity
 from ..schemas.fatigue import FatigueScore
 from ..schemas.plan import WorkoutSlot
 
-# VDOT lookup table (Jack Daniels, simplified)
+# ---------------------------------------------------------------------------
+# VDOT paces from data/vdot_paces.json (Jack Daniels, full table)
+# ---------------------------------------------------------------------------
+
+_VDOT_PACES_PATH = pathlib.Path(__file__).parents[3] / "data" / "vdot_paces.json"
+_VDOT_PACES: dict[str, dict] = {}
+
+
+def _load_vdot_paces() -> dict[str, dict]:
+    global _VDOT_PACES
+    if not _VDOT_PACES:
+        with _VDOT_PACES_PATH.open(encoding="utf-8") as f:
+            raw = json.load(f)
+        _VDOT_PACES = raw.get("vdot_paces", {})
+    return _VDOT_PACES
+
+
+def get_vdot_paces(vdot: float) -> dict:
+    """Lookup Daniels paces for a VDOT value from data/vdot_paces.json.
+
+    Returns a dict with keys:
+      easy_min_per_km, easy_max_per_km, long_run_pace_per_km,
+      threshold_pace_per_km, interval_pace_per_km, repetition_pace_per_km, etc.
+
+    Clamps VDOT to the available range [20, 85] and rounds to nearest integer.
+    Falls back to nearest available entry if exact match not found.
+    Returns empty dict if data file unavailable.
+    """
+    try:
+        paces = _load_vdot_paces()
+    except (FileNotFoundError, KeyError, json.JSONDecodeError):
+        return {}
+
+    if not paces:
+        return {}
+
+    vdot_int = max(20, min(85, round(vdot)))
+    key = str(vdot_int)
+    if key in paces:
+        return dict(paces[key])
+
+    # Fallback: nearest available VDOT
+    available = sorted(int(k) for k in paces.keys())
+    nearest = min(available, key=lambda v: abs(v - vdot_int))
+    return dict(paces.get(str(nearest), {}))
+
+
+# HR zone descriptions (Daniels/Seiler hybrid — running_zones.json)
+_HR_ZONES: dict[str, str] = {
+    "easy_z1":       "Z1 easy (60-74% HRmax)",
+    "long_run_z1":   "Z1 long run (60-74% HRmax)",
+    "tempo_z2":      "Z2 tempo (80-88% HRmax)",
+    "vo2max_z3":     "Z3 VO2max (95-100% HRmax)",
+    "activation_z3": "Z3 activation (95-100% HRmax)",
+}
+
+
+def _build_pace_note(workout_type: str, paces: dict) -> str:
+    """Build a human-readable pace + HR zone note for a WorkoutSlot."""
+    if not paces:
+        return ""
+    zone = _HR_ZONES.get(workout_type, "")
+    if workout_type == "easy_z1":
+        easy_min = paces.get("easy_min_per_km", "")
+        easy_max = paces.get("easy_max_per_km", "")
+        pace_str = f"{easy_min}–{easy_max}/km" if easy_min and easy_max else ""
+    elif workout_type == "long_run_z1":
+        lr = paces.get("long_run_pace_per_km", "")
+        easy_max = paces.get("easy_max_per_km", "")
+        pace_str = f"{lr}/km" if lr else (f"≤{easy_max}/km" if easy_max else "")
+    elif workout_type == "tempo_z2":
+        t = paces.get("threshold_pace_per_km", "")
+        pace_str = f"{t}/km" if t else ""
+    elif workout_type in ("vo2max_z3", "activation_z3"):
+        iv = paces.get("interval_pace_per_km", "")
+        pace_str = f"{iv}/km" if iv else ""
+    else:
+        pace_str = ""
+
+    parts = [p for p in [pace_str, zone] if p]
+    return " | ".join(parts)
+
+
+# VDOT lookup table (Jack Daniels, simplified) — used by estimate_vdot
 # (vdot, easy_pace_s_per_km, threshold_pace_s_per_km)
 _VDOT_TABLE: list[tuple[int, int, int]] = [
     (30, 450, 390), (33, 425, 368), (35, 405, 350), (38, 383, 332),
@@ -108,6 +193,7 @@ def generate_running_sessions(
     volume_modifier: float,
     tid_strategy: TIDStrategy,
     week_start: date,            # Monday of the planning week
+    _paces: dict | None = None,  # injected in tests to avoid file I/O
 ) -> list[WorkoutSlot]:
     """Generate weekly running sessions as WorkoutSlots.
 
@@ -118,6 +204,9 @@ def generate_running_sessions(
     """
     if not available_days:
         return []
+
+    # Lookup VDOT paces once (injected or from file)
+    paces = _paces if _paces is not None else get_vdot_paces(vdot)
 
     # 1. Wave loading (deload check MUST come first)
     base_minutes = hours_budget * 60.0 * volume_modifier
@@ -190,6 +279,7 @@ def generate_running_sessions(
             workout_type=wtype,
             duration_min=dur,
             fatigue_score=_Z,
+            notes=_build_pace_note(wtype, paces),
         )
         for i, (wtype, dur) in enumerate(sessions_to_place)
     ]
