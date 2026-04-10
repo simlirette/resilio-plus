@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/plan', label: 'Plan' },
   { href: '/review', label: 'Review' },
+  { href: '/history', label: 'History' },
 ]
 
 export function TopNav() {
