@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import dataclasses
 from dataclasses import dataclass, field
 
 from ..agents.base import AgentContext, AgentRecommendation, BaseAgent
+from ..core.goal_analysis import analyze_goals
 from ..core.acwr import ACWRResult, ACWRStatus, compute_acwr
 from ..core.conflict import Conflict, ConflictSeverity, detect_conflicts
 from ..core.fatigue import GlobalFatigue, aggregate_fatigue
@@ -39,6 +41,13 @@ class HeadCoach:
             load_history: Daily loads in oldest-first chronological order (from DB).
                           HeadCoach appends the new week's total load before computing ACWR.
         """
+        # 0. Compute goal-driven sport budgets and inject into context
+        budgets = analyze_goals(context.athlete)
+        context = dataclasses.replace(
+            context,
+            sport_budgets={s.value: h for s, h in budgets.items()},
+        )
+
         # 1. Invoke all specialist agents
         recommendations: list[AgentRecommendation] = [
             a.analyze(context) for a in self.agents

@@ -22,6 +22,7 @@ class AgentContext:
     fatsecret_days: list[FatSecretDay] = field(default_factory=list)
     week_number: int = 1                    # 1-based week in multi-week plan
     weeks_remaining: int = 0               # weeks until target_race_date
+    sport_budgets: dict[str, float] = field(default_factory=dict)  # sport name → hours
 
 
 @dataclass

@@ -39,9 +39,8 @@ class RunningCoach(BaseAgent):
         # 5. Periodization phase
         phase = get_current_phase(context.athlete.target_race_date, context.date_range[0])
 
-        # 6. Budget split: 60% running / 40% lifting; reversed if primary is LIFTING
-        run_ratio = 0.4 if context.athlete.primary_sport == Sport.LIFTING else 0.6
-        hours_budget = context.athlete.hours_per_week * run_ratio
+        # 6. Budget from goal analysis (injected by HeadCoach)
+        hours_budget = context.sport_budgets.get("running", context.athlete.hours_per_week * 0.6)
 
         # 7. Generate sessions
         sessions = generate_running_sessions(

@@ -37,12 +37,15 @@ class LiftingCoach(BaseAgent):
         # 5. Periodization phase
         phase = get_current_phase(context.athlete.target_race_date, context.date_range[0])
 
-        # 6. Budget split: 40% lifting / 60% running; reversed if primary is LIFTING
-        lift_ratio = 0.6 if context.athlete.primary_sport == Sport.LIFTING else 0.4
-        hours_budget = context.athlete.hours_per_week * lift_ratio
+        # 6. Budget from goal analysis (injected by HeadCoach)
+        hours_budget = context.sport_budgets.get("lifting", context.athlete.hours_per_week * 0.4)
 
-        # 7. Running load ratio (default 0.6 — refined when HeadCoach passes data)
-        running_load_ratio = 0.6
+        # 7. Running load ratio derived from sport_budgets
+        running_load_ratio = (
+            context.sport_budgets.get("running", 0) / context.athlete.hours_per_week
+            if context.athlete.hours_per_week > 0
+            else 0.6
+        )
 
         # 8. Generate sessions
         sessions = generate_lifting_sessions(
