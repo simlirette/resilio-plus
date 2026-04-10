@@ -87,9 +87,10 @@ Automatise le logging de Phase 8. Chaque connecteur remplace la saisie manuelle 
 
 ### Livrables Backend
 - Hevy pipeline complet : `GET /athletes/{id}/connectors/hevy/sync` → mappe workouts Hevy → `SessionLogModel`
-- FatSecret OAuth flow complet : `POST /athletes/{id}/connectors/fatsecret/authorize` + callback + token refresh
 - Terra intégration : pull HRV (RMSSD), sleep hours → alimente Recovery Coach
 - Strava sync amélioré : pull activités récentes → mappe vers sessions de course/vélo/natation
+
+> **Note :** FatSecret retiré du scope — la nutrition est calculée directement dans Resilio via une base de données d'aliments interne (NutritionCoach). Pas besoin d'app externe.
 
 ### Livrables Frontend
 - `frontend/src/app/settings/page.tsx` — Page settings principale
