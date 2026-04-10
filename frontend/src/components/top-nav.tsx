@@ -9,6 +9,8 @@ import { Moon, Sun } from 'lucide-react'
 
 const NAV_LINKS = [
   { href: '/dashboard', label: 'Dashboard' },
+  { href: '/energy', label: 'Energy' },
+  { href: '/check-in', label: 'Check-in' },
   { href: '/plan', label: 'Plan' },
   { href: '/review', label: 'Review' },
   { href: '/history', label: 'History' },
