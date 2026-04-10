@@ -117,3 +117,21 @@ class ConnectorCredentialModel(Base):
     athlete = relationship("AthleteModel", back_populates="credentials")
 
     __table_args__ = (UniqueConstraint("athlete_id", "provider"),)
+
+
+class SessionLogModel(Base):
+    __tablename__ = "session_logs"
+
+    id = Column(String, primary_key=True)
+    athlete_id = Column(String, ForeignKey("athletes.id"), nullable=False)
+    plan_id = Column(String, ForeignKey("training_plans.id"), nullable=False)
+    session_id = Column(String, nullable=False, index=True)
+    actual_duration_min = Column(Integer, nullable=True)
+    skipped = Column(Boolean, nullable=False, default=False)
+    rpe = Column(Integer, nullable=True)
+    notes = Column(Text, nullable=False, default="")
+    actual_data_json = Column(Text, nullable=False, default="{}")
+    logged_at = Column(DateTime(timezone=True), nullable=False,
+                       default=lambda: datetime.now(timezone.utc))
+
+    __table_args__ = (UniqueConstraint("athlete_id", "session_id"),)
