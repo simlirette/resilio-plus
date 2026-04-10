@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from ..agents.base import AgentContext, AgentRecommendation, BaseAgent
+from ..core.hormonal import get_nutrition_adjustments
 from ..core.nutrition_logic import compute_nutrition_directives
 from ..schemas.fatigue import FatigueScore
 
@@ -25,11 +26,25 @@ class NutritionCoach(BaseAgent):
             line = (
                 f"{day_type.value}: carbs={mt.carbs_g_per_kg}g/kg "
                 f"protein={mt.protein_g_per_kg}g/kg "
-                f"kcal≈{mt.calories_total}"
+                f"kcal\u2248{mt.calories_total}"
             )
             if dn.intra_effort_carbs_g_per_h:
                 line += f" | intra: {dn.intra_effort_carbs_g_per_h}g/h"
             lines.append(line)
+
+        # V3: apply cycle phase nutrition adjustments if hormonal profile is enabled
+        hp = context.hormonal_profile
+        if hp is not None and hp.enabled and hp.current_phase is not None:
+            adj = get_nutrition_adjustments(hp.current_phase)
+            cycle_parts = [f"Cycle({hp.current_phase}):"]
+            if adj["protein_extra_g_per_kg"] > 0:
+                cycle_parts.append(f"protein+{adj['protein_extra_g_per_kg']}g/kg")
+            if adj["calories_extra"] > 0:
+                cycle_parts.append(f"kcal+{adj['calories_extra']}")
+            if adj["supplements"]:
+                cycle_parts.append(f"supp={','.join(adj['supplements'])}")
+            cycle_parts.append(f"— {adj['notes']}")
+            lines.append(" ".join(cycle_parts))
 
         return AgentRecommendation(
             agent_name=self.name,
