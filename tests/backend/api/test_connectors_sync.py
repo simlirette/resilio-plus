@@ -58,3 +58,55 @@ def test_hevy_sync_wrong_athlete_returns_403(authed_client):
     other_id = str(uuid.uuid4())
     resp = client.post(f"/athletes/{other_id}/connectors/hevy/sync")
     assert resp.status_code == 403
+
+
+def test_terra_sync_no_credential_returns_404(authed_client):
+    client, athlete_id = authed_client
+    resp = client.post(f"/athletes/{athlete_id}/connectors/terra/sync")
+    assert resp.status_code == 404
+    assert "Terra" in resp.json()["detail"]
+
+
+def test_terra_sync_with_mock(authed_client):
+    client, athlete_id = authed_client
+
+    # Connect Terra first
+    client.post(
+        f"/athletes/{athlete_id}/connectors/terra",
+        json={"terra_user_id": "terra-user-abc"},
+    )
+
+    from app.schemas.connector import TerraHealthData
+    from datetime import date as _date
+    mock_data = TerraHealthData(
+        date=_date.today(),
+        hrv_rmssd=55.0,
+        sleep_duration_hours=7.5,
+        sleep_score=82,
+        steps=8000,
+        active_energy_kcal=450.0,
+    )
+
+    with patch("app.routes.connectors.TerraConnector") as MockTerra:
+        instance = MockTerra.return_value.__enter__.return_value
+        instance.fetch_daily.return_value = mock_data
+        resp = client.post(f"/athletes/{athlete_id}/connectors/terra/sync")
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["synced"] == 1
+    assert body["hrv_rmssd"] == 55.0
+
+
+def test_strava_sync_no_credential_returns_404(authed_client):
+    client, athlete_id = authed_client
+    resp = client.post(f"/athletes/{athlete_id}/connectors/strava/sync")
+    assert resp.status_code == 404
+    assert "Strava" in resp.json()["detail"]
+
+
+def test_strava_sync_wrong_athlete_returns_403(authed_client):
+    client, _ = authed_client
+    import uuid as _uuid
+    resp = client.post(f"/athletes/{str(_uuid.uuid4())}/connectors/strava/sync")
+    assert resp.status_code == 403

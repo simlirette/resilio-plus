@@ -6,10 +6,12 @@ from typing import Annotated, Literal
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from ..connectors.hevy import HevyConnector
 from ..connectors.strava import StravaConnector
+from ..connectors.terra import TerraConnector
 from ..db.models import AthleteModel, ConnectorCredentialModel, SessionLogModel, TrainingPlanModel
 from ..dependencies import get_db, get_current_athlete_id
 from ..schemas.connector import ConnectorCredential
@@ -54,6 +56,61 @@ def _upsert_credential(
             refresh_token=refresh_token,
             expires_at=expires_at,
             extra_json=extra_json,
+        ))
+        db.commit()
+
+
+# ── Auth helpers ──────────────────────────────────────────────────────────────
+
+
+def _require_own(
+    athlete_id: str,
+    current_id: Annotated[str, Depends(get_current_athlete_id)],
+) -> str:
+    if current_id != athlete_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    return athlete_id
+
+
+def _get_latest_plan(athlete_id: str, db: Session) -> TrainingPlanModel | None:
+    from sqlalchemy import desc
+    return (
+        db.query(TrainingPlanModel)
+        .filter(TrainingPlanModel.athlete_id == athlete_id)
+        .order_by(desc(TrainingPlanModel.created_at))
+        .first()
+    )
+
+
+def _upsert_session_log(
+    *,
+    athlete_id: str,
+    plan_id: str,
+    session_id: str,
+    actual_duration_min: int | None,
+    actual_data: dict,
+    db: Session,
+) -> None:
+    existing = (
+        db.query(SessionLogModel)
+        .filter_by(athlete_id=athlete_id, session_id=session_id)
+        .first()
+    )
+    if existing:
+        existing.actual_duration_min = actual_duration_min
+        existing.actual_data_json = json.dumps(actual_data)
+        existing.logged_at = datetime.now(timezone.utc)
+        db.commit()
+    else:
+        db.add(SessionLogModel(
+            id=str(uuid.uuid4()),
+            athlete_id=athlete_id,
+            plan_id=plan_id,
+            session_id=session_id,
+            actual_duration_min=actual_duration_min,
+            skipped=False,
+            actual_data_json=json.dumps(actual_data),
+            logged_at=datetime.now(timezone.utc),
         ))
         db.commit()
 
@@ -129,59 +186,33 @@ def hevy_connect(athlete_id: str, req: HevyConnectRequest, db: DB) -> ConnectorS
     return ConnectorStatus(provider="hevy", connected=True, expires_at=None)
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# ── Terra ─────────────────────────────────────────────────────────────────────
 
 
-def _require_own(
+class TerraConnectRequest(BaseModel):
+    terra_user_id: str
+
+
+@router.post("/{athlete_id}/connectors/terra", status_code=201)
+def terra_connect(
     athlete_id: str,
-    current_id: Annotated[str, Depends(get_current_athlete_id)],
-) -> str:
-    if current_id != athlete_id:
-        raise HTTPException(status_code=403, detail="Access denied")
-    return athlete_id
+    req: TerraConnectRequest,
+    db: DB,
+    _: Annotated[str, Depends(_require_own)],
+) -> ConnectorStatus:
+    if db.get(AthleteModel, athlete_id) is None:
+        raise HTTPException(status_code=404, detail="Athlete not found")
 
-
-def _get_latest_plan(athlete_id: str, db: Session) -> TrainingPlanModel | None:
-    from sqlalchemy import desc
-    return (
-        db.query(TrainingPlanModel)
-        .filter(TrainingPlanModel.athlete_id == athlete_id)
-        .order_by(desc(TrainingPlanModel.created_at))
-        .first()
+    _upsert_credential(
+        athlete_id=athlete_id,
+        provider="terra",
+        access_token=None,
+        refresh_token=None,
+        expires_at=None,
+        extra_json=json.dumps({"terra_user_id": req.terra_user_id}),
+        db=db,
     )
-
-
-def _upsert_session_log(
-    *,
-    athlete_id: str,
-    plan_id: str,
-    session_id: str,
-    actual_duration_min: int | None,
-    actual_data: dict,
-    db: Session,
-) -> None:
-    existing = (
-        db.query(SessionLogModel)
-        .filter_by(athlete_id=athlete_id, session_id=session_id)
-        .first()
-    )
-    if existing:
-        existing.actual_duration_min = actual_duration_min
-        existing.actual_data_json = json.dumps(actual_data)
-        existing.logged_at = datetime.now(timezone.utc)
-        db.commit()
-    else:
-        db.add(SessionLogModel(
-            id=str(uuid.uuid4()),
-            athlete_id=athlete_id,
-            plan_id=plan_id,
-            session_id=session_id,
-            actual_duration_min=actual_duration_min,
-            skipped=False,
-            actual_data_json=json.dumps(actual_data),
-            logged_at=datetime.now(timezone.utc),
-        ))
-        db.commit()
+    return ConnectorStatus(provider="terra", connected=True, expires_at=None)
 
 
 # ── Hevy Sync ─────────────────────────────────────────────────────────────────
@@ -264,6 +295,150 @@ def hevy_sync(
             plan_id=plan.id,
             session_id=session_id,
             actual_duration_min=workout.duration_seconds // 60,
+            actual_data=actual_data,
+            db=db,
+        )
+        synced += 1
+
+    return {"synced": synced, "skipped": skipped}
+
+
+# ── Terra Sync ────────────────────────────────────────────────────────────────
+
+
+@router.post("/{athlete_id}/connectors/terra/sync")
+def terra_sync(
+    athlete_id: str,
+    db: DB,
+    _: Annotated[str, Depends(_require_own)],
+) -> dict:
+    """Fetch today's Terra health data and store latest HRV/sleep in connector creds."""
+    from datetime import date
+
+    cred_model = (
+        db.query(ConnectorCredentialModel)
+        .filter_by(athlete_id=athlete_id, provider="terra")
+        .first()
+    )
+    if cred_model is None:
+        raise HTTPException(status_code=404, detail="Terra connector not connected")
+
+    extra = json.loads(cred_model.extra_json or "{}")
+    cred = ConnectorCredential(
+        athlete_id=athlete_id,  # type: ignore[arg-type]
+        provider="terra",
+        extra=extra,
+    )
+
+    api_key = os.getenv("TERRA_API_KEY", "")
+    dev_id = os.getenv("TERRA_DEV_ID", "")
+
+    try:
+        with TerraConnector(cred, client_id=api_key, client_secret=dev_id) as connector:
+            health_data = connector.fetch_daily(date.today())
+    except Exception:
+        raise HTTPException(status_code=502, detail="Failed to fetch Terra data")
+
+    extra["last_hrv_rmssd"] = health_data.hrv_rmssd
+    extra["last_sleep_hours"] = health_data.sleep_duration_hours
+    extra["last_sleep_score"] = health_data.sleep_score
+    extra["last_steps"] = health_data.steps
+    extra["last_sync"] = datetime.now(timezone.utc).isoformat()
+    cred_model.extra_json = json.dumps(extra)
+    db.commit()
+
+    return {
+        "synced": 1,
+        "hrv_rmssd": health_data.hrv_rmssd,
+        "sleep_hours": health_data.sleep_duration_hours,
+        "sleep_score": health_data.sleep_score,
+    }
+
+
+# ── Strava Sync ───────────────────────────────────────────────────────────────
+
+
+@router.post("/{athlete_id}/connectors/strava/sync")
+def strava_sync(
+    athlete_id: str,
+    db: DB,
+    _: Annotated[str, Depends(_require_own)],
+) -> dict:
+    """Fetch last 30 days of Strava activities → map to run/bike/swim sessions → SessionLogModel."""
+    cred_model = (
+        db.query(ConnectorCredentialModel)
+        .filter_by(athlete_id=athlete_id, provider="strava")
+        .first()
+    )
+    if cred_model is None:
+        raise HTTPException(status_code=404, detail="Strava connector not connected")
+
+    cred = ConnectorCredential(
+        athlete_id=athlete_id,  # type: ignore[arg-type]
+        provider="strava",
+        access_token=cred_model.access_token,
+        refresh_token=cred_model.refresh_token,
+        expires_at=cred_model.expires_at,
+    )
+
+    client_id = os.getenv("STRAVA_CLIENT_ID", "")
+    client_secret = os.getenv("STRAVA_CLIENT_SECRET", "")
+
+    since = datetime.now(timezone.utc) - timedelta(days=30)
+    until = datetime.now(timezone.utc)
+
+    try:
+        with StravaConnector(cred, client_id=client_id, client_secret=client_secret) as connector:
+            activities = connector.fetch_activities(since, until)
+    except Exception:
+        raise HTTPException(status_code=502, detail="Failed to fetch Strava activities")
+
+    sport_map = {
+        "Run": "running",
+        "Ride": "biking",
+        "Swim": "swimming",
+        "VirtualRide": "biking",
+        "TrailRun": "running",
+    }
+
+    plan = _get_latest_plan(athlete_id, db)
+    if plan is None:
+        return {"synced": 0, "skipped": len(activities), "reason": "no plan found"}
+
+    slots = json.loads(plan.weekly_slots_json)
+    session_map: dict[tuple[str, str], str] = {
+        (s["date"], s["sport"]): s["id"]
+        for s in slots
+    }
+
+    synced = 0
+    skipped = 0
+    for activity in activities:
+        sport = sport_map.get(activity.sport_type)
+        if sport is None:
+            skipped += 1
+            continue
+
+        date_key = activity.date.isoformat()
+        session_id = session_map.get((date_key, sport))
+        if session_id is None:
+            skipped += 1
+            continue
+
+        actual_data = {
+            "source": "strava",
+            "strava_activity_id": activity.id,
+            "distance_meters": activity.distance_meters,
+            "elevation_gain_meters": activity.elevation_gain_meters,
+            "average_hr": activity.average_hr,
+            "max_hr": activity.max_hr,
+        }
+        duration_min = activity.duration_seconds // 60 if activity.duration_seconds else None
+        _upsert_session_log(
+            athlete_id=athlete_id,
+            plan_id=plan.id,
+            session_id=session_id,
+            actual_duration_min=duration_min,
             actual_data=actual_data,
             db=db,
         )
