@@ -1,10 +1,11 @@
 // frontend/src/app/login/page.tsx
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth'
 import { api, ApiError } from '@/lib/api'
+import { SIMON } from '../../../mock-data/simon'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,6 +18,21 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Dev mode: if backend unreachable, auto-login with mock user
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'development') return
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 1500)
+    fetch('http://localhost:8000/', { method: 'HEAD', signal: controller.signal })
+      .then(() => clearTimeout(timeout))
+      .catch(() => {
+        clearTimeout(timeout)
+        login('dev-mock-token', SIMON.id)
+        router.replace('/dashboard')
+      })
+    return () => { clearTimeout(timeout); controller.abort() }
+  }, [login, router])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -42,7 +58,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle className="text-2xl font-bold tracking-widest text-primary">RESILIO+</CardTitle>
-          <CardDescription>Sign in to your coaching dashboard</CardDescription>
+          <CardDescription>Sign in to Resilio+</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
