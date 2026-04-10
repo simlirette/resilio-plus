@@ -1,0 +1,104 @@
+{
+  "description": "MEV/MAV/MRV par groupe musculaire — Israetel/RP adapté hybride athlète. Unité: séries effectives/semaine.",
+  "rules": [
+    "Si le volume de course augmente (phase build), MRV_hybride jambes BAISSE automatiquement",
+    "CNS load > 70/100 → pas d'exercice Tier 3 (barbell compounds lourds)",
+    "Fatigue musculaire > 80/100 → pas de travail ciblé pendant 48h",
+    "Augmenter le volume graduellement: +2 séries/semaine max par groupe"
+  ],
+  "muscles": {
+    "quadriceps": {
+      "mev": 6,
+      "mav": 10,
+      "mrv_standard": 18,
+      "mrv_hybride": 12,
+      "note": "Course = volume additionnel gratuit. Réduire si km course > 50/sem."
+    },
+    "hamstrings": {
+      "mev": 4,
+      "mav": 8,
+      "mrv_standard": 16,
+      "mrv_hybride": 10,
+      "note": "Course = volume additionnel. RDL et Nordic Curl prioritaires."
+    },
+    "glutes": {
+      "mev": 0,
+      "mav": 4,
+      "mrv_standard": 12,
+      "mrv_hybride": 6,
+      "note": "Souvent suffisamment stimulés par course + squat. Hip thrust si lacune."
+    },
+    "calves": {
+      "mev": 4,
+      "mav": 8,
+      "mrv_standard": 14,
+      "mrv_hybride": 6,
+      "note": "Course = beaucoup de volume. Réduire agressivement si semaines > 40km."
+    },
+    "chest": {
+      "mev": 6,
+      "mav": 14,
+      "mrv_standard": 22,
+      "mrv_hybride": 20,
+      "note": "Non impacté par la course. Pleine capacité d'entraînement."
+    },
+    "back_lats": {
+      "mev": 6,
+      "mav": 14,
+      "mrv_standard": 22,
+      "mrv_hybride": 20,
+      "note": "Non impacté par la course. Rows + pulldowns."
+    },
+    "shoulders_lateral": {
+      "mev": 6,
+      "mav": 12,
+      "mrv_standard": 20,
+      "mrv_hybride": 16,
+      "note": "Non impacté par la course. Lateral raises prioritaires."
+    },
+    "biceps": {
+      "mev": 4,
+      "mav": 10,
+      "mrv_standard": 16,
+      "mrv_hybride": 14,
+      "note": "Non impacté par la course."
+    },
+    "triceps": {
+      "mev": 4,
+      "mav": 8,
+      "mrv_standard": 14,
+      "mrv_hybride": 12,
+      "note": "Non impacté par la course."
+    },
+    "core": {
+      "mev": 0,
+      "mav": 4,
+      "mrv_standard": 10,
+      "mrv_hybride": 6,
+      "note": "Running + compounds = beaucoup de volume indirect. Anti-rotation prioritaire."
+    },
+    "hip_flexors": {
+      "mev": 0,
+      "mav": 2,
+      "mrv_standard": 6,
+      "mrv_hybride": 2,
+      "note": "Course = volume direct. Étirements + renforcement léger seulement."
+    },
+    "rotateurs_externes_hanche": {
+      "mev": 2,
+      "mav": 4,
+      "mrv_standard": 8,
+      "mrv_hybride": 6,
+      "note": "OBLIGATOIRE pour coureurs. Prévention valgus genou. Band exercises."
+    }
+  },
+  "running_volume_adjustments": {
+    "description": "Ajustement MRV hybride membres inférieurs selon km/semaine de course",
+    "thresholds": [
+      {"weekly_km_max": 30, "mrv_multiplier": 1.0, "note": "Pleine capacité"},
+      {"weekly_km_max": 50, "mrv_multiplier": 0.8, "note": "-20% MRV jambes"},
+      {"weekly_km_max": 70, "mrv_multiplier": 0.65, "note": "-35% MRV jambes"},
+      {"weekly_km_max": 999, "mrv_multiplier": 0.5, "note": "-50% MRV jambes — maintenance seulement"}
+    ]
+  }
+}

@@ -1,0 +1,175 @@
+{
+  "description": "Token Economy — Mapping des champs AthleteState autorisés par agent. Seul le Head Coach a accès au state complet. Chaque agent reçoit uniquement sa vue filtrée.",
+  "head_coach": {
+    "access": "full",
+    "fields": ["*"],
+    "note": "Accès complet — orchestre tous les agents"
+  },
+  "running_coach": {
+    "access": "partial",
+    "fields": [
+      "athlete_id",
+      "profile.name",
+      "profile.age",
+      "profile.sex",
+      "profile.weight_kg",
+      "profile.training_history.years_running",
+      "profile.training_history.current_5k_time_min",
+      "profile.training_history.current_10k_time_min",
+      "profile.training_history.current_half_marathon_min",
+      "profile.injuries_history",
+      "profile.lifestyle.sleep_avg_hours",
+      "running_profile",
+      "fatigue.acwr",
+      "fatigue.acwr_by_sport.running",
+      "fatigue.hrv_rmssd_today",
+      "fatigue.hrv_rmssd_baseline",
+      "fatigue.recovery_score_today",
+      "fatigue.weekly_fatigue_score",
+      "fatigue.fatigue_by_muscle.quadriceps",
+      "fatigue.fatigue_by_muscle.hamstrings",
+      "fatigue.fatigue_by_muscle.calves",
+      "fatigue.fatigue_by_muscle.glutes",
+      "fatigue.sleep_hours_last_night",
+      "compliance.last_4_weeks_completion_rate",
+      "compliance.missed_sessions_this_week"
+    ],
+    "excluded_fields": [
+      "lifting_profile",
+      "swimming_profile",
+      "biking_profile",
+      "nutrition_profile",
+      "fatigue.fatigue_by_muscle.chest",
+      "fatigue.fatigue_by_muscle.back",
+      "fatigue.fatigue_by_muscle.shoulders"
+    ]
+  },
+  "lifting_coach": {
+    "access": "partial",
+    "fields": [
+      "athlete_id",
+      "profile.name",
+      "profile.age",
+      "profile.sex",
+      "profile.weight_kg",
+      "profile.training_history.years_lifting",
+      "profile.training_history.estimated_1rm",
+      "profile.injuries_history",
+      "lifting_profile",
+      "running_profile.weekly_km_current",
+      "fatigue.acwr",
+      "fatigue.acwr_by_sport.lifting",
+      "fatigue.cns_load_7day_avg",
+      "fatigue.recovery_score_today",
+      "fatigue.fatigue_by_muscle",
+      "fatigue.hrv_rmssd_today",
+      "fatigue.hrv_rmssd_baseline",
+      "compliance.last_4_weeks_completion_rate"
+    ],
+    "excluded_fields": [
+      "running_profile.paces",
+      "swimming_profile",
+      "biking_profile",
+      "nutrition_profile"
+    ]
+  },
+  "swimming_coach": {
+    "access": "partial",
+    "fields": [
+      "athlete_id",
+      "profile.name",
+      "profile.age",
+      "profile.sex",
+      "profile.weight_kg",
+      "profile.training_history.years_swimming",
+      "swimming_profile",
+      "fatigue.acwr",
+      "fatigue.recovery_score_today",
+      "fatigue.hrv_rmssd_today",
+      "fatigue.fatigue_by_muscle.lats",
+      "fatigue.fatigue_by_muscle.shoulders",
+      "compliance.last_4_weeks_completion_rate"
+    ],
+    "excluded_fields": [
+      "running_profile",
+      "lifting_profile",
+      "biking_profile",
+      "nutrition_profile"
+    ]
+  },
+  "biking_coach": {
+    "access": "partial",
+    "fields": [
+      "athlete_id",
+      "profile.name",
+      "profile.age",
+      "profile.sex",
+      "profile.weight_kg",
+      "profile.training_history.years_running",
+      "biking_profile",
+      "fatigue.acwr",
+      "fatigue.acwr_by_sport.biking",
+      "fatigue.recovery_score_today",
+      "fatigue.hrv_rmssd_today",
+      "fatigue.fatigue_by_muscle.quadriceps",
+      "fatigue.fatigue_by_muscle.hamstrings",
+      "compliance.last_4_weeks_completion_rate"
+    ],
+    "excluded_fields": [
+      "running_profile",
+      "lifting_profile",
+      "swimming_profile",
+      "nutrition_profile"
+    ]
+  },
+  "nutrition_coach": {
+    "access": "partial",
+    "fields": [
+      "athlete_id",
+      "profile.name",
+      "profile.age",
+      "profile.sex",
+      "profile.weight_kg",
+      "profile.height_cm",
+      "profile.body_fat_percent",
+      "profile.lifestyle.work_type",
+      "profile.lifestyle.sleep_avg_hours",
+      "profile.lifestyle.stress_level",
+      "nutrition_profile",
+      "fatigue.acwr",
+      "fatigue.weekly_fatigue_score",
+      "fatigue.recovery_score_today",
+      "compliance.nutrition_adherence_7day",
+      "running_profile.weekly_km_current",
+      "lifting_profile.sessions_per_week",
+      "swimming_profile.weekly_volume_km",
+      "biking_profile.weekly_volume_km"
+    ],
+    "excluded_fields": [
+      "running_profile.paces",
+      "lifting_profile.volume_landmarks",
+      "fatigue.fatigue_by_muscle"
+    ]
+  },
+  "recovery_coach": {
+    "access": "partial",
+    "fields": [
+      "athlete_id",
+      "profile.name",
+      "profile.age",
+      "profile.training_history.current_weekly_volume_hours",
+      "fatigue",
+      "compliance.last_4_weeks_completion_rate",
+      "compliance.missed_sessions_this_week",
+      "running_profile.weekly_km_current",
+      "lifting_profile.sessions_per_week"
+    ],
+    "excluded_fields": [
+      "running_profile.paces",
+      "lifting_profile.volume_landmarks",
+      "swimming_profile",
+      "biking_profile",
+      "nutrition_profile"
+    ]
+  }
+}

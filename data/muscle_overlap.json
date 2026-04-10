@@ -1,0 +1,114 @@
+{
+  "description": "Table de chevauchement musculaire entre sports et types de séances. Utilisé par le Head Coach pour la résolution de conflits de planning.",
+  "conflict_rules": {
+    "high_intensity_gap_hours": 24,
+    "same_day_gap_hours": 6,
+    "cns_recovery_hours": 48,
+    "description": "Conflit = même groupe sollicité à haute intensité dans la fenêtre de récupération"
+  },
+  "sport_muscle_map": {
+    "running_easy": {
+      "muscles": ["calves_low", "hip_flexors_low"],
+      "intensity": "low",
+      "cns_cost": "minimal",
+      "recovery_hours": 8
+    },
+    "running_moderate": {
+      "muscles": ["quadriceps", "hamstrings", "calves", "glutes", "hip_flexors"],
+      "intensity": "moderate",
+      "cns_cost": "moderate",
+      "recovery_hours": 24
+    },
+    "running_intervals": {
+      "muscles": ["quadriceps", "hamstrings", "calves", "glutes", "hip_flexors", "core"],
+      "intensity": "high",
+      "cns_cost": "high",
+      "recovery_hours": 36
+    },
+    "running_long": {
+      "muscles": ["quadriceps", "hamstrings", "calves", "glutes", "hip_flexors"],
+      "intensity": "moderate",
+      "cns_cost": "moderate",
+      "recovery_hours": 36,
+      "note": "Durée élevée → dommages mécaniques même à basse intensité"
+    },
+    "cycling_easy": {
+      "muscles": ["quadriceps_low", "hamstrings_low", "glutes_low"],
+      "intensity": "low",
+      "cns_cost": "minimal",
+      "recovery_hours": 8
+    },
+    "cycling_moderate": {
+      "muscles": ["quadriceps", "hamstrings", "glutes", "calves"],
+      "intensity": "moderate",
+      "cns_cost": "low",
+      "recovery_hours": 20
+    },
+    "cycling_intervals": {
+      "muscles": ["quadriceps", "hamstrings", "glutes", "calves", "core"],
+      "intensity": "high",
+      "cns_cost": "high",
+      "recovery_hours": 36
+    },
+    "swimming": {
+      "muscles": ["lats", "shoulders", "triceps", "core", "hip_flexors_low"],
+      "intensity": "moderate",
+      "cns_cost": "low",
+      "recovery_hours": 16
+    },
+    "lifting_legs": {
+      "muscles": ["quadriceps", "hamstrings", "glutes", "calves", "core"],
+      "intensity": "high",
+      "cns_cost": "high",
+      "recovery_hours": 48
+    },
+    "lifting_push": {
+      "muscles": ["chest", "shoulders", "triceps"],
+      "intensity": "high",
+      "cns_cost": "moderate",
+      "recovery_hours": 48
+    },
+    "lifting_pull": {
+      "muscles": ["back_lats", "biceps", "core", "forearms"],
+      "intensity": "high",
+      "cns_cost": "moderate",
+      "recovery_hours": 48
+    },
+    "lifting_upper": {
+      "muscles": ["chest", "back_lats", "shoulders", "biceps", "triceps", "core"],
+      "intensity": "high",
+      "cns_cost": "moderate",
+      "recovery_hours": 48
+    }
+  },
+  "conflict_matrix": {
+    "description": "Paires de séances à risque le même jour ou dans les 24h",
+    "high_risk_pairs": [
+      ["running_intervals", "lifting_legs"],
+      ["running_long", "lifting_legs"],
+      ["running_moderate", "lifting_legs"],
+      ["cycling_intervals", "lifting_legs"],
+      ["running_intervals", "cycling_intervals"]
+    ],
+    "medium_risk_pairs": [
+      ["running_easy", "lifting_legs"],
+      ["running_moderate", "cycling_moderate"],
+      ["swimming", "lifting_pull"],
+      ["lifting_push", "lifting_pull"]
+    ],
+    "low_risk_pairs": [
+      ["running_easy", "lifting_upper"],
+      ["cycling_easy", "lifting_upper"],
+      ["swimming", "lifting_legs"],
+      ["running_easy", "swimming"]
+    ]
+  },
+  "resolution_priority": [
+    "swap_days",
+    "change_split",
+    "reduce_intensity",
+    "reduce_volume",
+    "substitute_exercise",
+    "remove_session"
+  ]
+}
