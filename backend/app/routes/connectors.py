@@ -5,11 +5,13 @@ from datetime import datetime, timezone, timedelta
 from typing import Annotated, Literal
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from ..connectors.apple_health import AppleHealthConnector
+from ..connectors.fit import FitConnector
+from ..connectors.gpx import GpxConnector
 from ..connectors.hevy import HevyConnector
 from ..connectors.strava import StravaConnector
 from ..connectors.terra import TerraConnector
@@ -114,6 +116,86 @@ def _upsert_session_log(
             logged_at=datetime.now(timezone.utc),
         ))
         db.commit()
+
+
+def _file_import_to_session_log(
+    athlete_id: str,
+    parsed: dict,
+    sport: str,
+    source: str,
+    db: Session,
+) -> dict:
+    """Find matching plan session by date+sport and create SessionLogModel."""
+    plan = _get_latest_plan(athlete_id, db)
+    if plan is None:
+        return {"imported": False, "reason": "no active plan found"}
+
+    slots = json.loads(plan.weekly_slots_json)
+    date_key = parsed["activity_date"].isoformat()
+    session_id = next(
+        (s["id"] for s in slots if s["date"] == date_key and s["sport"] == sport),
+        None,
+    )
+
+    actual_data = {
+        "source": source,
+        "distance_km": parsed.get("distance_km"),
+        "duration_seconds": parsed.get("duration_seconds"),
+        "avg_pace_sec_per_km": parsed.get("avg_pace_sec_per_km"),
+        "elevation_gain_m": parsed.get("elevation_gain_m"),
+    }
+
+    if session_id:
+        _upsert_session_log(
+            athlete_id=athlete_id,
+            plan_id=plan.id,
+            session_id=session_id,
+            actual_duration_min=parsed["duration_seconds"] // 60 if parsed.get("duration_seconds") else None,
+            actual_data=actual_data,
+            db=db,
+        )
+        return {"imported": True, "session_id": session_id, "source": source}
+    else:
+        return {"imported": False, "reason": f"no {sport} session found for {date_key}"}
+
+
+# ── GPX/FIT File Upload ───────────────────────────────────────────────────────
+
+
+@router.post("/{athlete_id}/connectors/files/gpx")
+def upload_gpx(
+    athlete_id: str,
+    db: DB,
+    _: Annotated[str, Depends(_require_own)],
+    file: UploadFile = File(...),
+) -> dict:
+    """Upload GPX file → parse → map to running session → SessionLogModel."""
+    content = file.file.read()
+    connector = GpxConnector()
+    try:
+        parsed = connector.parse(content)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    return _file_import_to_session_log(athlete_id, parsed, "running", "gpx", db)
+
+
+@router.post("/{athlete_id}/connectors/files/fit")
+def upload_fit(
+    athlete_id: str,
+    db: DB,
+    _: Annotated[str, Depends(_require_own)],
+    file: UploadFile = File(...),
+) -> dict:
+    """Upload FIT file → parse → map to running/biking session → SessionLogModel."""
+    content = file.file.read()
+    connector = FitConnector()
+    try:
+        parsed = connector.parse(content)
+    except (ValueError, RuntimeError) as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    return _file_import_to_session_log(athlete_id, parsed, "running", "fit", db)
 
 
 # ── Strava OAuth2 ────────────────────────────────────────────────────────────
