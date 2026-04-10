@@ -12,6 +12,7 @@ services:
       # Live-reload: mount source so uvicorn --reload picks up changes
       - ./backend:/app/backend
       - ./resilio:/app/resilio
+      - ./.bmad-core:/app/.bmad-core
     environment:
       PYTHONPATH: /app/backend
 
@@ -20,7 +21,7 @@ services:
       context: .
       dockerfile: Dockerfile.frontend
     ports:
-      - "3000:3000"
+      - "4000:3000"
     volumes:
       # Live-reload: mount source (excludes node_modules via anonymous volume)
       - ./frontend:/app

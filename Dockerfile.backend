@@ -22,7 +22,10 @@ RUN pip install --no-cache-dir \
 # Copy source — resilio/ is the legacy CLI package; backend/ is the FastAPI app
 COPY resilio/ ./resilio/
 COPY backend/ ./backend/
+COPY .bmad-core/ ./.bmad-core/
 COPY scripts/docker-entrypoint-backend.sh /entrypoint.sh
+# Fix Windows CRLF line endings that break bash on Linux
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
 
 # PYTHONPATH lets Python find `app` (backend/app/) without install
 ENV PYTHONPATH=/app/backend
