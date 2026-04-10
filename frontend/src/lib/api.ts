@@ -13,6 +13,15 @@ function getToken(): string | null {
   return localStorage.getItem('token')
 }
 
+async function _reqRaw(path: string, init: RequestInit = {}): Promise<any> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+  const headers: Record<string, string> = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+  const res = await fetch(`${API_BASE}${path}`, { ...init, headers: { ...headers, ...(init.headers as Record<string, string> || {}) } })
+  if (!res.ok) throw new ApiError(res.status, await res.text())
+  return res.json()
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken()
   const headers: Record<string, string> = {
@@ -198,4 +207,47 @@ export const api = {
 
   getHistory: (athleteId: string) =>
     request<WeekSummary[]>(`/athletes/${athleteId}/history`),
+
+  getConnectors: (athleteId: string): Promise<{ connectors: Array<{ provider: string; connected: boolean; expires_at?: number | null }> }> =>
+    request(`/athletes/${athleteId}/connectors`),
+
+  stravaAuthorize: (athleteId: string): Promise<{ auth_url: string }> =>
+    request(`/athletes/${athleteId}/connectors/strava/authorize`, { method: 'POST' }),
+
+  // Connector sync
+  hevySync: (athleteId: string): Promise<{ synced: number; skipped: number }> =>
+    request(`/athletes/${athleteId}/connectors/hevy/sync`, { method: 'POST' }),
+
+  terraSync: (athleteId: string): Promise<{ synced: number; hrv_rmssd: number | null }> =>
+    request(`/athletes/${athleteId}/connectors/terra/sync`, { method: 'POST' }),
+
+  stravaSync: (athleteId: string): Promise<{ synced: number; skipped: number }> =>
+    request(`/athletes/${athleteId}/connectors/strava/sync`, { method: 'POST' }),
+
+  appleHealthUpload: (
+    athleteId: string,
+    data: { snapshot_date: string; hrv_rmssd?: number; sleep_hours?: number; hr_rest?: number }
+  ): Promise<{ uploaded: boolean; snapshot_date: string }> =>
+    request(`/athletes/${athleteId}/connectors/apple-health/upload`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  uploadGpx: (athleteId: string, file: File): Promise<{ imported: boolean; session_id?: string }> => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return _reqRaw(`/athletes/${athleteId}/connectors/files/gpx`, { method: 'POST', body: formData })
+  },
+
+  uploadFit: (athleteId: string, file: File): Promise<{ imported: boolean; session_id?: string }> => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return _reqRaw(`/athletes/${athleteId}/connectors/files/fit`, { method: 'POST', body: formData })
+  },
+
+  connectTerra: (athleteId: string, terraUserId: string): Promise<{ provider: string; connected: boolean }> =>
+    request(`/athletes/${athleteId}/connectors/terra`, {
+      method: 'POST',
+      body: JSON.stringify({ terra_user_id: terraUserId }),
+    }),
 }
