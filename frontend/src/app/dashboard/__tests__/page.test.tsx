@@ -27,7 +27,7 @@ const MOCK_STATUS: apiModule.WeekStatusResponse = {
     id: 'p1', athlete_id: 'a1', start_date: '2026-04-14', end_date: '2026-04-20',
     phase: 'build', total_weekly_hours: 8.5, acwr: 1.12,
     sessions: [
-      { date: '2026-04-17', sport: 'running', workout_type: 'Tempo Run', duration_min: 50, fatigue_score: { local_muscular: 30, cns_load: 20, metabolic_cost: 50, recovery_hours: 12, affected_muscles: [] }, notes: '' },
+      { id: 's1', date: '2026-04-17', sport: 'running', workout_type: 'Tempo Run', duration_min: 50, fatigue_score: { local_muscular: 30, cns_load: 20, metabolic_cost: 50, recovery_hours: 12, affected_muscles: [] }, notes: '' },
     ],
   },
 }

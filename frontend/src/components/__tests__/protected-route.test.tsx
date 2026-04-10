@@ -1,5 +1,5 @@
 // frontend/src/components/__tests__/protected-route.test.tsx
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
 import { ProtectedRoute } from '../protected-route'
 import { AuthProvider } from '@/lib/auth'

@@ -40,6 +40,7 @@ export interface FatigueScore {
 }
 
 export interface WorkoutSlot {
+  id: string
   date: string
   sport: Sport
   workout_type: string
@@ -76,6 +77,49 @@ export interface WeeklyReviewResponse {
   acwr: number
   adjustment_applied: number
   next_week_suggestion: string
+}
+
+export interface SessionLogResponse {
+  id: string
+  session_id: string
+  actual_duration_min: number | null
+  skipped: boolean
+  rpe: number | null
+  notes: string
+  actual_data: Record<string, unknown>
+  logged_at: string
+}
+
+export interface SessionDetailResponse {
+  session_id: string
+  plan_id: string
+  date: string
+  sport: Sport
+  workout_type: string
+  duration_min: number
+  fatigue_score: FatigueScore
+  notes: string
+  log: SessionLogResponse | null
+}
+
+export interface SessionLogRequest {
+  actual_duration_min?: number
+  skipped?: boolean
+  rpe?: number
+  notes?: string
+  actual_data?: Record<string, unknown>
+}
+
+export interface WeekSummary {
+  plan_id: string
+  week_number: number
+  start_date: string
+  end_date: string
+  phase: string
+  planned_hours: number
+  sessions_total: number
+  sessions_logged: number
+  completion_pct: number
 }
 
 export interface TokenResponse {
@@ -139,4 +183,19 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+
+  getSession: (athleteId: string, sessionId: string) =>
+    request<SessionDetailResponse>(`/athletes/${athleteId}/sessions/${sessionId}`),
+
+  logSession: (athleteId: string, sessionId: string, data: SessionLogRequest) =>
+    request<SessionLogResponse>(`/athletes/${athleteId}/sessions/${sessionId}/log`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  getSessionLog: (athleteId: string, sessionId: string) =>
+    request<SessionLogResponse>(`/athletes/${athleteId}/sessions/${sessionId}/log`),
+
+  getHistory: (athleteId: string) =>
+    request<WeekSummary[]>(`/athletes/${athleteId}/history`),
 }

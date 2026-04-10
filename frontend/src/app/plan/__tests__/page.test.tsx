@@ -16,8 +16,8 @@ const MOCK_PLAN: apiModule.TrainingPlanResponse = {
   id: 'p1', athlete_id: 'a1', start_date: '2026-04-14', end_date: '2026-04-20',
   phase: 'build', total_weekly_hours: 8.5, acwr: 1.0,
   sessions: [
-    { date: '2026-04-14', sport: 'running', workout_type: 'Easy Run', duration_min: 45, fatigue_score: { local_muscular: 20, cns_load: 10, metabolic_cost: 30, recovery_hours: 8, affected_muscles: [] }, notes: 'Zone 2' },
-    { date: '2026-04-15', sport: 'lifting', workout_type: 'Squat + Deadlift', duration_min: 60, fatigue_score: { local_muscular: 70, cns_load: 60, metabolic_cost: 20, recovery_hours: 48, affected_muscles: ['quads', 'hamstrings'] }, notes: '5x5' },
+    { id: 's1', date: '2026-04-14', sport: 'running', workout_type: 'Easy Run', duration_min: 45, fatigue_score: { local_muscular: 20, cns_load: 10, metabolic_cost: 30, recovery_hours: 8, affected_muscles: [] }, notes: 'Zone 2' },
+    { id: 's2', date: '2026-04-15', sport: 'lifting', workout_type: 'Squat + Deadlift', duration_min: 60, fatigue_score: { local_muscular: 70, cns_load: 60, metabolic_cost: 20, recovery_hours: 48, affected_muscles: ['quads', 'hamstrings'] }, notes: '5x5' },
   ],
 }
 
