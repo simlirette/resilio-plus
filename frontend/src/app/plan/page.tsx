@@ -46,7 +46,7 @@ export default function PlanPage() {
         else if (err instanceof ApiError && err.status === 404) setNotFound(true)
         else setError('Failed to load plan.')
       })
-  }, [athleteId, logout, router])
+  }, [athleteId, logout]) // router is stable in Next.js — omit to prevent re-fetch on every render
 
   return (
     <ProtectedRoute>

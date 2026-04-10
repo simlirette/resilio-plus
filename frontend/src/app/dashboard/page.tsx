@@ -39,7 +39,7 @@ export default function DashboardPage() {
         else if (err instanceof ApiError && err.status === 404) setNotFound(true)
         else setError('Failed to load week status.')
       })
-  }, [athleteId, logout, router])
+  }, [athleteId, logout]) // router is stable in Next.js — omit to prevent re-fetch on every render
 
   return (
     <ProtectedRoute>

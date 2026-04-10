@@ -1,6 +1,6 @@
 // frontend/src/lib/auth.tsx
 'use client'
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 
 interface AuthState {
   token: string | null
@@ -23,17 +23,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (token && athleteId) setAuth({ token, athleteId })
   }, [])
 
-  function login(token: string, athleteId: string) {
+  const login = useCallback((token: string, athleteId: string) => {
     localStorage.setItem('token', token)
     localStorage.setItem('athlete_id', athleteId)
     setAuth({ token, athleteId })
-  }
+  }, [])
 
-  function logout() {
+  const logout = useCallback(() => {
     localStorage.removeItem('token')
     localStorage.removeItem('athlete_id')
     setAuth({ token: null, athleteId: null })
-  }
+  }, [])
 
   return (
     <AuthContext.Provider value={{ ...auth, login, logout }}>
