@@ -251,3 +251,49 @@ export const api = {
       body: JSON.stringify({ terra_user_id: terraUserId }),
     }),
 }
+
+// ── Analytics ──────────────────────────────────────────────────────────────
+export interface AcwrPoint {
+  date: string;
+  acwr: number;
+  acute: number;
+  chronic: number;
+}
+
+export interface TrainingLoadPoint {
+  date: string;
+  ctl: number;
+  atl: number;
+  tsb: number;
+}
+
+export interface LoadAnalytics {
+  acwr: AcwrPoint[];
+  training_load: TrainingLoadPoint[];
+}
+
+export interface SportBreakdown {
+  [sport: string]: number;
+}
+
+export interface PerformancePoint {
+  date: string;
+  value: number;
+}
+
+export interface PerformanceAnalytics {
+  vdot: PerformancePoint[];
+  e1rm: PerformancePoint[];
+}
+
+export function getLoadAnalytics(athleteId: string): Promise<LoadAnalytics> {
+  return request<LoadAnalytics>(`/athletes/${athleteId}/analytics/load`);
+}
+
+export function getSportBreakdown(athleteId: string): Promise<SportBreakdown> {
+  return request<SportBreakdown>(`/athletes/${athleteId}/analytics/sport-breakdown`);
+}
+
+export function getPerformanceAnalytics(athleteId: string): Promise<PerformanceAnalytics> {
+  return request<PerformanceAnalytics>(`/athletes/${athleteId}/analytics/performance`);
+}
