@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from sqlalchemy import Boolean, Column, Date, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 
-from app.db.database import Base
+from ..db.database import Base
 
 
 class EnergySnapshotModel(Base):

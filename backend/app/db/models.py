@@ -148,7 +148,7 @@ class SessionLogModel(Base):
 
 # Import V3 models so SQLAlchemy's mapper registry can resolve the
 # back-references declared on AthleteModel above.
-from app.models.schemas import (  # noqa: E402, F401
+from ..models.schemas import (  # noqa: E402, F401
     AllostaticEntryModel,
     EnergySnapshotModel,
     HormonalProfileModel,
