@@ -118,3 +118,46 @@ def test_06_login_with_onboarding_credentials(e2e_client):
     assert "access_token" in body
     assert body["token_type"] == "bearer"
     assert body["athlete_id"] == _state["athlete_id"]
+
+
+def test_07_log_session_and_history(e2e_client):
+    """GET session → POST log → GET history shows 1 logged session."""
+    headers = {"Authorization": f"Bearer {_state['token']}"}
+    athlete_id = _state["athlete_id"]
+
+    # Get the plan to find a session id
+    plan_resp = e2e_client.get(f"/athletes/{athlete_id}/plan", headers=headers)
+    assert plan_resp.status_code == 200
+    sessions = plan_resp.json()["sessions"]
+    assert len(sessions) > 0
+    session_id = sessions[0]["id"]
+    assert session_id  # must be a non-empty string
+
+    # GET session detail — not yet logged
+    detail_resp = e2e_client.get(
+        f"/athletes/{athlete_id}/sessions/{session_id}", headers=headers
+    )
+    assert detail_resp.status_code == 200
+    assert detail_resp.json()["log"] is None
+
+    # POST log
+    log_resp = e2e_client.post(
+        f"/athletes/{athlete_id}/sessions/{session_id}/log",
+        json={"actual_duration_min": 38, "rpe": 6, "notes": "Good session"},
+        headers=headers,
+    )
+    assert log_resp.status_code == 201
+    assert log_resp.json()["actual_duration_min"] == 38
+
+    # GET session detail — now logged
+    detail_resp2 = e2e_client.get(
+        f"/athletes/{athlete_id}/sessions/{session_id}", headers=headers
+    )
+    assert detail_resp2.json()["log"] is not None
+
+    # GET history
+    history_resp = e2e_client.get(f"/athletes/{athlete_id}/history", headers=headers)
+    assert history_resp.status_code == 200
+    history = history_resp.json()
+    assert len(history) >= 1
+    assert history[0]["sessions_logged"] >= 1
