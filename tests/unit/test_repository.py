@@ -38,7 +38,7 @@ class TestRepositoryIO:
         monkeypatch.chdir(tmp_path)
         repo = RepositoryIO()
 
-        abs_path = Path("/absolute/path/file.yaml")
+        abs_path = Path("/absolute/path/file.yaml").resolve()
         resolved = repo.resolve_path(abs_path)
 
         assert resolved == abs_path

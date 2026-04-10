@@ -64,22 +64,20 @@ class TestBreakDetection:
     def test_single_week_break(self):
         """Single week break in the middle should be detected."""
         today = date.today()
-        race_date = date(2026, 1, 6)  # Day of first run
+        # Race 30 days ago
+        race_date = today - timedelta(days=30)
 
-        # Week 1 (Jan 5-11): 3 runs
-        # Week 2 (Jan 12-18): 0 runs (BREAK)
-        # Week 3 (Jan 19-25): 3 runs
-        # Week 4+ (Jan 26-Feb 4): continuing runs
+        # Weeks 1-2: active, Week 3: break, Week 4: active to today
         activities = [
-            create_run(date(2026, 1, 6)),  # Week 1
-            create_run(date(2026, 1, 8)),
-            create_run(date(2026, 1, 10)),
-            # Week 2: no runs (BREAK)
-            create_run(date(2026, 1, 20)),  # Week 3
-            create_run(date(2026, 1, 22)),
-            create_run(date(2026, 1, 24)),
-            create_run(date(2026, 2, 2)),  # Week 4 - to avoid break after
-            create_run(date(2026, 2, 4)),  # Today
+            create_run(today - timedelta(days=30)),
+            create_run(today - timedelta(days=28)),
+            create_run(today - timedelta(days=26)),
+            # Week 3 (approx days 25 to 10): no runs
+            create_run(today - timedelta(days=10)),
+            create_run(today - timedelta(days=8)),
+            create_run(today - timedelta(days=6)),
+            create_run(today - timedelta(days=2)),
+            create_run(today),
         ]
 
         result = detect_training_breaks(activities, race_date, lookback_months=2)
@@ -92,16 +90,16 @@ class TestBreakDetection:
     def test_multiple_breaks(self):
         """Multiple breaks should all be detected, longest identified."""
         today = date.today()
-        race_date = date(2026, 1, 6)  # Day of first run
+        race_date = today - timedelta(days=30)
 
         activities = [
-            create_run(date(2026, 1, 6)),  # Week 1
-            create_run(date(2026, 1, 8)),
-            # Week 2: BREAK (~1 week)
-            create_run(date(2026, 1, 20)),  # Week 3
-            create_run(date(2026, 1, 22)),
-            # Weeks 4: BREAK (~1-2 weeks to today)
-            create_run(date(2026, 2, 4)),  # Today - end with activity
+            create_run(today - timedelta(days=30)),
+            create_run(today - timedelta(days=28)),
+            # BREAK (~1 week)
+            create_run(today - timedelta(days=16)),
+            create_run(today - timedelta(days=14)),
+            # BREAK (~1-2 weeks to today)
+            create_run(today),
         ]
 
         result = detect_training_breaks(activities, race_date, lookback_months=2)

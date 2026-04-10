@@ -1,6 +1,7 @@
 import json
 import time
 import uuid
+from datetime import datetime, timezone, timedelta
 
 import httpx
 import pytest
@@ -83,14 +84,19 @@ def test_fetch_hevy_workouts_maps_to_schema(db_session):
     athlete_id = _make_athlete(db_session)
     _add_hevy_cred(db_session, athlete_id)
 
+    now = datetime.now(timezone.utc)
+    # Ensure date is well within the 7-day since window
+    start_dt = now - timedelta(days=1)
+    end_dt = start_dt + timedelta(hours=1)
+
     respx.get("https://api.hevyapp.com/v1/workouts").mock(
         return_value=httpx.Response(200, json={
             "page": 1, "page_count": 1,
             "workouts": [{
                 "id": "w1",
                 "title": "Push Day",
-                "start_time": "2026-03-25T08:00:00Z",
-                "end_time": "2026-03-25T09:00:00Z",
+                "start_time": start_dt.strftime("%Y-%m-%dT%H:00:00Z"),
+                "end_time": end_dt.strftime("%Y-%m-%dT%H:00:00Z"),
                 "exercises": [],
             }]
         })
