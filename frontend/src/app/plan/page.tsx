@@ -46,7 +46,7 @@ export default function PlanPage() {
         else if (err instanceof ApiError && err.status === 404) setNotFound(true)
         else setError('Failed to load plan.')
       })
-  }, [athleteId, logout]) // router is stable in Next.js — omit to prevent re-fetch on every render
+  }, [athleteId, logout])
 
   return (
     <ProtectedRoute>
@@ -73,18 +73,22 @@ export default function PlanPage() {
               <div key={date}>
                 <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">{formatDate(date)}</h2>
                 <div className="space-y-2">
-                  {sessions.map((s, i) => (
-                    <Card key={i}>
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center gap-2">
-                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${SPORT_COLORS[s.sport] ?? ''}`}>{s.sport}</span>
-                          <CardTitle className="text-base">{s.workout_type}</CardTitle>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-muted-foreground">{s.duration_min} min{s.notes ? ` · ${s.notes}` : ''}</p>
-                      </CardContent>
-                    </Card>
+                  {sessions.map((s) => (
+                    <Link key={s.id} href={`/session/${s.id}`} className="block">
+                      <Card className="cursor-pointer transition-colors hover:bg-muted/50">
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${SPORT_COLORS[s.sport] ?? ''}`}>{s.sport}</span>
+                              <CardTitle className="text-base">{s.workout_type}</CardTitle>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm text-muted-foreground">{s.duration_min} min{s.notes ? ` · ${s.notes}` : ''}</p>
+                        </CardContent>
+                      </Card>
+                    </Link>
                   ))}
                 </div>
               </div>
