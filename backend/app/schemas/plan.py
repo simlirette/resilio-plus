@@ -10,6 +10,7 @@ from .fatigue import FatigueScore
 
 
 class WorkoutSlot(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid4()))
     date: date
     sport: Sport
     workout_type: str
