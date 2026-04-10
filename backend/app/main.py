@@ -1,6 +1,9 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from .core.sync_scheduler import setup_scheduler
 from .routes.auth import router as auth_router
 from .routes.onboarding import router as onboarding_router
 from .routes.athletes import router as athletes_router
@@ -11,7 +14,17 @@ from .routes.nutrition import router as nutrition_router
 from .routes.recovery import router as recovery_router
 from .routes.sessions import router as sessions_router
 
-app = FastAPI(title="Resilio Plus API", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    scheduler = setup_scheduler()
+    try:
+        yield
+    finally:
+        scheduler.shutdown(wait=False)
+
+
+app = FastAPI(title="Resilio Plus API", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
