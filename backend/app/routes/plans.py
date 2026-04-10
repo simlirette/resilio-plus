@@ -10,8 +10,7 @@ from sqlalchemy.orm import Session
 
 from ..agents.base import AgentContext
 from ..agents.head_coach import HeadCoach
-from ..agents.lifting_coach import LiftingCoach
-from ..agents.running_coach import RunningCoach
+from ..routes._agent_factory import build_agents
 from ..core.periodization import get_current_phase
 from ..services.connector_service import fetch_connector_data
 from ..db.models import AthleteModel, TrainingPlanModel
@@ -76,7 +75,7 @@ def _create_plan_for_athlete(
         weeks_remaining=weeks_remaining,
     )
 
-    coach = HeadCoach(agents=[RunningCoach(), LiftingCoach()])
+    coach = HeadCoach(agents=build_agents(athlete))
     weekly_plan = coach.build_week(context, load_history=[])
 
     plan_model = TrainingPlanModel(

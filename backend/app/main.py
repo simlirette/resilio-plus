@@ -7,6 +7,8 @@ from .routes.athletes import router as athletes_router
 from .routes.connectors import router as connectors_router
 from .routes.plans import router as plans_router
 from .routes.reviews import router as reviews_router
+from .routes.nutrition import router as nutrition_router
+from .routes.recovery import router as recovery_router
 
 app = FastAPI(title="Resilio Plus API", version="0.1.0")
 
@@ -24,3 +26,5 @@ app.include_router(athletes_router)
 app.include_router(connectors_router)
 app.include_router(plans_router)
 app.include_router(reviews_router)
+app.include_router(nutrition_router)
+app.include_router(recovery_router)
