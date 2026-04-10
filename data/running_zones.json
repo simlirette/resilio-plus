@@ -1,0 +1,136 @@
+{
+  "description": "Zones d'entraînement course — modèles Seiler 3-zones et Daniels 5-zones. Toutes les intensités exprimées en %FC_max et %VO2max.",
+  "models": {
+    "seiler_3_zone": {
+      "description": "Modèle polarisé Seiler — recommandé pour athlètes hybrides (80/20 TID)",
+      "zone_1": {
+        "name": "Zone 1 — Low intensity (LIT)",
+        "pct_hrmax_min": 60,
+        "pct_hrmax_max": 80,
+        "pct_vo2max_min": 50,
+        "pct_vo2max_max": 70,
+        "lactate_threshold": "below VT1",
+        "target_weekly_volume_pct": 80,
+        "description": "Aérobie de base, conversation possible, mitochondrial development",
+        "feel": "Very easy to comfortable — could hold for hours"
+      },
+      "zone_2": {
+        "name": "Zone 2 — Threshold / Tempo (MIT)",
+        "pct_hrmax_min": 81,
+        "pct_hrmax_max": 90,
+        "pct_vo2max_min": 71,
+        "pct_vo2max_max": 85,
+        "lactate_threshold": "between VT1 and VT2",
+        "target_weekly_volume_pct": 5,
+        "description": "Seuil lactique, tempo, cruise intervals — à éviter en grande quantité (grey zone)",
+        "feel": "Comfortably hard — can speak a few words"
+      },
+      "zone_3": {
+        "name": "Zone 3 — High intensity (HIT)",
+        "pct_hrmax_min": 91,
+        "pct_hrmax_max": 100,
+        "pct_vo2max_min": 86,
+        "pct_vo2max_max": 100,
+        "lactate_threshold": "above VT2",
+        "target_weekly_volume_pct": 15,
+        "description": "VO2max, intervalles, répétitions — adaptatif mais stressant",
+        "feel": "Hard — can only say 2-3 words"
+      }
+    },
+    "daniels_5_zone": {
+      "description": "Modèle Daniels VDOT — allures précises calculées depuis VDOT. Référence pour la prescription exacte.",
+      "zone_E": {
+        "name": "Easy (E)",
+        "pct_hrmax_min": 60,
+        "pct_hrmax_max": 74,
+        "pct_vo2max_min": 55,
+        "pct_vo2max_max": 70,
+        "pace_source": "vdot_paces.easy_min/easy_max",
+        "target_weekly_volume_pct": 75,
+        "typical_sessions": ["easy_run", "recovery_run", "long_run"],
+        "benefits": ["Mitochondrial density", "Capillary development", "Fat oxidation", "Running economy (low intensity)"],
+        "feel": "Can hold conversation. Should feel very easy."
+      },
+      "zone_M": {
+        "name": "Marathon Pace (M)",
+        "pct_hrmax_min": 75,
+        "pct_hrmax_max": 83,
+        "pct_vo2max_min": 71,
+        "pct_vo2max_max": 79,
+        "pace_source": "vdot_paces.marathon_pace_per_km",
+        "target_weekly_volume_pct": 5,
+        "typical_sessions": ["marathon_pace_segments", "progression_run_finish"],
+        "benefits": ["Marathon-specific fitness", "Fat/carb utilization balance", "Mental preparation"],
+        "feel": "Comfortably hard. 3-4 words possible."
+      },
+      "zone_T": {
+        "name": "Threshold (T)",
+        "pct_hrmax_min": 84,
+        "pct_hrmax_max": 88,
+        "pct_vo2max_min": 80,
+        "pct_vo2max_max": 88,
+        "pace_source": "vdot_paces.threshold_pace_per_km",
+        "target_weekly_volume_pct": 10,
+        "typical_sessions": ["tempo_run_20_40min", "cruise_intervals"],
+        "benefits": ["Lactate threshold elevation", "Improved lactate clearance"],
+        "feel": "Comfortably hard. Can say a few words. SHOULD be able to sustain 20-40min.",
+        "cruise_intervals_format": "3-4 x 8-12min @ T-pace, 1-2min jog recovery"
+      },
+      "zone_I": {
+        "name": "Interval (I)",
+        "pct_hrmax_min": 95,
+        "pct_hrmax_max": 100,
+        "pct_vo2max_min": 95,
+        "pct_vo2max_max": 100,
+        "pace_source": "vdot_paces.interval_pace_per_km",
+        "target_weekly_volume_pct": 8,
+        "typical_sessions": ["vo2max_intervals"],
+        "benefits": ["VO2max improvement", "Running economy at high speeds"],
+        "feel": "Hard. Breathing labored but controlled. No sprinting.",
+        "standard_format": "5-6 x 3-5min @ I-pace, recovery = work duration"
+      },
+      "zone_R": {
+        "name": "Repetition (R)",
+        "pct_hrmax_min": 105,
+        "pct_hrmax_max": 120,
+        "pct_vo2max_min": 105,
+        "pct_vo2max_max": 120,
+        "pace_source": "vdot_paces.repetition_pace_per_400m",
+        "target_weekly_volume_pct": 2,
+        "typical_sessions": ["repetitions_economy"],
+        "benefits": ["Running economy", "Fast-twitch recruitment", "Speed"],
+        "feel": "Fast and relaxed. NOT sprinting. Full recovery between reps.",
+        "standard_format": "8-12 x 200-400m @ R-pace, 60-90s full recovery"
+      }
+    }
+  },
+  "tid_targets": {
+    "description": "Training Intensity Distribution (TID) — répartition idéale du volume d'entraînement",
+    "polarized_80_20": {
+      "description": "Recommandé Seiler pour hybrides (moins de réunions LT que polarisé pur)",
+      "zone_1_pct": 80,
+      "zone_2_pct": 5,
+      "zone_3_pct": 15
+    },
+    "pyramidal": {
+      "description": "Alternative acceptable — plus de tempo",
+      "zone_1_pct": 70,
+      "zone_2_pct": 20,
+      "zone_3_pct": 10
+    },
+    "threshold_heavy": {
+      "description": "NON RECOMMANDÉ pour hybrides — conduit au surentraînement",
+      "zone_1_pct": 50,
+      "zone_2_pct": 40,
+      "zone_3_pct": 10
+    }
+  },
+  "heart_rate_calculation": {
+    "max_hr_formulas": [
+      {"formula": "220 - age", "accuracy": "±12 bpm", "use_case": "Default if no measured data"},
+      {"formula": "208 - 0.7*age", "accuracy": "±7 bpm", "use_case": "Tanaka — more accurate for masters"},
+      {"formula": "measured", "accuracy": "gold standard", "use_case": "Use if athlete has done a max HR test"}
+    ],
+    "preference": "Use measured max HR from Strava/Garmin data if available"
+  }
+}

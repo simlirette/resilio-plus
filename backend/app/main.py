@@ -13,6 +13,7 @@ from .routes.reviews import router as reviews_router
 from .routes.nutrition import router as nutrition_router
 from .routes.recovery import router as recovery_router
 from .routes.sessions import router as sessions_router
+from .routes.analytics import router as analytics_router
 
 
 @asynccontextmanager
@@ -43,3 +44,4 @@ app.include_router(reviews_router)
 app.include_router(nutrition_router)
 app.include_router(recovery_router)
 app.include_router(sessions_router)
+app.include_router(analytics_router)
