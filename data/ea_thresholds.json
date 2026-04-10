@@ -1,33 +1,19 @@
 {
-  "version": "1.0",
-  "thresholds": {
-    "female": {
-      "optimal_min": 45,
-      "suboptimal_min": 30,
-      "critical_max": 30,
-      "danger_max": 25
-    },
-    "male": {
-      "optimal_min": 45,
-      "suboptimal_min": 35,
-      "critical_max": 25,
-      "danger_max": 20
-    }
+  "female": {
+    "optimal_min_kcal_per_kg_ffm": 45,
+    "suboptimal_min_kcal_per_kg_ffm": 30,
+    "critical_threshold_kcal_per_kg_ffm": 30,
+    "reds_consecutive_days": 3
   },
-  "reds_signal_days": 3,
-  "formula": "EA = (Apport calorique - EAT) / kg FFM",
-  "variables": {
-    "EAT": "Énergie dépensée à l'entraînement (kcal)",
-    "FFM": "Fat-Free Mass — masse maigre en kg"
+  "male": {
+    "optimal_min_kcal_per_kg_ffm": 45,
+    "suboptimal_min_kcal_per_kg_ffm": 25,
+    "critical_threshold_kcal_per_kg_ffm": 25,
+    "reds_consecutive_days": 3
   },
-  "actions": {
-    "suboptimal": "Alerte Nutrition Coach — augmenter apport calorique",
-    "critical": "Veto Recovery Coach — séance annulée ou réduite",
-    "reds_signal": "Escalade Head Coach — réduction charge + suggestion consultation"
-  },
-  "sources": [
-    "Mountjoy et al. BJSM 2018 - RED-S consensus statement",
-    "Loucks et al. 2003 - EA thresholds original research",
-    "Burke et al. 2018 - EA female athletes"
-  ]
+  "status_labels": {
+    "optimal": "EA > 45 kcal/kg FFM — aucune action requise",
+    "suboptimal": "EA 25-45 kcal/kg FFM — alerte Nutrition Coach",
+    "critical": "EA < seuil critique — veto Recovery Coach + alerte RED-S"
+  }
 }
