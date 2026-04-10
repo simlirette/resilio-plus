@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from ..connectors.apple_health import AppleHealthConnector
 from ..connectors.hevy import HevyConnector
 from ..connectors.strava import StravaConnector
 from ..connectors.terra import TerraConnector
@@ -213,6 +214,61 @@ def terra_connect(
         db=db,
     )
     return ConnectorStatus(provider="terra", connected=True, expires_at=None)
+
+
+# ── Apple Health Upload ───────────────────────────────────────────────────────
+
+
+class AppleHealthUploadRequest(BaseModel):
+    snapshot_date: str
+    hrv_rmssd: float | None = None
+    sleep_hours: float | None = None
+    hr_rest: int | None = None
+
+
+@router.post("/{athlete_id}/connectors/apple-health/upload", status_code=200)
+def apple_health_upload(
+    athlete_id: str,
+    req: AppleHealthUploadRequest,
+    db: DB,
+    _: Annotated[str, Depends(_require_own)],
+) -> dict:
+    """Upload Apple Health data JSON → store latest HRV/sleep in connector creds."""
+    if db.get(AthleteModel, athlete_id) is None:
+        raise HTTPException(status_code=404, detail="Athlete not found")
+
+    connector = AppleHealthConnector()
+    try:
+        parsed = connector.parse(req.model_dump())
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    extra_update = connector.to_extra_dict(parsed)
+
+    cred_model = (
+        db.query(ConnectorCredentialModel)
+        .filter_by(athlete_id=athlete_id, provider="apple_health")
+        .first()
+    )
+    if cred_model:
+        existing = json.loads(cred_model.extra_json or "{}")
+        existing.update(extra_update)
+        cred_model.extra_json = json.dumps(existing)
+    else:
+        db.add(ConnectorCredentialModel(
+            id=str(uuid.uuid4()),
+            athlete_id=athlete_id,
+            provider="apple_health",
+            extra_json=json.dumps(extra_update),
+        ))
+    db.commit()
+
+    return {
+        "uploaded": True,
+        "snapshot_date": parsed.snapshot_date.isoformat(),
+        "hrv_rmssd": parsed.hrv_rmssd,
+        "sleep_hours": parsed.sleep_hours,
+    }
 
 
 # ── Hevy Sync ─────────────────────────────────────────────────────────────────

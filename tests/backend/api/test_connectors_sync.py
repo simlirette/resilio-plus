@@ -110,3 +110,29 @@ def test_strava_sync_wrong_athlete_returns_403(authed_client):
     import uuid as _uuid
     resp = client.post(f"/athletes/{str(_uuid.uuid4())}/connectors/strava/sync")
     assert resp.status_code == 403
+
+
+def test_apple_health_upload(authed_client):
+    client, athlete_id = authed_client
+    resp = client.post(
+        f"/athletes/{athlete_id}/connectors/apple-health/upload",
+        json={
+            "snapshot_date": "2026-04-10",
+            "hrv_rmssd": 52.0,
+            "sleep_hours": 7.5,
+            "hr_rest": 50,
+        },
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["uploaded"] is True
+    assert body["hrv_rmssd"] == 52.0
+
+
+def test_apple_health_upload_missing_date_returns_422(authed_client):
+    client, athlete_id = authed_client
+    resp = client.post(
+        f"/athletes/{athlete_id}/connectors/apple-health/upload",
+        json={"hrv_rmssd": 52.0},
+    )
+    assert resp.status_code == 422
