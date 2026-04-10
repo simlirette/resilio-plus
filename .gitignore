@@ -1,6 +1,16 @@
 # Byte-compiled / optimized / DLL files
 config/.workflow_lock
 .DS_Store
+
+# Local debug / test output files
+*.txt
+artefacts/
+.superpowers/
+.coaching/
+skill\ builder/
+
+# Local Claude settings
+.claude/settings.local.json
 __pycache__/
 *.py[codz]
 *$py.class
