@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql+psycopg2://resilio:resilio@localhost:5432/resilio_db",
+    "sqlite:///./resilio_dev.db",
 )
 
 engine = create_engine(DATABASE_URL)
