@@ -3,11 +3,15 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import date
+from typing import TYPE_CHECKING, Optional
 
 from ..schemas.athlete import AthleteProfile
 from ..schemas.connector import FatSecretDay, HevyWorkout, StravaActivity, TerraHealthData
 from ..schemas.fatigue import FatigueScore
 from ..schemas.plan import WorkoutSlot
+
+if TYPE_CHECKING:
+    from ..models.athlete_state import HormonalProfile
 
 
 @dataclass
@@ -23,6 +27,8 @@ class AgentContext:
     week_number: int = 1                    # 1-based week in multi-week plan
     weeks_remaining: int = 0               # weeks until target_race_date
     sport_budgets: dict[str, float] = field(default_factory=dict)  # sport name → hours
+    # V3: optional hormonal profile — used by lifting/running/nutrition agents
+    hormonal_profile: Optional["HormonalProfile"] = field(default=None)
 
 
 @dataclass

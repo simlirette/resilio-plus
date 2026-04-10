@@ -1,0 +1,40 @@
+{
+  "version": "1.0",
+  "component_weights": {
+    "hrv_deviation": 0.30,
+    "sleep_quality": 0.25,
+    "work_intensity": 0.20,
+    "stress_level": 0.15,
+    "cycle_phase": 0.05,
+    "ea_status": 0.05
+  },
+  "work_intensity_scores": {
+    "light": 10,
+    "normal": 30,
+    "heavy": 65,
+    "exhausting": 90
+  },
+  "stress_level_scores": {
+    "none": 0,
+    "mild": 30,
+    "significant": 70
+  },
+  "cycle_phase_scores": {
+    "menstrual": 40,
+    "follicular": 10,
+    "ovulation": 15,
+    "luteal": 35,
+    "null": 20
+  },
+  "ea_status_scores": {
+    "optimal": 0,
+    "suboptimal": 40,
+    "critical": 80
+  },
+  "intensity_cap_thresholds": {
+    "0-40": 1.0,
+    "41-60": 1.0,
+    "61-80": 0.85,
+    "81-100": 0.70
+  }
+}

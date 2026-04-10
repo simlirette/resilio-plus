@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 from ..agents.base import AgentContext, AgentRecommendation, BaseAgent
+from ..core.hormonal import get_lifting_adjustments
 from ..core.lifting_logic import (
     compute_lifting_fatigue, estimate_strength_level, generate_lifting_sessions,
 )
@@ -71,6 +72,20 @@ class LiftingCoach(BaseAgent):
             for s in sessions
         )
 
+        # V3: apply cycle phase adjustments if hormonal profile is enabled
+        cycle_notes = ""
+        hp = context.hormonal_profile
+        if hp is not None and hp.enabled and hp.current_phase is not None:
+            adj = get_lifting_adjustments(hp.current_phase)
+            if adj["rpe_offset"] < 0:
+                # Approximate RPE -1 as ~10% intensity reduction
+                readiness_modifier = max(0.5, readiness_modifier * 0.90)
+            cycle_notes = (
+                f" | Cycle({hp.current_phase}): RPE{adj['rpe_offset']:+d}"
+                + (" NO-1RM" if adj["no_1rm"] else "")
+                + f" — {adj['notes']}"
+            )
+
         return AgentRecommendation(
             agent_name=self.name,
             fatigue_score=fatigue_score,
@@ -79,6 +94,6 @@ class LiftingCoach(BaseAgent):
             readiness_modifier=readiness_modifier,
             notes=(
                 f"Level: {strength_level.value} | Phase: {phase.phase.value} | "
-                f"DUP block: {context.week_number % 3}"
+                f"DUP block: {context.week_number % 3}{cycle_notes}"
             ),
         )

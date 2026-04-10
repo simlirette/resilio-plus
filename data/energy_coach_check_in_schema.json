@@ -1,0 +1,30 @@
+{
+  "version": "1.0",
+  "questions": [
+    {
+      "id": "work_intensity",
+      "question_fr": "Comment s'est passée ta journée de travail ?",
+      "options": ["light", "normal", "heavy", "exhausting"],
+      "labels_fr": ["Légère", "Normale", "Intense", "Épuisante"],
+      "required": true
+    },
+    {
+      "id": "stress_level",
+      "question_fr": "As-tu eu des facteurs de stress importants aujourd'hui ?",
+      "options": ["none", "mild", "significant"],
+      "labels_fr": ["Non", "Oui, léger", "Oui, significatif"],
+      "required": true
+    },
+    {
+      "id": "cycle_phase",
+      "question_fr": "Phase de cycle ?",
+      "options": ["menstrual", "follicular", "ovulation", "luteal"],
+      "labels_fr": ["Menstruelle", "Folliculaire", "Ovulation", "Lutéale"],
+      "required": false,
+      "condition": "hormonal_profile.enabled == true"
+    }
+  ],
+  "estimated_duration_seconds": 30,
+  "frequency": "daily",
+  "optimal_timing": "morning"
+}
