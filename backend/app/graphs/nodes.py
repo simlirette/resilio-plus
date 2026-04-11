@@ -75,7 +75,7 @@ def _rec_to_dict(r: AgentRecommendation) -> dict:
     return {
         "agent_name": r.agent_name,
         "weekly_load": r.weekly_load,
-        "fatigue_score": dataclasses.asdict(r.fatigue_score) if dataclasses.is_dataclass(r.fatigue_score) else r.fatigue_score.model_dump(),
+        "fatigue_score": r.fatigue_score.model_dump(),
         "suggested_sessions": [s.model_dump(mode="json") for s in r.suggested_sessions],
         "readiness_modifier": r.readiness_modifier,
         "notes": r.notes,
@@ -207,37 +207,16 @@ def detect_conflicts_node(state: AthleteCoachingState, config: dict) -> dict:
 # ---------------------------------------------------------------------------
 
 def resolve_conflicts_node(state: AthleteCoachingState, config: dict) -> dict:
-    """Resolve CRITICAL conflicts by dropping the shorter conflicting session."""
-    recs = [_rec_from_dict(d) for d in state.get("recommendations_dicts", [])]
+    """Pass-through logging node — actual conflict resolution is handled by HeadCoach._arbitrate in build_proposed_plan.
+
+    This node filters for critical conflicts and logs them, but makes no state
+    changes. The duplicate resolution logic previously here has been removed to
+    avoid conflicts with _arbitrate's authoritative session-dropping behaviour.
+    """
     conflicts = [_conflict_from_dict(d) for d in state.get("conflicts_dicts", [])]
-
     critical = [c for c in conflicts if c.severity == ConflictSeverity.CRITICAL]
-
-    for conflict in critical:
-        agents_in_conflict = set(conflict.agents)
-        # Gather all sessions from ALL recs whose sport matches a conflicting agent
-        candidate_sessions = [
-            s
-            for rec in recs
-            for s in rec.suggested_sessions
-            if s.sport.value in agents_in_conflict
-        ]
-        if len(candidate_sessions) >= 2:
-            shortest_duration = min(s.duration_min for s in candidate_sessions)
-            candidates_shortest = [s for s in candidate_sessions if s.duration_min == shortest_duration]
-            to_drop = (
-                candidates_shortest[0]
-                if len(candidates_shortest) == 1
-                else max(candidates_shortest, key=lambda s: s.sport.value)
-            )
-            # Remove to_drop from whichever rec owns it
-            for rec in recs:
-                rec.suggested_sessions = [s for s in rec.suggested_sessions if s is not to_drop]
-
     return {
-        "recommendations_dicts": [_rec_to_dict(r) for r in recs],
-        "conflicts_dicts": [],
-        "messages": [AIMessage(f"{len(critical)} conflits critiques résolus.")],
+        "messages": [AIMessage(f"{len(critical)} conflits critiques détectés — résolution déléguée à HeadCoach._arbitrate.")],
     }
 
 
@@ -390,6 +369,8 @@ def finalize_plan(state: AthleteCoachingState, config: dict) -> dict:
     _db_models = importlib.import_module("app.db.models")
     TrainingPlanModel = _db_models.TrainingPlanModel
     db = config.get("configurable", {}).get("db")
+    if db is None:
+        raise ValueError("finalize_plan: config['configurable']['db'] is required")
     athlete_id = state["athlete_id"]
     plan_dict = state["proposed_plan_dict"]
 

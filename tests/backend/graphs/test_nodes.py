@@ -115,7 +115,11 @@ def test_detect_conflicts_node_returns_conflicts_dicts():
 
 
 def test_resolve_conflicts_node_drops_shorter_session():
-    """resolve_conflicts_node drops the shorter session from a CRITICAL conflict pair."""
+    """resolve_conflicts_node is a pass-through — sessions are NOT dropped by this node.
+
+    Actual conflict resolution is delegated to HeadCoach._arbitrate in
+    build_proposed_plan. This node only logs critical conflicts.
+    """
     from datetime import date
     state = _base_state()
     today = str(date.today())
@@ -148,17 +152,13 @@ def test_resolve_conflicts_node_drops_shorter_session():
         {"severity": "critical", "rule": "dual_hiit", "agents": ["running", "lifting"], "message": "Two HIIT sessions on same day"}
     ]
     result = resolve_conflicts_node(state, config={"configurable": {}})
-    assert "recommendations_dicts" in result
-    # Collect all sessions from result
-    all_sessions = []
-    for rec in result["recommendations_dicts"]:
-        all_sessions.extend(rec.get("suggested_sessions", []))
-    # The 45-min lifting session (shorter) should be dropped; the 60-min running session should remain
-    session_ids = [s["id"] for s in all_sessions]
-    assert "s1" in session_ids, "Longer session (60 min) should be kept"
-    assert "s2" not in session_ids, "Shorter session (45 min) should be dropped"
-    # conflicts_dicts should be cleared
-    assert result.get("conflicts_dicts") == []
+    # Node is a no-op: returns only a message, no recommendations_dicts or conflicts_dicts changes
+    assert isinstance(result, dict)
+    assert "messages" in result
+    # Sessions are passed through intact — recommendations_dicts is not returned by this node
+    assert "recommendations_dicts" not in result, "Node must not modify recommendations — _arbitrate handles this"
+    # conflicts_dicts is not cleared by this node (pass-through)
+    assert "conflicts_dicts" not in result, "Node must not clear conflicts_dicts — it is a logging-only pass-through"
 
 
 def test_build_proposed_plan_populates_proposed_plan_dict():
