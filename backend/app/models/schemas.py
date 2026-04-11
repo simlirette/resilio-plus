@@ -67,3 +67,48 @@ class AllostaticEntryModel(Base):
     athlete = relationship("AthleteModel", back_populates="allostatic_entries")
 
     __table_args__ = (UniqueConstraint("athlete_id", "entry_date"),)
+
+
+class ExternalPlanModel(Base):
+    """Training plan entered manually or imported from file by a Tracking Only athlete."""
+    __tablename__ = "external_plans"
+
+    id = Column(String, primary_key=True)
+    athlete_id = Column(String, ForeignKey("athletes.id"), nullable=False)
+    title = Column(String, nullable=False)
+    source = Column(String, nullable=False)          # "manual" | "file_import"
+    status = Column(String, nullable=False, default="active")   # "active" | "archived"
+    start_date = Column(Date, nullable=True)
+    end_date = Column(Date, nullable=True)
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+    athlete = relationship("AthleteModel", back_populates="external_plans")
+    sessions = relationship(
+        "ExternalSessionModel", back_populates="plan", cascade="all, delete-orphan"
+    )
+
+
+class ExternalSessionModel(Base):
+    """A single session belonging to an external (non-AI) training plan."""
+    __tablename__ = "external_sessions"
+
+    id = Column(String, primary_key=True)
+    plan_id = Column(String, ForeignKey("external_plans.id"), nullable=False)
+    athlete_id = Column(String, ForeignKey("athletes.id"), nullable=False)
+    session_date = Column(Date, nullable=False)
+    sport = Column(String, nullable=False)
+    title = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    duration_min = Column(Integer, nullable=True)
+    status = Column(String, nullable=False, default="planned")  # "planned"|"completed"|"skipped"
+
+    plan = relationship("ExternalPlanModel", back_populates="sessions")
+    log = relationship(
+        "SessionLogModel",
+        back_populates="external_session",
+        uselist=False,
+    )

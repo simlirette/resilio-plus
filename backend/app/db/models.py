@@ -39,6 +39,7 @@ class AthleteModel(Base):
     ftp_watts = Column(Integer, nullable=True)
     vdot = Column(Float, nullable=True)
     css_per_100m = Column(Float, nullable=True)
+    coaching_mode = Column(String, nullable=False, default="full")
     # JSON-serialized list fields
     sports_json = Column(Text, nullable=False)
     goals_json = Column(Text, nullable=False)
@@ -55,6 +56,7 @@ class AthleteModel(Base):
     energy_snapshots = relationship("EnergySnapshotModel", back_populates="athlete", cascade="all, delete-orphan")
     hormonal_profile = relationship("HormonalProfileModel", back_populates="athlete", uselist=False, cascade="all, delete-orphan")
     allostatic_entries = relationship("AllostaticEntryModel", back_populates="athlete", cascade="all, delete-orphan")
+    external_plans = relationship("ExternalPlanModel", back_populates="athlete", cascade="all, delete-orphan")
 
 
 class TrainingPlanModel(Base):
@@ -68,6 +70,7 @@ class TrainingPlanModel(Base):
     total_weekly_hours = Column(Float, nullable=False)
     acwr = Column(Float, nullable=False)
     weekly_slots_json = Column(Text, nullable=False)
+    status = Column(String, nullable=False, default="active")
     created_at = Column(DateTime(timezone=True), nullable=False,
                         default=lambda: datetime.now(timezone.utc))
     # Relationships
@@ -138,10 +141,12 @@ class SessionLogModel(Base):
     actual_data_json = Column(Text, nullable=False, default="{}")
     logged_at = Column(DateTime(timezone=True), nullable=False,
                        default=lambda: datetime.now(timezone.utc))
+    external_session_id = Column(String, ForeignKey("external_sessions.id"), nullable=True)
 
     # Relationships
     athlete = relationship("AthleteModel", back_populates="session_logs")
     plan = relationship("TrainingPlanModel")
+    external_session = relationship("ExternalSessionModel", back_populates="log")
 
     __table_args__ = (UniqueConstraint("athlete_id", "session_id"),)
 
@@ -152,4 +157,6 @@ from app.models.schemas import (  # noqa: E402, F401
     AllostaticEntryModel,
     EnergySnapshotModel,
     HormonalProfileModel,
+    ExternalPlanModel,
+    ExternalSessionModel,
 )
