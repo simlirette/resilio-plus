@@ -23,8 +23,14 @@ def test_state_has_required_keys():
     assert state["messages"] == []
 
 
-def test_state_is_fully_serializable():
-    """Verify all values are JSON-serializable (critical for MemorySaver)."""
+def test_non_message_fields_are_json_serializable():
+    """Verify all non-messages fields are JSON-serializable.
+
+    The `messages` field holds BaseMessage objects which are NOT json.dumps-safe —
+    that is intentional. LangGraph's MemorySaver serializes them via its own
+    checkpoint mechanism, not bare json.dumps. All other fields must be
+    plain Python primitives/dicts/lists.
+    """
     import json
 
     state: AthleteCoachingState = {
