@@ -31,6 +31,8 @@ class EnergySnapshotModel(Base):
     recommended_intensity_cap = Column(Float, nullable=False)
     veto_triggered = Column(Boolean, nullable=False, default=False)
     veto_reason = Column(Text, nullable=True)
+    objective_score = Column(Float, nullable=True)
+    subjective_score = Column(Float, nullable=True)
     created_at = Column(
         DateTime(timezone=True),
         nullable=False,

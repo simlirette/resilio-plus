@@ -73,3 +73,25 @@ def test_hormonal_profile_update_valid():
     )
     assert h.enabled is True
     assert h.cycle_length_days == 28
+
+
+# ---------------------------------------------------------------------------
+# Task 2 — ORM columns
+# ---------------------------------------------------------------------------
+
+def test_energy_snapshot_has_objective_score():
+    from sqlalchemy import create_engine, inspect
+    from sqlalchemy.pool import StaticPool
+    from app.db.database import Base
+    from app.db import models as _models  # noqa
+
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    Base.metadata.create_all(engine)
+    inspector = inspect(engine)
+    cols = {c["name"] for c in inspector.get_columns("energy_snapshots")}
+    assert "objective_score" in cols
+    assert "subjective_score" in cols
