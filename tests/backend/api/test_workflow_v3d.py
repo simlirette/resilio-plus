@@ -93,6 +93,7 @@ def test_create_plan_returns_thread_id(client_and_athlete):
 def test_approve_plan_returns_plan_id(client_and_athlete):
     """POST /workflow/plans/{thread_id}/approve returns success + plan_id."""
     client, athlete_id, _ = client_and_athlete
+    thread_id = f"{athlete_id}:thread-abc-123"
 
     with patch("app.routes.workflow.CoachingService") as MockService:
         mock_instance = MagicMock()
@@ -105,7 +106,7 @@ def test_approve_plan_returns_plan_id(client_and_athlete):
         MockService.return_value = mock_instance
 
         resp = client.post(
-            f"/athletes/{athlete_id}/workflow/plans/thread-abc-123/approve",
+            f"/athletes/{athlete_id}/workflow/plans/{thread_id}/approve",
         )
 
     assert resp.status_code == 200, resp.text
@@ -117,6 +118,7 @@ def test_approve_plan_returns_plan_id(client_and_athlete):
 def test_revise_plan_returns_new_proposed(client_and_athlete):
     """POST /workflow/plans/{thread_id}/revise returns requires_approval=True."""
     client, athlete_id, _ = client_and_athlete
+    thread_id = f"{athlete_id}:thread-abc-123"
 
     with patch("app.routes.workflow.CoachingService") as MockService:
         mock_instance = MagicMock()
@@ -128,7 +130,7 @@ def test_revise_plan_returns_new_proposed(client_and_athlete):
         MockService.return_value = mock_instance
 
         resp = client.post(
-            f"/athletes/{athlete_id}/workflow/plans/thread-abc-123/revise",
+            f"/athletes/{athlete_id}/workflow/plans/{thread_id}/revise",
             json={"feedback": "Trop de volume, réduire s'il te plaît"},
         )
 
@@ -136,7 +138,7 @@ def test_revise_plan_returns_new_proposed(client_and_athlete):
     data = resp.json()
     assert data["success"] is True
     assert data["requires_approval"] is True
-    assert data["thread_id"] == "thread-abc-123"
+    assert data["thread_id"] == thread_id
 
 
 def test_create_plan_requires_full_mode(client_and_athlete):
@@ -168,5 +170,22 @@ def test_approve_requires_full_mode(client_and_athlete):
 
     resp = client.post(
         f"/athletes/{athlete_id}/workflow/plans/some-thread/approve",
+    )
+    assert resp.status_code == 403
+
+
+def test_revise_requires_full_mode(client_and_athlete):
+    """POST /workflow/plans/{thread_id}/revise returns 403 for tracking_only."""
+    client, athlete_id, engine = client_and_athlete
+    TestSession = sessionmaker(bind=engine)
+
+    with TestSession() as db:
+        athlete = db.get(AthleteModel, athlete_id)
+        athlete.coaching_mode = "tracking_only"
+        db.commit()
+
+    resp = client.post(
+        f"/athletes/{athlete_id}/workflow/plans/some-thread/revise",
+        json={"feedback": "feedback"},
     )
     assert resp.status_code == 403

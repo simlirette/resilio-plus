@@ -8,9 +8,11 @@ These endpoints are intentionally synchronous — plan generation is fast enough
 to run within a single HTTP request. For multi-minute jobs, consider background tasks.
 
 Endpoints:
-  GET  /athletes/{id}/workflow/status       — current workflow phase + readiness
-  POST /athletes/{id}/workflow/create-plan  — trigger full plan creation (steps 1-9)
-  POST /athletes/{id}/workflow/weekly-sync  — trigger weekly review cycle (H1-H5)
+  GET  /athletes/{id}/workflow/status                        — current workflow phase + readiness
+  POST /athletes/{id}/workflow/create-plan                   — trigger full plan creation (steps 1-9)
+  POST /athletes/{id}/workflow/weekly-sync                   — trigger weekly review cycle (H1-H5)
+  POST /athletes/{id}/workflow/plans/{thread_id}/approve     — approve proposed plan
+  POST /athletes/{id}/workflow/plans/{thread_id}/revise      — reject and revise plan
 """
 from __future__ import annotations
 
@@ -32,6 +34,16 @@ from ..services.coaching_service import CoachingService
 router = APIRouter(prefix="/athletes", tags=["workflow"])
 
 DB = Annotated[Session, Depends(get_db)]
+
+
+def _validate_thread_ownership(thread_id: str, athlete_id: str) -> None:
+    """Verify the thread_id was created for this athlete.
+
+    Thread IDs are prefixed with athlete_id (e.g. 'a1:uuid4').
+    Raises HTTPException 403 if the prefix doesn't match.
+    """
+    if not thread_id.startswith(f"{athlete_id}:"):
+        raise HTTPException(status_code=403, detail="Thread does not belong to this athlete")
 
 
 def _require_own(
@@ -87,6 +99,7 @@ class PlanApproveResponse(BaseModel):
 
 class PlanReviseRequest(BaseModel):
     feedback: str
+    weeks: int | None = None
 
 
 class WeeklySyncResponse(BaseModel):
@@ -207,13 +220,11 @@ def create_plan_workflow(
     Runs the coaching graph until the present_to_athlete interrupt, then
     returns the proposed plan with thread_id for approval/revision.
     """
-    import json as _json
-
     try:
-        sports = _json.loads(athlete.sports_json)
-        goals = _json.loads(athlete.goals_json)
-        available_days = _json.loads(athlete.available_days_json)
-        equipment = _json.loads(athlete.equipment_json)
+        sports = json.loads(athlete.sports_json)
+        goals = json.loads(athlete.goals_json)
+        available_days = json.loads(athlete.available_days_json)
+        equipment = json.loads(athlete.equipment_json)
     except Exception:
         sports, goals, available_days, equipment = [], [], [], []
 
@@ -280,6 +291,7 @@ def approve_plan(
     db: DB,
 ) -> PlanApproveResponse:
     """Approve the proposed plan — finalize and persist to DB."""
+    _validate_thread_ownership(thread_id, athlete_id)
     service = CoachingService()
     try:
         final_dict = service.resume_plan(
@@ -308,6 +320,7 @@ def revise_plan_endpoint(
     db: DB,
 ) -> PlanCreateResponse:
     """Reject the proposed plan with feedback and request a revision."""
+    _validate_thread_ownership(thread_id, athlete_id)
     service = CoachingService()
     try:
         new_proposed = service.resume_plan(
@@ -326,6 +339,7 @@ def revise_plan_endpoint(
         success=True,
         plan_id=None,
         phase=phase,
+        weeks=body.weeks,
         sessions_total=sessions_total,
         message=f"Plan révisé. {sessions_total} séances proposées.",
         thread_id=thread_id,

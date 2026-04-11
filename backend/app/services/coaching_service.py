@@ -33,7 +33,7 @@ class CoachingService:
 
         Returns (thread_id, proposed_plan_dict).
         """
-        thread_id = str(uuid.uuid4())
+        thread_id = f"{athlete_id}:{str(uuid.uuid4())}"
         config = {"configurable": {"thread_id": thread_id, "db": db}}
 
         initial_state: AthleteCoachingState = {
