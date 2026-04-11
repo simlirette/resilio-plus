@@ -215,20 +215,23 @@ def resolve_conflicts_node(state: AthleteCoachingState, config: dict) -> dict:
 
     for conflict in critical:
         agents_in_conflict = set(conflict.agents)
-        for rec in recs:
-            if rec.agent_name not in agents_in_conflict:
-                continue
-            candidate_sessions = [s for s in rec.suggested_sessions
-                                   if s.sport.value in agents_in_conflict
-                                   or any(a in s.workout_type for a in agents_in_conflict)]
-            if len(candidate_sessions) >= 2:
-                shortest_duration = min(s.duration_min for s in candidate_sessions)
-                candidates_shortest = [s for s in candidate_sessions if s.duration_min == shortest_duration]
-                to_drop = (
-                    candidates_shortest[0]
-                    if len(candidates_shortest) == 1
-                    else max(candidates_shortest, key=lambda s: s.sport.value)
-                )
+        # Gather all sessions from ALL recs whose sport matches a conflicting agent
+        candidate_sessions = [
+            s
+            for rec in recs
+            for s in rec.suggested_sessions
+            if s.sport.value in agents_in_conflict
+        ]
+        if len(candidate_sessions) >= 2:
+            shortest_duration = min(s.duration_min for s in candidate_sessions)
+            candidates_shortest = [s for s in candidate_sessions if s.duration_min == shortest_duration]
+            to_drop = (
+                candidates_shortest[0]
+                if len(candidates_shortest) == 1
+                else max(candidates_shortest, key=lambda s: s.sport.value)
+            )
+            # Remove to_drop from whichever rec owns it
+            for rec in recs:
                 rec.suggested_sessions = [s for s in rec.suggested_sessions if s is not to_drop]
 
     return {

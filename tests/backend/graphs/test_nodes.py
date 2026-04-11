@@ -114,6 +114,53 @@ def test_detect_conflicts_node_returns_conflicts_dicts():
     assert isinstance(result["conflicts_dicts"], list)
 
 
+def test_resolve_conflicts_node_drops_shorter_session():
+    """resolve_conflicts_node drops the shorter session from a CRITICAL conflict pair."""
+    from datetime import date
+    state = _base_state()
+    today = str(date.today())
+    fatigue = {"local_muscular": 30.0, "cns_load": 20.0, "metabolic_cost": 25.0, "recovery_hours": 24.0, "affected_muscles": []}
+    # Two recommendations with HIIT sessions on the same day — triggers CRITICAL conflict
+    state["recommendations_dicts"] = [
+        {
+            "agent_name": "running",
+            "weekly_load": 6.0,
+            "fatigue_score": fatigue,
+            "suggested_sessions": [
+                {"id": "s1", "date": today, "sport": "running", "workout_type": "hiit_interval", "duration_min": 60, "fatigue_score": fatigue, "notes": ""}
+            ],
+            "readiness_modifier": 1.0,
+            "notes": "",
+        },
+        {
+            "agent_name": "lifting",
+            "weekly_load": 3.0,
+            "fatigue_score": fatigue,
+            "suggested_sessions": [
+                {"id": "s2", "date": today, "sport": "lifting", "workout_type": "hiit_strength", "duration_min": 45, "fatigue_score": fatigue, "notes": ""}
+            ],
+            "readiness_modifier": 1.0,
+            "notes": "",
+        },
+    ]
+    # Set a CRITICAL conflict between running and lifting on this day
+    state["conflicts_dicts"] = [
+        {"severity": "critical", "rule": "dual_hiit", "agents": ["running", "lifting"], "message": "Two HIIT sessions on same day"}
+    ]
+    result = resolve_conflicts_node(state, config={"configurable": {}})
+    assert "recommendations_dicts" in result
+    # Collect all sessions from result
+    all_sessions = []
+    for rec in result["recommendations_dicts"]:
+        all_sessions.extend(rec.get("suggested_sessions", []))
+    # The 45-min lifting session (shorter) should be dropped; the 60-min running session should remain
+    session_ids = [s["id"] for s in all_sessions]
+    assert "s1" in session_ids, "Longer session (60 min) should be kept"
+    assert "s2" not in session_ids, "Shorter session (45 min) should be dropped"
+    # conflicts_dicts should be cleared
+    assert result.get("conflicts_dicts") == []
+
+
 def test_build_proposed_plan_populates_proposed_plan_dict():
     state = _base_state()
     state["budgets"] = {"running": 6.0}
@@ -175,6 +222,7 @@ def test_revise_plan_clears_proposed_plan():
     result = revise_plan(state, config={"configurable": {}})
     assert result.get("proposed_plan_dict") is None
     assert result.get("human_approved") is False
+    assert result.get("human_feedback") is None
 
 
 def test_finalize_plan_raises_without_approval():
