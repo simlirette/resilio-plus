@@ -274,3 +274,137 @@ def test_divergence_flag_thresholds():
     assert classify_divergence(10.0) == "none"
     assert classify_divergence(20.0) == "moderate"
     assert classify_divergence(35.0) == "high"
+
+
+# ---------------------------------------------------------------------------
+# Task 4 — Route integration tests
+# ---------------------------------------------------------------------------
+
+def test_post_checkin_creates_readiness(authed_client):
+    client, athlete_id = authed_client
+    resp = client.post(
+        f"/athletes/{athlete_id}/checkin",
+        json={
+            "work_intensity": "normal",
+            "stress_level": "none",
+            "legs_feeling": "fresh",
+            "energy_global": "great",
+        },
+    )
+    assert resp.status_code == 201
+    body = resp.json()
+    assert "final_readiness" in body
+    assert "traffic_light" in body
+    assert body["traffic_light"] in ("green", "yellow", "red")
+    assert "intensity_cap" in body
+
+
+def test_post_checkin_rejects_duplicate(authed_client):
+    client, athlete_id = authed_client
+    payload = {
+        "work_intensity": "normal",
+        "stress_level": "none",
+        "legs_feeling": "normal",
+        "energy_global": "ok",
+    }
+    client.post(f"/athletes/{athlete_id}/checkin", json=payload)
+    resp = client.post(f"/athletes/{athlete_id}/checkin", json=payload)
+    assert resp.status_code == 409
+
+
+def test_post_checkin_requires_auth(client):
+    resp = client.post(
+        "/athletes/some-id/checkin",
+        json={
+            "work_intensity": "normal",
+            "stress_level": "none",
+            "legs_feeling": "normal",
+            "energy_global": "ok",
+        },
+    )
+    assert resp.status_code == 401
+
+
+def test_get_readiness_returns_404_when_no_checkin(authed_client):
+    client, athlete_id = authed_client
+    resp = client.get(f"/athletes/{athlete_id}/readiness")
+    assert resp.status_code == 404
+
+
+def test_get_readiness_returns_data_after_checkin(authed_client):
+    client, athlete_id = authed_client
+    client.post(
+        f"/athletes/{athlete_id}/checkin",
+        json={
+            "work_intensity": "light",
+            "stress_level": "none",
+            "legs_feeling": "fresh",
+            "energy_global": "great",
+        },
+    )
+    resp = client.get(f"/athletes/{athlete_id}/readiness")
+    assert resp.status_code == 200
+    assert "final_readiness" in resp.json()
+
+
+def test_get_energy_history_returns_list(authed_client):
+    client, athlete_id = authed_client
+    client.post(
+        f"/athletes/{athlete_id}/checkin",
+        json={
+            "work_intensity": "heavy",
+            "stress_level": "significant",
+            "legs_feeling": "heavy",
+            "energy_global": "low",
+        },
+    )
+    resp = client.get(f"/athletes/{athlete_id}/energy/history")
+    assert resp.status_code == 200
+    assert isinstance(resp.json(), list)
+    assert len(resp.json()) == 1
+
+
+def test_patch_hormonal_profile(authed_client):
+    client, athlete_id = authed_client
+    from datetime import date
+    resp = client.patch(
+        f"/athletes/{athlete_id}/hormonal-profile",
+        json={
+            "enabled": True,
+            "cycle_length_days": 28,
+            "last_period_start": str(date.today()),
+        },
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["enabled"] is True
+    assert body["cycle_length_days"] == 28
+
+
+def test_checkin_with_cycle_phase(authed_client):
+    client, athlete_id = authed_client
+    resp = client.post(
+        f"/athletes/{athlete_id}/checkin",
+        json={
+            "work_intensity": "normal",
+            "stress_level": "mild",
+            "legs_feeling": "normal",
+            "energy_global": "ok",
+            "cycle_phase": "follicular",
+        },
+    )
+    assert resp.status_code == 201
+
+
+def test_checkin_rejects_invalid_legs_value(authed_client):
+    client, athlete_id = authed_client
+    resp = client.post(
+        f"/athletes/{athlete_id}/checkin",
+        json={
+            "work_intensity": "normal",
+            "stress_level": "none",
+            "legs_feeling": "terrible",
+            "energy_global": "ok",
+        },
+    )
+    assert resp.status_code == 422

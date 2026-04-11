@@ -17,6 +17,7 @@ from .routes.analytics import router as analytics_router
 from .routes.food import router as food_router
 from .routes.workflow import router as workflow_router
 from .routes.mode import router as mode_router
+from .routes.checkin import router as checkin_router
 
 
 @asynccontextmanager
@@ -51,3 +52,4 @@ app.include_router(analytics_router)
 app.include_router(food_router)
 app.include_router(workflow_router)
 app.include_router(mode_router)
+app.include_router(checkin_router)
