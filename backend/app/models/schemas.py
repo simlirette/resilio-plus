@@ -1,9 +1,11 @@
-"""SQLAlchemy models V3 — nouvelles tables pour AthleteState V3.
+"""SQLAlchemy models V3 — nouvelles tables pour AthleteState V3 + mode système.
 
 Tables créées :
 - energy_snapshots        : historique des EnergySnapshot par athlète
 - hormonal_profiles       : profil hormonal par athlète (1:1)
 - allostatic_entries      : historique quotidien allostatic (28 jours) par athlète
+- external_plans          : plans d'entraînement importés (mode tracking_only)
+- external_sessions       : séances individuelles d'un plan externe
 
 Référence : docs/resilio-v3-master.md — sections 3.2, 4.3, 5.2, 7.1
 """
@@ -111,4 +113,5 @@ class ExternalSessionModel(Base):
         "SessionLogModel",
         back_populates="external_session",
         uselist=False,
+        passive_deletes=True,
     )

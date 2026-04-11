@@ -141,7 +141,7 @@ class SessionLogModel(Base):
     actual_data_json = Column(Text, nullable=False, default="{}")
     logged_at = Column(DateTime(timezone=True), nullable=False,
                        default=lambda: datetime.now(timezone.utc))
-    external_session_id = Column(String, ForeignKey("external_sessions.id"), nullable=True)
+    external_session_id = Column(String, ForeignKey("external_sessions.id", ondelete="SET NULL"), nullable=True)
 
     # Relationships
     athlete = relationship("AthleteModel", back_populates="session_logs")
