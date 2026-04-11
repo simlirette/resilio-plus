@@ -1,4 +1,5 @@
 """Integration tests for the coaching graph and CoachingService."""
+import uuid
 from datetime import date
 from unittest.mock import MagicMock, patch
 
@@ -68,7 +69,7 @@ def test_graph_no_interrupt_runs_to_completion():
     with patch(_ENERGY_PATCH, return_value=None):
         result = graph.invoke(
             initial_state,
-            config={"configurable": {"thread_id": "test-thread-1", "db": _db_mock()}},
+            config={"configurable": {"thread_id": str(uuid.uuid4()), "db": _db_mock()}},
         )
 
     assert result["final_plan_dict"] is not None

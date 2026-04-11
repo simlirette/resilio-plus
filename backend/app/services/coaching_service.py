@@ -78,6 +78,7 @@ class CoachingService:
                 "human_approved": approved,
                 "human_feedback": feedback,
             },
+            as_node="present_to_athlete",
         )
 
         # Resume from checkpoint (None input = continue from where we left off)

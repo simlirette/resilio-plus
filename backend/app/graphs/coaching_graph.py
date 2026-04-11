@@ -41,15 +41,11 @@ def _after_revise(state: AthleteCoachingState) -> str:
     # Count revision messages to enforce max 1 revision
     revision_count = sum(
         1 for m in state.get("messages", [])
-        if hasattr(m, "content") and "Révision demandée" in m.content
+        if hasattr(m, "content") and "Replanification en cours" in m.content
     )
     if revision_count <= 1:
         return "delegate"
     return "present"
-
-
-def _after_energy_snapshot(state: AthleteCoachingState) -> str:
-    return "finalize"
 
 
 def build_coaching_graph(interrupt: bool = True):
@@ -106,13 +102,7 @@ def build_coaching_graph(interrupt: bool = True):
         {"delegate": "delegate_specialists", "present": "present_to_athlete"},
     )
 
-    # Post-energy snapshot
-    builder.add_conditional_edges(
-        "apply_energy_snapshot",
-        _after_energy_snapshot,
-        {"finalize": "finalize_plan"},
-    )
-
+    builder.add_edge("apply_energy_snapshot", "finalize_plan")
     builder.add_edge("finalize_plan", END)
 
     checkpointer = MemorySaver()
