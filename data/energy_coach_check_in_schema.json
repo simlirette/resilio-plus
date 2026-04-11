@@ -1,5 +1,5 @@
 {
-  "version": "1.0",
+  "version": "2.0",
   "questions": [
     {
       "id": "work_intensity",
@@ -16,6 +16,20 @@
       "required": true
     },
     {
+      "id": "legs_feeling",
+      "question_fr": "Comment se sentent tes jambes ?",
+      "options": ["fresh", "normal", "heavy", "dead"],
+      "labels_fr": ["Fraîches", "Normales", "Lourdes", "Mortes"],
+      "required": true
+    },
+    {
+      "id": "energy_global",
+      "question_fr": "Comment est ton énergie globale aujourd'hui ?",
+      "options": ["great", "ok", "low", "exhausted"],
+      "labels_fr": ["Top", "OK", "Basse", "Épuisé(e)"],
+      "required": true
+    },
+    {
       "id": "cycle_phase",
       "question_fr": "Phase de cycle ?",
       "options": ["menstrual", "follicular", "ovulation", "luteal"],
@@ -24,7 +38,11 @@
       "condition": "hormonal_profile.enabled == true"
     }
   ],
-  "estimated_duration_seconds": 30,
+  "comment": {
+    "optional": true,
+    "max_chars": 140
+  },
+  "estimated_duration_seconds": 45,
   "frequency": "daily",
   "optimal_timing": "morning"
 }
