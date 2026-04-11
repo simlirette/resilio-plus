@@ -349,3 +349,49 @@ def test_patch_mode_archives_active_plan_when_switching_to_tracking(authed_clien
 def test_patch_mode_requires_auth(client):
     resp = client.patch("/athletes/some-id/mode", json={"coaching_mode": "full"})
     assert resp.status_code == 401
+
+
+def test_onboarding_with_tracking_only_mode(client):
+    """An athlete can register with tracking_only mode."""
+    payload = {
+        "name": "Eve",
+        "age": 25,
+        "sex": "F",
+        "weight_kg": 55.0,
+        "height_cm": 162.0,
+        "sports": ["running"],
+        "primary_sport": "running",
+        "goals": ["stay active"],
+        "available_days": [1, 3, 5],
+        "hours_per_week": 5.0,
+        "email": "eve@test.com",
+        "password": "password123",
+        "plan_start_date": "2026-05-01",
+        "coaching_mode": "tracking_only",
+    }
+    resp = client.post("/athletes/onboarding", json=payload)
+    assert resp.status_code == 201
+    body = resp.json()
+    assert body["athlete"]["coaching_mode"] == "tracking_only"
+
+
+def test_onboarding_defaults_to_full_mode(client):
+    """Onboarding without coaching_mode defaults to full."""
+    payload = {
+        "name": "Frank",
+        "age": 32,
+        "sex": "M",
+        "weight_kg": 78.0,
+        "height_cm": 178.0,
+        "sports": ["running", "lifting"],
+        "primary_sport": "running",
+        "goals": ["sub-25 5k"],
+        "available_days": [0, 2, 4, 6],
+        "hours_per_week": 8.0,
+        "email": "frank@test.com",
+        "password": "password123",
+        "plan_start_date": "2026-05-01",
+    }
+    resp = client.post("/athletes/onboarding", json=payload)
+    assert resp.status_code == 201
+    assert resp.json()["athlete"]["coaching_mode"] == "full"

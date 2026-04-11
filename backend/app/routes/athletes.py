@@ -47,6 +47,7 @@ def athlete_model_to_response(m: AthleteModel) -> AthleteResponse:
         sleep_hours_typical=m.sleep_hours_typical,
         stress_level=m.stress_level,
         job_physical=m.job_physical,
+        coaching_mode=m.coaching_mode,
     )
 
 

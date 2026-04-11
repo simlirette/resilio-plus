@@ -48,6 +48,7 @@ def onboard_athlete(req: OnboardingRequest, db: DB) -> OnboardingResponse:
         goals_json=json.dumps(req.goals),
         available_days_json=json.dumps(req.available_days),
         equipment_json=json.dumps(req.equipment),
+        coaching_mode=req.coaching_mode,
     )
     db.add(athlete_model)
     db.flush()

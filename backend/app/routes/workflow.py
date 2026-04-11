@@ -26,6 +26,7 @@ from sqlalchemy.orm import Session
 
 from ..db.models import AthleteModel, TrainingPlanModel, WeeklyReviewModel, SessionLogModel
 from ..dependencies import get_db, get_current_athlete_id
+from ..dependencies.mode_guard import require_full_mode
 
 router = APIRouter(prefix="/athletes", tags=["workflow"])
 
@@ -184,7 +185,7 @@ def get_workflow_status(
 def create_plan_workflow(
     athlete_id: str,
     body: PlanCreateRequest,
-    athlete: Annotated[AthleteModel, Depends(_require_own)],
+    athlete: Annotated[AthleteModel, Depends(require_full_mode)],
     db: DB,
 ) -> PlanCreateResponse:
     """
