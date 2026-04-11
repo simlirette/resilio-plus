@@ -238,3 +238,62 @@ def test_athlete_create_rejects_invalid_mode():
     }
     with pytest.raises(ValidationError):
         AthleteCreate(**payload)
+
+
+# ModeGuard dependency tests
+import pytest
+from unittest.mock import MagicMock
+from fastapi import HTTPException
+
+from app.dependencies.mode_guard import require_full_mode, require_tracking_mode
+from app.db.models import AthleteModel
+
+
+def _make_athlete(coaching_mode: str, athlete_id: str = "abc") -> AthleteModel:
+    a = MagicMock(spec=AthleteModel)
+    a.id = athlete_id
+    a.coaching_mode = coaching_mode
+    return a
+
+
+def test_require_full_mode_passes_for_full():
+    athlete = _make_athlete("full", "abc")
+    db = MagicMock()
+    db.get.return_value = athlete
+    result = require_full_mode(athlete_id="abc", current_id="abc", db=db)
+    assert result is athlete
+
+
+def test_require_full_mode_raises_for_tracking_only():
+    athlete = _make_athlete("tracking_only", "abc")
+    db = MagicMock()
+    db.get.return_value = athlete
+    with pytest.raises(HTTPException) as exc_info:
+        require_full_mode(athlete_id="abc", current_id="abc", db=db)
+    assert exc_info.value.status_code == 403
+
+
+def test_require_full_mode_raises_for_wrong_owner():
+    athlete = _make_athlete("full", "abc")
+    db = MagicMock()
+    db.get.return_value = athlete
+    with pytest.raises(HTTPException) as exc_info:
+        require_full_mode(athlete_id="abc", current_id="xyz", db=db)
+    assert exc_info.value.status_code == 403
+
+
+def test_require_tracking_mode_passes_for_tracking_only():
+    athlete = _make_athlete("tracking_only", "abc")
+    db = MagicMock()
+    db.get.return_value = athlete
+    result = require_tracking_mode(athlete_id="abc", current_id="abc", db=db)
+    assert result is athlete
+
+
+def test_require_tracking_mode_raises_for_full():
+    athlete = _make_athlete("full", "abc")
+    db = MagicMock()
+    db.get.return_value = athlete
+    with pytest.raises(HTTPException) as exc_info:
+        require_tracking_mode(athlete_id="abc", current_id="abc", db=db)
+    assert exc_info.value.status_code == 403
