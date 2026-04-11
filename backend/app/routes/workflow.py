@@ -240,6 +240,7 @@ def create_plan_workflow(
         vdot=athlete.vdot,
         css_per_100m=athlete.css_per_100m,
         equipment=equipment,
+        coaching_mode=athlete.coaching_mode,
     )
 
     service = CoachingService()
