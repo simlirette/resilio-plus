@@ -1,6 +1,6 @@
 """Node functions for the LangGraph coaching planning graph.
 
-Each node takes (state: AthleteCoachingState, config: dict) and returns a
+Each node takes (state: AthleteCoachingState, config: RunnableConfig) and returns a
 partial state dict. All domain objects are serialized to/from plain dicts
 because LangGraph MemorySaver requires JSON-serializable state.
 
@@ -14,6 +14,7 @@ import uuid
 from datetime import date, timedelta
 
 from langchain_core.messages import AIMessage
+from langchain_core.runnables import RunnableConfig
 
 from ..agents.base import AgentContext, AgentRecommendation
 from ..agents.head_coach import HeadCoach, WeeklyPlan
@@ -115,7 +116,7 @@ def _athlete_from_dict(d: dict) -> AthleteProfile:
 # Node 1: analyze_profile
 # ---------------------------------------------------------------------------
 
-def analyze_profile(state: AthleteCoachingState, config: dict) -> dict:
+def analyze_profile(state: AthleteCoachingState, config: RunnableConfig) -> dict:
     """Compute goal-driven sport budgets from athlete profile."""
     athlete = _athlete_from_dict(state["athlete_dict"])
     budgets_enum = analyze_goals(athlete)
@@ -130,7 +131,7 @@ def analyze_profile(state: AthleteCoachingState, config: dict) -> dict:
 # Node 2: compute_acwr
 # ---------------------------------------------------------------------------
 
-def compute_acwr(state: AthleteCoachingState, config: dict) -> dict:
+def compute_acwr(state: AthleteCoachingState, config: RunnableConfig) -> dict:
     """Compute ACWR from load history + projected weekly load from recommendations."""
     recs = [_rec_from_dict(d) for d in state.get("recommendations_dicts", [])]
     weekly_load = sum(r.weekly_load for r in recs)
@@ -146,7 +147,7 @@ def compute_acwr(state: AthleteCoachingState, config: dict) -> dict:
 # Node 3: delegate_specialists
 # ---------------------------------------------------------------------------
 
-def delegate_specialists(state: AthleteCoachingState, config: dict) -> dict:
+def delegate_specialists(state: AthleteCoachingState, config: RunnableConfig) -> dict:
     """Invoke all sport-specific specialist agents and collect recommendations."""
     athlete = _athlete_from_dict(state["athlete_dict"])
     budgets_str = state.get("budgets", {})
@@ -183,7 +184,7 @@ def delegate_specialists(state: AthleteCoachingState, config: dict) -> dict:
 # Node 4: merge_recommendations (no-op pass-through)
 # ---------------------------------------------------------------------------
 
-def merge_recommendations(state: AthleteCoachingState, config: dict) -> dict:
+def merge_recommendations(state: AthleteCoachingState, config: RunnableConfig) -> dict:
     """No-op pass-through — future hook for cross-agent merging logic."""
     return {}
 
@@ -192,7 +193,7 @@ def merge_recommendations(state: AthleteCoachingState, config: dict) -> dict:
 # Node 5: detect_conflicts_node
 # ---------------------------------------------------------------------------
 
-def detect_conflicts_node(state: AthleteCoachingState, config: dict) -> dict:
+def detect_conflicts_node(state: AthleteCoachingState, config: RunnableConfig) -> dict:
     """Detect scheduling conflicts between agent recommendations."""
     recs = [_rec_from_dict(d) for d in state.get("recommendations_dicts", [])]
     conflicts = detect_conflicts(recs)
@@ -206,7 +207,7 @@ def detect_conflicts_node(state: AthleteCoachingState, config: dict) -> dict:
 # Node 6: resolve_conflicts_node
 # ---------------------------------------------------------------------------
 
-def resolve_conflicts_node(state: AthleteCoachingState, config: dict) -> dict:
+def resolve_conflicts_node(state: AthleteCoachingState, config: RunnableConfig) -> dict:
     """Pass-through logging node — actual conflict resolution is handled by HeadCoach._arbitrate in build_proposed_plan.
 
     This node filters for critical conflicts and logs them, but makes no state
@@ -224,7 +225,7 @@ def resolve_conflicts_node(state: AthleteCoachingState, config: dict) -> dict:
 # Node 7: build_proposed_plan
 # ---------------------------------------------------------------------------
 
-def build_proposed_plan(state: AthleteCoachingState, config: dict) -> dict:
+def build_proposed_plan(state: AthleteCoachingState, config: RunnableConfig) -> dict:
     """Build the proposed WeeklyPlan from recommendations, ACWR, and conflicts."""
     athlete = _athlete_from_dict(state["athlete_dict"])
     recs = [_rec_from_dict(d) for d in state.get("recommendations_dicts", [])]
@@ -275,7 +276,7 @@ def build_proposed_plan(state: AthleteCoachingState, config: dict) -> dict:
 # Node 8: apply_energy_snapshot
 # ---------------------------------------------------------------------------
 
-def apply_energy_snapshot(state: AthleteCoachingState, config: dict) -> dict:
+def apply_energy_snapshot(state: AthleteCoachingState, config: RunnableConfig) -> dict:
     """Apply today's energy snapshot to scale session durations if intensity cap < 1.0."""
     athlete_id = state["athlete_id"]
     db = config.get("configurable", {}).get("db")
@@ -330,7 +331,7 @@ def apply_energy_snapshot(state: AthleteCoachingState, config: dict) -> dict:
 # Node 9: present_to_athlete
 # ---------------------------------------------------------------------------
 
-def present_to_athlete(state: AthleteCoachingState, config: dict) -> dict:
+def present_to_athlete(state: AthleteCoachingState, config: RunnableConfig) -> dict:
     """Present the proposed plan to the athlete and wait for approval (interrupt handled by graph)."""
     return {
         "messages": [AIMessage("Plan présenté à l'athlète — en attente de validation.")],
@@ -341,7 +342,7 @@ def present_to_athlete(state: AthleteCoachingState, config: dict) -> dict:
 # Node 10: revise_plan
 # ---------------------------------------------------------------------------
 
-def revise_plan(state: AthleteCoachingState, config: dict) -> dict:
+def revise_plan(state: AthleteCoachingState, config: RunnableConfig) -> dict:
     """Clear the proposed plan so the graph loops back to rebuild it with feedback."""
     feedback = state.get("human_feedback", "")
     return {
@@ -356,7 +357,7 @@ def revise_plan(state: AthleteCoachingState, config: dict) -> dict:
 # Node 11: finalize_plan
 # ---------------------------------------------------------------------------
 
-def finalize_plan(state: AthleteCoachingState, config: dict) -> dict:
+def finalize_plan(state: AthleteCoachingState, config: RunnableConfig) -> dict:
     """Persist the approved plan to the database and return final_plan_dict."""
     if not state.get("human_approved"):
         raise ValueError("Cannot finalize: human_approved is False")
