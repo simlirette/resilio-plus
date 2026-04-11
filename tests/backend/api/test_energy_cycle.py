@@ -95,3 +95,182 @@ def test_energy_snapshot_has_objective_score():
     cols = {c["name"] for c in inspector.get_columns("energy_snapshots")}
     assert "objective_score" in cols
     assert "subjective_score" in cols
+
+
+# ---------------------------------------------------------------------------
+# Task 3 — EnergyCycleService unit tests
+# ---------------------------------------------------------------------------
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+import uuid
+from datetime import datetime, timezone
+
+from app.db.database import Base
+from app.db import models as _db_models  # noqa
+
+
+def _make_engine():
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    Base.metadata.create_all(engine)
+    return engine
+
+
+def _make_athlete(session, sex="M"):
+    from app.db.models import AthleteModel
+    athlete = AthleteModel(
+        id=str(uuid.uuid4()),
+        name="Test",
+        age=28,
+        sex=sex,
+        weight_kg=70.0,
+        height_cm=175.0,
+        primary_sport="running",
+        hours_per_week=8.0,
+        sports_json='["running"]',
+        goals_json='[]',
+        available_days_json='[0,2,4]',
+        equipment_json='[]',
+    )
+    session.add(athlete)
+    session.commit()
+    return athlete
+
+
+def test_service_submit_checkin_creates_snapshot():
+    from app.services.energy_cycle_service import EnergyCycleService
+    from app.schemas.checkin import CheckInInput
+
+    engine = _make_engine()
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    athlete = _make_athlete(session)
+
+    svc = EnergyCycleService()
+    checkin = CheckInInput(
+        work_intensity="normal",
+        stress_level="none",
+        legs_feeling="fresh",
+        energy_global="great",
+    )
+    result = svc.submit_checkin(athlete.id, session, checkin)
+
+    assert result.final_readiness > 0
+    assert result.traffic_light in ("green", "yellow", "red")
+    assert result.divergence >= 0
+    assert result.divergence_flag in ("none", "moderate", "high")
+    session.close()
+
+
+def test_service_no_duplicate_checkin_same_day():
+    from app.services.energy_cycle_service import EnergyCycleService
+    from app.schemas.checkin import CheckInInput
+    from fastapi import HTTPException
+
+    engine = _make_engine()
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    athlete = _make_athlete(session)
+
+    svc = EnergyCycleService()
+    checkin = CheckInInput(
+        work_intensity="normal",
+        stress_level="none",
+        legs_feeling="normal",
+        energy_global="ok",
+    )
+    svc.submit_checkin(athlete.id, session, checkin)
+
+    with pytest.raises(HTTPException) as exc:
+        svc.submit_checkin(athlete.id, session, checkin)
+    assert exc.value.status_code == 409
+
+
+def test_service_get_today_snapshot_returns_none_when_no_checkin():
+    from app.services.energy_cycle_service import EnergyCycleService
+
+    engine = _make_engine()
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    athlete = _make_athlete(session)
+
+    svc = EnergyCycleService()
+    result = svc.get_today_snapshot(athlete.id, session)
+    assert result is None
+    session.close()
+
+
+def test_service_get_today_snapshot_returns_snapshot_after_checkin():
+    from app.services.energy_cycle_service import EnergyCycleService
+    from app.schemas.checkin import CheckInInput
+
+    engine = _make_engine()
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    athlete = _make_athlete(session)
+
+    svc = EnergyCycleService()
+    checkin = CheckInInput(
+        work_intensity="light",
+        stress_level="none",
+        legs_feeling="fresh",
+        energy_global="great",
+    )
+    svc.submit_checkin(athlete.id, session, checkin)
+    snap = svc.get_today_snapshot(athlete.id, session)
+    assert snap is not None
+    session.close()
+
+
+def test_service_get_history_returns_last_n_days():
+    from app.services.energy_cycle_service import EnergyCycleService
+    from app.models.schemas import EnergySnapshotModel
+
+    engine = _make_engine()
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    athlete = _make_athlete(session)
+
+    # Seed 5 snapshots
+    for i in range(5):
+        snap = EnergySnapshotModel(
+            id=str(uuid.uuid4()),
+            athlete_id=athlete.id,
+            timestamp=datetime.now(timezone.utc),
+            allostatic_score=30.0,
+            cognitive_load=20.0,
+            energy_availability=45.0,
+            sleep_quality=70.0,
+            recommended_intensity_cap=1.0,
+            veto_triggered=False,
+            objective_score=70.0,
+            subjective_score=80.0,
+        )
+        session.add(snap)
+    session.commit()
+
+    svc = EnergyCycleService()
+    history = svc.get_history(athlete.id, session, days=7)
+    assert len(history) == 5
+    session.close()
+
+
+def test_subjective_score_calculation():
+    """Verify subjective_score formula from spec."""
+    from app.services.energy_cycle_service import compute_subjective_score
+    assert compute_subjective_score("fresh", "great") == 100.0
+    assert compute_subjective_score("dead", "exhausted") == pytest.approx(12.5)
+    assert compute_subjective_score("normal", "ok") == pytest.approx(77.5)
+
+
+def test_divergence_flag_thresholds():
+    """Verify divergence classification from spec."""
+    from app.services.energy_cycle_service import classify_divergence
+    assert classify_divergence(10.0) == "none"
+    assert classify_divergence(20.0) == "moderate"
+    assert classify_divergence(35.0) == "high"
