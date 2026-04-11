@@ -179,3 +179,62 @@ def test_external_plan_cascade_deletes_sessions():
     count = session.query(ExternalSessionModel).filter_by(plan_id=plan_id).count()
     assert count == 0, "ExternalSessions should be cascade-deleted with their plan"
     session.close()
+
+
+# Schema tests for coaching_mode
+from app.schemas.athlete import AthleteCreate, AthleteProfile, AthleteUpdate
+
+
+def test_athlete_create_has_coaching_mode_default():
+    payload = {
+        "name": "Bob",
+        "age": 28,
+        "sex": "M",
+        "weight_kg": 75.0,
+        "height_cm": 180.0,
+        "sports": ["running"],
+        "primary_sport": "running",
+        "goals": ["run 10k"],
+        "available_days": [1, 3, 5],
+        "hours_per_week": 6.0,
+    }
+    athlete = AthleteCreate(**payload)
+    assert athlete.coaching_mode == "full"
+
+
+def test_athlete_create_accepts_tracking_only():
+    payload = {
+        "name": "Carol",
+        "age": 35,
+        "sex": "F",
+        "weight_kg": 58.0,
+        "height_cm": 165.0,
+        "sports": ["running"],
+        "primary_sport": "running",
+        "goals": ["finish marathon"],
+        "available_days": [0, 2, 5],
+        "hours_per_week": 8.0,
+        "coaching_mode": "tracking_only",
+    }
+    athlete = AthleteCreate(**payload)
+    assert athlete.coaching_mode == "tracking_only"
+
+
+def test_athlete_create_rejects_invalid_mode():
+    from pydantic import ValidationError
+    import pytest
+    payload = {
+        "name": "Dan",
+        "age": 40,
+        "sex": "M",
+        "weight_kg": 80.0,
+        "height_cm": 175.0,
+        "sports": ["lifting"],
+        "primary_sport": "lifting",
+        "goals": ["bench 100kg"],
+        "available_days": [1, 4],
+        "hours_per_week": 5.0,
+        "coaching_mode": "invalid_mode",
+    }
+    with pytest.raises(ValidationError):
+        AthleteCreate(**payload)

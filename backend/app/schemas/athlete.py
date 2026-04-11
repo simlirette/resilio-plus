@@ -45,6 +45,7 @@ class AthleteProfile(BaseModel):
     sleep_hours_typical: float = Field(default=7.0)
     stress_level: int = Field(default=5, ge=1, le=10)
     job_physical: bool = False
+    coaching_mode: Literal["full", "tracking_only"] = "full"
 
 
 class AthleteCreate(BaseModel):
@@ -68,6 +69,7 @@ class AthleteCreate(BaseModel):
     sleep_hours_typical: float = Field(default=7.0)
     stress_level: int = Field(default=5, ge=1, le=10)
     job_physical: bool = False
+    coaching_mode: Literal["full", "tracking_only"] = "full"
 
 
 class AthleteUpdate(BaseModel):
@@ -91,6 +93,7 @@ class AthleteUpdate(BaseModel):
     sleep_hours_typical: float | None = None
     stress_level: int | None = Field(default=None, ge=1, le=10)
     job_physical: bool | None = None
+    coaching_mode: Literal["full", "tracking_only"] | None = None
 
 
 AthleteResponse = AthleteProfile
