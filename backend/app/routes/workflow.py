@@ -27,6 +27,7 @@ from sqlalchemy.orm import Session
 from ..db.models import AthleteModel, TrainingPlanModel, WeeklyReviewModel, SessionLogModel
 from ..dependencies import get_db, get_current_athlete_id
 from ..dependencies.mode_guard import require_full_mode
+from ..services.coaching_service import CoachingService
 
 router = APIRouter(prefix="/athletes", tags=["workflow"])
 
@@ -69,11 +70,23 @@ class PlanCreateRequest(BaseModel):
 
 class PlanCreateResponse(BaseModel):
     success: bool
-    plan_id: str
-    phase: str
-    weeks: int
-    sessions_total: int
-    message: str
+    plan_id: str | None = None
+    phase: str | None = None
+    weeks: int | None = None
+    sessions_total: int | None = None
+    message: str = ""
+    thread_id: str | None = None
+    requires_approval: bool = False
+
+
+class PlanApproveResponse(BaseModel):
+    success: bool
+    plan_id: str | None = None
+    message: str = ""
+
+
+class PlanReviseRequest(BaseModel):
+    feedback: str
 
 
 class WeeklySyncResponse(BaseModel):
@@ -189,30 +202,22 @@ def create_plan_workflow(
     db: DB,
 ) -> PlanCreateResponse:
     """
-    Trigger the 9-step plan creation workflow (section 8.1 resilio-master-v2.md).
+    Trigger the LangGraph plan creation workflow (V3-D).
 
-    Steps executed here:
-      1. Validate athlete profile completeness
-      2. Calculate ACWR baseline (0 for new athletes)
-      3. Determine training phase from start_date / target_race_date
-      4. Delegate to Head Coach via /athletes/{id}/plans (existing endpoint)
-      5. Return plan summary
-
-    This endpoint wraps the existing plan generation logic and adds workflow
-    framing (phase detection, session counts, human-readable message).
+    Runs the coaching graph until the present_to_athlete interrupt, then
+    returns the proposed plan with thread_id for approval/revision.
     """
-    from ..routes.plans import _create_plan_for_athlete
-    from ..schemas.athlete import AthleteProfile
     import json as _json
 
-    # Build minimal AthleteProfile from model
     try:
         sports = _json.loads(athlete.sports_json)
         goals = _json.loads(athlete.goals_json)
         available_days = _json.loads(athlete.available_days_json)
+        equipment = _json.loads(athlete.equipment_json)
     except Exception:
-        sports, goals, available_days = [], [], []
+        sports, goals, available_days, equipment = [], [], [], []
 
+    from ..schemas.athlete import AthleteProfile
     athlete_profile = AthleteProfile(
         id=athlete.id,
         name=athlete.name,
@@ -234,40 +239,96 @@ def create_plan_workflow(
         ftp_watts=athlete.ftp_watts,
         vdot=athlete.vdot,
         css_per_100m=athlete.css_per_100m,
-        equipment=_json.loads(athlete.equipment_json),
+        equipment=equipment,
     )
 
-    end_date = body.start_date + timedelta(weeks=body.weeks)
-
+    service = CoachingService()
     try:
-        plan_model = _create_plan_for_athlete(
+        thread_id, proposed_dict = service.create_plan(
             athlete_id=athlete_id,
-            athlete=athlete_profile,
-            start_date=body.start_date,
-            end_date=end_date,
+            athlete_dict=athlete_profile.model_dump(mode="json"),
+            load_history=[],
             db=db,
         )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Plan generation failed: {exc}") from exc
 
-    # Count sessions in generated plan
-    try:
-        slots = _json.loads(plan_model.weekly_slots_json)
-        sessions_total = sum(len(w.get("sessions", [])) for w in slots)
-    except Exception:
-        sessions_total = 0
+    sessions_total = len(proposed_dict.get("sessions", [])) if proposed_dict else 0
+    phase = proposed_dict.get("phase", "base") if proposed_dict else "base"
 
     return PlanCreateResponse(
         success=True,
-        plan_id=plan_model.id,
-        phase=plan_model.phase,
+        plan_id=None,
+        phase=phase,
         weeks=body.weeks,
         sessions_total=sessions_total,
         message=(
-            f"Plan created — {body.weeks} weeks of {plan_model.phase} phase "
-            f"starting {body.start_date}. "
-            f"{sessions_total} sessions planned."
+            f"Plan proposé — {body.weeks} semaines phase {phase}. "
+            f"{sessions_total} séances. En attente de validation."
         ),
+        thread_id=thread_id,
+        requires_approval=True,
+    )
+
+
+@router.post("/{athlete_id}/workflow/plans/{thread_id}/approve", response_model=PlanApproveResponse)
+def approve_plan(
+    athlete_id: str,
+    thread_id: str,
+    athlete: Annotated[AthleteModel, Depends(require_full_mode)],
+    db: DB,
+) -> PlanApproveResponse:
+    """Approve the proposed plan — finalize and persist to DB."""
+    service = CoachingService()
+    try:
+        final_dict = service.resume_plan(
+            thread_id=thread_id,
+            approved=True,
+            feedback=None,
+            db=db,
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Plan approval failed: {exc}") from exc
+
+    plan_id = final_dict.get("db_plan_id") if final_dict else None
+    return PlanApproveResponse(
+        success=True,
+        plan_id=plan_id,
+        message="Plan approuvé et enregistré." if plan_id else "Plan approuvé.",
+    )
+
+
+@router.post("/{athlete_id}/workflow/plans/{thread_id}/revise", response_model=PlanCreateResponse)
+def revise_plan_endpoint(
+    athlete_id: str,
+    thread_id: str,
+    body: PlanReviseRequest,
+    athlete: Annotated[AthleteModel, Depends(require_full_mode)],
+    db: DB,
+) -> PlanCreateResponse:
+    """Reject the proposed plan with feedback and request a revision."""
+    service = CoachingService()
+    try:
+        new_proposed = service.resume_plan(
+            thread_id=thread_id,
+            approved=False,
+            feedback=body.feedback,
+            db=db,
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Plan revision failed: {exc}") from exc
+
+    sessions_total = len(new_proposed.get("sessions", [])) if new_proposed else 0
+    phase = new_proposed.get("phase", "base") if new_proposed else "base"
+
+    return PlanCreateResponse(
+        success=True,
+        plan_id=None,
+        phase=phase,
+        sessions_total=sessions_total,
+        message=f"Plan révisé. {sessions_total} séances proposées.",
+        thread_id=thread_id,
+        requires_approval=True,
     )
 
 

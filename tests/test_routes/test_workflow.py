@@ -70,16 +70,29 @@ def test_workflow_status_response_schema(authed_client):
 # ---------------------------------------------------------------------------
 
 def test_create_plan_workflow_success(authed_client):
+    """V3-D: create-plan returns thread_id + requires_approval (plan not yet persisted)."""
     client, athlete_id = authed_client
     start = str(date.today() + timedelta(days=1))
-    resp = client.post(
-        f"/athletes/{athlete_id}/workflow/create-plan",
-        json={"start_date": start, "weeks": 4},
-    )
+
+    from unittest.mock import MagicMock, patch
+    with patch("app.routes.workflow.CoachingService") as MockService:
+        mock_instance = MagicMock()
+        mock_instance.create_plan.return_value = (
+            "thread-test-001",
+            {"sessions": [], "phase": "base", "readiness_level": "green"},
+        )
+        MockService.return_value = mock_instance
+
+        resp = client.post(
+            f"/athletes/{athlete_id}/workflow/create-plan",
+            json={"start_date": start, "weeks": 4},
+        )
+
     assert resp.status_code == 200
     data = resp.json()
     assert data["success"] is True
-    assert data["plan_id"] is not None
+    assert data["thread_id"] == "thread-test-001"
+    assert data["requires_approval"] is True
     assert data["weeks"] == 4
     assert "phase" in data
     assert "sessions_total" in data
@@ -87,15 +100,9 @@ def test_create_plan_workflow_success(authed_client):
 
 
 def test_create_plan_workflow_updates_status(authed_client):
-    """After creating a plan, workflow status should show has_plan=True."""
+    """Onboarding creates a plan; status should show has_plan=True without extra create-plan call."""
     client, athlete_id = authed_client
-    start = str(date.today() + timedelta(days=1))
-    create_resp = client.post(
-        f"/athletes/{athlete_id}/workflow/create-plan",
-        json={"start_date": start, "weeks": 4},
-    )
-    assert create_resp.status_code == 200
-
+    # Onboarding (via authed_client fixture) already persists a plan
     status_resp = client.get(f"/athletes/{athlete_id}/workflow/status")
     assert status_resp.status_code == 200
     status = status_resp.json()
@@ -136,15 +143,9 @@ def test_weekly_sync_returns_200(authed_client):
 
 
 def test_weekly_sync_after_plan_creation(authed_client):
-    """Create a plan first, then run weekly sync."""
+    """Onboarding creates a plan; weekly sync should succeed with 200."""
     client, athlete_id = authed_client
-    start = str(date.today() - timedelta(days=7))
-    create_resp = client.post(
-        f"/athletes/{athlete_id}/workflow/create-plan",
-        json={"start_date": start, "weeks": 4},
-    )
-    assert create_resp.status_code == 200
-
+    # Onboarding already created a plan — run weekly sync directly
     sync_resp = client.post(f"/athletes/{athlete_id}/workflow/weekly-sync")
     assert sync_resp.status_code == 200
     data = sync_resp.json()
@@ -161,11 +162,7 @@ def test_weekly_sync_after_plan_creation(authed_client):
 def test_weekly_sync_creates_review_record(authed_client):
     """Running weekly sync should update workflow status phase."""
     client, athlete_id = authed_client
-    start = str(date.today() - timedelta(days=7))
-    client.post(
-        f"/athletes/{athlete_id}/workflow/create-plan",
-        json={"start_date": start, "weeks": 4},
-    )
+    # Onboarding already created a plan — run weekly sync directly
     client.post(f"/athletes/{athlete_id}/workflow/weekly-sync")
 
     # After sync, status should reflect review done
