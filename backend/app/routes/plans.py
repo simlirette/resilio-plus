@@ -112,6 +112,25 @@ def generate_plan(
     return TrainingPlanResponse.from_model(plan_model)
 
 
+@router.get("/{athlete_id}/plans", response_model=list[TrainingPlanResponse])
+def list_plans(
+    athlete_id: str,
+    db: DB,
+    _: Annotated[str, Depends(_require_own)],
+) -> list[TrainingPlanResponse]:
+    athlete = db.get(AthleteModel, athlete_id)
+    if athlete is None:
+        raise HTTPException(status_code=404, detail="Athlete not found")
+
+    plans = (
+        db.query(TrainingPlanModel)
+        .filter(TrainingPlanModel.athlete_id == athlete_id)
+        .order_by(desc(TrainingPlanModel.created_at))
+        .all()
+    )
+    return [TrainingPlanResponse.from_model(p) for p in plans]
+
+
 @router.get("/{athlete_id}/plan", response_model=TrainingPlanResponse)
 def get_latest_plan(
     athlete_id: str,

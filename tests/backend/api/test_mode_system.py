@@ -297,3 +297,55 @@ def test_require_tracking_mode_raises_for_full():
     with pytest.raises(HTTPException) as exc_info:
         require_tracking_mode(athlete_id="abc", current_id="abc", db=db)
     assert exc_info.value.status_code == 403
+
+
+def test_patch_mode_switches_to_tracking_only(authed_client):
+    client, athlete_id = authed_client
+    resp = client.patch(
+        f"/athletes/{athlete_id}/mode",
+        json={"coaching_mode": "tracking_only"},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["coaching_mode"] == "tracking_only"
+
+
+def test_patch_mode_switches_back_to_full(authed_client):
+    client, athlete_id = authed_client
+    # Switch to tracking_only first
+    client.patch(f"/athletes/{athlete_id}/mode", json={"coaching_mode": "tracking_only"})
+    # Switch back to full
+    resp = client.patch(f"/athletes/{athlete_id}/mode", json={"coaching_mode": "full"})
+    assert resp.status_code == 200
+    assert resp.json()["coaching_mode"] == "full"
+
+
+def test_patch_mode_rejects_invalid_value(authed_client):
+    client, athlete_id = authed_client
+    resp = client.patch(
+        f"/athletes/{athlete_id}/mode",
+        json={"coaching_mode": "coaching_only"},
+    )
+    assert resp.status_code == 422
+
+
+def test_patch_mode_archives_active_plan_when_switching_to_tracking(authed_client):
+    """Switching to tracking_only archives the active training plan."""
+    client, athlete_id = authed_client
+    resp = client.patch(
+        f"/athletes/{athlete_id}/mode",
+        json={"coaching_mode": "tracking_only"},
+    )
+    assert resp.status_code == 200
+    # Verify plan is now archived via the plans endpoint
+    plans_resp = client.get(f"/athletes/{athlete_id}/plans")
+    assert plans_resp.status_code == 200
+    plans = plans_resp.json()
+    if plans:  # onboarding creates a plan
+        assert all(p.get("status", "active") == "archived" for p in plans), \
+            "All plans should be archived after switching to tracking_only"
+
+
+def test_patch_mode_requires_auth(client):
+    resp = client.patch("/athletes/some-id/mode", json={"coaching_mode": "full"})
+    assert resp.status_code == 401

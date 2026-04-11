@@ -38,6 +38,7 @@ class TrainingPlanResponse(BaseModel):
     phase: str
     total_weekly_hours: float
     acwr: float
+    status: str = "active"
     sessions: list[WorkoutSlot]
 
     @classmethod
@@ -51,5 +52,6 @@ class TrainingPlanResponse(BaseModel):
             phase=m.phase,
             total_weekly_hours=m.total_weekly_hours,
             acwr=m.acwr,
+            status=getattr(m, "status", "active"),
             sessions=sessions,
         )
