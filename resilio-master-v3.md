@@ -402,7 +402,9 @@ Terra API → SyncService.sync_terra() → ConnectorCredential.extra_json
 scheduler.add_job(sync_all_strava, trigger="interval", hours=6)
 scheduler.add_job(sync_all_hevy,   trigger="interval", hours=6)
 scheduler.add_job(sync_all_terra,  trigger="interval", hours=6)
-# detect_energy_patterns() : NON IMPLÉMENTÉ (V3-F)
+scheduler.add_job(run_energy_patterns_weekly, trigger="cron", day_of_week="mon", hour=6)
+# → détecte 4 patterns (jambes lourdes, stress chronique, divergence, RED-S)
+# → stocke messages dans head_coach_messages table (déduplication 7j)
 ```
 
 ### Endpoints connector
@@ -528,6 +530,8 @@ backend/app/
 | APScheduler auto-sync (6h) | `core/sync_scheduler.py` | Phase 9 |
 | Frontend settings — connect forms | `frontend/src/app/settings/` | Phase 9 |
 | get_agent_view() — 8 agents | `models/athlete_state.py` | V3 |
+| detect_energy_patterns() APScheduler (4 patterns) | `core/sync_scheduler.py` | S-4 ✅ |
+| HeadCoachMessageModel + head_coach_messages table | `models/schemas.py`, migration 0005 | S-4 ✅ |
 
 ### NON IMPLÉMENTÉ ❌
 
@@ -537,8 +541,6 @@ backend/app/
 | Import fichier plan externe (Claude Haiku) | `routes/external_plan.py` (POST /import) | S-2 |
 | Weekly review graph (5 nodes) | `graphs/weekly_review_graph.py` | S-3 |
 | CoachingService.weekly_review() | `services/coaching_service.py` (ajout) | S-3 |
-| detect_energy_patterns() APScheduler | `core/sync_scheduler.py` (ajout) | S-4 |
-| Challenges proactifs (messages Head Coach) | `services/energy_cycle_service.py` (ajout) | S-4 |
 | Frontend check-in page | `frontend/src/app/checkin/` | S-5 |
 | Frontend energy card dashboard | `frontend/src/app/dashboard/` (ajout card) | S-5 |
 | Frontend tracking page (Tracking Only) | `frontend/src/app/tracking/` | S-6 |

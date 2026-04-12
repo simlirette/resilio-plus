@@ -92,7 +92,7 @@ class FatigueScore:
 | V3-C | EnergyCycleService + check-in routes | ✅ Complete |
 | V3-D | LangGraph coaching graph (11 nodes) + CoachingService + approve/revise | ✅ Complete |
 | V3-E | ExternalPlan CRUD + import fichier (Claude Haiku) | ❌ Not started |
-| V3-F | detect_energy_patterns() + challenges proactifs | ❌ Not started |
+| V3-F | detect_energy_patterns() + challenges proactifs | ✅ Complete |
 | V3-G | Frontend check-in + energy card + tracking page | ❌ Not started |
 | V3-H | E2E tests 2-volet + CLAUDE.md final | ❌ Not started |
 

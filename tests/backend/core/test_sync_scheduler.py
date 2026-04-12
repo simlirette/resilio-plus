@@ -54,6 +54,9 @@ def test_setup_scheduler_all_jobs_every_6h():
     scheduler = setup_scheduler()
     try:
         for job in scheduler.get_jobs():
+            # Skip cron-based jobs (e.g. energy_patterns_weekly) — only check interval jobs
+            if job.trigger.__class__.__name__ != "IntervalTrigger":
+                continue
             assert job.trigger.interval.total_seconds() == 6 * 3600, \
                 f"Job {job.id} interval is not 6h"
     finally:

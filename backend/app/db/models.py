@@ -57,6 +57,7 @@ class AthleteModel(Base):
     hormonal_profile = relationship("HormonalProfileModel", back_populates="athlete", uselist=False, cascade="all, delete-orphan")
     allostatic_entries = relationship("AllostaticEntryModel", back_populates="athlete", cascade="all, delete-orphan")
     external_plans = relationship("ExternalPlanModel", back_populates="athlete", cascade="all, delete-orphan")
+    head_coach_messages = relationship("HeadCoachMessageModel", back_populates="athlete", cascade="all, delete-orphan")
 
 
 class TrainingPlanModel(Base):
@@ -159,4 +160,5 @@ from app.models.schemas import (  # noqa: E402, F401
     HormonalProfileModel,
     ExternalPlanModel,
     ExternalSessionModel,
+    HeadCoachMessageModel,
 )
