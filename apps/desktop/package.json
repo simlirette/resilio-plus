@@ -2,5 +2,16 @@
   "name": "@resilio/desktop",
   "version": "0.1.0",
   "private": true,
-  "description": "Tauri desktop wrapper — scaffold pending (Vague 1 Session T)"
+  "description": "Resilio+ desktop app — Tauri 2.x wrapper of apps/web",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
 }
