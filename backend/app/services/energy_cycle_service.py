@@ -135,6 +135,8 @@ class EnergyCycleService:
             veto_reason=energy_snapshot.veto_reason,
             objective_score=objective_score,
             subjective_score=round(subjective_score, 2),
+            legs_feeling=checkin.legs_feeling,
+            stress_level=checkin.stress_level,
         )
         db.add(snap_model)
         db.commit()
