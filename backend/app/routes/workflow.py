@@ -530,3 +530,103 @@ def _build_recommendations(
         recs.append("Moins de 50% des séances complétées — envisager de réduire la densité du plan.")
 
     return recs
+
+
+# ---------------------------------------------------------------------------
+# S-3 — Weekly review graph endpoints
+# ---------------------------------------------------------------------------
+
+class ReviewStartResponse(BaseModel):
+    thread_id: str
+    review_summary: dict | None = None
+    message: str = ""
+
+
+class ReviewConfirmRequest(BaseModel):
+    thread_id: str
+    approved: bool = True
+
+
+class ReviewConfirmResponse(BaseModel):
+    success: bool
+    review_id: str | None = None
+    message: str = ""
+
+
+# Module-level service instance — shared across requests in the same process.
+# Each call to weekly_review() creates a new graph instance stored inside
+# the service, so state isolation is maintained per thread_id.
+_review_service = CoachingService()
+
+
+@router.post("/{athlete_id}/plan/review/start", response_model=ReviewStartResponse)
+def start_weekly_review(
+    athlete_id: str,
+    athlete: Annotated[AthleteModel, Depends(_require_own)],
+    db: DB,
+) -> ReviewStartResponse:
+    """Start the weekly review graph (S-3).
+
+    Runs nodes 1–3 (analyze → acwr → summary), then pauses at the
+    present_review interrupt. Returns thread_id + review_summary for
+    the athlete to inspect before confirming.
+    """
+    try:
+        thread_id, review_summary = _review_service.weekly_review(
+            athlete_id=athlete_id,
+            db=db,
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Weekly review failed: {exc}",
+        ) from exc
+
+    sessions_completed = review_summary.get("sessions_completed", 0) if review_summary else 0
+    sessions_planned = review_summary.get("sessions_planned", 0) if review_summary else 0
+
+    return ReviewStartResponse(
+        thread_id=thread_id,
+        review_summary=review_summary,
+        message=(
+            f"Revue semaine prête — {sessions_completed}/{sessions_planned} séances. "
+            "Confirme pour enregistrer."
+        ),
+    )
+
+
+@router.post("/{athlete_id}/plan/review/confirm", response_model=ReviewConfirmResponse)
+def confirm_weekly_review(
+    athlete_id: str,
+    body: ReviewConfirmRequest,
+    athlete: Annotated[AthleteModel, Depends(_require_own)],
+    db: DB,
+) -> ReviewConfirmResponse:
+    """Confirm or cancel a pending weekly review (S-3).
+
+    POST body: {"thread_id": "...", "approved": true}
+
+    Resumes the graph from the present_review checkpoint.
+    If approved=True, persists WeeklyReviewModel to DB.
+    If approved=False, cancels without writing.
+    """
+    _validate_thread_ownership(body.thread_id, athlete_id)
+
+    try:
+        _review_service.resume_review(
+            thread_id=body.thread_id,
+            approved=body.approved,
+            db=db,
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Review confirmation failed: {exc}",
+        ) from exc
+
+    action = "enregistrée" if body.approved else "annulée"
+    return ReviewConfirmResponse(
+        success=True,
+        review_id=None,
+        message=f"Révision hebdomadaire {action}.",
+    )
