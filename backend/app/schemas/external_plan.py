@@ -55,3 +55,18 @@ class ExternalPlanOut(BaseModel):
     sessions: list[ExternalSessionOut]
 
     model_config = {"from_attributes": True}
+
+
+class ExternalPlanDraftSession(BaseModel):
+    session_date: date | None = None
+    sport: str
+    title: str
+    description: str | None = None
+    duration_min: int | None = None
+
+
+class ExternalPlanDraft(BaseModel):
+    title: str
+    sessions_parsed: int
+    sessions: list[ExternalPlanDraftSession]
+    parse_warnings: list[str]
