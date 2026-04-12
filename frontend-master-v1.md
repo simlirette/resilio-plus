@@ -209,6 +209,26 @@ docs(frontend): update frontend-master-v1
 - [x] FRONTEND_AUDIT.md
 - [x] CLAUDE.md mis à jour (8 règles absolues, workspace structure)
 
+### Vague 1 ✅ (2026-04-12) — livrée via 2 merges consolidés, voir FRONTEND_VAGUE1_POSTMORTEM.md
+
+| Session | Statut | Livrable | Branche effective |
+|---|---|---|---|
+| FE-1A | ✅ | Tauri desktop scaffold (`apps/desktop/`) | via fe-1d |
+| FE-1B | ✅ | Expo mobile scaffold + composants `@resilio/ui-mobile` | fe-1b |
+| FE-1C | ✅ | ESLint rules + migration hex → CSS vars (check-in, energy) | via fe-1d |
+| FE-1D | ✅ | Génération `@resilio/api-client` + migration `apps/web/src/lib/api.ts` | fe-1d |
+
+---
+
+## 8b. Dette technique Vague 1
+
+| Item | Sévérité | Description |
+|---|---|---|
+| 37 warnings ESLint dans `energy/cycle/page.tsx` | ⚠️ Moyen | 26 warnings — composants cycle menstruel démo avec variables non utilisées. À nettoyer avant Vague 2. |
+| 1 warning ESLint dans `allostatic-gauge.tsx` | ℹ️ Faible | Gauge SVG — variable inutilisée mineure. |
+| Désynchro peer deps React dans `apps/mobile` | ⚠️ Moyen | À corriger avant le premier `expo start`. Expo SDK 52 attend React 18 ; workspace hoiste React 19. |
+| 2 branches abandonnées sur remote | ℹ️ Info | `session/fe-1a` et `session/fe-1c` conservées pour traçabilité, non mergées. Le travail est dans main via fe-1d. |
+
 ---
 
 ## 9. Backlog Vague 1 Frontend
