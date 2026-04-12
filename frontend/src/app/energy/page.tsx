@@ -1,30 +1,32 @@
 'use client'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
   ReferenceLine, CartesianGrid,
 } from 'recharts'
 import { AllostaticGauge } from '@/components/ui/allostatic-gauge'
-import {
-  ENERGY_TODAY,
-  ALLOSTATIC_HISTORY_7D,
-  HRV_HISTORY_7D,
-  allostaticZone,
-  eaStatus,
-} from '../../../mock-data/simon'
+import { useAuth } from '@/lib/auth'
+import { api, ApiError, type ReadinessResponse, type EnergySnapshotSummary } from '@/lib/api'
 
 // ── Color helpers ──────────────────────────────────────────────────────────
 
-function zoneColor(zone: 'green' | 'yellow' | 'red' | 'critical'): string {
-  return { green: '#10b981', yellow: '#f59e0b', red: '#ef4444', critical: '#dc2626' }[zone]
+function trafficColor(light: string): string {
+  return { green: '#10b981', yellow: '#f59e0b', red: '#ef4444' }[light] ?? '#5b5fef'
 }
 
-function eaColor(status: 'optimal' | 'suboptimal' | 'critical'): string {
-  return { optimal: '#10b981', suboptimal: '#f59e0b', critical: '#ef4444' }[status]
+function allostaticColor(score: number): string {
+  if (score <= 40) return '#10b981'
+  if (score <= 60) return '#f59e0b'
+  if (score <= 80) return '#ef4444'
+  return '#dc2626'
 }
 
-function eaLabel(status: 'optimal' | 'suboptimal' | 'critical'): string {
-  return { optimal: 'Optimal', suboptimal: 'Sous-optimal', critical: 'Critique' }[status]
+function eaColor(ea: number): string {
+  if (ea >= 45) return '#10b981'
+  if (ea >= 30) return '#f59e0b'
+  return '#ef4444'
 }
 
 // ── Mini stat card ─────────────────────────────────────────────────────────
@@ -47,10 +49,7 @@ function StatCard({
       className="rounded-xl p-4 flex flex-col gap-1"
       style={{ background: '#14141f', border: '1px solid #22223a' }}
     >
-      <p
-        className="text-xs font-medium tracking-widest uppercase"
-        style={{ color: '#5c5c7a' }}
-      >
+      <p className="text-xs font-medium tracking-widest uppercase" style={{ color: '#5c5c7a' }}>
         {label}
       </p>
       <div className="flex items-end gap-1 mt-1">
@@ -60,28 +59,19 @@ function StatCard({
         >
           {value}
         </span>
-        {unit && (
-          <span className="text-sm mb-0.5" style={{ color: '#5c5c7a' }}>
-            {unit}
-          </span>
-        )}
+        {unit && <span className="text-sm mb-0.5" style={{ color: '#5c5c7a' }}>{unit}</span>}
       </div>
-      {sub && (
-        <p className="text-xs mt-0.5" style={{ color: '#5c5c7a' }}>
-          {sub}
-        </p>
-      )}
+      {sub && <p className="text-xs mt-0.5" style={{ color: '#5c5c7a' }}>{sub}</p>}
     </div>
   )
 }
 
 // ── EA Bar ────────────────────────────────────────────────────────────────
 
-function EnergyAvailabilityCard() {
-  const ea = ENERGY_TODAY.energy_availability
-  const status = eaStatus(ea, 'male')
-  const color = eaColor(status)
-  const pct = Math.min(100, (ea / 60) * 100) // max display at 60 kcal
+function EnergyAvailabilityCard({ ea }: { ea: number }) {
+  const color = eaColor(ea)
+  const label = ea >= 45 ? 'Optimal' : ea >= 30 ? 'Sous-optimal' : 'Critique'
+  const pct = Math.min(100, (ea / 60) * 100)
 
   return (
     <div
@@ -96,7 +86,7 @@ function EnergyAvailabilityCard() {
           className="text-xs font-semibold px-2 py-0.5 rounded-full"
           style={{ background: `${color}18`, color }}
         >
-          {eaLabel(status)}
+          {label}
         </span>
       </div>
 
@@ -105,24 +95,16 @@ function EnergyAvailabilityCard() {
           className="text-3xl font-bold leading-none"
           style={{ fontFamily: "'Space Mono', monospace", color }}
         >
-          {ea}
+          {Math.round(ea)}
         </span>
         <span className="text-sm mb-0.5" style={{ color: '#5c5c7a' }}>kcal/kg FFM</span>
       </div>
 
-      {/* Progress bar with threshold markers */}
       <div className="relative">
         <div className="h-2 rounded-full overflow-hidden" style={{ background: '#22223a' }}>
-          <div
-            className="h-full rounded-full transition-all duration-700"
-            style={{ width: `${pct}%`, background: color }}
-          />
+          <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: color }} />
         </div>
-        {/* Threshold line at 45 */}
-        <div
-          className="absolute top-0 bottom-0 w-px"
-          style={{ left: `${(45 / 60) * 100}%`, background: '#10b981', opacity: 0.5 }}
-        />
+        <div className="absolute top-0 bottom-0 w-px" style={{ left: `${(45 / 60) * 100}%`, background: '#10b981', opacity: 0.5 }} />
       </div>
 
       <div className="flex justify-between text-xs" style={{ color: '#5c5c7a' }}>
@@ -159,25 +141,27 @@ function ChartTooltip(props: Record<string, unknown>) {
   )
 }
 
-// ── Veto status banner ────────────────────────────────────────────────────
+// ── Status banner ─────────────────────────────────────────────────────────
 
-function VetoStatus() {
-  const zone = allostaticZone(ENERGY_TODAY.allostatic_score)
-  const cap = ENERGY_TODAY.recommended_intensity_cap
+function VetoStatus({ readiness }: { readiness: ReadinessResponse }) {
+  const cap = readiness.intensity_cap
+  const light = readiness.traffic_light
 
-  if (ENERGY_TODAY.veto_triggered) {
+  if (light === 'red') {
     return (
       <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: '#ef444415', border: '1px solid #ef444440' }}>
         <span className="text-xl mt-0.5">🔴</span>
         <div>
-          <p className="font-semibold text-sm" style={{ color: '#ef4444' }}>Séance bloquée</p>
-          <p className="text-xs mt-0.5" style={{ color: '#ef444490' }}>{ENERGY_TODAY.veto_reason}</p>
+          <p className="font-semibold text-sm" style={{ color: '#ef4444' }}>Séance déconseillée</p>
+          <p className="text-xs mt-0.5" style={{ color: '#ef444490' }}>
+            Charge allostatique critique. Cap à {Math.round(cap * 100)}%.
+          </p>
         </div>
       </div>
     )
   }
 
-  if (zone === 'yellow' || zone === 'red') {
+  if (light === 'yellow') {
     return (
       <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: '#f59e0b12', border: '1px solid #f59e0b40' }}>
         <span className="text-xl mt-0.5">🟡</span>
@@ -186,8 +170,7 @@ function VetoStatus() {
             Intensité réduite · cap {Math.round(cap * 100)}%
           </p>
           <p className="text-xs mt-0.5" style={{ color: '#f59e0b90' }}>
-            Charge allostatique modérée — un indicateur hors zone.
-            {' '}Journée de travail lourde (cognitif +65).
+            Charge allostatique modérée.
           </p>
         </div>
       </div>
@@ -205,13 +188,105 @@ function VetoStatus() {
   )
 }
 
+// ── History charts ────────────────────────────────────────────────────────
+
+function HistoryCharts({ history }: { history: EnergySnapshotSummary[] }) {
+  if (history.length === 0) return null
+
+  const chartData = history.slice(-7).map(s => ({
+    label: s.date.slice(5), // MM-DD
+    score: Math.round(s.allostatic_score),
+    light: s.traffic_light,
+  }))
+
+  return (
+    <div
+      className="rounded-xl p-5"
+      style={{ background: '#14141f', border: '1px solid #22223a' }}
+    >
+      <p className="text-xs font-medium tracking-widest uppercase mb-4" style={{ color: '#5c5c7a' }}>
+        Historique {Math.min(history.length, 7)} jours
+      </p>
+      <p className="text-xs mb-3" style={{ color: '#8888a8' }}>Allostatic Score</p>
+      <ResponsiveContainer width="100%" height={100}>
+        <LineChart data={chartData} margin={{ left: -20, right: 10, top: 4, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#22223a" vertical={false} />
+          <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#5c5c7a', fontFamily: 'Space Grotesk' }} axisLine={false} tickLine={false} />
+          <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#5c5c7a', fontFamily: 'Space Mono' }} axisLine={false} tickLine={false} />
+          <ReferenceLine y={40} stroke="#10b98140" strokeDasharray="4 4" />
+          <ReferenceLine y={60} stroke="#f59e0b40" strokeDasharray="4 4" />
+          <Tooltip content={(props) => <ChartTooltip {...props} />} />
+          <Line
+            type="monotone"
+            dataKey="score"
+            name="score"
+            stroke="#5b5fef"
+            strokeWidth={2}
+            dot={{ r: 3, fill: '#5b5fef', stroke: '#08080e', strokeWidth: 2 }}
+            activeDot={{ r: 4, fill: '#5b5fef' }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
+// ── Insights panel ─────────────────────────────────────────────────────────
+
+function InsightsPanel({ insights }: { insights: string[] }) {
+  if (insights.length === 0) return null
+  return (
+    <div
+      className="rounded-xl p-4"
+      style={{ background: '#14141f', border: '1px solid #22223a' }}
+    >
+      <p className="text-xs font-medium tracking-widest uppercase mb-3" style={{ color: '#5c5c7a' }}>
+        Insights
+      </p>
+      <ul className="space-y-1.5">
+        {insights.map((insight, i) => (
+          <li key={i} className="text-xs flex items-start gap-2" style={{ color: '#8888a8' }}>
+            <span style={{ color: '#5b5fef', marginTop: 1 }}>›</span>
+            {insight}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────
 
 export default function EnergyPage() {
-  const zone = allostaticZone(ENERGY_TODAY.allostatic_score)
-  const zColor = zoneColor(zone)
-  const hrvDelta = ENERGY_TODAY.hrv_rmssd - ENERGY_TODAY.hrv_baseline
-  const hrvDeltaStr = (hrvDelta > 0 ? '+' : '') + hrvDelta.toFixed(0)
+  const { athleteId } = useAuth()
+  const router = useRouter()
+  const [readiness, setReadiness] = useState<ReadinessResponse | null>(null)
+  const [history, setHistory] = useState<EnergySnapshotSummary[]>([])
+  const [loading, setLoading] = useState(true)
+  const [noCheckin, setNoCheckin] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (!athleteId) return
+
+    Promise.allSettled([
+      api.getReadiness(athleteId),
+      api.getEnergyHistory(athleteId, 7),
+    ]).then(([rRes, hRes]) => {
+      if (rRes.status === 'fulfilled') {
+        setReadiness(rRes.value)
+      } else if (rRes.reason instanceof ApiError) {
+        if (rRes.reason.status === 401) { router.replace('/login'); return }
+        if (rRes.reason.status === 404) setNoCheckin(true)
+        else setError('Impossible de charger le readiness.')
+      }
+      if (hRes.status === 'fulfilled') setHistory(hRes.value)
+      setLoading(false)
+    })
+  }, [athleteId, router])
+
+  const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+  const todayCapitalized = today.charAt(0).toUpperCase() + today.slice(1)
 
   return (
     <div className="space-y-6 pb-12">
@@ -223,11 +298,11 @@ export default function EnergyPage() {
             Tableau de Bord Énergie
           </p>
           <h1 className="text-2xl font-bold mt-0.5" style={{ letterSpacing: '-0.02em' }}>
-            Jeudi 10 Avril
+            {todayCapitalized}
           </h1>
         </div>
         <div className="flex items-center gap-2">
-          {ENERGY_TODAY.check_in_done ? (
+          {readiness ? (
             <span
               className="text-xs px-2.5 py-1 rounded-full font-medium"
               style={{ background: '#10b98115', color: '#10b981', border: '1px solid #10b98130' }}
@@ -246,129 +321,94 @@ export default function EnergyPage() {
         </div>
       </div>
 
-      {/* ── Status banner ── */}
-      <VetoStatus />
+      {/* ── Loading state ── */}
+      {loading && (
+        <p className="text-sm text-muted-foreground animate-pulse">Chargement…</p>
+      )}
 
-      {/* ── Main grid: Gauge + EA ── */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      {/* ── Error ── */}
+      {error && <p className="text-sm" style={{ color: '#ef4444' }}>{error}</p>}
 
-        {/* Gauge card */}
+      {/* ── No check-in yet ── */}
+      {!loading && noCheckin && !readiness && (
         <div
-          className="rounded-xl p-5 flex flex-col items-center gap-2"
+          className="rounded-xl p-6 flex flex-col items-center gap-4 text-center"
           style={{ background: '#14141f', border: '1px solid #22223a' }}
         >
-          <AllostaticGauge score={ENERGY_TODAY.allostatic_score} size={200} />
-
-          {/* Component breakdown */}
-          <div className="w-full mt-2 space-y-1.5">
-            {[
-              { label: 'HRV / Autonomique', value: 30, fill: '#ef4444', pct: 30 },
-              { label: 'Sommeil', value: 62, fill: '#f59e0b', pct: 62 * 0.25 },
-              { label: 'Charge cognitive', value: 65, fill: '#ef4444', pct: 65 * 0.20 },
-              { label: 'Stress déclaré', value: 30, fill: '#10b981', pct: 30 * 0.15 },
-            ].map(row => (
-              <div key={row.label} className="flex items-center gap-2 text-xs">
-                <span className="w-32 shrink-0" style={{ color: '#5c5c7a' }}>{row.label}</span>
-                <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: '#22223a' }}>
-                  <div className="h-full rounded-full" style={{ width: `${Math.min(100, row.value)}%`, background: row.fill }} />
-                </div>
-                <span className="w-8 text-right font-mono" style={{ color: '#8888a8' }}>{row.value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Right column: EA + HRV + Sleep */}
-        <div className="flex flex-col gap-4">
-          <EnergyAvailabilityCard />
-
-          <div className="grid grid-cols-2 gap-3">
-            <StatCard
-              label="HRV (RMSSD)"
-              value={ENERGY_TODAY.hrv_rmssd}
-              unit="ms"
-              sub={`${hrvDeltaStr}ms vs baseline`}
-              color={ENERGY_TODAY.hrv_rmssd < ENERGY_TODAY.hrv_baseline ? '#f59e0b' : '#10b981'}
-            />
-            <StatCard
-              label="Sommeil"
-              value={ENERGY_TODAY.sleep_hours}
-              unit="h"
-              sub={`Qualité ${ENERGY_TODAY.sleep_quality}/100`}
-              color={ENERGY_TODAY.sleep_hours >= 7 ? '#10b981' : '#f59e0b'}
-            />
-          </div>
-
-          <StatCard
-            label="FC Repos"
-            value={ENERGY_TODAY.resting_hr}
-            unit="bpm"
-            sub="Dans la norme"
-            color="#eeeef4"
-          />
-        </div>
-      </div>
-
-      {/* ── 7-Day History charts ── */}
-      <div
-        className="rounded-xl p-5"
-        style={{ background: '#14141f', border: '1px solid #22223a' }}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-xs font-medium tracking-widest uppercase" style={{ color: '#5c5c7a' }}>
-            Historique 7 Jours
+          <p className="text-sm" style={{ color: '#5c5c7a' }}>
+            Pas encore de check-in aujourd&apos;hui.
           </p>
+          <Link
+            href="/check-in"
+            className="text-sm px-6 py-2.5 rounded-xl font-semibold transition-opacity hover:opacity-80"
+            style={{ background: '#5b5fef', color: '#fff' }}
+          >
+            Faire le check-in →
+          </Link>
         </div>
+      )}
 
-        <div className="space-y-6">
-          {/* Allostatic score chart */}
-          <div>
-            <p className="text-xs mb-3" style={{ color: '#8888a8' }}>Allostatic Score</p>
-            <ResponsiveContainer width="100%" height={100}>
-              <LineChart data={ALLOSTATIC_HISTORY_7D} margin={{ left: -20, right: 10, top: 4, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#22223a" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#5c5c7a', fontFamily: 'Space Grotesk' }} axisLine={false} tickLine={false} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#5c5c7a', fontFamily: 'Space Mono' }} axisLine={false} tickLine={false} />
-                <ReferenceLine y={40} stroke="#10b98140" strokeDasharray="4 4" />
-                <ReferenceLine y={60} stroke="#f59e0b40" strokeDasharray="4 4" />
-                <Tooltip content={(props) => <ChartTooltip {...props} />} />
-                <Line
-                  type="monotone"
-                  dataKey="score"
-                  name="score"
-                  stroke="#5b5fef"
-                  strokeWidth={2}
-                  dot={{ r: 3, fill: '#5b5fef', stroke: '#08080e', strokeWidth: 2 }}
-                  activeDot={{ r: 4, fill: '#5b5fef' }}
+      {/* ── Main content (when readiness loaded) ── */}
+      {readiness && (
+        <>
+          {/* Status banner */}
+          <VetoStatus readiness={readiness} />
+
+          {/* Main grid: Gauge + EA */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+            {/* Gauge card */}
+            <div
+              className="rounded-xl p-5 flex flex-col items-center gap-2"
+              style={{ background: '#14141f', border: '1px solid #22223a' }}
+            >
+              <AllostaticGauge score={Math.round(readiness.allostatic_score)} size={200} />
+
+              {/* Divergence info */}
+              {readiness.divergence_flag !== 'none' && (
+                <div
+                  className="w-full rounded-lg px-3 py-2 text-xs"
+                  style={{
+                    background: readiness.divergence_flag === 'high' ? '#ef444415' : '#f59e0b15',
+                    border: `1px solid ${readiness.divergence_flag === 'high' ? '#ef444430' : '#f59e0b30'}`,
+                    color: readiness.divergence_flag === 'high' ? '#ef4444' : '#f59e0b',
+                  }}
+                >
+                  Divergence objectif/subjectif : {Math.round(readiness.divergence)} pts
+                </div>
+              )}
+            </div>
+
+            {/* Right column: stats */}
+            <div className="flex flex-col gap-4">
+              <EnergyAvailabilityCard ea={readiness.energy_availability} />
+
+              <div className="grid grid-cols-2 gap-3">
+                <StatCard
+                  label="Readiness"
+                  value={Math.round(readiness.final_readiness)}
+                  unit="/100"
+                  sub={`Obj ${Math.round(readiness.objective_score)} / Subj ${Math.round(readiness.subjective_score)}`}
+                  color={trafficColor(readiness.traffic_light)}
                 />
-              </LineChart>
-            </ResponsiveContainer>
+                <StatCard
+                  label="Cap intensité"
+                  value={Math.round(readiness.intensity_cap * 100)}
+                  unit="%"
+                  sub="Limite recommandée"
+                  color={allostaticColor(readiness.allostatic_score)}
+                />
+              </div>
+            </div>
           </div>
 
-          {/* HRV chart */}
-          <div>
-            <p className="text-xs mb-3" style={{ color: '#8888a8' }}>HRV RMSSD (ms)</p>
-            <ResponsiveContainer width="100%" height={100}>
-              <LineChart data={HRV_HISTORY_7D} margin={{ left: -20, right: 10, top: 4, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#22223a" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#5c5c7a', fontFamily: 'Space Grotesk' }} axisLine={false} tickLine={false} />
-                <YAxis domain={[55, 90]} tick={{ fontSize: 10, fill: '#5c5c7a', fontFamily: 'Space Mono' }} axisLine={false} tickLine={false} />
-                <ReferenceLine y={ENERGY_TODAY.hrv_baseline} stroke="#10b98150" strokeDasharray="4 4" label={{ value: 'baseline', position: 'right', fill: '#10b98170', fontSize: 10 }} />
-                <Tooltip content={(props) => <ChartTooltip {...props} />} />
-                <Line
-                  type="monotone"
-                  dataKey="hrv"
-                  name="ms"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  dot={{ r: 3, fill: '#10b981', stroke: '#08080e', strokeWidth: 2 }}
-                  activeDot={{ r: 4, fill: '#10b981' }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
+          {/* Insights */}
+          <InsightsPanel insights={readiness.insights} />
+        </>
+      )}
+
+      {/* ── History chart (when available) ── */}
+      {history.length > 0 && <HistoryCharts history={history} />}
 
       {/* ── Quick links ── */}
       <div className="flex gap-3 flex-wrap">
@@ -377,14 +417,7 @@ export default function EnergyPage() {
           className="text-sm px-4 py-2 rounded-lg font-medium transition-opacity hover:opacity-80"
           style={{ background: '#5b5fef', color: '#fff' }}
         >
-          Modifier le check-in
-        </Link>
-        <Link
-          href="/energy/cycle"
-          className="text-sm px-4 py-2 rounded-lg font-medium transition-opacity hover:opacity-80"
-          style={{ background: '#1a1a28', border: '1px solid #22223a', color: '#eeeef4' }}
-        >
-          Vue cycle →
+          {readiness ? 'Modifier le check-in' : 'Check-in →'}
         </Link>
         <Link
           href="/dashboard"

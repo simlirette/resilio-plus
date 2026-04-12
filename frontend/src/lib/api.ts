@@ -260,6 +260,18 @@ export const api = {
     return _reqRaw(`/athletes/${athleteId}/connectors/files/fit`, { method: 'POST', body: formData })
   },
 
+  submitCheckin: (athleteId: string, data: CheckInRequest) =>
+    request<ReadinessResponse>(`/athletes/${athleteId}/checkin`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  getReadiness: (athleteId: string) =>
+    request<ReadinessResponse>(`/athletes/${athleteId}/readiness`),
+
+  getEnergyHistory: (athleteId: string, days = 28) =>
+    request<EnergySnapshotSummary[]>(`/athletes/${athleteId}/energy/history?days=${days}`),
+
 }
 
 // ── Analytics ──────────────────────────────────────────────────────────────
@@ -294,6 +306,42 @@ export interface PerformancePoint {
 export interface PerformanceAnalytics {
   vdot: PerformancePoint[];
   e1rm: PerformancePoint[];
+}
+
+// ── Energy / Check-in ──────────────────────────────────────────────────────
+
+export interface CheckInRequest {
+  work_intensity: 'light' | 'normal' | 'heavy' | 'exhausting'
+  stress_level: 'none' | 'mild' | 'significant'
+  legs_feeling: 'fresh' | 'normal' | 'heavy' | 'dead'
+  energy_global: 'great' | 'ok' | 'low' | 'exhausted'
+  cycle_phase?: 'menstrual' | 'follicular' | 'ovulation' | 'luteal' | null
+  comment?: string | null
+}
+
+export interface ReadinessResponse {
+  date: string
+  objective_score: number
+  subjective_score: number
+  final_readiness: number
+  divergence: number
+  divergence_flag: 'none' | 'moderate' | 'high'
+  traffic_light: 'green' | 'yellow' | 'red'
+  allostatic_score: number
+  energy_availability: number
+  intensity_cap: number
+  insights: string[]
+}
+
+export interface EnergySnapshotSummary {
+  date: string
+  objective_score: number | null
+  subjective_score: number | null
+  allostatic_score: number
+  energy_availability: number
+  intensity_cap: number
+  veto_triggered: boolean
+  traffic_light: string
 }
 
 export function getLoadAnalytics(athleteId: string): Promise<LoadAnalytics> {

@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth'
 import { api, ApiError } from '@/lib/api'
-import { SIMON } from '../../../mock-data/simon'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,20 +18,11 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // Dev mode: if backend unreachable, auto-login with mock user
+  // Redirect if already logged in
   useEffect(() => {
-    if (process.env.NODE_ENV !== 'development') return
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 1500)
-    fetch('http://localhost:8000/', { method: 'HEAD', signal: controller.signal })
-      .then(() => clearTimeout(timeout))
-      .catch(() => {
-        clearTimeout(timeout)
-        login('dev-mock-token', SIMON.id)
-        router.replace('/dashboard')
-      })
-    return () => { clearTimeout(timeout); controller.abort() }
-  }, [login, router])
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+    if (token) router.replace('/dashboard')
+  }, [router])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

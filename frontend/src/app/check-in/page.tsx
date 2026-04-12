@@ -1,16 +1,23 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth'
+import { api, ApiError, type CheckInRequest, type ReadinessResponse } from '@/lib/api'
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
-type WorkIntensity = 'light' | 'normal' | 'heavy' | 'exhausting'
-type StressLevel = 'none' | 'mild' | 'significant'
+type WorkIntensity = CheckInRequest['work_intensity']
+type StressLevel = CheckInRequest['stress_level']
+type LegsFeeling = CheckInRequest['legs_feeling']
+type EnergyGlobal = CheckInRequest['energy_global']
 
-interface CheckInState {
+interface FormState {
   work_intensity: WorkIntensity | null
   stress_level: StressLevel | null
-  submitted: boolean
+  legs_feeling: LegsFeeling | null
+  energy_global: EnergyGlobal | null
+  comment: string
 }
 
 // ── Option button ─────────────────────────────────────────────────────────
@@ -68,19 +75,14 @@ function ProgressDots({ step, total }: { step: number; total: number }) {
 
 // ── Confirmation screen ───────────────────────────────────────────────────
 
-function ConfirmationScreen({ work, stress }: { work: WorkIntensity; stress: StressLevel }) {
-  const scoreEst = {
-    none: { light: 28, normal: 36, heavy: 52, exhausting: 72 },
-    mild: { light: 35, normal: 45, heavy: 58, exhausting: 76 },
-    significant: { light: 48, normal: 58, heavy: 68, exhausting: 85 },
-  }[stress][work]
-
-  const zoneColor = scoreEst <= 40 ? '#10b981' : scoreEst <= 60 ? '#f59e0b' : '#ef4444'
-  const zoneLabel = scoreEst <= 40 ? 'Charge légère' : scoreEst <= 60 ? 'Charge modérée' : 'Charge élevée'
+function ConfirmationScreen({ readiness }: { readiness: ReadinessResponse }) {
+  const lightColor = { green: '#10b981', yellow: '#f59e0b', red: '#ef4444' }[readiness.traffic_light]
+  const lightLabel = { green: 'Feu vert', yellow: 'Feu orange', red: 'Feu rouge' }[readiness.traffic_light]
+  const score = Math.round(readiness.final_readiness)
 
   return (
     <div className="flex flex-col items-center gap-6 py-8 text-center">
-      {/* Checkmark animation */}
+      {/* Checkmark */}
       <div
         className="flex items-center justify-center rounded-full"
         style={{ width: 72, height: 72, background: '#10b98118', border: '2px solid #10b981' }}
@@ -93,62 +95,66 @@ function ConfirmationScreen({ work, stress }: { work: WorkIntensity; stress: Str
       <div>
         <h2 className="text-xl font-bold">Check-in enregistré</h2>
         <p className="text-sm mt-1" style={{ color: '#5c5c7a' }}>
-          L'Energy Coach a mis à jour ton profil.
+          L&apos;Energy Coach a mis à jour ton profil.
         </p>
       </div>
 
-      {/* Score preview */}
+      {/* Readiness card */}
       <div
         className="w-full rounded-xl p-4"
         style={{ background: '#14141f', border: '1px solid #22223a' }}
       >
         <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#5c5c7a' }}>
-          Estimation Allostatic Score
+          Readiness aujourd&apos;hui
         </p>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-3">
           <span
             className="text-4xl font-bold"
-            style={{ fontFamily: "'Space Mono', monospace", color: zoneColor }}
+            style={{ fontFamily: "'Space Mono', monospace", color: lightColor }}
           >
-            ~{scoreEst}
+            {score}
           </span>
           <span
-            className="text-xs px-3 py-1 rounded-full font-semibold"
-            style={{ background: `${zoneColor}18`, color: zoneColor, border: `1px solid ${zoneColor}40` }}
+            className="text-xs px-3 py-1 rounded-full font-semibold flex items-center gap-1.5"
+            style={{ background: `${lightColor}18`, color: lightColor, border: `1px solid ${lightColor}40` }}
           >
-            {zoneLabel}
+            <span
+              className="inline-block rounded-full"
+              style={{ width: 8, height: 8, background: lightColor }}
+            />
+            {lightLabel}
           </span>
         </div>
 
-        <div className="mt-3 space-y-1.5 text-left">
-          <div className="flex justify-between text-xs">
-            <span style={{ color: '#5c5c7a' }}>Journée de travail</span>
-            <span style={{ color: '#eeeef4' }}>
-              {{ light: 'Légère', normal: 'Normale', heavy: 'Intense', exhausting: 'Épuisante' }[work]}
-            </span>
-          </div>
-          <div className="flex justify-between text-xs">
-            <span style={{ color: '#5c5c7a' }}>Stress déclaré</span>
-            <span style={{ color: '#eeeef4' }}>
-              {{ none: 'Aucun', mild: 'Léger', significant: 'Significatif' }[stress]}
-            </span>
-          </div>
+        {readiness.insights.length > 0 && (
+          <ul className="text-left space-y-1 mt-2">
+            {readiness.insights.map((insight, i) => (
+              <li key={i} className="text-xs flex items-start gap-2" style={{ color: '#8888a8' }}>
+                <span style={{ color: lightColor, marginTop: 1 }}>›</span>
+                {insight}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <div className="mt-3 pt-3 flex justify-between text-xs" style={{ borderTop: '1px solid #22223a' }}>
+          <span style={{ color: '#5c5c7a' }}>Cap intensité</span>
+          <span style={{ color: '#eeeef4' }}>{Math.round(readiness.intensity_cap * 100)}%</span>
         </div>
       </div>
 
-      {/* Intensity note if high load */}
-      {scoreEst > 60 && (
+      {readiness.traffic_light !== 'green' && (
         <div
           className="w-full rounded-xl p-4 flex items-start gap-3 text-left"
-          style={{ background: '#f59e0b10', border: '1px solid #f59e0b40' }}
+          style={{ background: `${lightColor}10`, border: `1px solid ${lightColor}40` }}
         >
-          <span className="text-lg">⚡</span>
+          <span className="text-lg">{readiness.traffic_light === 'red' ? '🔴' : '🟡'}</span>
           <div>
-            <p className="text-sm font-semibold" style={{ color: '#f59e0b' }}>
-              Intensité ajustée pour aujourd'hui
+            <p className="text-sm font-semibold" style={{ color: lightColor }}>
+              Intensité ajustée pour aujourd&apos;hui
             </p>
-            <p className="text-xs mt-0.5" style={{ color: '#f59e0b80' }}>
-              Cap à 85% de l'intensité normale. Durée réduite de ~10%.
+            <p className="text-xs mt-0.5" style={{ color: `${lightColor}90` }}>
+              Cap à {Math.round(readiness.intensity_cap * 100)}% de l&apos;intensité normale.
             </p>
           </div>
         </div>
@@ -177,24 +183,59 @@ function ConfirmationScreen({ work, stress }: { work: WorkIntensity; stress: Str
 // ── Main Page ─────────────────────────────────────────────────────────────
 
 export default function CheckInPage() {
-  const [state, setState] = useState<CheckInState>({
+  const { athleteId } = useAuth()
+  const router = useRouter()
+
+  const [form, setForm] = useState<FormState>({
     work_intensity: null,
     stress_level: null,
-    submitted: false,
+    legs_feeling: null,
+    energy_global: null,
+    comment: '',
   })
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+  const [readiness, setReadiness] = useState<ReadinessResponse | null>(null)
 
-  // Which step are we on? 0 = work, 1 = stress, 2 = done
-  const step = state.work_intensity === null ? 0 : state.stress_level === null ? 1 : 2
-  const canSubmit = step === 2 && !state.submitted
+  // Step: number of completed questions
+  const step =
+    form.work_intensity === null ? 0
+    : form.stress_level === null ? 1
+    : form.legs_feeling === null ? 2
+    : form.energy_global === null ? 3
+    : 4
 
-  function submit() {
-    setState(s => ({ ...s, submitted: true }))
+  const canSubmit = step === 4 && !submitting
+
+  async function submit() {
+    if (!athleteId) { router.replace('/login'); return }
+    if (!form.work_intensity || !form.stress_level || !form.legs_feeling || !form.energy_global) return
+    setSubmitting(true)
+    setError('')
+    try {
+      const payload: CheckInRequest = {
+        work_intensity: form.work_intensity,
+        stress_level: form.stress_level,
+        legs_feeling: form.legs_feeling,
+        energy_global: form.energy_global,
+        comment: form.comment.trim() || null,
+      }
+      const res = await api.submitCheckin(athleteId, payload)
+      setReadiness(res)
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        router.replace('/login')
+      } else {
+        setError('Erreur lors du check-in. Réessaie.')
+        setSubmitting(false)
+      }
+    }
   }
 
-  if (state.submitted && state.work_intensity && state.stress_level) {
+  if (readiness) {
     return (
       <div className="max-w-md mx-auto px-2">
-        <ConfirmationScreen work={state.work_intensity} stress={state.stress_level} />
+        <ConfirmationScreen readiness={readiness} />
       </div>
     )
   }
@@ -214,87 +255,179 @@ export default function CheckInPage() {
                 className="text-xs px-2 py-0.5 rounded-full"
                 style={{ background: '#5b5fef15', color: '#818cf8', border: '1px solid #5b5fef30' }}
               >
-                ~30 secondes
+                ~60 secondes
               </span>
             </div>
             <h1 className="text-xl font-bold">Comment vas-tu ?</h1>
           </div>
         </div>
 
-        <ProgressDots step={step === 2 ? 2 : step + 1} total={2} />
+        <ProgressDots step={Math.min(step, 4)} total={4} />
 
-        {/* ── Question 1: Work intensity ── */}
+        {error && (
+          <p className="text-sm text-destructive">{error}</p>
+        )}
+
+        {/* ── Q1: Work intensity ── */}
         <div
           className="rounded-xl p-5 space-y-3 transition-opacity duration-300"
           style={{
             background: '#14141f',
             border: `1px solid ${step >= 0 ? '#22223a' : '#191928'}`,
-            opacity: step === 0 || state.work_intensity ? 1 : 0.4,
+            opacity: step === 0 || form.work_intensity ? 1 : 0.4,
           }}
         >
           <div className="flex items-center gap-2 mb-1">
-            <span
-              className="text-xs font-mono px-1.5 py-0.5 rounded"
-              style={{ background: '#22223a', color: '#5c5c7a' }}
-            >
-              01
-            </span>
-            <p className="font-semibold text-sm">Comment s'est passée ta journée de travail ?</p>
+            <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ background: '#22223a', color: '#5c5c7a' }}>01</span>
+            <p className="font-semibold text-sm">Comment s&apos;est passée ta journée de travail ?</p>
           </div>
-
           <div className="grid grid-cols-2 gap-2">
-            {[
+            {([
               { value: 'light' as WorkIntensity, label: 'Légère', sub: 'Peu de sollicitations' },
               { value: 'normal' as WorkIntensity, label: 'Normale', sub: 'Journée standard' },
               { value: 'heavy' as WorkIntensity, label: 'Intense', sub: 'Beaucoup de réunions / décisions' },
               { value: 'exhausting' as WorkIntensity, label: 'Épuisante', sub: 'Cognitif maximal' },
-            ].map(opt => (
+            ] as const).map(opt => (
               <OptionBtn
                 key={opt.value}
                 label={opt.label}
                 sub={opt.sub}
-                selected={state.work_intensity === opt.value}
-                onClick={() => setState(s => ({ ...s, work_intensity: opt.value }))}
+                selected={form.work_intensity === opt.value}
+                onClick={() => setForm(s => ({ ...s, work_intensity: opt.value }))}
               />
             ))}
           </div>
         </div>
 
-        {/* ── Question 2: Stress ── */}
+        {/* ── Q2: Stress ── */}
         <div
           className="rounded-xl p-5 space-y-3 transition-all duration-300"
           style={{
             background: '#14141f',
             border: `1px solid ${step >= 1 ? '#22223a' : '#191928'}`,
-            opacity: state.work_intensity ? 1 : 0.3,
-            pointerEvents: state.work_intensity ? 'auto' : 'none',
+            opacity: form.work_intensity ? 1 : 0.3,
+            pointerEvents: form.work_intensity ? 'auto' : 'none',
           }}
         >
           <div className="flex items-center gap-2 mb-1">
-            <span
-              className="text-xs font-mono px-1.5 py-0.5 rounded"
-              style={{ background: '#22223a', color: '#5c5c7a' }}
-            >
-              02
-            </span>
-            <p className="font-semibold text-sm">Facteurs de stress importants aujourd'hui ?</p>
+            <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ background: '#22223a', color: '#5c5c7a' }}>02</span>
+            <p className="font-semibold text-sm">Facteurs de stress importants aujourd&apos;hui ?</p>
           </div>
-
           <div className="space-y-2">
-            {[
+            {([
               { value: 'none' as StressLevel, label: 'Non', sub: 'Journée tranquille' },
               { value: 'mild' as StressLevel, label: 'Oui, léger', sub: 'Quelques tensions gérées' },
               { value: 'significant' as StressLevel, label: 'Oui, significatif', sub: 'Stress notable, difficile à zapper' },
-            ].map(opt => (
+            ] as const).map(opt => (
               <OptionBtn
                 key={opt.value}
                 label={opt.label}
                 sub={opt.sub}
-                selected={state.stress_level === opt.value}
-                onClick={() => setState(s => ({ ...s, stress_level: opt.value }))}
+                selected={form.stress_level === opt.value}
+                onClick={() => setForm(s => ({ ...s, stress_level: opt.value }))}
               />
             ))}
           </div>
+        </div>
+
+        {/* ── Q3: Legs feeling ── */}
+        <div
+          className="rounded-xl p-5 space-y-3 transition-all duration-300"
+          style={{
+            background: '#14141f',
+            border: `1px solid ${step >= 2 ? '#22223a' : '#191928'}`,
+            opacity: form.stress_level ? 1 : 0.3,
+            pointerEvents: form.stress_level ? 'auto' : 'none',
+          }}
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ background: '#22223a', color: '#5c5c7a' }}>03</span>
+            <p className="font-semibold text-sm">Comment se sentent tes jambes ?</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {([
+              { value: 'fresh' as LegsFeeling, label: 'Fraîches', sub: 'Prêt à tout' },
+              { value: 'normal' as LegsFeeling, label: 'Normales', sub: 'État standard' },
+              { value: 'heavy' as LegsFeeling, label: 'Lourdes', sub: 'Fatigue ressentie' },
+              { value: 'dead' as LegsFeeling, label: 'Mortes', sub: 'Vraiment épuisées' },
+            ] as const).map(opt => (
+              <OptionBtn
+                key={opt.value}
+                label={opt.label}
+                sub={opt.sub}
+                selected={form.legs_feeling === opt.value}
+                onClick={() => setForm(s => ({ ...s, legs_feeling: opt.value }))}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* ── Q4: Energy global ── */}
+        <div
+          className="rounded-xl p-5 space-y-3 transition-all duration-300"
+          style={{
+            background: '#14141f',
+            border: `1px solid ${step >= 3 ? '#22223a' : '#191928'}`,
+            opacity: form.legs_feeling ? 1 : 0.3,
+            pointerEvents: form.legs_feeling ? 'auto' : 'none',
+          }}
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ background: '#22223a', color: '#5c5c7a' }}>04</span>
+            <p className="font-semibold text-sm">Niveau d&apos;énergie global aujourd&apos;hui ?</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {([
+              { value: 'great' as EnergyGlobal, label: 'Super', sub: 'Plein d\'énergie' },
+              { value: 'ok' as EnergyGlobal, label: 'Correct', sub: 'Dans la norme' },
+              { value: 'low' as EnergyGlobal, label: 'Faible', sub: 'Moins d\'élan que d\'habitude' },
+              { value: 'exhausted' as EnergyGlobal, label: 'Épuisé', sub: 'Vraiment à plat' },
+            ] as const).map(opt => (
+              <OptionBtn
+                key={opt.value}
+                label={opt.label}
+                sub={opt.sub}
+                selected={form.energy_global === opt.value}
+                onClick={() => setForm(s => ({ ...s, energy_global: opt.value }))}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* ── Q5: Optional comment ── */}
+        <div
+          className="rounded-xl p-5 space-y-3 transition-all duration-300"
+          style={{
+            background: '#14141f',
+            border: `1px solid ${step >= 4 ? '#22223a' : '#191928'}`,
+            opacity: form.energy_global ? 1 : 0.3,
+            pointerEvents: form.energy_global ? 'auto' : 'none',
+          }}
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ background: '#22223a', color: '#5c5c7a' }}>05</span>
+            <p className="font-semibold text-sm">
+              Note rapide{' '}
+              <span className="font-normal" style={{ color: '#5c5c7a' }}>(optionnel)</span>
+            </p>
+          </div>
+          <textarea
+            value={form.comment}
+            onChange={e => setForm(s => ({ ...s, comment: e.target.value.slice(0, 140) }))}
+            placeholder="Ex : nuit agitée, courbatures post-sortie longue…"
+            rows={2}
+            className="w-full rounded-lg px-3 py-2.5 text-sm resize-none outline-none"
+            style={{
+              background: '#0e0e1a',
+              border: '1px solid #22223a',
+              color: '#eeeef4',
+            }}
+          />
+          {form.comment.length > 0 && (
+            <p className="text-right text-xs" style={{ color: '#5c5c7a' }}>
+              {form.comment.length}/140
+            </p>
+          )}
         </div>
 
         {/* ── Submit ── */}
@@ -308,7 +441,11 @@ export default function CheckInPage() {
             cursor: canSubmit ? 'pointer' : 'not-allowed',
           }}
         >
-          {step < 2 ? 'Répondre aux 2 questions pour continuer' : 'Enregistrer le check-in →'}
+          {submitting
+            ? 'Enregistrement…'
+            : step < 4
+            ? `Répondre aux ${4 - step} question${4 - step > 1 ? 's' : ''} restante${4 - step > 1 ? 's' : ''}`
+            : 'Enregistrer le check-in →'}
         </button>
 
         <p className="text-center text-xs" style={{ color: '#5c5c7a' }}>

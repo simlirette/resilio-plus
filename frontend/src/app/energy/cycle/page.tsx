@@ -1,12 +1,59 @@
 'use client'
 import Link from 'next/link'
-import {
-  HORMONAL_DEMO,
-  CYCLE_PHASES,
-  CYCLE_ADJUSTMENTS_TODAY,
-} from '../../../../mock-data/simon'
 
-// ── Phase info helper ─────────────────────────────────────────────────────
+// ── Static cycle phase data ───────────────────────────────────────────────
+
+const CYCLE_PHASES = [
+  {
+    id: 'menstrual',
+    label: 'Menstruelle',
+    color: '#ef4444',
+    description: 'J1–J5 · Récupération prioritaire',
+    days: [1, 2, 3, 4, 5],
+  },
+  {
+    id: 'follicular',
+    label: 'Folliculaire',
+    color: '#10b981',
+    description: 'J6–J13 · Phase de gains',
+    days: [6, 7, 8, 9, 10, 11, 12, 13],
+  },
+  {
+    id: 'ovulation',
+    label: 'Ovulation',
+    color: '#5b5fef',
+    description: 'J14–J15 · Pic de performance',
+    days: [14, 15],
+  },
+  {
+    id: 'luteal',
+    label: 'Lutéale',
+    color: '#f59e0b',
+    description: 'J16–J28 · Intensité modérée',
+    days: Array.from({ length: 13 }, (_, i) => i + 16),
+  },
+]
+
+const PHASE_DESCRIPTIONS: Record<string, { physio: string; performance: string }> = {
+  menstrual: {
+    physio: 'Estrogène et progestérone au plus bas. Prostaglandines élevées — crampes et inflammation possibles.',
+    performance: 'Force légèrement réduite (–5/–10%). Tolérance à la douleur réduite. Récupération ralentie.',
+  },
+  follicular: {
+    physio: 'Estrogène en hausse. Sensibilité à l\'insuline améliorée. Phase de récupération optimale.',
+    performance: 'Phase idéale pour les gains de force et les séances intensives. Récupération la plus rapide.',
+  },
+  ovulation: {
+    physio: 'Pic d\'estrogène + LH. Force maximale absolue du cycle. Laxité ligamentaire augmentée.',
+    performance: 'Performance au maximum. Risque accru de blessure ligamentaire — attention à la technique.',
+  },
+  luteal: {
+    physio: 'Progestérone élevée. Température basale +0.3–0.5°C. Catabolisme musculaire accru.',
+    performance: 'Force réduite progressivement (–5/–15% fin de phase). Besoin protéines augmenté.',
+  },
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
 
 function getPhase(phaseId: string) {
   return CYCLE_PHASES.find(p => p.id === phaseId) ?? CYCLE_PHASES[3]
@@ -29,16 +76,14 @@ function CycleCalendar({ cycleDay, cycleLength }: { cycleDay: number; cycleLengt
             {d}
           </div>
         ))}
-
         {days.map(day => {
           const phase = phaseForDay(day)
           const isToday = day === cycleDay
           const isCurrent = day <= cycleDay
-
           return (
             <div
               key={day}
-              className="relative flex items-center justify-center rounded-lg text-xs font-medium transition-all"
+              className="relative flex items-center justify-center rounded-lg text-xs font-medium"
               style={{
                 aspectRatio: '1',
                 background: isToday
@@ -47,25 +92,18 @@ function CycleCalendar({ cycleDay, cycleLength }: { cycleDay: number; cycleLengt
                   ? `${phase?.color ?? '#5b5fef'}22`
                   : '#14141f',
                 color: isToday ? '#fff' : isCurrent ? phase?.color : '#5c5c7a',
-                border: isToday
-                  ? `2px solid ${phase?.color ?? '#5b5fef'}`
-                  : '1px solid #22223a',
+                border: isToday ? `2px solid ${phase?.color ?? '#5b5fef'}` : '1px solid #22223a',
                 fontFamily: "'Space Mono', monospace",
               }}
             >
               {day}
               {isToday && (
-                <span
-                  className="absolute -top-1 -right-1 w-2 h-2 rounded-full"
-                  style={{ background: '#fff' }}
-                />
+                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full" style={{ background: '#fff' }} />
               )}
             </div>
           )
         })}
       </div>
-
-      {/* Phase legend */}
       <div className="flex flex-wrap gap-x-4 gap-y-2 mt-4">
         {CYCLE_PHASES.map(phase => (
           <div key={phase.id} className="flex items-center gap-1.5 text-xs">
@@ -81,28 +119,9 @@ function CycleCalendar({ cycleDay, cycleLength }: { cycleDay: number; cycleLengt
 
 // ── Phase detail card ─────────────────────────────────────────────────────
 
-function PhaseCard({ phaseId }: { phaseId: string }) {
+function PhaseCard({ phaseId, cycleDay }: { phaseId: string; cycleDay: number }) {
   const phase = getPhase(phaseId)
-  const descriptions: Record<string, { physio: string; performance: string }> = {
-    menstrual: {
-      physio: 'Estrogène et progestérone au plus bas. Prostaglandines élevées — crampes et inflammation possibles.',
-      performance: 'Force légèrement réduite (–5/–10%). Tolérance à la douleur réduite. Récupération ralentie.',
-    },
-    follicular: {
-      physio: 'Estrogène en hausse. Sensibilité à l\'insuline améliorée. Phase de récupération optimale.',
-      performance: 'Phase idéale pour les gains de force et les séances intensives. Récupération la plus rapide.',
-    },
-    ovulation: {
-      physio: 'Pic d\'estrogène + LH. Force maximale absolue du cycle. Laxité ligamentaire augmentée.',
-      performance: 'Performance au maximum. Risque accru de blessure ligamentaire — attention à la technique.',
-    },
-    luteal: {
-      physio: 'Progestérone élevée. Température basale +0.3–0.5°C. Catabolisme musculaire accru.',
-      performance: 'Force réduite progressivement (–5/–15% fin de phase). Besoin protéines augmenté.',
-    },
-  }
-
-  const desc = descriptions[phaseId] ?? descriptions.luteal
+  const desc = PHASE_DESCRIPTIONS[phaseId] ?? PHASE_DESCRIPTIONS.luteal
 
   return (
     <div
@@ -114,21 +133,16 @@ function PhaseCard({ phaseId }: { phaseId: string }) {
           <p className="text-xs font-medium tracking-widest uppercase" style={{ color: `${phase.color}90` }}>
             Phase active
           </p>
-          <h3 className="text-xl font-bold mt-0.5" style={{ color: phase.color }}>
-            {phase.label}
-          </h3>
-          <p className="text-xs mt-0.5" style={{ color: `${phase.color}80` }}>
-            {phase.description}
-          </p>
+          <h3 className="text-xl font-bold mt-0.5" style={{ color: phase.color }}>{phase.label}</h3>
+          <p className="text-xs mt-0.5" style={{ color: `${phase.color}80` }}>{phase.description}</p>
         </div>
         <div
           className="text-right text-xs font-mono px-3 py-1.5 rounded-lg"
           style={{ background: `${phase.color}18`, color: phase.color }}
         >
-          J{HORMONAL_DEMO.current_cycle_day}
+          J{cycleDay}
         </div>
       </div>
-
       <div className="space-y-2">
         <div>
           <p className="text-xs font-semibold mb-1" style={{ color: '#8888a8' }}>Physiologie</p>
@@ -143,96 +157,19 @@ function PhaseCard({ phaseId }: { phaseId: string }) {
   )
 }
 
-// ── Severity icon ─────────────────────────────────────────────────────────
+// ── Demo notice ───────────────────────────────────────────────────────────
 
-function SeverityIcon({ severity }: { severity: 'info' | 'caution' | 'warning' }) {
-  const map = {
-    info: { icon: '●', color: '#5b5fef' },
-    caution: { icon: '▲', color: '#f59e0b' },
-    warning: { icon: '⬛', color: '#ef4444' },
-  }
-  const { icon, color } = map[severity]
-  return <span style={{ color, fontSize: '10px' }}>{icon}</span>
-}
-
-// ── Adjustments for today ─────────────────────────────────────────────────
-
-function TodayAdjustments({ phaseId }: { phaseId: string }) {
-  const adjustments = CYCLE_ADJUSTMENTS_TODAY[phaseId] ?? []
-  const phase = getPhase(phaseId)
-
+function DemoNotice() {
   return (
     <div
-      className="rounded-xl p-5"
-      style={{ background: '#14141f', border: '1px solid #22223a' }}
+      className="rounded-xl p-4 flex items-start gap-3"
+      style={{ background: '#5b5fef10', border: '1px solid #5b5fef30' }}
     >
-      <p className="text-xs font-medium tracking-widest uppercase mb-4" style={{ color: '#5c5c7a' }}>
-        Ajustements actifs aujourd'hui
-      </p>
-
-      <div className="space-y-2.5">
-        {adjustments.map((adj, i) => (
-          <div
-            key={i}
-            className="flex items-start gap-3 rounded-lg px-3 py-2.5"
-            style={{ background: '#1a1a28' }}
-          >
-            <SeverityIcon severity={adj.severity} />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span
-                  className="text-xs font-semibold px-1.5 py-0.5 rounded"
-                  style={{ background: `${phase.color}18`, color: phase.color }}
-                >
-                  {adj.agent}
-                </span>
-              </div>
-              <p className="text-xs" style={{ color: '#8888a8' }}>{adj.adjustment}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-4 flex items-center gap-2 text-xs" style={{ color: '#5c5c7a' }}>
-        <span>●</span> Info
-        <span className="ml-2" style={{ color: '#f59e0b' }}>▲</span> Prudence
-        <span className="ml-2" style={{ color: '#ef4444' }}>⬛</span> Vigilance
-      </div>
-    </div>
-  )
-}
-
-// ── Upcoming phases ───────────────────────────────────────────────────────
-
-function UpcomingPhases({ currentDay, cycleLength }: { currentDay: number; cycleLength: number }) {
-  const remaining = cycleLength - currentDay
-  const nextCycleDay1InDays = remaining + 1
-
-  const nextPhase = currentDay < 5
-    ? null
-    : currentDay < 13
-    ? { phase: CYCLE_PHASES[2], daysUntil: 14 - currentDay }
-    : currentDay < 15
-    ? { phase: CYCLE_PHASES[3], daysUntil: 16 - currentDay }
-    : { phase: CYCLE_PHASES[0], daysUntil: nextCycleDay1InDays }
-
-  if (!nextPhase) return null
-
-  return (
-    <div
-      className="rounded-xl p-4 flex items-center gap-4"
-      style={{ background: '#14141f', border: '1px solid #22223a' }}
-    >
-      <div
-        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-sm font-mono font-bold"
-        style={{ background: `${nextPhase.phase.color}18`, color: nextPhase.phase.color }}
-      >
-        {nextPhase.daysUntil}j
-      </div>
-      <div>
-        <p className="text-xs" style={{ color: '#5c5c7a' }}>Prochaine phase</p>
-        <p className="font-semibold text-sm" style={{ color: nextPhase.phase.color }}>
-          {nextPhase.phase.label}
+      <span style={{ color: '#818cf8' }}>ℹ</span>
+      <div className="text-xs" style={{ color: '#8888a8' }}>
+        <p>Cette vue utilise des données de démonstration (J18 — phase lutéale).</p>
+        <p className="mt-0.5">
+          Configure ton profil hormonal via le check-in quotidien ou les réglages.
         </p>
       </div>
     </div>
@@ -241,9 +178,12 @@ function UpcomingPhases({ currentDay, cycleLength }: { currentDay: number; cycle
 
 // ── Main Page ─────────────────────────────────────────────────────────────
 
+const DEMO_CYCLE_DAY = 18
+const DEMO_CYCLE_LENGTH = 28
+const DEMO_PHASE = 'luteal'
+
 export default function CyclePage() {
-  const { current_cycle_day, current_phase, cycle_length_days } = HORMONAL_DEMO
-  const phase = getPhase(current_phase)
+  const phase = getPhase(DEMO_PHASE)
 
   return (
     <div className="space-y-6 pb-12 max-w-lg mx-auto">
@@ -257,7 +197,7 @@ export default function CyclePage() {
           <h1 className="text-2xl font-bold mt-0.5" style={{ letterSpacing: '-0.02em' }}>
             <span style={{ color: phase.color }}>{phase.label}</span>
             {' '}
-            <span className="font-mono text-lg" style={{ color: '#5c5c7a' }}>J{current_cycle_day}</span>
+            <span className="font-mono text-lg" style={{ color: '#5c5c7a' }}>J{DEMO_CYCLE_DAY}</span>
           </h1>
         </div>
         <Link
@@ -269,8 +209,10 @@ export default function CyclePage() {
         </Link>
       </div>
 
+      <DemoNotice />
+
       {/* ── Phase detail ── */}
-      <PhaseCard phaseId={current_phase} />
+      <PhaseCard phaseId={DEMO_PHASE} cycleDay={DEMO_CYCLE_DAY} />
 
       {/* ── Cycle calendar ── */}
       <div
@@ -278,18 +220,12 @@ export default function CyclePage() {
         style={{ background: '#14141f', border: '1px solid #22223a' }}
       >
         <p className="text-xs font-medium tracking-widest uppercase mb-4" style={{ color: '#5c5c7a' }}>
-          Cycle {cycle_length_days} jours · Démarré le 23 Mars
+          Cycle {DEMO_CYCLE_LENGTH} jours · Démo
         </p>
-        <CycleCalendar cycleDay={current_cycle_day} cycleLength={cycle_length_days} />
+        <CycleCalendar cycleDay={DEMO_CYCLE_DAY} cycleLength={DEMO_CYCLE_LENGTH} />
       </div>
 
-      {/* ── Today's adjustments ── */}
-      <TodayAdjustments phaseId={current_phase} />
-
-      {/* ── Upcoming ── */}
-      <UpcomingPhases currentDay={current_cycle_day} cycleLength={cycle_length_days} />
-
-      {/* ── Data note ── */}
+      {/* ── Info note ── */}
       <div
         className="rounded-xl p-4 flex items-start gap-3"
         style={{ background: '#14141f', border: '1px solid #22223a' }}
@@ -297,9 +233,7 @@ export default function CyclePage() {
         <span style={{ color: '#5c5c7a' }}>ℹ</span>
         <div className="text-xs" style={{ color: '#5c5c7a' }}>
           <p>Données saisies manuellement via le check-in quotidien.</p>
-          <p className="mt-0.5">
-            Connecte Apple Health pour un suivi automatique du cycle.
-          </p>
+          <p className="mt-0.5">Connecte Apple Health pour un suivi automatique du cycle.</p>
         </div>
       </div>
 
