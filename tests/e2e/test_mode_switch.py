@@ -153,3 +153,68 @@ def test_09_tracking_route_blocked_after_switch_back(e2e_client):
         headers=headers,
     )
     assert resp.status_code == 403, resp.text
+
+
+def test_10_head_coach_messages_preserved_after_mode_switch(e2e_client):
+    """head_coach_messages survive mode switch — the NEVER DELETE architectural rule.
+
+    No GET API endpoint exists for head_coach_messages (S-4 debt), so we verify
+    preservation directly via the DB session from the test fixture override.
+    """
+    import uuid
+    from datetime import datetime, timezone
+
+    from app.dependencies import get_db
+    from app.main import app
+    from app.models.schemas import HeadCoachMessageModel
+
+    headers = {"Authorization": f"Bearer {_state['token']}"}
+
+    # Athlete is in full mode from test_08 — good starting state.
+    # Insert a HeadCoachMessage directly via the DB session.
+    db_override = app.dependency_overrides.get(get_db)
+    assert db_override is not None, "DB override must be active in e2e fixture"
+
+    msg_id = str(uuid.uuid4())
+    gen = db_override()
+    db = next(gen)
+    try:
+        db.add(HeadCoachMessageModel(
+            id=msg_id,
+            athlete_id=_state["athlete_id"],
+            pattern_type="heavy_legs",
+            message="Jambes lourdes récurrentes — réduis l'intensité.",
+            created_at=datetime.now(timezone.utc),
+            is_read=False,
+        ))
+        db.commit()
+    finally:
+        gen.close()
+
+    # Switch to tracking_only
+    switch_resp = e2e_client.patch(
+        f"/athletes/{_state['athlete_id']}/mode",
+        json={"coaching_mode": "tracking_only"},
+        headers=headers,
+    )
+    assert switch_resp.status_code == 200
+
+    # Message must still exist — mode switch never deletes Volet 2 data
+    gen2 = db_override()
+    db2 = next(gen2)
+    try:
+        still_there = db2.query(HeadCoachMessageModel).filter(
+            HeadCoachMessageModel.id == msg_id
+        ).first()
+        assert still_there is not None, (
+            "HeadCoachMessage was deleted by mode switch — violates the NEVER DELETE rule"
+        )
+    finally:
+        gen2.close()
+
+    # Restore full mode to leave state clean
+    e2e_client.patch(
+        f"/athletes/{_state['athlete_id']}/mode",
+        json={"coaching_mode": "full"},
+        headers=headers,
+    )
