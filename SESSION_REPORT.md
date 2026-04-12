@@ -171,3 +171,59 @@ Déplacé vers : `docs/archive/resilio-master-v2_archived_2026-04-12.md`
 4. Chaque session produit des commits atomiques fréquents
 5. Volet 2 doit fonctionner sans Volet 1 (tester en isolation)
 6. `resilio-master-v3.md` fait autorité — toute décision qui s'en écarte doit être documentée
+
+---
+
+## Session S-4 — detect_energy_patterns() + Challenges Proactifs
+
+**Date :** 2026-04-12
+**Branche :** `session/s4-energy-patterns`
+**Statut :** ✅ Terminé
+
+### Ce qui a été fait
+
+#### Migration 0005 (`alembic/versions/0005_energy_patterns.py`)
+- Ajout de `legs_feeling` (String, nullable) et `stress_level` (String, nullable) sur `energy_snapshots`
+- Création de la table `head_coach_messages` (id, athlete_id, pattern_type, message, created_at, is_read)
+- Downgrade fonctionnel : `DROP TABLE head_coach_messages` + `DROP COLUMN` sur les 2 nouveaux champs
+
+#### HeadCoachMessageModel (`backend/app/models/schemas.py`)
+- Nouveau modèle ORM avec relationship → `AthleteModel.head_coach_messages`
+- Pattern type : `"heavy_legs"` | `"chronic_stress"` | `"persistent_divergence"` | `"reds_signal"`
+
+#### EnergyCycleService.submit_checkin() (`backend/app/services/energy_cycle_service.py`)
+- Persiste maintenant `legs_feeling` et `stress_level` dans `EnergySnapshotModel`
+
+#### detect_energy_patterns(db) (`backend/app/core/sync_scheduler.py`)
+- 4 fonctions détecteur pures (testables sans DB) :
+  - `_detect_heavy_legs` — `legs_feeling in ("heavy","dead")` ≥3/7j
+  - `_detect_chronic_stress` — `stress_level == "significant"` ≥4/7j
+  - `_detect_persistent_divergence` — divergence >30pts sur ≥3j consécutifs
+  - `_detect_reds_signal` — `energy_availability < 30.0` ≥3/7j
+- Gestion timezone SQLite/PostgreSQL : `_last_7_days()` compare naive vs aware
+- Déduplication : pas de message créé si même `pattern_type` dans les 7 derniers jours
+- Retourne `{"athletes_scanned": N, "messages_created": M}`
+
+#### APScheduler weekly job
+- `run_energy_patterns_weekly()` wrapper avec `SessionLocal()` + error handling
+- Job `energy_patterns_weekly` : `trigger="cron"`, `day_of_week="mon"`, `hour=6`, `misfire_grace_time=3600`
+- Test existant `test_setup_scheduler_all_jobs_every_6h` corrigé pour ignorer les CronTrigger
+
+### Décision architecturale documentée : table dédiée vs champ JSON
+
+**Choix : table `head_coach_messages`**
+
+**Justification :** les messages sont une donnée time-series (un message par pattern par semaine par athlète). Un champ JSON sur AthleteModel grandirait sans borne, sans métadonnées par message (lu/non lu, pattern_type, created_at), et sans capacité de requête. La table dédiée est cohérente avec `energy_snapshots` et `allostatic_entries` qui suivent le même pattern.
+
+### Tests ajoutés
+- `tests/backend/core/test_energy_patterns.py` — **22 tests TDD** couvrant :
+  - ORM colonnes + table existence (4 tests)
+  - submit_checkin() persistance (2 tests)
+  - 4 pattern detectors × 2-3 cas chacun (9 tests)
+  - detect_energy_patterns() intégration + déduplication (5 tests)
+  - APScheduler job (2 tests)
+- `tests/backend/core/test_sync_scheduler.py` — fix `test_setup_scheduler_all_jobs_every_6h`
+
+### Invariants vérifiés
+- `pytest tests/` : **1741 passed, 9 skipped** ✅ (≥ 1243)
+- Branche : `session/s4-energy-patterns` poussée ✅
