@@ -568,6 +568,7 @@ Ordre recommandé pour 7 sessions parallèles. Les sessions S-1, S-3, S-4, S-5 n
 1. **Modularité** : Volet 2 fonctionne sans Volet 1. Tester chaque session indépendamment.
 2. **ModeGuard** : routes Volet 1 → `require_full_mode`. Routes plan externe → `require_tracking_mode`. Routes Volet 2 → pas de restriction.
 3. **Jamais effacer** : toujours archiver (`status = "archived"`), jamais `DELETE`.
+   - **Exception approuvée (S-1)** : `DELETE /external-plan/sessions/{id}` effectue un hard-delete sur `ExternalSession`. Justification : les sessions sont saisies manuellement par l'utilisateur (pas de données Strava/Hevy) et n'ont aucune dépendance FK aval. Le risque de perte irréversible est assumé par le project owner ; la fonctionnalité est documentée dans `SESSION_REPORT.md` session S-1. Toute future entité similaire doit faire l'objet d'une approbation explicite avant de déroger à cette règle.
 4. **State LangGraph** : uniquement types primitifs/dicts. Session DB via `config["configurable"]["db"]`.
 5. **Flux V1 → V2** : unidirectionnel. `apply_energy_snapshot` lit, ne pousse jamais.
 6. **Human-in-the-loop** : préservé aux 2 INTERRUPT existants. Ne pas bypasser.
