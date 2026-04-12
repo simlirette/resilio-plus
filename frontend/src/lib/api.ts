@@ -299,42 +299,27 @@ export const api = {
   deleteExternalSession: (athleteId: string, sessionId: string): Promise<void> =>
     request(`/athletes/${athleteId}/external-plan/sessions/${sessionId}`, { method: 'DELETE' }),
 
-  // ── S-2 STUBS ─────────────────────────────────────────────────────────────
-  // POST /athletes/{id}/external-plan/import is not yet implemented (S-2 scope).
-  // These stubs simulate the API with mock data.
-
-  importExternalPlan: (_athleteId: string, _file: File): Promise<ExternalPlanDraft> => {
-    console.log('[STUB] S-2 not implemented: importExternalPlan')
-    return new Promise(resolve =>
-      setTimeout(() => resolve({
-        title: 'Plan importé (démo)',
-        sessions_parsed: 3,
-        sessions: [
-          { session_date: new Date().toISOString().split('T')[0], sport: 'running', title: 'Easy run 45min', duration_min: 45 },
-          { session_date: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0], sport: 'lifting', title: 'Full body strength', duration_min: 60 },
-          { session_date: new Date(Date.now() + 4 * 86400000).toISOString().split('T')[0], sport: 'running', title: 'Tempo intervals', duration_min: 55 },
-        ],
-        parse_warnings: ['[DÉMO] Endpoint S-2 non implémenté — données fictives'],
-      }), 800)
-    )
+  importExternalPlan: async (athleteId: string, file: File): Promise<ExternalPlanDraft> => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await fetch(`${API_BASE}/athletes/${athleteId}/external-plan/import`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    })
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      throw new ApiError(res.status, (body as { detail?: string }).detail ?? 'Import failed')
+    }
+    return res.json() as Promise<ExternalPlanDraft>
   },
 
-  confirmImportExternalPlan: (athleteId: string, _draft: ExternalPlanDraft): Promise<ExternalPlanOut> => {
-    console.log('[STUB] S-2 not implemented: confirmImportExternalPlan')
-    return new Promise(resolve =>
-      setTimeout(() => resolve({
-        id: 'stub-plan-id',
-        athlete_id: athleteId,
-        title: 'Plan importé (démo)',
-        source: 'file',
-        status: 'active',
-        start_date: new Date().toISOString().split('T')[0],
-        end_date: null,
-        created_at: new Date().toISOString(),
-        sessions: [],
-      }), 500)
-    )
-  },
+  confirmImportExternalPlan: (athleteId: string, draft: ExternalPlanDraft): Promise<ExternalPlanOut> =>
+    request<ExternalPlanOut>(`/athletes/${athleteId}/external-plan/import/confirm`, {
+      method: 'POST',
+      body: JSON.stringify(draft),
+    }),
 
 }
 
