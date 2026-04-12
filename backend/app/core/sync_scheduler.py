@@ -1,100 +1,76 @@
 """
 Sync scheduler — APScheduler BackgroundScheduler.
-Runs sync_all_strava and sync_all_hevy every 6 hours for all connected athletes.
+Runs sync_all_strava, sync_all_hevy, sync_all_terra every 6 hours for all connected athletes.
 Each function creates its own DB session (thread-safe, independent of request sessions).
+Delegates all sync logic to SyncService.
 """
 from __future__ import annotations
 
-import json
 import logging
-from datetime import datetime, timedelta, timezone
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from ..db.database import SessionLocal
 from ..db.models import ConnectorCredentialModel
+from ..services.sync_service import ConnectorNotFoundError, SyncService
 
 logger = logging.getLogger(__name__)
 
 
 def sync_all_strava() -> None:
-    """Sync Strava for all athletes with active Strava credentials."""
-    from ..connectors.strava import StravaConnector
-    from ..schemas.connector import ConnectorCredential
-    import os
-
-    client_id = os.getenv("STRAVA_CLIENT_ID", "")
-    client_secret = os.getenv("STRAVA_CLIENT_SECRET", "")
-
+    """Auto-sync Strava for all athletes with active Strava credentials."""
     with SessionLocal() as db:
-        creds = (
-            db.query(ConnectorCredentialModel)
-            .filter_by(provider="strava")
-            .all()
-        )
+        creds = db.query(ConnectorCredentialModel).filter_by(provider="strava").all()
         for cred_model in creds:
             try:
-                cred = ConnectorCredential(
-                    athlete_id=cred_model.athlete_id,  # type: ignore[arg-type]
-                    provider="strava",
-                    access_token=cred_model.access_token,
-                    refresh_token=cred_model.refresh_token,
-                    expires_at=cred_model.expires_at,
-                )
-                since = datetime.now(timezone.utc) - timedelta(days=7)
-                until = datetime.now(timezone.utc)
-                with StravaConnector(cred, client_id=client_id, client_secret=client_secret) as connector:
-                    activities = connector.fetch_activities(since, until)
+                result = SyncService.sync_strava(cred_model.athlete_id, db)
                 logger.info(
-                    "Strava sync OK: athlete=%s activities=%d",
-                    cred_model.athlete_id,
-                    len(activities),
+                    "Strava sync OK: athlete=%s synced=%d skipped=%d",
+                    cred_model.athlete_id, result["synced"], result.get("skipped", 0),
                 )
+            except ConnectorNotFoundError:
+                pass
             except Exception:
                 logger.warning(
-                    "Strava sync failed: athlete=%s",
-                    cred_model.athlete_id,
-                    exc_info=True,
+                    "Strava sync failed: athlete=%s", cred_model.athlete_id, exc_info=True
                 )
 
 
 def sync_all_hevy() -> None:
-    """Sync Hevy for all athletes with active Hevy API key."""
-    from ..connectors.hevy import HevyConnector
-    from ..schemas.connector import ConnectorCredential
-
+    """Auto-sync Hevy for all athletes with active Hevy API key."""
     with SessionLocal() as db:
-        creds = (
-            db.query(ConnectorCredentialModel)
-            .filter_by(provider="hevy")
-            .all()
-        )
+        creds = db.query(ConnectorCredentialModel).filter_by(provider="hevy").all()
         for cred_model in creds:
             try:
-                extra = json.loads(cred_model.extra_json or "{}")
-                api_key = extra.get("api_key", "")
-                if not api_key:
-                    continue
-
-                cred = ConnectorCredential(
-                    athlete_id=cred_model.athlete_id,  # type: ignore[arg-type]
-                    provider="hevy",
-                    extra={"api_key": api_key},
-                )
-                since = datetime.now(timezone.utc) - timedelta(days=7)
-                until = datetime.now(timezone.utc)
-                with HevyConnector(cred, client_id=api_key, client_secret="") as connector:
-                    workouts = connector.fetch_workouts(since, until)
+                result = SyncService.sync_hevy(cred_model.athlete_id, db)
                 logger.info(
-                    "Hevy sync OK: athlete=%s workouts=%d",
-                    cred_model.athlete_id,
-                    len(workouts),
+                    "Hevy sync OK: athlete=%s synced=%d skipped=%d",
+                    cred_model.athlete_id, result["synced"], result.get("skipped", 0),
                 )
+            except ConnectorNotFoundError:
+                pass
             except Exception:
                 logger.warning(
-                    "Hevy sync failed: athlete=%s",
-                    cred_model.athlete_id,
-                    exc_info=True,
+                    "Hevy sync failed: athlete=%s", cred_model.athlete_id, exc_info=True
+                )
+
+
+def sync_all_terra() -> None:
+    """Auto-sync Terra HRV/sleep for all athletes with active Terra credentials."""
+    with SessionLocal() as db:
+        creds = db.query(ConnectorCredentialModel).filter_by(provider="terra").all()
+        for cred_model in creds:
+            try:
+                result = SyncService.sync_terra(cred_model.athlete_id, db)
+                logger.info(
+                    "Terra sync OK: athlete=%s hrv=%s sleep=%s",
+                    cred_model.athlete_id, result["hrv_rmssd"], result["sleep_hours"],
+                )
+            except ConnectorNotFoundError:
+                pass
+            except Exception:
+                logger.warning(
+                    "Terra sync failed: athlete=%s", cred_model.athlete_id, exc_info=True
                 )
 
 
@@ -102,20 +78,16 @@ def setup_scheduler() -> BackgroundScheduler:
     """Create, configure, and start the BackgroundScheduler."""
     scheduler = BackgroundScheduler()
     scheduler.add_job(
-        sync_all_strava,
-        trigger="interval",
-        hours=6,
-        id="strava_sync",
-        replace_existing=True,
-        misfire_grace_time=300,
+        sync_all_strava, trigger="interval", hours=6,
+        id="strava_sync", replace_existing=True, misfire_grace_time=300,
     )
     scheduler.add_job(
-        sync_all_hevy,
-        trigger="interval",
-        hours=6,
-        id="hevy_sync",
-        replace_existing=True,
-        misfire_grace_time=300,
+        sync_all_hevy, trigger="interval", hours=6,
+        id="hevy_sync", replace_existing=True, misfire_grace_time=300,
+    )
+    scheduler.add_job(
+        sync_all_terra, trigger="interval", hours=6,
+        id="terra_sync", replace_existing=True, misfire_grace_time=300,
     )
     scheduler.start()
     return scheduler
