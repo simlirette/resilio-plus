@@ -96,6 +96,8 @@ class FatigueScore:
 | V3-G | Frontend check-in + energy card + tracking page | ✅ Complete (S-5 + S-6) |
 | V3-H | E2E tests 2-volet + CLAUDE.md final | ✅ Complete (S-7) |
 
+**Dernières phases complétées (2026-04-12) :** Backend V3 finalisé — architecture 2-volets opérationnelle, 35 tests E2E, mode switch validé, invariants modularité prouvés. Voir `BACKEND_V3_COMPLETE.md` pour l'état consolidé.
+
 ---
 
 ## Running Coach Knowledge Base
@@ -135,7 +137,7 @@ The Running Coach has the richest existing knowledge base.
 4. **Frequent atomic commits** — one commit per logical task
 5. **Verify invariants after every task**:
    - `poetry install` must succeed
-   - `pytest tests/` must pass (≥1243 passing)
+   - `pytest tests/` must pass (≥1847 passing — état S-7)
    - `npx tsc --noEmit` (frontend) must have no errors
 
 **pytest path (Windows):** `C:\Users\simon\AppData\Local\pypoetry\Cache\virtualenvs\resilio-8kDCl3fk-py3.13\Scripts\pytest.exe`
