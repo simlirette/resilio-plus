@@ -19,7 +19,8 @@ const SPORT_LABELS: Record<string, string> = {
   biking: 'Vélo',
 }
 
-function formatDate(iso: string): string {
+function formatDate(iso: string | null): string {
+  if (!iso) return 'Date inconnue'
   return new Date(iso).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
 }
 

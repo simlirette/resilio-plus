@@ -463,10 +463,18 @@ export interface ExternalSessionUpdate {
   status?: 'planned' | 'completed' | 'skipped'
 }
 
+export interface ExternalPlanDraftSession {
+  session_date: string | null
+  sport: string
+  title: string
+  description?: string
+  duration_min?: number
+}
+
 export interface ExternalPlanDraft {
   title: string
   sessions_parsed: number
-  sessions: ExternalSessionCreate[]
+  sessions: ExternalPlanDraftSession[]
   parse_warnings: string[]
 }
 
