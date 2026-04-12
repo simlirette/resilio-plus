@@ -1,3 +1,57 @@
+# SESSION S-6 — Frontend Tracking Page
+
+**Date :** 2026-04-12
+**Branche :** session/s6-frontend-tracking
+**Commits :** 5 (feat × 4 + docs × 1)
+
+## Ce qui a été fait
+
+### 1. api.ts — Types + méthodes ExternalPlan
+- `AthleteProfile`, `ExternalPlanOut`, `ExternalSessionOut`
+- `ExternalPlanCreate`, `ExternalSessionCreate`, `ExternalSessionUpdate`
+- `ExternalPlanDraft` (type stub S-2)
+- `api.getAthleteProfile()`, `api.getExternalPlan()`, `api.createExternalPlan()`
+- `api.addExternalSession()`, `api.updateExternalSession()`, `api.deleteExternalSession()`
+- **STUBS** : `api.importExternalPlan()`, `api.confirmImportExternalPlan()` → mock data
+
+### 2. auth.tsx — coachingMode dans le contexte
+- `coachingMode: 'full' | 'tracking_only' | null` ajouté à `AuthState`
+- Fetch `GET /athletes/{id}` au chargement et au login
+- localStorage key `coaching_mode` pour bootstrap rapide
+
+### 3. top-nav.tsx — Badge mode + lien conditionnel
+- Badge `TRACKING` (amber) affiché si `coaching_mode === "tracking_only"`
+- Lien "Tracking" → `/tracking` visible uniquement en mode tracking_only
+
+### 4. tracking/page.tsx — Visualisation plan externe
+- `ProtectedRoute` + redirect `/dashboard` si `coachingMode !== 'tracking_only'`
+- GET `/athletes/{id}/external-plan` → affiche plan + sessions
+- Marquage séance : PATCH status=completed / skipped
+- Formulaire ajout séance (inline)
+- Formulaire création plan si 404
+
+### 5. tracking/import/page.tsx — Wizard import fichier
+- Drag & drop / sélection fichier (PDF/TXT/CSV/ICS)
+- Étape 1 : upload → `api.importExternalPlan()` (STUB)
+- Étape 2 : preview draft (sessions + warnings)
+- Étape 3 : confirmation → `api.confirmImportExternalPlan()` (STUB)
+- Notice de démo visible dans l'UI
+
+## Invariants
+- `npx tsc --noEmit` → ✅ aucune erreur
+- `npm run build` → ✅ 19 pages générées (dont /tracking + /tracking/import)
+
+## Stubs S-2 documentés
+
+| Méthode | Endpoint réel | Comportement stub |
+|---|---|---|
+| `api.importExternalPlan()` | `POST /athletes/{id}/external-plan/import` | Mock draft 3 séances après 800ms |
+| `api.confirmImportExternalPlan()` | `POST /athletes/{id}/external-plan/import/confirm` | Mock ExternalPlanOut après 500ms |
+
+Ces stubs seront remplacés quand S-2 sera mergé sur main.
+
+---
+
 # SESSION S-5 — Frontend Check-in + Energy Card
 
 **Date :** 2026-04-12
