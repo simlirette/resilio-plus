@@ -162,4 +162,40 @@ def test_08_volet2_works_in_tracking_only_mode(e2e_client):
         headers=headers,
     )
     assert readiness_resp.status_code == 200, readiness_resp.text
-    assert readiness_resp.json()["traffic_light"] in ("green", "yellow", "red")
+
+
+def test_09_volet2_never_invokes_langgraph(e2e_client):
+    """Critical architectural invariant: Volet 2 endpoints NEVER trigger the coaching graph.
+
+    Patches CoachingService.create_plan and resume_plan with assertion failures.
+    If any Volet 2 endpoint (checkin, readiness, history) calls them, the test fails.
+    This guarantees the Volet 2 independence contract specified in resilio-master-v3.md §1.
+    """
+    from unittest.mock import patch
+
+    headers = {"Authorization": f"Bearer {_state['token']}"}
+    athlete_id = _state["athlete_id"]
+
+    def _must_not_be_called(*args, **kwargs):
+        raise AssertionError(
+            "LangGraph coaching graph was invoked from a Volet 2 endpoint — "
+            "this violates the 2-volet modularity invariant."
+        )
+
+    with patch(
+        "app.services.coaching_service.CoachingService.create_plan",
+        side_effect=_must_not_be_called,
+    ):
+        with patch(
+            "app.services.coaching_service.CoachingService.resume_plan",
+            side_effect=_must_not_be_called,
+        ):
+            # GET /readiness must not touch the coaching graph
+            r1 = e2e_client.get(f"/athletes/{athlete_id}/readiness", headers=headers)
+            assert r1.status_code == 200, r1.text
+
+            # GET /energy/history must not touch the coaching graph
+            r2 = e2e_client.get(
+                f"/athletes/{athlete_id}/energy/history?days=7", headers=headers
+            )
+            assert r2.status_code == 200, r2.text

@@ -543,6 +543,30 @@ backend/app/
 
 Toutes les sessions S-1 à S-7 sont terminées. Aucun composant V3 restant.
 
+> **Dette technique** : voir `REVIEW_VAGUE1.md` (S-1, S-3, S-4, S-5) et `REVIEW_VAGUE2.md` (S-2, S-6) pour la liste complète des points non-bloquants. Consolidation dans `BACKEND_V3_COMPLETE.md` section 3.
+
+---
+
+## 11B. ARCHITECTURE 2-VOLETS — VALIDÉE PAR LES TESTS E2E (S-7)
+
+Les invariants architecturaux sont maintenant couverts par des tests automatisés dans `tests/e2e/`.
+
+### Invariants prouvés
+
+| Invariant | Test | Garantie |
+|---|---|---|
+| Volet 2 ne touche jamais LangGraph | `test_volet2_standalone::test_09` | `CoachingService.create_plan/resume_plan` patchés pour lever si appelés |
+| Volet 2 fonctionne sans plan | `test_volet2_standalone::test_04` | Checkin 201 sans TrainingPlan ni ExternalPlan |
+| Mode switch archive sans supprimer | `test_mode_switch::test_04` | Plans status="archived", count inchangé |
+| NEVER DELETE s'applique à tous les modèles | `test_mode_switch::test_10` | HeadCoachMessageModel toujours en DB après switch |
+| ModeGuard enforced dans les 2 sens | `test_mode_switch::test_05` + `test_09` | 403 dans les 2 directions |
+
+### Principe fondamental (rappel)
+```
+EnergyCycleService → (lecture seule) → coaching graph
+coaching graph     → (jamais)        → EnergyCycleService
+```
+
 ---
 
 ## 12. TRAVAIL BACKEND — SESSIONS COMPLÈTES (2026-04-12)
