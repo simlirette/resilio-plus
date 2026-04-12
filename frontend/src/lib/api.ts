@@ -208,8 +208,23 @@ export const api = {
   getHistory: (athleteId: string) =>
     request<WeekSummary[]>(`/athletes/${athleteId}/history`),
 
-  getConnectors: (athleteId: string): Promise<{ connectors: Array<{ provider: string; connected: boolean; expires_at?: number | null }> }> =>
+  getConnectors: (athleteId: string): Promise<{ connectors: Array<{ provider: string; connected: boolean; expires_at?: number | null; last_sync?: string | null }> }> =>
     request(`/athletes/${athleteId}/connectors`),
+
+  connectHevy: (athleteId: string, apiKey: string): Promise<{ provider: string; connected: boolean }> =>
+    request(`/athletes/${athleteId}/connectors/hevy`, {
+      method: 'POST',
+      body: JSON.stringify({ api_key: apiKey }),
+    }),
+
+  connectTerraUserId: (athleteId: string, terraUserId: string): Promise<{ provider: string; connected: boolean }> =>
+    request(`/athletes/${athleteId}/connectors/terra`, {
+      method: 'POST',
+      body: JSON.stringify({ terra_user_id: terraUserId }),
+    }),
+
+  disconnectConnector: (athleteId: string, provider: 'strava' | 'hevy' | 'terra'): Promise<void> =>
+    request(`/athletes/${athleteId}/connectors/${provider}`, { method: 'DELETE' }),
 
   stravaAuthorize: (athleteId: string): Promise<{ auth_url: string }> =>
     request(`/athletes/${athleteId}/connectors/strava/authorize`, { method: 'POST' }),
@@ -245,11 +260,6 @@ export const api = {
     return _reqRaw(`/athletes/${athleteId}/connectors/files/fit`, { method: 'POST', body: formData })
   },
 
-  connectTerra: (athleteId: string, terraUserId: string): Promise<{ provider: string; connected: boolean }> =>
-    request(`/athletes/${athleteId}/connectors/terra`, {
-      method: 'POST',
-      body: JSON.stringify({ terra_user_id: terraUserId }),
-    }),
 }
 
 // ── Analytics ──────────────────────────────────────────────────────────────

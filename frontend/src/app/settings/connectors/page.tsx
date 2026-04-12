@@ -6,9 +6,21 @@ import { api, ApiError } from '@/lib/api'
 import { ProtectedRoute } from '@/components/protected-route'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
-type ConnectorStatus = { provider: string; connected: boolean; expires_at?: number | null }
+type ConnectorStatus = {
+  provider: string
+  connected: boolean
+  expires_at?: number | null
+  last_sync?: string | null
+}
 type SyncResult = { message: string; ok: boolean }
+
+function formatLastSync(lastSync?: string | null): string {
+  if (!lastSync) return 'Never synced'
+  const d = new Date(lastSync)
+  return d.toLocaleString()
+}
 
 export default function ConnectorsPage() {
   const { athleteId, logout } = useAuth()
@@ -17,8 +29,21 @@ export default function ConnectorsPage() {
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState<string | null>(null)
   const [results, setResults] = useState<Record<string, SyncResult>>({})
+  const [hevyKey, setHevyKey] = useState('')
+  const [terraUserId, setTerraUserId] = useState('')
+  const [connecting, setConnecting] = useState<string | null>(null)
+  const [disconnecting, setDisconnecting] = useState<string | null>(null)
   const gpxRef = useRef<HTMLInputElement>(null)
   const fitRef = useRef<HTMLInputElement>(null)
+
+  const reload = () => {
+    if (!athleteId) return
+    api.getConnectors(athleteId)
+      .then(data => setConnectors(data.connectors))
+      .catch(err => {
+        if (err instanceof ApiError && err.status === 401) { logout(); router.replace('/login') }
+      })
+  }
 
   useEffect(() => {
     if (!athleteId) return
@@ -29,6 +54,9 @@ export default function ConnectorsPage() {
       })
       .finally(() => setLoading(false))
   }, [athleteId, logout, router])
+
+  const getConnector = (provider: string): ConnectorStatus | undefined =>
+    connectors.find(c => c.provider === provider)
 
   const isConnected = (provider: string) =>
     connectors.some(c => c.provider === provider && c.connected)
@@ -42,10 +70,55 @@ export default function ConnectorsPage() {
         ...r,
         [provider]: { ok: true, message: `Synced ${result.synced ?? 1} item(s)` },
       }))
+      reload()
     } catch {
       setResults(r => ({ ...r, [provider]: { ok: false, message: 'Sync failed' } }))
     } finally {
       setSyncing(null)
+    }
+  }
+
+  const connectHevy = async () => {
+    if (!athleteId || !hevyKey.trim()) return
+    setConnecting('hevy')
+    try {
+      await api.connectHevy(athleteId, hevyKey.trim())
+      setHevyKey('')
+      setResults(r => ({ ...r, hevy: { ok: true, message: 'Connected' } }))
+      reload()
+    } catch {
+      setResults(r => ({ ...r, hevy: { ok: false, message: 'Connection failed' } }))
+    } finally {
+      setConnecting(null)
+    }
+  }
+
+  const connectTerra = async () => {
+    if (!athleteId || !terraUserId.trim()) return
+    setConnecting('terra')
+    try {
+      await api.connectTerraUserId(athleteId, terraUserId.trim())
+      setTerraUserId('')
+      setResults(r => ({ ...r, terra: { ok: true, message: 'Connected' } }))
+      reload()
+    } catch {
+      setResults(r => ({ ...r, terra: { ok: false, message: 'Connection failed' } }))
+    } finally {
+      setConnecting(null)
+    }
+  }
+
+  const disconnect = async (provider: 'strava' | 'hevy' | 'terra') => {
+    if (!athleteId) return
+    setDisconnecting(provider)
+    try {
+      await api.disconnectConnector(athleteId, provider)
+      setResults(r => ({ ...r, [provider]: { ok: true, message: 'Disconnected' } }))
+      reload()
+    } catch {
+      setResults(r => ({ ...r, [provider]: { ok: false, message: 'Disconnect failed' } }))
+    } finally {
+      setDisconnecting(null)
     }
   }
 
@@ -91,23 +164,37 @@ export default function ConnectorsPage() {
               </span>
             </div>
           </CardHeader>
-          <CardContent className="flex gap-2 flex-wrap">
-            {!isConnected('strava') && athleteId && (
-              <Button variant="outline" size="sm" onClick={() =>
-                api.stravaAuthorize(athleteId).then(d => window.location.href = d.auth_url)
-              }>Connect</Button>
-            )}
+          <CardContent className="space-y-2">
             {isConnected('strava') && (
-              <Button variant="outline" size="sm" disabled={syncing === 'strava'}
-                onClick={() => syncConnector('strava', () => api.stravaSync(athleteId!))}>
-                {syncing === 'strava' ? 'Syncing…' : 'Sync now'}
-              </Button>
+              <p className="text-xs text-muted-foreground">
+                Last sync: {formatLastSync(getConnector('strava')?.last_sync)}
+              </p>
             )}
-            {results.strava && (
-              <span className={`text-xs self-center ${results.strava.ok ? 'text-emerald-400' : 'text-destructive'}`}>
-                {results.strava.message}
-              </span>
-            )}
+            <div className="flex gap-2 flex-wrap">
+              {!isConnected('strava') && athleteId && (
+                <Button variant="outline" size="sm" onClick={() =>
+                  api.stravaAuthorize(athleteId).then(d => window.location.href = d.auth_url)
+                }>Connect</Button>
+              )}
+              {isConnected('strava') && (
+                <>
+                  <Button variant="outline" size="sm" disabled={syncing === 'strava'}
+                    onClick={() => syncConnector('strava', () => api.stravaSync(athleteId!))}>
+                    {syncing === 'strava' ? 'Syncing…' : 'Sync now'}
+                  </Button>
+                  <Button variant="ghost" size="sm" disabled={disconnecting === 'strava'}
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => disconnect('strava')}>
+                    {disconnecting === 'strava' ? 'Disconnecting…' : 'Disconnect'}
+                  </Button>
+                </>
+              )}
+              {results.strava && (
+                <span className={`text-xs self-center ${results.strava.ok ? 'text-emerald-400' : 'text-destructive'}`}>
+                  {results.strava.message}
+                </span>
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -121,18 +208,47 @@ export default function ConnectorsPage() {
               </span>
             </div>
           </CardHeader>
-          <CardContent className="flex gap-2 flex-wrap">
+          <CardContent className="space-y-2">
             {isConnected('hevy') && (
-              <Button variant="outline" size="sm" disabled={syncing === 'hevy'}
-                onClick={() => syncConnector('hevy', () => api.hevySync(athleteId!))}>
-                {syncing === 'hevy' ? 'Syncing…' : 'Sync now'}
-              </Button>
+              <p className="text-xs text-muted-foreground">
+                Last sync: {formatLastSync(getConnector('hevy')?.last_sync)}
+              </p>
             )}
-            {results.hevy && (
-              <span className={`text-xs self-center ${results.hevy.ok ? 'text-emerald-400' : 'text-destructive'}`}>
-                {results.hevy.message}
-              </span>
+            {!isConnected('hevy') && (
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Hevy API key"
+                  value={hevyKey}
+                  onChange={e => setHevyKey(e.target.value)}
+                  className="h-8 text-sm max-w-xs"
+                  type="password"
+                />
+                <Button variant="outline" size="sm" disabled={connecting === 'hevy' || !hevyKey.trim()}
+                  onClick={connectHevy}>
+                  {connecting === 'hevy' ? 'Connecting…' : 'Connect'}
+                </Button>
+              </div>
             )}
+            <div className="flex gap-2 flex-wrap">
+              {isConnected('hevy') && (
+                <>
+                  <Button variant="outline" size="sm" disabled={syncing === 'hevy'}
+                    onClick={() => syncConnector('hevy', () => api.hevySync(athleteId!))}>
+                    {syncing === 'hevy' ? 'Syncing…' : 'Sync now'}
+                  </Button>
+                  <Button variant="ghost" size="sm" disabled={disconnecting === 'hevy'}
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => disconnect('hevy')}>
+                    {disconnecting === 'hevy' ? 'Disconnecting…' : 'Disconnect'}
+                  </Button>
+                </>
+              )}
+              {results.hevy && (
+                <span className={`text-xs self-center ${results.hevy.ok ? 'text-emerald-400' : 'text-destructive'}`}>
+                  {results.hevy.message}
+                </span>
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -146,18 +262,46 @@ export default function ConnectorsPage() {
               </span>
             </div>
           </CardHeader>
-          <CardContent className="flex gap-2 flex-wrap">
+          <CardContent className="space-y-2">
             {isConnected('terra') && (
-              <Button variant="outline" size="sm" disabled={syncing === 'terra'}
-                onClick={() => syncConnector('terra', () => api.terraSync(athleteId!))}>
-                {syncing === 'terra' ? 'Syncing…' : 'Sync now'}
-              </Button>
+              <p className="text-xs text-muted-foreground">
+                Last sync: {formatLastSync(getConnector('terra')?.last_sync)}
+              </p>
             )}
-            {results.terra && (
-              <span className={`text-xs self-center ${results.terra.ok ? 'text-emerald-400' : 'text-destructive'}`}>
-                {results.terra.message}
-              </span>
+            {!isConnected('terra') && (
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Terra user ID"
+                  value={terraUserId}
+                  onChange={e => setTerraUserId(e.target.value)}
+                  className="h-8 text-sm max-w-xs"
+                />
+                <Button variant="outline" size="sm" disabled={connecting === 'terra' || !terraUserId.trim()}
+                  onClick={connectTerra}>
+                  {connecting === 'terra' ? 'Connecting…' : 'Connect'}
+                </Button>
+              </div>
             )}
+            <div className="flex gap-2 flex-wrap">
+              {isConnected('terra') && (
+                <>
+                  <Button variant="outline" size="sm" disabled={syncing === 'terra'}
+                    onClick={() => syncConnector('terra', () => api.terraSync(athleteId!))}>
+                    {syncing === 'terra' ? 'Syncing…' : 'Sync now'}
+                  </Button>
+                  <Button variant="ghost" size="sm" disabled={disconnecting === 'terra'}
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => disconnect('terra')}>
+                    {disconnecting === 'terra' ? 'Disconnecting…' : 'Disconnect'}
+                  </Button>
+                </>
+              )}
+              {results.terra && (
+                <span className={`text-xs self-center ${results.terra.ok ? 'text-emerald-400' : 'text-destructive'}`}>
+                  {results.terra.message}
+                </span>
+              )}
+            </div>
           </CardContent>
         </Card>
 
