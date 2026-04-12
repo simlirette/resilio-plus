@@ -11,6 +11,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@resilio/ui-web": "workspace:*",
+    "@resilio/design-tokens": "workspace:*",
+    "@resilio/shared-logic": "workspace:*",
+    "@resilio/api-client": "workspace:*",
+    "@resilio/brand": "workspace:*",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-progress": "^1.1.8",
     "@radix-ui/react-slot": "^1.2.4",

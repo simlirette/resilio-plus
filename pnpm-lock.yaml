@@ -23,6 +23,21 @@ importers:
       '@radix-ui/react-slot':
         specifier: ^1.2.4
         version: 1.2.4(@types/react@19.2.14)(react@19.2.4)
+      '@resilio/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
+      '@resilio/brand':
+        specifier: workspace:*
+        version: link:../../packages/brand
+      '@resilio/design-tokens':
+        specifier: workspace:*
+        version: link:../../packages/design-tokens
+      '@resilio/shared-logic':
+        specifier: workspace:*
+        version: link:../../packages/shared-logic
+      '@resilio/ui-web':
+        specifier: workspace:*
+        version: link:../../packages/ui-web
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
