@@ -42,6 +42,15 @@ export const colors = {
   zoneYellowBg: 'rgba(245, 158, 11, 0.10)',
   zoneRed: '#ef4444',
   zoneRedBg: 'rgba(239, 68, 68, 0.10)',
+  zoneCritical: '#dc2626',
+
+  // ── RGB channels for alpha variants ─────────────────────────────────────
+  primaryRgb: '91, 95, 239',
+  zoneGreenRgb: '16, 185, 129',
+  zoneYellowRgb: '245, 158, 11',
+  zoneRedRgb: '239, 68, 68',
+  zoneCriticalRgb: '220, 38, 38',
+  phaseLutealRgb: '129, 140, 248',
 
   // ── Cycle phase colors ───────────────────────────────────────────────────
   phaseMenstrual: '#ef4444',

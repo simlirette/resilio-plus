@@ -1,6 +1,9 @@
-// frontend/src/lib/api.ts
+// apps/web/src/lib/api.ts
+import { createClient, ApiClientError } from '@resilio/api-client'
+
 const API_BASE = 'http://localhost:8000'
 
+// Re-export ApiError under existing name so all consumers stay unchanged
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message)
@@ -13,29 +16,29 @@ function getToken(): string | null {
   return localStorage.getItem('token')
 }
 
-async function _reqRaw(path: string, init: RequestInit = {}): Promise<any> {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-  const headers: Record<string, string> = {}
-  if (token) headers['Authorization'] = `Bearer ${token}`
-  const res = await fetch(`${API_BASE}${path}`, { ...init, headers: { ...headers, ...(init.headers as Record<string, string> || {}) } })
-  if (!res.ok) throw new ApiError(res.status, await res.text())
-  return res.json()
-}
+// Typed HTTP client backed by @resilio/api-client
+const _client = createClient(API_BASE, getToken)
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = getToken()
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  try {
+    return await _client.request<T>(path, options)
+  } catch (err) {
+    if (err instanceof ApiClientError) {
+      throw new ApiError(err.status, err.message)
+    }
+    throw err
   }
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers })
-  if (res.status === 401) throw new ApiError(401, 'Unauthorized')
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}))
-    throw new ApiError(res.status, (body as { detail?: string }).detail ?? 'Request failed')
+}
+
+async function _reqRaw(path: string, init: RequestInit = {}): Promise<any> {
+  try {
+    return await _client.rawRequest(path, init)
+  } catch (err) {
+    if (err instanceof ApiClientError) {
+      throw new ApiError(err.status, err.message)
+    }
+    throw err
   }
-  return res.json() as Promise<T>
 }
 
 export type Sport = 'running' | 'lifting' | 'swimming' | 'biking'

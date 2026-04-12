@@ -13,20 +13,28 @@ import { api, ApiError, type ReadinessResponse, type EnergySnapshotSummary } fro
 // ── Color helpers ──────────────────────────────────────────────────────────
 
 function trafficColor(light: string): string {
-  return { green: '#10b981', yellow: '#f59e0b', red: '#ef4444' }[light] ?? '#5b5fef'
+  return (
+    { green: 'var(--zone-green)', yellow: 'var(--zone-yellow)', red: 'var(--zone-red)' } as Record<string, string>
+  )[light] ?? 'var(--accent)'
 }
 
 function allostaticColor(score: number): string {
-  if (score <= 40) return '#10b981'
-  if (score <= 60) return '#f59e0b'
-  if (score <= 80) return '#ef4444'
-  return '#dc2626'
+  if (score <= 40) return 'var(--zone-green)'
+  if (score <= 60) return 'var(--zone-yellow)'
+  if (score <= 80) return 'var(--zone-red)'
+  return 'var(--zone-critical)'
 }
 
 function eaColor(ea: number): string {
-  if (ea >= 45) return '#10b981'
-  if (ea >= 30) return '#f59e0b'
-  return '#ef4444'
+  if (ea >= 45) return 'var(--zone-green)'
+  if (ea >= 30) return 'var(--zone-yellow)'
+  return 'var(--zone-red)'
+}
+
+function eaColorBg(ea: number): string {
+  if (ea >= 45) return 'rgba(var(--zone-green-rgb), 0.094)'
+  if (ea >= 30) return 'rgba(var(--zone-yellow-rgb), 0.094)'
+  return 'rgba(var(--zone-red-rgb), 0.094)'
 }
 
 // ── Mini stat card ─────────────────────────────────────────────────────────
@@ -36,7 +44,7 @@ function StatCard({
   value,
   unit,
   sub,
-  color = '#eeeef4',
+  color = 'var(--foreground)',
 }: {
   label: string
   value: string | number
@@ -70,6 +78,7 @@ function StatCard({
 
 function EnergyAvailabilityCard({ ea }: { ea: number }) {
   const color = eaColor(ea)
+  const colorBg = eaColorBg(ea)
   const label = ea >= 45 ? 'Optimal' : ea >= 30 ? 'Sous-optimal' : 'Critique'
   const pct = Math.min(100, (ea / 60) * 100)
 
@@ -84,7 +93,7 @@ function EnergyAvailabilityCard({ ea }: { ea: number }) {
         </p>
         <span
           className="text-xs font-semibold px-2 py-0.5 rounded-full"
-          style={{ background: `${color}18`, color }}
+          style={{ background: colorBg, color }}
         >
           {label}
         </span>
@@ -101,15 +110,15 @@ function EnergyAvailabilityCard({ ea }: { ea: number }) {
       </div>
 
       <div className="relative">
-        <div className="h-2 rounded-full overflow-hidden" style={{ background: '#22223a' }}>
+        <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--border)' }}>
           <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: color }} />
         </div>
-        <div className="absolute top-0 bottom-0 w-px" style={{ left: `${(45 / 60) * 100}%`, background: '#10b981', opacity: 0.5 }} />
+        <div className="absolute top-0 bottom-0 w-px" style={{ left: `${(45 / 60) * 100}%`, background: 'var(--zone-green)', opacity: 0.5 }} />
       </div>
 
       <div className="flex justify-between text-xs" style={{ color: 'var(--muted-foreground)' }}>
         <span>0</span>
-        <span style={{ color: '#10b98188' }}>Seuil optimal: 45</span>
+        <span style={{ color: 'rgba(var(--zone-green-rgb), 0.533)' }}>Seuil optimal: 45</span>
         <span>60</span>
       </div>
     </div>
@@ -149,11 +158,11 @@ function VetoStatus({ readiness }: { readiness: ReadinessResponse }) {
 
   if (light === 'red') {
     return (
-      <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: '#ef444415', border: '1px solid #ef444440' }}>
+      <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: 'rgba(var(--zone-red-rgb), 0.082)', border: '1px solid rgba(var(--zone-red-rgb), 0.251)' }}>
         <span className="text-xl mt-0.5">🔴</span>
         <div>
-          <p className="font-semibold text-sm" style={{ color: '#ef4444' }}>Séance déconseillée</p>
-          <p className="text-xs mt-0.5" style={{ color: '#ef444490' }}>
+          <p className="font-semibold text-sm" style={{ color: 'var(--zone-red)' }}>Séance déconseillée</p>
+          <p className="text-xs mt-0.5" style={{ color: 'rgba(var(--zone-red-rgb), 0.565)' }}>
             Charge allostatique critique. Cap à {Math.round(cap * 100)}%.
           </p>
         </div>
@@ -163,13 +172,13 @@ function VetoStatus({ readiness }: { readiness: ReadinessResponse }) {
 
   if (light === 'yellow') {
     return (
-      <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: '#f59e0b12', border: '1px solid #f59e0b40' }}>
+      <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: 'rgba(var(--zone-yellow-rgb), 0.071)', border: '1px solid rgba(var(--zone-yellow-rgb), 0.251)' }}>
         <span className="text-xl mt-0.5">🟡</span>
         <div>
-          <p className="font-semibold text-sm" style={{ color: '#f59e0b' }}>
+          <p className="font-semibold text-sm" style={{ color: 'var(--zone-yellow)' }}>
             Intensité réduite · cap {Math.round(cap * 100)}%
           </p>
-          <p className="text-xs mt-0.5" style={{ color: '#f59e0b90' }}>
+          <p className="text-xs mt-0.5" style={{ color: 'rgba(var(--zone-yellow-rgb), 0.565)' }}>
             Charge allostatique modérée.
           </p>
         </div>
@@ -178,11 +187,11 @@ function VetoStatus({ readiness }: { readiness: ReadinessResponse }) {
   }
 
   return (
-    <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: '#10b98112', border: '1px solid #10b98140' }}>
+    <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: 'rgba(var(--zone-green-rgb), 0.071)', border: '1px solid rgba(var(--zone-green-rgb), 0.251)' }}>
       <span className="text-xl mt-0.5">🟢</span>
       <div>
-        <p className="font-semibold text-sm" style={{ color: '#10b981' }}>Plan nominal</p>
-        <p className="text-xs mt-0.5" style={{ color: '#10b98190' }}>Tous les indicateurs dans la zone.</p>
+        <p className="font-semibold text-sm" style={{ color: 'var(--zone-green)' }}>Plan nominal</p>
+        <p className="text-xs mt-0.5" style={{ color: 'rgba(var(--zone-green-rgb), 0.565)' }}>Tous les indicateurs dans la zone.</p>
       </div>
     </div>
   )
@@ -210,20 +219,20 @@ function HistoryCharts({ history }: { history: EnergySnapshotSummary[] }) {
       <p className="text-xs mb-3" style={{ color: 'var(--text-secondary)' }}>Allostatic Score</p>
       <ResponsiveContainer width="100%" height={100}>
         <LineChart data={chartData} margin={{ left: -20, right: 10, top: 4, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#22223a" vertical={false} />
-          <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#5c5c7a', fontFamily: 'Space Grotesk' }} axisLine={false} tickLine={false} />
-          <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#5c5c7a', fontFamily: 'Space Mono' }} axisLine={false} tickLine={false} />
-          <ReferenceLine y={40} stroke="#10b98140" strokeDasharray="4 4" />
-          <ReferenceLine y={60} stroke="#f59e0b40" strokeDasharray="4 4" />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+          <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--text-muted)', fontFamily: 'Space Grotesk' }} axisLine={false} tickLine={false} />
+          <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: 'var(--text-muted)', fontFamily: 'Space Mono' }} axisLine={false} tickLine={false} />
+          <ReferenceLine y={40} stroke="rgba(var(--zone-green-rgb), 0.251)" strokeDasharray="4 4" />
+          <ReferenceLine y={60} stroke="rgba(var(--zone-yellow-rgb), 0.251)" strokeDasharray="4 4" />
           <Tooltip content={(props) => <ChartTooltip {...props} />} />
           <Line
             type="monotone"
             dataKey="score"
             name="score"
-            stroke="#5b5fef"
+            stroke="var(--accent)"
             strokeWidth={2}
-            dot={{ r: 3, fill: '#5b5fef', stroke: '#08080e', strokeWidth: 2 }}
-            activeDot={{ r: 4, fill: '#5b5fef' }}
+            dot={{ r: 3, fill: 'var(--accent)', stroke: 'var(--background)', strokeWidth: 2 }}
+            activeDot={{ r: 4, fill: 'var(--accent)' }}
           />
         </LineChart>
       </ResponsiveContainer>
@@ -246,7 +255,7 @@ function InsightsPanel({ insights }: { insights: string[] }) {
       <ul className="space-y-1.5">
         {insights.map((insight, i) => (
           <li key={i} className="text-xs flex items-start gap-2" style={{ color: 'var(--text-secondary)' }}>
-            <span style={{ color: '#5b5fef', marginTop: 1 }}>›</span>
+            <span style={{ color: 'var(--accent)', marginTop: 1 }}>›</span>
             {insight}
           </li>
         ))}
@@ -305,7 +314,7 @@ export default function EnergyPage() {
           {readiness ? (
             <span
               className="text-xs px-2.5 py-1 rounded-full font-medium"
-              style={{ background: '#10b98115', color: '#10b981', border: '1px solid #10b98130' }}
+              style={{ background: 'rgba(var(--zone-green-rgb), 0.082)', color: 'var(--zone-green)', border: '1px solid rgba(var(--zone-green-rgb), 0.188)' }}
             >
               ✓ Check-in fait
             </span>
@@ -313,7 +322,7 @@ export default function EnergyPage() {
             <Link
               href="/check-in"
               className="text-xs px-3 py-1.5 rounded-full font-semibold transition-opacity hover:opacity-80"
-              style={{ background: 'var(--primary)', color: '#fff' }}
+              style={{ background: 'var(--primary)', color: 'var(--primary-foreground)' }}
             >
               Check-in →
             </Link>
@@ -327,7 +336,7 @@ export default function EnergyPage() {
       )}
 
       {/* ── Error ── */}
-      {error && <p className="text-sm" style={{ color: '#ef4444' }}>{error}</p>}
+      {error && <p className="text-sm" style={{ color: 'var(--destructive)' }}>{error}</p>}
 
       {/* ── No check-in yet ── */}
       {!loading && noCheckin && !readiness && (
@@ -341,7 +350,7 @@ export default function EnergyPage() {
           <Link
             href="/check-in"
             className="text-sm px-6 py-2.5 rounded-xl font-semibold transition-opacity hover:opacity-80"
-            style={{ background: 'var(--primary)', color: '#fff' }}
+            style={{ background: 'var(--primary)', color: 'var(--primary-foreground)' }}
           >
             Faire le check-in →
           </Link>
@@ -369,9 +378,9 @@ export default function EnergyPage() {
                 <div
                   className="w-full rounded-lg px-3 py-2 text-xs"
                   style={{
-                    background: readiness.divergence_flag === 'high' ? '#ef444415' : '#f59e0b15',
-                    border: `1px solid ${readiness.divergence_flag === 'high' ? '#ef444430' : '#f59e0b30'}`,
-                    color: readiness.divergence_flag === 'high' ? '#ef4444' : '#f59e0b',
+                    background: readiness.divergence_flag === 'high' ? 'rgba(var(--zone-red-rgb), 0.082)' : 'rgba(var(--zone-yellow-rgb), 0.082)',
+                    border: `1px solid ${readiness.divergence_flag === 'high' ? 'rgba(var(--zone-red-rgb), 0.188)' : 'rgba(var(--zone-yellow-rgb), 0.188)'}`,
+                    color: readiness.divergence_flag === 'high' ? 'var(--zone-red)' : 'var(--zone-yellow)',
                   }}
                 >
                   Divergence objectif/subjectif : {Math.round(readiness.divergence)} pts
@@ -415,7 +424,7 @@ export default function EnergyPage() {
         <Link
           href="/check-in"
           className="text-sm px-4 py-2 rounded-lg font-medium transition-opacity hover:opacity-80"
-          style={{ background: 'var(--primary)', color: '#fff' }}
+          style={{ background: 'var(--primary)', color: 'var(--primary-foreground)' }}
         >
           {readiness ? 'Modifier le check-in' : 'Check-in →'}
         </Link>

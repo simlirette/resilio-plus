@@ -6,7 +6,7 @@ import { AuthProvider } from '@/lib/auth'
 import * as apiModule from '@/lib/api'
 
 vi.mock('@/lib/api', () => ({
-  api: { getWeekStatus: vi.fn() },
+  api: { getWeekStatus: vi.fn(), getReadiness: vi.fn().mockResolvedValue(null) },
   ApiError: class ApiError extends Error {
     constructor(public status: number, message: string) { super(message) }
   },

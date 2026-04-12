@@ -38,14 +38,14 @@ function OptionBtn({
       onClick={onClick}
       className="w-full text-left rounded-xl px-4 py-3.5 transition-all duration-150"
       style={{
-        background: selected ? '#5b5fef18' : '#14141f',
-        border: `1px solid ${selected ? '#5b5fef' : '#22223a'}`,
-        color: selected ? '#818cf8' : '#eeeef4',
+        background: selected ? 'rgba(var(--accent-rgb), 0.094)' : 'var(--surface-2)',
+        border: `1px solid ${selected ? 'var(--accent)' : 'var(--border)'}`,
+        color: selected ? 'var(--phase-luteal)' : 'var(--foreground)',
       }}
     >
       <span className="font-medium text-sm">{label}</span>
       {sub && (
-        <span className="block text-xs mt-0.5" style={{ color: selected ? '#818cf880' : '#5c5c7a' }}>
+        <span className="block text-xs mt-0.5" style={{ color: selected ? 'rgba(var(--phase-luteal-rgb), 0.502)' : 'var(--text-muted)' }}>
           {sub}
         </span>
       )}
@@ -65,7 +65,7 @@ function ProgressDots({ step, total }: { step: number; total: number }) {
           style={{
             width: i < step ? '24px' : '6px',
             height: '6px',
-            background: i < step ? '#5b5fef' : i === step ? '#8888a8' : '#22223a',
+            background: i < step ? 'var(--accent)' : i === step ? 'var(--text-secondary)' : 'var(--border)',
           }}
         />
       ))}
@@ -76,7 +76,41 @@ function ProgressDots({ step, total }: { step: number; total: number }) {
 // ── Confirmation screen ───────────────────────────────────────────────────
 
 function ConfirmationScreen({ readiness }: { readiness: ReadinessResponse }) {
-  const lightColor = { green: '#10b981', yellow: '#f59e0b', red: '#ef4444' }[readiness.traffic_light]
+  type TrafficLight = 'green' | 'yellow' | 'red'
+  const tl = readiness.traffic_light as TrafficLight
+
+  const lightColor: Record<TrafficLight, string> = {
+    green: 'var(--zone-green)',
+    yellow: 'var(--zone-yellow)',
+    red: 'var(--zone-red)',
+  }
+  const lightBg: Record<TrafficLight, string> = {
+    green: 'var(--zone-green-bg)',
+    yellow: 'var(--zone-yellow-bg)',
+    red: 'var(--zone-red-bg)',
+  }
+  const lightBgDim: Record<TrafficLight, string> = {
+    green: 'rgba(var(--zone-green-rgb), 0.063)',
+    yellow: 'rgba(var(--zone-yellow-rgb), 0.063)',
+    red: 'rgba(var(--zone-red-rgb), 0.063)',
+  }
+  const lightBorder: Record<TrafficLight, string> = {
+    green: 'rgba(var(--zone-green-rgb), 0.251)',
+    yellow: 'rgba(var(--zone-yellow-rgb), 0.251)',
+    red: 'rgba(var(--zone-red-rgb), 0.251)',
+  }
+  const lightMuted: Record<TrafficLight, string> = {
+    green: 'rgba(var(--zone-green-rgb), 0.565)',
+    yellow: 'rgba(var(--zone-yellow-rgb), 0.565)',
+    red: 'rgba(var(--zone-red-rgb), 0.565)',
+  }
+
+  const color = lightColor[tl] ?? 'var(--zone-green)'
+  const bg = lightBg[tl] ?? 'var(--zone-green-bg)'
+  const bgDim = lightBgDim[tl] ?? 'rgba(var(--zone-green-rgb), 0.063)'
+  const border = lightBorder[tl] ?? 'rgba(var(--zone-green-rgb), 0.251)'
+  const muted = lightMuted[tl] ?? 'rgba(var(--zone-green-rgb), 0.565)'
+
   const lightLabel = { green: 'Feu vert', yellow: 'Feu orange', red: 'Feu rouge' }[readiness.traffic_light]
   const score = Math.round(readiness.final_readiness)
 
@@ -85,10 +119,10 @@ function ConfirmationScreen({ readiness }: { readiness: ReadinessResponse }) {
       {/* Checkmark */}
       <div
         className="flex items-center justify-center rounded-full"
-        style={{ width: 72, height: 72, background: '#10b98118', border: '2px solid #10b981' }}
+        style={{ width: 72, height: 72, background: 'var(--zone-green-bg)', border: '2px solid var(--zone-green)' }}
       >
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-          <path d="M5 13l4 4L19 7" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M5 13l4 4L19 7" stroke="var(--zone-green)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
 
@@ -110,17 +144,17 @@ function ConfirmationScreen({ readiness }: { readiness: ReadinessResponse }) {
         <div className="flex items-center justify-between mb-3">
           <span
             className="text-4xl font-bold"
-            style={{ fontFamily: "'Space Mono', monospace", color: lightColor }}
+            style={{ fontFamily: "'Space Mono', monospace", color }}
           >
             {score}
           </span>
           <span
             className="text-xs px-3 py-1 rounded-full font-semibold flex items-center gap-1.5"
-            style={{ background: `${lightColor}18`, color: lightColor, border: `1px solid ${lightColor}40` }}
+            style={{ background: bg, color, border: `1px solid ${border}` }}
           >
             <span
               className="inline-block rounded-full"
-              style={{ width: 8, height: 8, background: lightColor }}
+              style={{ width: 8, height: 8, background: color }}
             />
             {lightLabel}
           </span>
@@ -130,14 +164,14 @@ function ConfirmationScreen({ readiness }: { readiness: ReadinessResponse }) {
           <ul className="text-left space-y-1 mt-2">
             {readiness.insights.map((insight, i) => (
               <li key={i} className="text-xs flex items-start gap-2" style={{ color: 'var(--text-secondary)' }}>
-                <span style={{ color: lightColor, marginTop: 1 }}>›</span>
+                <span style={{ color, marginTop: 1 }}>›</span>
                 {insight}
               </li>
             ))}
           </ul>
         )}
 
-        <div className="mt-3 pt-3 flex justify-between text-xs" style={{ borderTop: '1px solid #22223a' }}>
+        <div className="mt-3 pt-3 flex justify-between text-xs" style={{ borderTop: '1px solid var(--border)' }}>
           <span style={{ color: 'var(--muted-foreground)' }}>Cap intensité</span>
           <span style={{ color: 'var(--foreground)' }}>{Math.round(readiness.intensity_cap * 100)}%</span>
         </div>
@@ -146,14 +180,14 @@ function ConfirmationScreen({ readiness }: { readiness: ReadinessResponse }) {
       {readiness.traffic_light !== 'green' && (
         <div
           className="w-full rounded-xl p-4 flex items-start gap-3 text-left"
-          style={{ background: `${lightColor}10`, border: `1px solid ${lightColor}40` }}
+          style={{ background: bgDim, border: `1px solid ${border}` }}
         >
           <span className="text-lg">{readiness.traffic_light === 'red' ? '🔴' : '🟡'}</span>
           <div>
-            <p className="text-sm font-semibold" style={{ color: lightColor }}>
+            <p className="text-sm font-semibold" style={{ color }}>
               Intensité ajustée pour aujourd&apos;hui
             </p>
-            <p className="text-xs mt-0.5" style={{ color: `${lightColor}90` }}>
+            <p className="text-xs mt-0.5" style={{ color: muted }}>
               Cap à {Math.round(readiness.intensity_cap * 100)}% de l&apos;intensité normale.
             </p>
           </div>
@@ -164,7 +198,7 @@ function ConfirmationScreen({ readiness }: { readiness: ReadinessResponse }) {
         <Link
           href="/energy"
           className="flex-1 text-center text-sm px-4 py-2.5 rounded-lg font-semibold transition-opacity hover:opacity-80"
-          style={{ background: 'var(--primary)', color: '#fff' }}
+          style={{ background: 'var(--primary)', color: 'var(--primary-foreground)' }}
         >
           Voir le dashboard énergie
         </Link>
@@ -253,7 +287,7 @@ export default function CheckInPage() {
               </p>
               <span
                 className="text-xs px-2 py-0.5 rounded-full"
-                style={{ background: '#5b5fef15', color: '#818cf8', border: '1px solid #5b5fef30' }}
+                style={{ background: 'rgba(var(--accent-rgb), 0.082)', color: 'var(--phase-luteal)', border: '1px solid rgba(var(--accent-rgb), 0.188)' }}
               >
                 ~60 secondes
               </span>
@@ -273,7 +307,7 @@ export default function CheckInPage() {
           className="rounded-xl p-5 space-y-3 transition-opacity duration-300"
           style={{
             background: 'var(--card)',
-            border: `1px solid ${step >= 0 ? '#22223a' : '#191928'}`,
+            border: `1px solid ${step >= 0 ? 'var(--border)' : 'var(--border-subtle)'}`,
             opacity: step === 0 || form.work_intensity ? 1 : 0.4,
           }}
         >
@@ -304,7 +338,7 @@ export default function CheckInPage() {
           className="rounded-xl p-5 space-y-3 transition-all duration-300"
           style={{
             background: 'var(--card)',
-            border: `1px solid ${step >= 1 ? '#22223a' : '#191928'}`,
+            border: `1px solid ${step >= 1 ? 'var(--border)' : 'var(--border-subtle)'}`,
             opacity: form.work_intensity ? 1 : 0.3,
             pointerEvents: form.work_intensity ? 'auto' : 'none',
           }}
@@ -335,7 +369,7 @@ export default function CheckInPage() {
           className="rounded-xl p-5 space-y-3 transition-all duration-300"
           style={{
             background: 'var(--card)',
-            border: `1px solid ${step >= 2 ? '#22223a' : '#191928'}`,
+            border: `1px solid ${step >= 2 ? 'var(--border)' : 'var(--border-subtle)'}`,
             opacity: form.stress_level ? 1 : 0.3,
             pointerEvents: form.stress_level ? 'auto' : 'none',
           }}
@@ -367,7 +401,7 @@ export default function CheckInPage() {
           className="rounded-xl p-5 space-y-3 transition-all duration-300"
           style={{
             background: 'var(--card)',
-            border: `1px solid ${step >= 3 ? '#22223a' : '#191928'}`,
+            border: `1px solid ${step >= 3 ? 'var(--border)' : 'var(--border-subtle)'}`,
             opacity: form.legs_feeling ? 1 : 0.3,
             pointerEvents: form.legs_feeling ? 'auto' : 'none',
           }}
@@ -378,9 +412,9 @@ export default function CheckInPage() {
           </div>
           <div className="grid grid-cols-2 gap-2">
             {([
-              { value: 'great' as EnergyGlobal, label: 'Super', sub: 'Plein d\'énergie' },
+              { value: 'great' as EnergyGlobal, label: 'Super', sub: "Plein d'énergie" },
               { value: 'ok' as EnergyGlobal, label: 'Correct', sub: 'Dans la norme' },
-              { value: 'low' as EnergyGlobal, label: 'Faible', sub: 'Moins d\'élan que d\'habitude' },
+              { value: 'low' as EnergyGlobal, label: 'Faible', sub: "Moins d'élan que d'habitude" },
               { value: 'exhausted' as EnergyGlobal, label: 'Épuisé', sub: 'Vraiment à plat' },
             ] as const).map(opt => (
               <OptionBtn
@@ -399,7 +433,7 @@ export default function CheckInPage() {
           className="rounded-xl p-5 space-y-3 transition-all duration-300"
           style={{
             background: 'var(--card)',
-            border: `1px solid ${step >= 4 ? '#22223a' : '#191928'}`,
+            border: `1px solid ${step >= 4 ? 'var(--border)' : 'var(--border-subtle)'}`,
             opacity: form.energy_global ? 1 : 0.3,
             pointerEvents: form.energy_global ? 'auto' : 'none',
           }}
@@ -436,8 +470,8 @@ export default function CheckInPage() {
           onClick={submit}
           className="w-full py-3 rounded-xl font-semibold text-sm transition-all duration-200"
           style={{
-            background: canSubmit ? '#5b5fef' : '#22223a',
-            color: canSubmit ? '#fff' : '#5c5c7a',
+            background: canSubmit ? 'var(--accent)' : 'var(--border)',
+            color: canSubmit ? 'var(--primary-foreground)' : 'var(--text-muted)',
             cursor: canSubmit ? 'pointer' : 'not-allowed',
           }}
         >
