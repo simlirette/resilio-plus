@@ -272,6 +272,70 @@ export const api = {
   getEnergyHistory: (athleteId: string, days = 28) =>
     request<EnergySnapshotSummary[]>(`/athletes/${athleteId}/energy/history?days=${days}`),
 
+  getAthleteProfile: (athleteId: string) =>
+    request<AthleteProfile>(`/athletes/${athleteId}`),
+
+  getExternalPlan: (athleteId: string) =>
+    request<ExternalPlanOut>(`/athletes/${athleteId}/external-plan`),
+
+  createExternalPlan: (athleteId: string, data: ExternalPlanCreate) =>
+    request<ExternalPlanOut>(`/athletes/${athleteId}/external-plan`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  addExternalSession: (athleteId: string, data: ExternalSessionCreate) =>
+    request<ExternalSessionOut>(`/athletes/${athleteId}/external-plan/sessions`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateExternalSession: (athleteId: string, sessionId: string, data: ExternalSessionUpdate) =>
+    request<ExternalSessionOut>(`/athletes/${athleteId}/external-plan/sessions/${sessionId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  deleteExternalSession: (athleteId: string, sessionId: string): Promise<void> =>
+    request(`/athletes/${athleteId}/external-plan/sessions/${sessionId}`, { method: 'DELETE' }),
+
+  // ── S-2 STUBS ─────────────────────────────────────────────────────────────
+  // POST /athletes/{id}/external-plan/import is not yet implemented (S-2 scope).
+  // These stubs simulate the API with mock data.
+
+  importExternalPlan: (_athleteId: string, _file: File): Promise<ExternalPlanDraft> => {
+    console.log('[STUB] S-2 not implemented: importExternalPlan')
+    return new Promise(resolve =>
+      setTimeout(() => resolve({
+        title: 'Plan importé (démo)',
+        sessions_parsed: 3,
+        sessions: [
+          { session_date: new Date().toISOString().split('T')[0], sport: 'running', title: 'Easy run 45min', duration_min: 45 },
+          { session_date: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0], sport: 'lifting', title: 'Full body strength', duration_min: 60 },
+          { session_date: new Date(Date.now() + 4 * 86400000).toISOString().split('T')[0], sport: 'running', title: 'Tempo intervals', duration_min: 55 },
+        ],
+        parse_warnings: ['[DÉMO] Endpoint S-2 non implémenté — données fictives'],
+      }), 800)
+    )
+  },
+
+  confirmImportExternalPlan: (athleteId: string, _draft: ExternalPlanDraft): Promise<ExternalPlanOut> => {
+    console.log('[STUB] S-2 not implemented: confirmImportExternalPlan')
+    return new Promise(resolve =>
+      setTimeout(() => resolve({
+        id: 'stub-plan-id',
+        athlete_id: athleteId,
+        title: 'Plan importé (démo)',
+        source: 'file',
+        status: 'active',
+        start_date: new Date().toISOString().split('T')[0],
+        end_date: null,
+        created_at: new Date().toISOString(),
+        sessions: [],
+      }), 500)
+    )
+  },
+
 }
 
 // ── Analytics ──────────────────────────────────────────────────────────────
@@ -342,6 +406,68 @@ export interface EnergySnapshotSummary {
   intensity_cap: number
   veto_triggered: boolean
   traffic_light: string
+}
+
+// ── ExternalPlan ───────────────────────────────────────────────────────────
+
+export interface AthleteProfile {
+  id: string
+  name: string
+  coaching_mode: 'full' | 'tracking_only'
+}
+
+export interface ExternalSessionOut {
+  id: string
+  plan_id: string
+  athlete_id: string
+  session_date: string
+  sport: string
+  title: string
+  description: string | null
+  duration_min: number | null
+  status: string
+}
+
+export interface ExternalPlanOut {
+  id: string
+  athlete_id: string
+  title: string
+  source: string
+  status: string
+  start_date: string | null
+  end_date: string | null
+  created_at: string
+  sessions: ExternalSessionOut[]
+}
+
+export interface ExternalPlanCreate {
+  title: string
+  start_date?: string
+  end_date?: string
+}
+
+export interface ExternalSessionCreate {
+  session_date: string
+  sport: string
+  title: string
+  description?: string
+  duration_min?: number
+}
+
+export interface ExternalSessionUpdate {
+  session_date?: string
+  sport?: string
+  title?: string
+  description?: string
+  duration_min?: number
+  status?: 'planned' | 'completed' | 'skipped'
+}
+
+export interface ExternalPlanDraft {
+  title: string
+  sessions_parsed: number
+  sessions: ExternalSessionCreate[]
+  parse_warnings: string[]
 }
 
 export function getLoadAnalytics(athleteId: string): Promise<LoadAnalytics> {
