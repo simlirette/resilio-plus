@@ -24,9 +24,61 @@ export interface ApiClientConfig {
   token?: ApiToken;
 }
 
+export class ApiClientError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+    this.name = 'ApiClientError';
+  }
+}
+
 /**
- * Minimal fetch wrapper — will be replaced by generated client (pnpm generate).
- * Provides JWT Authorization header injection.
+ * createClient — factory with dynamic token getter (callback style).
+ * Preferred over createApiClient for React context integration.
+ */
+export function createClient(baseURL: string, getToken: () => string | null) {
+  async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+    const token = getToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(options.headers as Record<string, string>),
+    };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const response = await fetch(`${baseURL}${path}`, { ...options, headers });
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      const message = (body as { detail?: string }).detail ?? `Request failed`;
+      throw new ApiClientError(response.status, message);
+    }
+
+    return response.json() as Promise<T>;
+  }
+
+  async function rawRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
+    const token = getToken();
+    const headers: Record<string, string> = {
+      ...(options.headers as Record<string, string>),
+    };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const response = await fetch(`${baseURL}${path}`, { ...options, headers });
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      const message = (body as { detail?: string }).detail ?? `Request failed`;
+      throw new ApiClientError(response.status, message);
+    }
+
+    return response.json() as Promise<T>;
+  }
+
+  return { request, rawRequest };
+}
+
+/**
+ * createApiClient — legacy factory with static/stored token.
+ * Use createClient for new code.
  */
 export function createApiClient(config: ApiClientConfig) {
   const { baseUrl, token } = config;
@@ -45,7 +97,7 @@ export function createApiClient(config: ApiClientConfig) {
     const response = await fetch(`${baseUrl}${path}`, { ...options, headers });
 
     if (!response.ok) {
-      throw new Error(`API error ${response.status}: ${response.statusText}`);
+      throw new ApiClientError(response.status, response.statusText);
     }
 
     return response.json() as Promise<T>;

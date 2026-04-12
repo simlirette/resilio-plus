@@ -2,5 +2,35 @@
   "name": "@resilio/mobile",
   "version": "0.1.0",
   "private": true,
-  "description": "Expo React Native iOS app — scaffold pending (Vague 1 Session M)"
+  "main": "expo-router/entry",
+  "scripts": {
+    "dev": "expo start",
+    "build": "expo export",
+    "build:ios": "eas build --platform ios",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@resilio/api-client": "workspace:*",
+    "@resilio/brand": "workspace:*",
+    "@resilio/design-tokens": "workspace:*",
+    "@resilio/shared-logic": "workspace:*",
+    "@resilio/ui-mobile": "workspace:*",
+    "expo": "~52.0.0",
+    "expo-font": "~13.0.0",
+    "expo-router": "~4.0.0",
+    "expo-splash-screen": "~0.29.0",
+    "expo-status-bar": "~2.0.0",
+    "lucide-react-native": "~0.475.0",
+    "react": "18.3.1",
+    "react-native": "0.76.5",
+    "react-native-safe-area-context": "4.12.0",
+    "react-native-screens": "~4.3.0",
+    "react-native-svg": "~15.8.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.0",
+    "@types/react": "~18.3.12",
+    "@types/react-native": "~0.73.0",
+    "typescript": "~5.3.3"
+  }
 }

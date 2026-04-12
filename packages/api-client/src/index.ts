@@ -9,9 +9,19 @@
  *   to regenerate src/generated/api.ts from the OpenAPI spec.
  *
  * USAGE (after generation):
- *   import { createApiClient } from '@resilio/api-client';
- *   const client = createApiClient({ baseUrl: 'http://localhost:8000', token });
+ *   import { createClient } from '@resilio/api-client';
+ *   const client = createClient('http://localhost:8000', () => localStorage.getItem('token'));
  */
 
 export type { ApiToken } from './helpers';
-export { createApiClient, setAuthToken, getAuthToken, clearAuthToken } from './helpers';
+export {
+  createApiClient,
+  createClient,
+  setAuthToken,
+  getAuthToken,
+  clearAuthToken,
+  ApiClientError,
+} from './helpers';
+
+// Re-export generated OpenAPI types
+export type { paths, operations, components } from './generated/api';
