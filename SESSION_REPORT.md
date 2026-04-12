@@ -115,6 +115,54 @@ Déplacé vers : `docs/archive/resilio-master-v2_archived_2026-04-12.md`
 
 ---
 
+## S-1 — ExternalPlan Backend CRUD (2026-04-12)
+
+**Branche :** `session/s1-external-plan`  
+**Statut :** ✅ Terminé
+
+### Ce qui a été fait
+
+| Composant | Fichier | Tests |
+|---|---|---|
+| Pydantic schemas | `backend/app/schemas/external_plan.py` | — |
+| ExternalPlanService | `backend/app/services/external_plan_service.py` | 14 tests unitaires ✅ |
+| Routes FastAPI (5 endpoints) | `backend/app/routes/external_plan.py` | 19 tests API ✅ |
+| Router enregistré | `backend/app/main.py` (+2 lignes) | — |
+
+**Endpoints livrés :**
+- `POST /athletes/{id}/external-plan` [require_tracking_mode]
+- `GET /athletes/{id}/external-plan` [require_tracking_mode]
+- `POST /athletes/{id}/external-plan/sessions` [require_tracking_mode]
+- `PATCH /athletes/{id}/external-plan/sessions/{session_id}` [require_tracking_mode]
+- `DELETE /athletes/{id}/external-plan/sessions/{session_id}` [require_tracking_mode]
+
+### Invariants vérifiés
+
+- `pytest tests/` → 1723 passed ≥ 1243 ✅
+- 18 failed = pré-existants (test_energy_patterns.py, S-4 hors scope) ✅
+- Aucune nouvelle dépendance ajoutée ✅
+- Volet 2 indépendant du Volet 1 : ExternalPlanService ne touche pas au coaching graph ✅
+
+### Décisions notables
+
+1. **Hard-delete des sessions** : Les sessions sont de la donnée saisie par l'utilisateur. Le DELETE HTTP supprime physiquement. La règle "jamais effacer" s'applique aux plans (ExternalPlanModel reste en DB avec status="archived"), pas aux séances individuelles.
+2. **XOR invariant au niveau service** : `create_plan()` archive toute ExternalPlan active avant d'en créer une nouvelle. Pas de cross-check TrainingPlan nécessaire — ModeGuard garantit l'exclusion mutuelle à la couche HTTP.
+3. **GET active plan → 404 si absent** : Sentinel propre pour le frontend (pas d'ambiguïté entre "pas de plan" et "erreur").
+4. **source="manual" systématique** : L'import fichier est S-2 scope.
+
+### Dette technique
+
+- Le commit `84413e7` (docs) a accidentellement inclus des fichiers S-3 (`weekly_review_graph.py`, tests weekly_review) présents dans le working tree d'une session parallèle. Ces fichiers sont maintenant sur la branche S-1. Ils ne cassent aucun test mais sont hors-périmètre.
+  - **Recommandation** : lors du merge final S-1 → main, utiliser `git cherry-pick` sur les 3 commits de code (0ccc584, 5d6c90b, e90d78a) plutôt que merge direct pour éviter de polluer main avec ces fichiers.
+
+### Suggestions hors-scope (→ SESSION_NOTES)
+
+- **GET /athletes/{id}/external-plan/archived** : liste des plans archivés (utile pour l'historique frontend S-6)
+- **PATCH /athletes/{id}/external-plan** : modifier le titre/dates du plan actif sans créer un nouveau plan
+- **ExternalSession.actual_duration_min** : champ pour tracker la durée réelle vs planifiée (utile pour la weekly review S-3)
+
+---
+
 ## Invariants à respecter dans chaque session
 
 1. `pytest tests/` doit passer (≥ 1243 tests)
