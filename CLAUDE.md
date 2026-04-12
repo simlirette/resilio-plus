@@ -98,6 +98,8 @@ class FatigueScore:
 
 **Dernières phases complétées (2026-04-12) :** Backend V3 finalisé — architecture 2-volets opérationnelle, 35 tests E2E, mode switch validé, invariants modularité prouvés. Voir `BACKEND_V3_COMPLETE.md` pour l'état consolidé.
 
+**Vague 1 Frontend complétée 2026-04-12 —** 4 sessions parallèles consolidées en 2 merges. Desktop (Tauri), Mobile (Expo), ESLint rules, hex cleanup, API client généré — tous livrés. Voir `FRONTEND_VAGUE1_POSTMORTEM.md`.
+
 ---
 
 ## Running Coach Knowledge Base
@@ -207,6 +209,7 @@ resilio-plus/
 6. **Commits conventionnels obligatoires** : `feat(web)`, `feat(desktop)`, `feat(mobile)`, `chore(tokens)`, `fix(web)`, etc.
 7. **Tests non négociables** pour `shared-logic` et `api-client`
 8. **Pas de logique métier dans les composants UI** — toujours dans `shared-logic` ou dans l'app
+9. **Pour toute session parallèle future, utiliser `git worktree add`** pour isoler les working trees. Ne jamais lancer 2+ sessions dans le même dossier local.
 
 ---
 
