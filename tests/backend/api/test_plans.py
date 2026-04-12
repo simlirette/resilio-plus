@@ -94,7 +94,7 @@ def test_plan_route_calls_connector_service(authed_client):
     c, athlete_id = authed_client
 
     with patch("app.routes.plans.fetch_connector_data") as mock_fetch:
-        mock_fetch.return_value = {"strava_activities": [], "hevy_workouts": []}
+        mock_fetch.return_value = {"strava_activities": [], "hevy_workouts": [], "terra_health": None}
         resp = c.post(
             f"/athletes/{athlete_id}/plan",
             json={"start_date": "2026-04-07", "end_date": "2026-04-13"},

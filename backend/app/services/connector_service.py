@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from ..connectors.hevy import HevyConnector
 from ..connectors.strava import StravaConnector
 from ..db.models import ConnectorCredentialModel
-from ..schemas.connector import ConnectorCredential, HevyWorkout, StravaActivity
+from ..schemas.connector import ConnectorCredential, HevyWorkout, StravaActivity, TerraHealthData
 
 logger = logging.getLogger(__name__)
 
@@ -40,14 +40,21 @@ def _persist_token_update(
 def fetch_connector_data(athlete_id: str, db: Session) -> dict:
     """Fetch live data from all connected providers for the athlete.
 
-    Always returns both keys even on error:
-        {"strava_activities": list[StravaActivity], "hevy_workouts": list[HevyWorkout]}
+    Always returns all keys even on error:
+        {
+            "strava_activities": list[StravaActivity],
+            "hevy_workouts": list[HevyWorkout],
+            "terra_health": TerraHealthData | None,
+        }
+    Terra data is read from cached extra_json (written by SyncService.sync_terra) —
+    no live API call needed here.
     """
     now = datetime.now(timezone.utc)
     since = datetime.fromtimestamp(now.timestamp() - _WEEK_SECONDS, tz=timezone.utc)
 
     strava_activities: list[StravaActivity] = []
     hevy_workouts: list[HevyWorkout] = []
+    terra_health: TerraHealthData | None = None
 
     # ── Strava ──────────────────────────────────────────────────────────────
     strava_model = (
@@ -82,4 +89,26 @@ def fetch_connector_data(athlete_id: str, db: Session) -> dict:
         except Exception:
             logger.warning("Hevy fetch failed for athlete %s", athlete_id, exc_info=True)
 
-    return {"strava_activities": strava_activities, "hevy_workouts": hevy_workouts}
+    # ── Terra (cached) ────────────────────────────────────────────────────────
+    terra_model = (
+        db.query(ConnectorCredentialModel)
+        .filter_by(athlete_id=athlete_id, provider="terra")
+        .first()
+    )
+    if terra_model:
+        from datetime import date
+        extra = json.loads(terra_model.extra_json or "{}")
+        terra_health = TerraHealthData(
+            date=date.today(),
+            hrv_rmssd=extra.get("last_hrv_rmssd"),
+            sleep_duration_hours=extra.get("last_sleep_hours"),
+            sleep_score=extra.get("last_sleep_score"),
+            steps=extra.get("last_steps"),
+            active_energy_kcal=None,
+        )
+
+    return {
+        "strava_activities": strava_activities,
+        "hevy_workouts": hevy_workouts,
+        "terra_health": terra_health,
+    }

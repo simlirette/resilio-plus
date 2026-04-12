@@ -69,7 +69,7 @@ def _create_plan_for_athlete(
         phase=phase,
         strava_activities=connector_data["strava_activities"],
         hevy_workouts=connector_data["hevy_workouts"],
-        terra_health=[],
+        terra_health=[connector_data["terra_health"]] if connector_data["terra_health"] else [],
         fatsecret_days=[],
         week_number=week_number,
         weeks_remaining=weeks_remaining,

@@ -49,7 +49,9 @@ def _add_hevy_cred(db_session, athlete_id):
 def test_fetch_no_credentials_returns_empty_lists(db_session):
     athlete_id = _make_athlete(db_session)
     result = fetch_connector_data(athlete_id, db_session)
-    assert result == {"strava_activities": [], "hevy_workouts": []}
+    assert result["strava_activities"] == []
+    assert result["hevy_workouts"] == []
+    assert result["terra_health"] is None
 
 
 @respx.mock
