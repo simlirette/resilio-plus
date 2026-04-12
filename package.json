@@ -3,13 +3,18 @@
   "private": true,
   "scripts": {
     "dev:web": "pnpm --filter @resilio/web dev",
-    "dev:desktop": "pnpm --filter @resilio/desktop dev",
+    "dev:desktop": "concurrently -n \"next,tauri\" -c \"cyan,green\" \"pnpm dev:web\" \"wait-on tcp:3000 && pnpm --filter @resilio/desktop dev\"",
     "dev:mobile": "pnpm --filter @resilio/mobile dev",
     "build:web": "pnpm --filter @resilio/web build",
-    "build:desktop": "pnpm --filter @resilio/desktop build",
+    "build:desktop": "pnpm --filter @resilio/web build:static && pnpm --filter @resilio/desktop build",
     "build:mobile": "pnpm --filter @resilio/mobile build",
+    "build:mobile:ios": "pnpm --filter @resilio/mobile build:ios",
     "lint": "pnpm --filter @resilio/web lint",
     "typecheck": "pnpm --filter @resilio/web typecheck"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0",
+    "wait-on": "^8.0.0"
   },
   "packageManager": "pnpm@10.33.0"
 }

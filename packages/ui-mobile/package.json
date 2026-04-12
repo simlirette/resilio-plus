@@ -7,7 +7,12 @@
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@resilio/design-tokens": "workspace:*"
+  },
   "devDependencies": {
+    "@types/react": "~18.3.12",
+    "@types/react-native": "~0.73.0",
     "typescript": "^5"
   },
   "peerDependencies": {
@@ -16,11 +21,7 @@
     "react-native": ">=0.73.0"
   },
   "peerDependenciesMeta": {
-    "lucide-react-native": {
-      "optional": false
-    },
-    "react-native": {
-      "optional": false
-    }
+    "lucide-react-native": { "optional": false },
+    "react-native": { "optional": false }
   }
 }

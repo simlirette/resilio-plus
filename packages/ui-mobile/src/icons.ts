@@ -4,23 +4,25 @@
  * RULE: Never import lucide-react-native directly in apps/mobile.
  * Always import from @resilio/ui-mobile instead.
  *
- * Mirror of @resilio/ui-web/src/icons.ts — same semantic names, different source.
- * Populated in Vague 1 Session M (Expo setup).
+ * Mirror of @resilio/ui-web/src/icons.ts — same semantic names, RN source.
  */
+import {
+  Moon, Sun, Trash2, Plus, Minus, Calendar, ChevronRight, ChevronLeft,
+  ChevronDown, ChevronUp, Check, X, AlertTriangle, AlertCircle, Info,
+  Settings, User, LogOut, LogIn, Activity, BarChart2, TrendingUp, TrendingDown,
+  Clock, Zap, Heart, Target, Award, Dumbbell, Bike, Waves,
+  Upload, Download, RefreshCw, Edit2, Save, Link2, ExternalLink,
+} from 'lucide-react-native';
 
-// Placeholder: lucide-react-native is not installed yet (Vague 1).
-// This file establishes the contract. Uncomment when Expo is scaffolded.
-
-// import {
-//   Moon, Sun, Trash2, Plus, ...
-// } from 'lucide-react-native';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type IconComponent = any;
-
-export const Icon: Record<string, IconComponent> = {
-  // Populated in Vague 1 — Expo scaffold session
-  // Same semantic keys as @resilio/ui-web/src/icons.ts
-};
+export const Icon = {
+  DarkMode: Moon, LightMode: Sun,
+  Add: Plus, Remove: Minus, Delete: Trash2, Edit: Edit2, Save: Save,
+  Upload: Upload, Download: Download, Refresh: RefreshCw, Link: Link2, ExternalLink: ExternalLink,
+  ChevronRight, ChevronLeft, ChevronDown, ChevronUp,
+  Check, Close: X, Warning: AlertTriangle, Error: AlertCircle, Info,
+  Calendar, Settings, User, LogOut, LogIn,
+  Activity, Analytics: BarChart2, TrendingUp, TrendingDown, Clock,
+  Energy: Zap, Heart, Target, Award, Lifting: Dumbbell, Biking: Bike, Swimming: Waves,
+} as const;
 
 export type IconName = keyof typeof Icon;
