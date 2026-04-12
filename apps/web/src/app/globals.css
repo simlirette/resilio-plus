@@ -31,6 +31,15 @@
   --zone-yellow-bg:  rgba(245, 158, 11, 0.10);
   --zone-red:        #ef4444;
   --zone-red-bg:     rgba(239, 68, 68, 0.10);
+  --zone-critical:   #dc2626;
+
+  /* RGB channels for alpha variants */
+  --accent-rgb:          91, 95, 239;
+  --zone-green-rgb:      16, 185, 129;
+  --zone-yellow-rgb:     245, 158, 11;
+  --zone-red-rgb:        239, 68, 68;
+  --zone-critical-rgb:   220, 38, 38;
+  --phase-luteal-rgb:    129, 140, 248;
 
   /* Cycle phase colors */
   --phase-menstrual:  #ef4444;
