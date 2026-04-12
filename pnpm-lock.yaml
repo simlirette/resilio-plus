@@ -234,16 +234,25 @@ importers:
 
   packages/ui-mobile:
     dependencies:
+      '@resilio/design-tokens':
+        specifier: workspace:*
+        version: link:../design-tokens
       lucide-react-native:
         specifier: '>=0.300.0'
-        version: 1.8.0(react-native-svg@15.15.4(react-native@0.85.0(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native@0.85.0(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
+        version: 1.8.0(react-native-svg@15.15.4(react-native@0.85.0(@babel/core@7.29.0)(@types/react@18.3.28)(react@19.2.4))(react@19.2.4))(react-native@0.85.0(@babel/core@7.29.0)(@types/react@18.3.28)(react@19.2.4))(react@19.2.4)
       react:
         specifier: '>=18.0.0'
         version: 19.2.4
       react-native:
         specifier: '>=0.73.0'
-        version: 0.85.0(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4)
+        version: 0.85.0(@babel/core@7.29.0)(@types/react@18.3.28)(react@19.2.4)
     devDependencies:
+      '@types/react':
+        specifier: ~18.3.12
+        version: 18.3.28
+      '@types/react-native':
+        specifier: ~0.73.0
+        version: 0.73.0(@babel/core@7.29.0)(@types/react@18.3.28)(react@19.2.4)
       typescript:
         specifier: ^5
         version: 5.9.3
@@ -7735,14 +7744,23 @@ snapshots:
     optionalDependencies:
       '@types/react': 18.3.28
 
-  '@react-native/virtualized-lists@0.85.0(@types/react@19.2.14)(react-native@0.85.0(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)':
+  '@react-native/virtualized-lists@0.76.5(@types/react@18.3.28)(react-native@0.76.5(@babel/core@7.29.0)(@types/react@18.3.28)(react@19.2.4))(react@19.2.4)':
     dependencies:
       invariant: 2.2.4
       nullthrows: 1.1.1
       react: 19.2.4
-      react-native: 0.85.0(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4)
+      react-native: 0.76.5(@babel/core@7.29.0)(@types/react@18.3.28)(react@19.2.4)
     optionalDependencies:
-      '@types/react': 19.2.14
+      '@types/react': 18.3.28
+
+  '@react-native/virtualized-lists@0.85.0(@types/react@18.3.28)(react-native@0.85.0(@babel/core@7.29.0)(@types/react@18.3.28)(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      invariant: 2.2.4
+      nullthrows: 1.1.1
+      react: 19.2.4
+      react-native: 0.85.0(@babel/core@7.29.0)(@types/react@18.3.28)(react@19.2.4)
+    optionalDependencies:
+      '@types/react': 18.3.28
 
   '@react-navigation/bottom-tabs@7.15.9(@react-navigation/native@7.2.2(react-native@0.76.5(@babel/core@7.29.0)(@babel/preset-env@7.29.2(@babel/core@7.29.0))(@types/react@18.3.28)(react@18.3.1))(react@18.3.1))(react-native-safe-area-context@4.12.0(react-native@0.76.5(@babel/core@7.29.0)(@babel/preset-env@7.29.2(@babel/core@7.29.0))(@types/react@18.3.28)(react@18.3.1))(react@18.3.1))(react-native-screens@4.3.0(react-native@0.76.5(@babel/core@7.29.0)(@babel/preset-env@7.29.2(@babel/core@7.29.0))(@types/react@18.3.28)(react@18.3.1))(react@18.3.1))(react-native@0.76.5(@babel/core@7.29.0)(@babel/preset-env@7.29.2(@babel/core@7.29.0))(@types/react@18.3.28)(react@18.3.1))(react@18.3.1)':
     dependencies:
@@ -8164,6 +8182,20 @@ snapshots:
   '@types/react-native@0.73.0(@babel/core@7.29.0)(@babel/preset-env@7.29.2(@babel/core@7.29.0))(@types/react@18.3.28)(react@18.3.1)':
     dependencies:
       react-native: 0.76.5(@babel/core@7.29.0)(@babel/preset-env@7.29.2(@babel/core@7.29.0))(@types/react@18.3.28)(react@18.3.1)
+    transitivePeerDependencies:
+      - '@babel/core'
+      - '@babel/preset-env'
+      - '@react-native-community/cli-server-api'
+      - '@types/react'
+      - bufferutil
+      - encoding
+      - react
+      - supports-color
+      - utf-8-validate
+
+  '@types/react-native@0.73.0(@babel/core@7.29.0)(@types/react@18.3.28)(react@19.2.4)':
+    dependencies:
+      react-native: 0.76.5(@babel/core@7.29.0)(@types/react@18.3.28)(react@19.2.4)
     transitivePeerDependencies:
       - '@babel/core'
       - '@babel/preset-env'
@@ -10156,11 +10188,11 @@ snapshots:
       react-native: 0.76.5(@babel/core@7.29.0)(@babel/preset-env@7.29.2(@babel/core@7.29.0))(@types/react@18.3.28)(react@18.3.1)
       react-native-svg: 15.8.0(react-native@0.76.5(@babel/core@7.29.0)(@babel/preset-env@7.29.2(@babel/core@7.29.0))(@types/react@18.3.28)(react@18.3.1))(react@18.3.1)
 
-  lucide-react-native@1.8.0(react-native-svg@15.15.4(react-native@0.85.0(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native@0.85.0(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4):
+  lucide-react-native@1.8.0(react-native-svg@15.15.4(react-native@0.85.0(@babel/core@7.29.0)(@types/react@18.3.28)(react@19.2.4))(react@19.2.4))(react-native@0.85.0(@babel/core@7.29.0)(@types/react@18.3.28)(react@19.2.4))(react@19.2.4):
     dependencies:
       react: 19.2.4
-      react-native: 0.85.0(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4)
-      react-native-svg: 15.15.4(react-native@0.85.0(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
+      react-native: 0.85.0(@babel/core@7.29.0)(@types/react@18.3.28)(react@19.2.4)
+      react-native-svg: 15.15.4(react-native@0.85.0(@babel/core@7.29.0)(@types/react@18.3.28)(react@19.2.4))(react@19.2.4)
 
   lucide-react@1.8.0(react@19.2.4):
     dependencies:
@@ -11056,12 +11088,12 @@ snapshots:
       react-native: 0.76.5(@babel/core@7.29.0)(@babel/preset-env@7.29.2(@babel/core@7.29.0))(@types/react@18.3.28)(react@18.3.1)
       warn-once: 0.1.1
 
-  react-native-svg@15.15.4(react-native@0.85.0(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4):
+  react-native-svg@15.15.4(react-native@0.85.0(@babel/core@7.29.0)(@types/react@18.3.28)(react@19.2.4))(react@19.2.4):
     dependencies:
       css-select: 5.2.2
       css-tree: 1.1.3
       react: 19.2.4
-      react-native: 0.85.0(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4)
+      react-native: 0.85.0(@babel/core@7.29.0)(@types/react@18.3.28)(react@19.2.4)
       warn-once: 0.1.1
 
   react-native-svg@15.8.0(react-native@0.76.5(@babel/core@7.29.0)(@babel/preset-env@7.29.2(@babel/core@7.29.0))(@types/react@18.3.28)(react@18.3.1))(react@18.3.1):
@@ -11124,7 +11156,59 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  react-native@0.85.0(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4):
+  react-native@0.76.5(@babel/core@7.29.0)(@types/react@18.3.28)(react@19.2.4):
+    dependencies:
+      '@jest/create-cache-key-function': 29.7.0
+      '@react-native/assets-registry': 0.76.5
+      '@react-native/codegen': 0.76.5(@babel/preset-env@7.29.2(@babel/core@7.29.0))
+      '@react-native/community-cli-plugin': 0.76.5(@babel/core@7.29.0)(@babel/preset-env@7.29.2(@babel/core@7.29.0))
+      '@react-native/gradle-plugin': 0.76.5
+      '@react-native/js-polyfills': 0.76.5
+      '@react-native/normalize-colors': 0.76.5
+      '@react-native/virtualized-lists': 0.76.5(@types/react@18.3.28)(react-native@0.76.5(@babel/core@7.29.0)(@types/react@18.3.28)(react@19.2.4))(react@19.2.4)
+      abort-controller: 3.0.0
+      anser: 1.4.10
+      ansi-regex: 5.0.1
+      babel-jest: 29.7.0(@babel/core@7.29.0)
+      babel-plugin-syntax-hermes-parser: 0.23.1
+      base64-js: 1.5.1
+      chalk: 4.1.2
+      commander: 12.1.0
+      event-target-shim: 5.0.1
+      flow-enums-runtime: 0.0.6
+      glob: 7.2.3
+      invariant: 2.2.4
+      jest-environment-node: 29.7.0
+      jsc-android: 250231.0.0
+      memoize-one: 5.2.1
+      metro-runtime: 0.81.5
+      metro-source-map: 0.81.5
+      mkdirp: 0.5.6
+      nullthrows: 1.1.1
+      pretty-format: 29.7.0
+      promise: 8.3.0
+      react: 19.2.4
+      react-devtools-core: 5.3.2
+      react-refresh: 0.14.2
+      regenerator-runtime: 0.13.11
+      scheduler: 0.24.0-canary-efb381bbf-20230505
+      semver: 7.7.4
+      stacktrace-parser: 0.1.11
+      whatwg-fetch: 3.6.20
+      ws: 6.2.3
+      yargs: 17.7.2
+    optionalDependencies:
+      '@types/react': 18.3.28
+    transitivePeerDependencies:
+      - '@babel/core'
+      - '@babel/preset-env'
+      - '@react-native-community/cli-server-api'
+      - bufferutil
+      - encoding
+      - supports-color
+      - utf-8-validate
+
+  react-native@0.85.0(@babel/core@7.29.0)(@types/react@18.3.28)(react@19.2.4):
     dependencies:
       '@react-native/assets-registry': 0.85.0
       '@react-native/codegen': 0.85.0(@babel/core@7.29.0)
@@ -11132,7 +11216,7 @@ snapshots:
       '@react-native/gradle-plugin': 0.85.0
       '@react-native/js-polyfills': 0.85.0
       '@react-native/normalize-colors': 0.85.0
-      '@react-native/virtualized-lists': 0.85.0(@types/react@19.2.14)(react-native@0.85.0(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
+      '@react-native/virtualized-lists': 0.85.0(@types/react@18.3.28)(react-native@0.85.0(@babel/core@7.29.0)(@types/react@18.3.28)(react@19.2.4))(react@19.2.4)
       abort-controller: 3.0.0
       anser: 1.4.10
       ansi-regex: 5.0.1
@@ -11160,7 +11244,7 @@ snapshots:
       ws: 7.5.10
       yargs: 17.7.2
     optionalDependencies:
-      '@types/react': 19.2.14
+      '@types/react': 18.3.28
     transitivePeerDependencies:
       - '@babel/core'
       - '@react-native-community/cli'
