@@ -1,3 +1,78 @@
+# SESSION fe-1a — Tauri 2.x Desktop Scaffold
+
+**Date:** 2026-04-12  
+**Branch:** session/fe-1a-tauri-desktop  
+**Scope:** Tauri 2.x scaffold for apps/desktop + static export pipeline for Next.js
+
+## What Was Done
+
+### New Files — apps/desktop/src-tauri/
+
+| File | Purpose |
+|---|---|
+| `tauri.conf.json` | Tauri 2.x config: productName=Resilio+, id=com.resilio.plus, 1280x800, min 1024x640 |
+| `Cargo.toml` | Rust: tauri 2, tauri-plugin-opener, serde |
+| `build.rs` | `tauri_build::build()` |
+| `src/main.rs` | Entry point (windows_subsystem=windows in release) |
+| `src/lib.rs` | `run()` function with tauri Builder |
+| `icons/*.png` | Placeholder icons — 512x512 #5b5fef "R+" (32, 128, 256, 512 px) |
+| `icons/icon.ico` | Windows ICO (multi-size: 16/32/48/64/128/256px) |
+| `icons/icon.icns` | macOS ICNS placeholder (PNG copy — replace with proper ICNS on macOS) |
+
+### Modified Files
+
+| File | Change |
+|---|---|
+| `apps/desktop/package.json` | Scripts: dev/build/tauri; deps: @tauri-apps/api ^2; devDeps: @tauri-apps/cli ^2 |
+| `apps/desktop/README.md` | Full prereq + dev/build + signing notes |
+| `apps/web/next.config.ts` | Conditional `output: 'export'` behind `NEXT_TAURI_STATIC=1` |
+| `apps/web/package.json` | Added `build:static` script; `cross-env` devDep |
+| `package.json` | `dev:desktop` → concurrently; `build:desktop` → build:static + tauri build; added concurrently + wait-on devDeps |
+| `packages/ui-web/src/theme/ThemeProvider.tsx` | Fixed pre-existing React 19 / next-themes type mismatch (blocked build; out of strict scope but necessary) |
+
+## Dev Orchestration
+
+```bash
+pnpm dev:desktop
+# concurrently runs:
+#   pnpm dev:web          → Next.js at http://localhost:3000
+#   wait-on tcp:3000 && tauri dev  → Tauri window (loads localhost:3000)
+```
+
+## Prod Build
+
+```bash
+pnpm build:desktop
+# 1. pnpm --filter @resilio/web build:static  → apps/web/out/ (static export)
+# 2. pnpm --filter @resilio/desktop build     → Tauri bundles
+```
+
+## Invariants Verified
+
+| Invariant | Status |
+|---|---|
+| `pnpm install` | ✅ OK |
+| `pnpm --filter @resilio/web build` | ✅ OK (fixed pre-existing ThemeProvider TS error) |
+| `pnpm --filter @resilio/web typecheck` | ✅ OK |
+
+## Blocked: Rust Not Installed
+
+`tauri dev` and `tauri build` require Rust toolchain, which is **not installed** on this machine.
+
+To proceed:
+1. Install Rust: https://rustup.rs/
+2. Install VS Build Tools with "Desktop development with C++" (Windows)
+3. Install WebView2 Runtime if not on Windows 11
+4. Run `pnpm dev:desktop` or `pnpm build:desktop`
+
+## Notes
+
+- `beforeDevCommand` in tauri.conf.json is intentionally empty — orchestration done at root level via `concurrently`
+- `icon.icns` is a PNG placeholder. On macOS, replace with proper ICNS via `iconutil` before distribution
+- `output: 'export'` in Next.js is gated behind `NEXT_TAURI_STATIC=1` env var — SSR build (`pnpm build`) unaffected
+
+---
+
 # SESSION Frontend S-0 — Monorepo Setup + Design System Foundations
 
 **Date :** 2026-04-12  

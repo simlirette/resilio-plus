@@ -1,3 +1,45 @@
+# SESSION PLAN — fe-1a Tauri Desktop
+
+**Date:** 2026-04-12  
+**Branch:** session/fe-1a-tauri-desktop  
+**Goal:** Scaffold Tauri 2.x desktop wrapper (Windows + macOS) for apps/web
+
+### Architecture
+
+```
+apps/desktop/src-tauri/
+├── tauri.conf.json   productName=Resilio+, id=com.resilio.plus, devUrl=localhost:3000
+├── Cargo.toml        tauri 2.x + tauri-build + serde
+├── build.rs
+├── icons/            placeholder PNGs (512x512 #5b5fef R+)
+└── src/
+    ├── main.rs
+    └── lib.rs
+```
+
+### Key decisions
+1. `output: 'export'` gated behind `NEXT_TAURI_STATIC=1` — preserves SSR build
+2. Root `dev:desktop`: `concurrently` (Next.js dev) + `wait-on tcp:3000` → Tauri dev
+3. `frontendDist` = `../../web/out` (relative to src-tauri/)
+4. `beforeDevCommand` = `""` — orchestration at root, not inside Tauri
+5. Icons: Python Pillow if available, else base64 minimal PNG
+
+### Tasks
+- [x] Create branch
+- [ ] src-tauri/ config files
+- [ ] Placeholder icons
+- [ ] apps/web updates (next.config.ts, package.json)
+- [ ] root package.json (dev:desktop / build:desktop + concurrently/wait-on)
+- [ ] apps/desktop/package.json + README
+- [ ] pnpm install
+- [ ] web build invariant
+- [ ] typecheck invariant
+- [ ] SESSION_REPORT.md + commit + push
+
+---
+
+> Previous session plans archived below.
+
 # SESSION PLAN — Frontend S-0 Monorepo Setup
 
 > Previous session plan archived below.

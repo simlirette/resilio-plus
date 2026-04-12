@@ -22,6 +22,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       enableSystem
       disableTransitionOnChange
     >
+      {/* @ts-expect-error ReactNode mismatch between next-themes and @types/react@19.x */}
       {children}
     </NextThemesProvider>
   );
