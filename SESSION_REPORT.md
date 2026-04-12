@@ -1,3 +1,56 @@
+# SESSION S-5 — Frontend Check-in + Energy Card
+
+**Date :** 2026-04-12
+**Branche :** session/s5-frontend-energy
+**Commits :** 2 (feat + docs)
+
+## Ce qui a été fait
+
+### 1. api.ts — Types + méthodes energy
+- `CheckInRequest` (5 champs obligatoires + cycle_phase + comment optionnels)
+- `ReadinessResponse` (mappage exact du backend V3-C)
+- `EnergySnapshotSummary`
+- `api.submitCheckin()`, `api.getReadiness()`, `api.getEnergyHistory()`
+
+### 2. check-in/page.tsx — Formulaire 5 questions
+- Ancienne version : 2 questions, pas d'appel API réel
+- Nouvelle version : 4 questions obligatoires (work_intensity, stress_level, legs_feeling, energy_global) + 1 comment optionnel (140 chars)
+- UI progressive : chaque question s'active après la précédente
+- Submit : POST `/athletes/{id}/checkin` via `useAuth().athleteId`
+- Confirmation : affiche la vraie `ReadinessResponse` (traffic_light, final_readiness, insights, intensity_cap)
+
+### 3. dashboard/page.tsx — EnergyCard
+- Chargement parallèle `getReadiness()` + `getWeekStatus()`
+- 3 états : loading / pas de check-in (404 → CTA) / chargé (score + dot couleur + 2 insights)
+
+### 4. energy/page.tsx — Vraie API
+- Import `mock-data/simon` (inexistant) → supprimé
+- Chargement `getReadiness()` + `getEnergyHistory(7)` via `Promise.allSettled()`
+- Chart allostatic 7 jours, stat cards readiness + intensity_cap
+- États loading / no-check-in / erreur
+
+### 5. energy/cycle/page.tsx — Static data
+- Import `mock-data/simon` → remplacé par constantes locales `CYCLE_PHASES` + `PHASE_DESCRIPTIONS`
+- Notice démo : cycle J18 lutéale (pas de GET hormonal-profile côté backend)
+
+### 6. login/page.tsx
+- Import `mock-data/simon` supprimé
+- Auto-login dev supprimé → redirect si token existant
+
+## Invariants
+- `npx tsc --noEmit` → ✅ aucune erreur
+- `npm run build` → ✅ clean (17 pages)
+
+## Divergences spec → code
+| Spec S-5 | Réalité |
+|---|---|
+| `/checkin` (sans tiret) | Page à `/check-in/` (déjà existante) |
+| Lien TopNav "Énergie" | Déjà présent dans top-nav.tsx — aucun changement |
+| cycle_phase dans formulaire | Omis — pas de détection du sexe côté frontend |
+| HRV chart dans energy/page | Supprimé — EnergySnapshotSummary ne contient pas HRV |
+
+---
+
 # SESSION 0 — Rapport de Consolidation V3
 
 **Date :** 2026-04-12
