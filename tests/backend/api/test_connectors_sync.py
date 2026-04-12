@@ -15,8 +15,7 @@ _TODAY = date.today().isoformat()
 
 def test_hevy_sync_no_credential_returns_404(authed_client):
     client, athlete_id = authed_client
-    with patch("app.routes.connectors.HevyConnector"):
-        resp = client.post(f"/athletes/{athlete_id}/connectors/hevy/sync")
+    resp = client.post(f"/athletes/{athlete_id}/connectors/hevy/sync")
     assert resp.status_code == 404
     assert "Hevy" in resp.json()["detail"]
 
@@ -43,7 +42,7 @@ def test_hevy_sync_maps_workout_to_session_log(authed_client):
         ],
     )
 
-    with patch("app.routes.connectors.HevyConnector") as MockHevy:
+    with patch("app.services.sync_service.HevyConnector") as MockHevy:
         instance = MockHevy.return_value.__enter__.return_value
         instance.fetch_workouts.return_value = [mock_workout]
         resp = client.post(f"/athletes/{athlete_id}/connectors/hevy/sync")
@@ -87,7 +86,7 @@ def test_terra_sync_with_mock(authed_client):
         active_energy_kcal=450.0,
     )
 
-    with patch("app.routes.connectors.TerraConnector") as MockTerra:
+    with patch("app.services.sync_service.TerraConnector") as MockTerra:
         instance = MockTerra.return_value.__enter__.return_value
         instance.fetch_daily.return_value = mock_data
         resp = client.post(f"/athletes/{athlete_id}/connectors/terra/sync")

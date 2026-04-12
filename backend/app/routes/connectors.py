@@ -23,6 +23,7 @@ from ..schemas.connector_api import (
     ConnectorStatus,
     HevyConnectRequest,
 )
+from ..services.sync_service import ConnectorNotFoundError, SyncService
 
 router = APIRouter(prefix="/athletes", tags=["connectors"])
 
@@ -363,82 +364,10 @@ def hevy_sync(
     _: Annotated[str, Depends(_require_own)],
 ) -> dict:
     """Fetch last 7 days of Hevy workouts → map to lifting sessions → SessionLogModel."""
-    cred_model = (
-        db.query(ConnectorCredentialModel)
-        .filter_by(athlete_id=athlete_id, provider="hevy")
-        .first()
-    )
-    if cred_model is None:
-        raise HTTPException(status_code=404, detail="Hevy connector not connected")
-
-    extra = json.loads(cred_model.extra_json or "{}")
-    api_key = extra.get("api_key", "")
-
-    cred = ConnectorCredential(
-        athlete_id=athlete_id,  # type: ignore[arg-type]
-        provider="hevy",
-        extra={"api_key": api_key},
-    )
-
-    since = datetime.now(timezone.utc) - timedelta(days=7)
-    until = datetime.now(timezone.utc)
-
     try:
-        with HevyConnector(cred, client_id=api_key, client_secret="") as connector:
-            workouts = connector.fetch_workouts(since, until)
-    except Exception:
-        raise HTTPException(status_code=502, detail="Failed to fetch Hevy workouts")
-
-    plan = _get_latest_plan(athlete_id, db)
-    if plan is None:
-        return {"synced": 0, "skipped": len(workouts), "reason": "no plan found"}
-
-    slots = json.loads(plan.weekly_slots_json)
-    lifting_by_date: dict[str, str] = {
-        s["date"]: s["id"]
-        for s in slots
-        if s.get("sport") == "lifting"
-    }
-
-    synced = 0
-    skipped = 0
-    for workout in workouts:
-        date_key = workout.date.isoformat()
-        session_id = lifting_by_date.get(date_key)
-        if session_id is None:
-            skipped += 1
-            continue
-
-        actual_data = {
-            "source": "hevy",
-            "hevy_workout_id": workout.id,
-            "exercises": [
-                {
-                    "name": ex.name,
-                    "sets": [
-                        {
-                            "reps": s.reps,
-                            "weight_kg": s.weight_kg,
-                            "rpe": s.rpe,
-                            "set_type": s.set_type,
-                        }
-                        for s in ex.sets
-                    ],
-                }
-                for ex in workout.exercises
-            ],
-        }
-        _upsert_session_log(
-            athlete_id=athlete_id,
-            plan_id=plan.id,
-            session_id=session_id,
-            actual_duration_min=workout.duration_seconds // 60,
-            actual_data=actual_data,
-            db=db,
-        )
-        synced += 1
-
-    return {"synced": synced, "skipped": skipped}
+        return SyncService.sync_hevy(athlete_id, db)
+    except ConnectorNotFoundError:
+        raise HTTPException(status_code=404, detail="Hevy connector not connected")
 
 
 # ── Terra Sync ────────────────────────────────────────────────────────────────
@@ -451,46 +380,10 @@ def terra_sync(
     _: Annotated[str, Depends(_require_own)],
 ) -> dict:
     """Fetch today's Terra health data and store latest HRV/sleep in connector creds."""
-    from datetime import date
-
-    cred_model = (
-        db.query(ConnectorCredentialModel)
-        .filter_by(athlete_id=athlete_id, provider="terra")
-        .first()
-    )
-    if cred_model is None:
-        raise HTTPException(status_code=404, detail="Terra connector not connected")
-
-    extra = json.loads(cred_model.extra_json or "{}")
-    cred = ConnectorCredential(
-        athlete_id=athlete_id,  # type: ignore[arg-type]
-        provider="terra",
-        extra=extra,
-    )
-
-    api_key = os.getenv("TERRA_API_KEY", "")
-    dev_id = os.getenv("TERRA_DEV_ID", "")
-
     try:
-        with TerraConnector(cred, client_id=api_key, client_secret=dev_id) as connector:
-            health_data = connector.fetch_daily(date.today())
-    except Exception:
-        raise HTTPException(status_code=502, detail="Failed to fetch Terra data")
-
-    extra["last_hrv_rmssd"] = health_data.hrv_rmssd
-    extra["last_sleep_hours"] = health_data.sleep_duration_hours
-    extra["last_sleep_score"] = health_data.sleep_score
-    extra["last_steps"] = health_data.steps
-    extra["last_sync"] = datetime.now(timezone.utc).isoformat()
-    cred_model.extra_json = json.dumps(extra)
-    db.commit()
-
-    return {
-        "synced": 1,
-        "hrv_rmssd": health_data.hrv_rmssd,
-        "sleep_hours": health_data.sleep_duration_hours,
-        "sleep_score": health_data.sleep_score,
-    }
+        return SyncService.sync_terra(athlete_id, db)
+    except ConnectorNotFoundError:
+        raise HTTPException(status_code=404, detail="Terra connector not connected")
 
 
 # ── Strava Sync ───────────────────────────────────────────────────────────────
@@ -502,87 +395,11 @@ def strava_sync(
     db: DB,
     _: Annotated[str, Depends(_require_own)],
 ) -> dict:
-    """Fetch last 30 days of Strava activities → map to run/bike/swim sessions → SessionLogModel."""
-    cred_model = (
-        db.query(ConnectorCredentialModel)
-        .filter_by(athlete_id=athlete_id, provider="strava")
-        .first()
-    )
-    if cred_model is None:
-        raise HTTPException(status_code=404, detail="Strava connector not connected")
-
-    cred = ConnectorCredential(
-        athlete_id=athlete_id,  # type: ignore[arg-type]
-        provider="strava",
-        access_token=cred_model.access_token,
-        refresh_token=cred_model.refresh_token,
-        expires_at=cred_model.expires_at,
-    )
-
-    client_id = os.getenv("STRAVA_CLIENT_ID", "")
-    client_secret = os.getenv("STRAVA_CLIENT_SECRET", "")
-
-    since = datetime.now(timezone.utc) - timedelta(days=30)
-    until = datetime.now(timezone.utc)
-
+    """Fetch last 7 days of Strava activities → map to run/bike/swim sessions → SessionLogModel."""
     try:
-        with StravaConnector(cred, client_id=client_id, client_secret=client_secret) as connector:
-            activities = connector.fetch_activities(since, until)
-    except Exception:
-        raise HTTPException(status_code=502, detail="Failed to fetch Strava activities")
-
-    sport_map = {
-        "Run": "running",
-        "Ride": "biking",
-        "Swim": "swimming",
-        "VirtualRide": "biking",
-        "TrailRun": "running",
-    }
-
-    plan = _get_latest_plan(athlete_id, db)
-    if plan is None:
-        return {"synced": 0, "skipped": len(activities), "reason": "no plan found"}
-
-    slots = json.loads(plan.weekly_slots_json)
-    session_map: dict[tuple[str, str], str] = {
-        (s["date"], s["sport"]): s["id"]
-        for s in slots
-    }
-
-    synced = 0
-    skipped = 0
-    for activity in activities:
-        sport = sport_map.get(activity.sport_type)
-        if sport is None:
-            skipped += 1
-            continue
-
-        date_key = activity.date.isoformat()
-        session_id = session_map.get((date_key, sport))
-        if session_id is None:
-            skipped += 1
-            continue
-
-        actual_data = {
-            "source": "strava",
-            "strava_activity_id": activity.id,
-            "distance_meters": activity.distance_meters,
-            "elevation_gain_meters": activity.elevation_gain_meters,
-            "average_hr": activity.average_hr,
-            "max_hr": activity.max_hr,
-        }
-        duration_min = activity.duration_seconds // 60 if activity.duration_seconds else None
-        _upsert_session_log(
-            athlete_id=athlete_id,
-            plan_id=plan.id,
-            session_id=session_id,
-            actual_duration_min=duration_min,
-            actual_data=actual_data,
-            db=db,
-        )
-        synced += 1
-
-    return {"synced": synced, "skipped": skipped}
+        return SyncService.sync_strava(athlete_id, db)
+    except ConnectorNotFoundError:
+        raise HTTPException(status_code=404, detail="Strava connector not connected")
 
 
 # ── List & Delete ─────────────────────────────────────────────────────────────
@@ -603,13 +420,14 @@ def list_connectors(athlete_id: str, db: DB) -> ConnectorListResponse:
             provider=c.provider,
             connected=True,
             expires_at=c.expires_at,
+            last_sync=json.loads(c.extra_json or "{}").get("last_sync"),
         )
         for c in creds
     ])
 
 
 @router.delete("/{athlete_id}/connectors/{provider}", status_code=204)
-def delete_connector(athlete_id: str, provider: Literal["strava", "hevy"], db: DB) -> None:
+def delete_connector(athlete_id: str, provider: Literal["strava", "hevy", "terra"], db: DB) -> None:
     if db.get(AthleteModel, athlete_id) is None:
         raise HTTPException(status_code=404)
     cred = (

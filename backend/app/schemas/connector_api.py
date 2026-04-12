@@ -2,9 +2,10 @@ from pydantic import BaseModel, Field
 
 
 class ConnectorStatus(BaseModel):
-    provider: str           # "strava" | "hevy"
+    provider: str           # "strava" | "hevy" | "terra"
     connected: bool
     expires_at: int | None  # epoch seconds (int); None for API key providers
+    last_sync: str | None = None  # ISO datetime of last successful sync
 
 
 class HevyConnectRequest(BaseModel):
