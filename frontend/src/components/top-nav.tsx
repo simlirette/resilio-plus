@@ -5,9 +5,10 @@ import { usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { useAuth } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Moon, Sun } from 'lucide-react'
 
-const NAV_LINKS = [
+const BASE_NAV_LINKS = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/energy', label: 'Energy' },
   { href: '/check-in', label: 'Check-in' },
@@ -18,26 +19,37 @@ const NAV_LINKS = [
   { href: '/settings/connectors', label: 'Settings' },
 ]
 
+const TRACKING_LINK = { href: '/tracking', label: 'Tracking' }
+
 export function TopNav() {
   const pathname = usePathname()
   const { theme, setTheme } = useTheme()
-  const { token, logout } = useAuth()
+  const { token, logout, coachingMode } = useAuth()
+
+  const navLinks = coachingMode === 'tracking_only'
+    ? [...BASE_NAV_LINKS, TRACKING_LINK]
+    : BASE_NAV_LINKS
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-14 max-w-screen-xl items-center gap-6 px-4">
-        <Link href="/" className="font-bold tracking-widest text-primary">
+        <Link href="/" className="flex items-center gap-2 font-bold tracking-widest text-primary">
           RESILIO+
+          {coachingMode === 'tracking_only' && (
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-semibold tracking-wider border-amber-500 text-amber-500">
+              TRACKING
+            </Badge>
+          )}
         </Link>
 
         {token && (
           <nav className="hidden gap-6 md:flex">
-            {NAV_LINKS.map(({ href, label }) => (
+            {navLinks.map(({ href, label }) => (
               <Link
                 key={href}
                 href={href}
                 className={`text-sm font-medium transition-colors hover:text-primary ${
-                  pathname === href
+                  pathname === href || pathname.startsWith(href + '/')
                     ? 'text-foreground border-b-2 border-primary pb-0.5'
                     : 'text-muted-foreground'
                 }`}
