@@ -47,9 +47,9 @@ function StatCard({
   return (
     <div
       className="rounded-xl p-4 flex flex-col gap-1"
-      style={{ background: '#14141f', border: '1px solid #22223a' }}
+      style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
     >
-      <p className="text-xs font-medium tracking-widest uppercase" style={{ color: '#5c5c7a' }}>
+      <p className="text-xs font-medium tracking-widest uppercase" style={{ color: 'var(--muted-foreground)' }}>
         {label}
       </p>
       <div className="flex items-end gap-1 mt-1">
@@ -59,9 +59,9 @@ function StatCard({
         >
           {value}
         </span>
-        {unit && <span className="text-sm mb-0.5" style={{ color: '#5c5c7a' }}>{unit}</span>}
+        {unit && <span className="text-sm mb-0.5" style={{ color: 'var(--muted-foreground)' }}>{unit}</span>}
       </div>
-      {sub && <p className="text-xs mt-0.5" style={{ color: '#5c5c7a' }}>{sub}</p>}
+      {sub && <p className="text-xs mt-0.5" style={{ color: 'var(--muted-foreground)' }}>{sub}</p>}
     </div>
   )
 }
@@ -76,10 +76,10 @@ function EnergyAvailabilityCard({ ea }: { ea: number }) {
   return (
     <div
       className="rounded-xl p-4 flex flex-col gap-3"
-      style={{ background: '#14141f', border: '1px solid #22223a' }}
+      style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
     >
       <div className="flex items-center justify-between">
-        <p className="text-xs font-medium tracking-widest uppercase" style={{ color: '#5c5c7a' }}>
+        <p className="text-xs font-medium tracking-widest uppercase" style={{ color: 'var(--muted-foreground)' }}>
           Energy Availability
         </p>
         <span
@@ -97,7 +97,7 @@ function EnergyAvailabilityCard({ ea }: { ea: number }) {
         >
           {Math.round(ea)}
         </span>
-        <span className="text-sm mb-0.5" style={{ color: '#5c5c7a' }}>kcal/kg FFM</span>
+        <span className="text-sm mb-0.5" style={{ color: 'var(--muted-foreground)' }}>kcal/kg FFM</span>
       </div>
 
       <div className="relative">
@@ -107,7 +107,7 @@ function EnergyAvailabilityCard({ ea }: { ea: number }) {
         <div className="absolute top-0 bottom-0 w-px" style={{ left: `${(45 / 60) * 100}%`, background: '#10b981', opacity: 0.5 }} />
       </div>
 
-      <div className="flex justify-between text-xs" style={{ color: '#5c5c7a' }}>
+      <div className="flex justify-between text-xs" style={{ color: 'var(--muted-foreground)' }}>
         <span>0</span>
         <span style={{ color: '#10b98188' }}>Seuil optimal: 45</span>
         <span>60</span>
@@ -128,13 +128,13 @@ function ChartTooltip(props: Record<string, unknown>) {
   return (
     <div
       className="rounded-lg px-3 py-2 text-sm"
-      style={{ background: '#1a1a28', border: '1px solid #22223a', color: '#eeeef4' }}
+      style={{ background: 'var(--input)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
     >
-      <p className="text-xs mb-1" style={{ color: '#5c5c7a' }}>{label}</p>
+      <p className="text-xs mb-1" style={{ color: 'var(--muted-foreground)' }}>{label}</p>
       {payload.map((p, i) => (
         <p key={i} style={{ color: p.color }}>
           <span className="font-mono font-bold">{p.value}</span>
-          <span className="ml-1 text-xs" style={{ color: '#5c5c7a' }}>{p.name}</span>
+          <span className="ml-1 text-xs" style={{ color: 'var(--muted-foreground)' }}>{p.name}</span>
         </p>
       ))}
     </div>
@@ -202,12 +202,12 @@ function HistoryCharts({ history }: { history: EnergySnapshotSummary[] }) {
   return (
     <div
       className="rounded-xl p-5"
-      style={{ background: '#14141f', border: '1px solid #22223a' }}
+      style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
     >
-      <p className="text-xs font-medium tracking-widest uppercase mb-4" style={{ color: '#5c5c7a' }}>
+      <p className="text-xs font-medium tracking-widest uppercase mb-4" style={{ color: 'var(--muted-foreground)' }}>
         Historique {Math.min(history.length, 7)} jours
       </p>
-      <p className="text-xs mb-3" style={{ color: '#8888a8' }}>Allostatic Score</p>
+      <p className="text-xs mb-3" style={{ color: 'var(--text-secondary)' }}>Allostatic Score</p>
       <ResponsiveContainer width="100%" height={100}>
         <LineChart data={chartData} margin={{ left: -20, right: 10, top: 4, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#22223a" vertical={false} />
@@ -238,14 +238,14 @@ function InsightsPanel({ insights }: { insights: string[] }) {
   return (
     <div
       className="rounded-xl p-4"
-      style={{ background: '#14141f', border: '1px solid #22223a' }}
+      style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
     >
-      <p className="text-xs font-medium tracking-widest uppercase mb-3" style={{ color: '#5c5c7a' }}>
+      <p className="text-xs font-medium tracking-widest uppercase mb-3" style={{ color: 'var(--muted-foreground)' }}>
         Insights
       </p>
       <ul className="space-y-1.5">
         {insights.map((insight, i) => (
-          <li key={i} className="text-xs flex items-start gap-2" style={{ color: '#8888a8' }}>
+          <li key={i} className="text-xs flex items-start gap-2" style={{ color: 'var(--text-secondary)' }}>
             <span style={{ color: '#5b5fef', marginTop: 1 }}>›</span>
             {insight}
           </li>
@@ -294,7 +294,7 @@ export default function EnergyPage() {
       {/* ── Header ── */}
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium tracking-widest uppercase" style={{ color: '#5c5c7a' }}>
+          <p className="text-xs font-medium tracking-widest uppercase" style={{ color: 'var(--muted-foreground)' }}>
             Tableau de Bord Énergie
           </p>
           <h1 className="text-2xl font-bold mt-0.5" style={{ letterSpacing: '-0.02em' }}>
@@ -313,7 +313,7 @@ export default function EnergyPage() {
             <Link
               href="/check-in"
               className="text-xs px-3 py-1.5 rounded-full font-semibold transition-opacity hover:opacity-80"
-              style={{ background: '#5b5fef', color: '#fff' }}
+              style={{ background: 'var(--primary)', color: '#fff' }}
             >
               Check-in →
             </Link>
@@ -333,15 +333,15 @@ export default function EnergyPage() {
       {!loading && noCheckin && !readiness && (
         <div
           className="rounded-xl p-6 flex flex-col items-center gap-4 text-center"
-          style={{ background: '#14141f', border: '1px solid #22223a' }}
+          style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
         >
-          <p className="text-sm" style={{ color: '#5c5c7a' }}>
+          <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
             Pas encore de check-in aujourd&apos;hui.
           </p>
           <Link
             href="/check-in"
             className="text-sm px-6 py-2.5 rounded-xl font-semibold transition-opacity hover:opacity-80"
-            style={{ background: '#5b5fef', color: '#fff' }}
+            style={{ background: 'var(--primary)', color: '#fff' }}
           >
             Faire le check-in →
           </Link>
@@ -360,7 +360,7 @@ export default function EnergyPage() {
             {/* Gauge card */}
             <div
               className="rounded-xl p-5 flex flex-col items-center gap-2"
-              style={{ background: '#14141f', border: '1px solid #22223a' }}
+              style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
             >
               <AllostaticGauge score={Math.round(readiness.allostatic_score)} size={200} />
 
@@ -415,14 +415,14 @@ export default function EnergyPage() {
         <Link
           href="/check-in"
           className="text-sm px-4 py-2 rounded-lg font-medium transition-opacity hover:opacity-80"
-          style={{ background: '#5b5fef', color: '#fff' }}
+          style={{ background: 'var(--primary)', color: '#fff' }}
         >
           {readiness ? 'Modifier le check-in' : 'Check-in →'}
         </Link>
         <Link
           href="/dashboard"
           className="text-sm px-4 py-2 rounded-lg font-medium transition-opacity hover:opacity-80"
-          style={{ background: '#1a1a28', border: '1px solid #22223a', color: '#eeeef4' }}
+          style={{ background: 'var(--input)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
         >
           Dashboard
         </Link>

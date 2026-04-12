@@ -1,4 +1,33 @@
-# SESSION PLAN — S-1 ExternalPlan Backend CRUD
+# SESSION PLAN — Frontend S-0 Monorepo Setup
+
+> Previous session plan archived below.
+
+---
+
+## SESSION PLAN — Frontend S-0 Monorepo Setup
+
+Date: 2026-04-12  
+Branche: session/frontend-s0-monorepo-setup
+
+### Objectif
+Restructurer le repo en monorepo pnpm pour accueillir 3 plateformes (web, desktop Tauri, mobile Expo iOS), et poser les fondations du design system partagé.
+
+### Plan d'exécution
+
+| # | Étape | Statut |
+|---|---|---|
+| 1 | Audit frontend/ → FRONTEND_AUDIT.md | ✅ |
+| 2 | Setup monorepo pnpm | ✅ |
+| 3 | Migration frontend/ → apps/web/ | ✅ |
+| 4 | Créer 6 packages partagés | ✅ |
+| 5 | Dark mode complet | ✅ |
+| 6 | Scaffolds desktop/mobile | ✅ |
+| 7 | frontend-master-v1.md + CLAUDE.md | ✅ |
+| 8 | Tests + push | ✅ |
+
+---
+
+# SESSION PLAN — S-1 ExternalPlan Backend CRUD (archivé)
 
 **Date:** 2026-04-12  
 **Branche:** session/s1-external-plan  

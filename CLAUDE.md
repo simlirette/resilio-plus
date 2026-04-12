@@ -158,12 +158,55 @@ Never increase total weekly load >10% in one step (applies across ALL sports com
 
 ## Key References
 
-- **Master Architecture V3**: `resilio-master-v3.md` ← RÉFÉRENCE PRINCIPALE
+- **Master Architecture V3**: `resilio-master-v3.md` ← RÉFÉRENCE PRINCIPALE BACKEND
+- **Master Frontend V1**: `frontend-master-v1.md` ← RÉFÉRENCE PRINCIPALE FRONTEND
+- **Frontend Audit Session 0**: `FRONTEND_AUDIT.md`
 - **Roadmap Phases 9–11**: `docs/superpowers/specs/2026-04-09-phases7-11-roadmap.md`
 - **Architecture Modulaire 2-Volets**: `docs/superpowers/specs/2026-04-11-modular-architecture-design.md`
 - **Phase 8 Design**: `docs/superpowers/specs/2026-04-10-phase8-design.md`
 - **Coaching Methodology**: `docs/coaching/methodology.md`
 - **Master V2 (archivé)**: `docs/archive/resilio-master-v2_archived_2026-04-12.md`
+
+---
+
+## Workspace Structure (Monorepo pnpm — Session 0, 2026-04-12)
+
+```
+resilio-plus/
+├── apps/
+│   ├── web/        — @resilio/web    — Next.js 16 (prod)
+│   ├── desktop/    — @resilio/desktop — Tauri (scaffold Vague 1)
+│   └── mobile/     — @resilio/mobile  — Expo iOS (scaffold Vague 1)
+├── packages/
+│   ├── design-tokens/ — @resilio/design-tokens
+│   ├── ui-web/        — @resilio/ui-web
+│   ├── ui-mobile/     — @resilio/ui-mobile
+│   ├── api-client/    — @resilio/api-client
+│   ├── shared-logic/  — @resilio/shared-logic
+│   └── brand/         — @resilio/brand
+├── backend/        — FastAPI Python (inchangé)
+├── pnpm-workspace.yaml
+└── package.json    — root scripts
+```
+
+**Commandes clés :**
+- `pnpm install` — installe tout le workspace
+- `pnpm --filter @resilio/web dev` — lance le Next.js
+- `pnpm --filter @resilio/web typecheck` — vérifie les types
+- `pnpm --filter @resilio/web build` — build production
+
+---
+
+## Règles absolues frontend (8)
+
+1. **Jamais d'import direct de `lucide-react`** en dehors de `packages/ui-web/`
+2. **Jamais d'import direct de `lucide-react-native`** en dehors de `packages/ui-mobile/`
+3. **Jamais de valeur de couleur hardcodée** en dehors de `packages/design-tokens/` — utiliser CSS vars (`var(--card)`, `var(--foreground)`, etc.)
+4. **Toujours passer par `@resilio/api-client`** pour les appels backend (migration en cours)
+5. **Tailwind `dark:` variants obligatoires** sur toute nouvelle classe Tailwind colorée + CSS variables pour inline styles
+6. **Commits conventionnels obligatoires** : `feat(web)`, `feat(desktop)`, `feat(mobile)`, `chore(tokens)`, `fix(web)`, etc.
+7. **Tests non négociables** pour `shared-logic` et `api-client`
+8. **Pas de logique métier dans les composants UI** — toujours dans `shared-logic` ou dans l'app
 
 ---
 

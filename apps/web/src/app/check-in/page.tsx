@@ -94,7 +94,7 @@ function ConfirmationScreen({ readiness }: { readiness: ReadinessResponse }) {
 
       <div>
         <h2 className="text-xl font-bold">Check-in enregistré</h2>
-        <p className="text-sm mt-1" style={{ color: '#5c5c7a' }}>
+        <p className="text-sm mt-1" style={{ color: 'var(--muted-foreground)' }}>
           L&apos;Energy Coach a mis à jour ton profil.
         </p>
       </div>
@@ -102,9 +102,9 @@ function ConfirmationScreen({ readiness }: { readiness: ReadinessResponse }) {
       {/* Readiness card */}
       <div
         className="w-full rounded-xl p-4"
-        style={{ background: '#14141f', border: '1px solid #22223a' }}
+        style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
       >
-        <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#5c5c7a' }}>
+        <p className="text-xs tracking-widest uppercase mb-3" style={{ color: 'var(--muted-foreground)' }}>
           Readiness aujourd&apos;hui
         </p>
         <div className="flex items-center justify-between mb-3">
@@ -129,7 +129,7 @@ function ConfirmationScreen({ readiness }: { readiness: ReadinessResponse }) {
         {readiness.insights.length > 0 && (
           <ul className="text-left space-y-1 mt-2">
             {readiness.insights.map((insight, i) => (
-              <li key={i} className="text-xs flex items-start gap-2" style={{ color: '#8888a8' }}>
+              <li key={i} className="text-xs flex items-start gap-2" style={{ color: 'var(--text-secondary)' }}>
                 <span style={{ color: lightColor, marginTop: 1 }}>›</span>
                 {insight}
               </li>
@@ -138,8 +138,8 @@ function ConfirmationScreen({ readiness }: { readiness: ReadinessResponse }) {
         )}
 
         <div className="mt-3 pt-3 flex justify-between text-xs" style={{ borderTop: '1px solid #22223a' }}>
-          <span style={{ color: '#5c5c7a' }}>Cap intensité</span>
-          <span style={{ color: '#eeeef4' }}>{Math.round(readiness.intensity_cap * 100)}%</span>
+          <span style={{ color: 'var(--muted-foreground)' }}>Cap intensité</span>
+          <span style={{ color: 'var(--foreground)' }}>{Math.round(readiness.intensity_cap * 100)}%</span>
         </div>
       </div>
 
@@ -164,14 +164,14 @@ function ConfirmationScreen({ readiness }: { readiness: ReadinessResponse }) {
         <Link
           href="/energy"
           className="flex-1 text-center text-sm px-4 py-2.5 rounded-lg font-semibold transition-opacity hover:opacity-80"
-          style={{ background: '#5b5fef', color: '#fff' }}
+          style={{ background: 'var(--primary)', color: '#fff' }}
         >
           Voir le dashboard énergie
         </Link>
         <Link
           href="/dashboard"
           className="text-sm px-4 py-2.5 rounded-lg font-medium transition-opacity hover:opacity-80"
-          style={{ background: '#1a1a28', border: '1px solid #22223a', color: '#eeeef4' }}
+          style={{ background: 'var(--input)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
         >
           Dashboard
         </Link>
@@ -248,7 +248,7 @@ export default function CheckInPage() {
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <p className="text-xs font-medium tracking-widest uppercase" style={{ color: '#5c5c7a' }}>
+              <p className="text-xs font-medium tracking-widest uppercase" style={{ color: 'var(--muted-foreground)' }}>
                 Check-in Quotidien
               </p>
               <span
@@ -272,13 +272,13 @@ export default function CheckInPage() {
         <div
           className="rounded-xl p-5 space-y-3 transition-opacity duration-300"
           style={{
-            background: '#14141f',
+            background: 'var(--card)',
             border: `1px solid ${step >= 0 ? '#22223a' : '#191928'}`,
             opacity: step === 0 || form.work_intensity ? 1 : 0.4,
           }}
         >
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ background: '#22223a', color: '#5c5c7a' }}>01</span>
+            <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ background: 'var(--border)', color: 'var(--muted-foreground)' }}>01</span>
             <p className="font-semibold text-sm">Comment s&apos;est passée ta journée de travail ?</p>
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -303,14 +303,14 @@ export default function CheckInPage() {
         <div
           className="rounded-xl p-5 space-y-3 transition-all duration-300"
           style={{
-            background: '#14141f',
+            background: 'var(--card)',
             border: `1px solid ${step >= 1 ? '#22223a' : '#191928'}`,
             opacity: form.work_intensity ? 1 : 0.3,
             pointerEvents: form.work_intensity ? 'auto' : 'none',
           }}
         >
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ background: '#22223a', color: '#5c5c7a' }}>02</span>
+            <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ background: 'var(--border)', color: 'var(--muted-foreground)' }}>02</span>
             <p className="font-semibold text-sm">Facteurs de stress importants aujourd&apos;hui ?</p>
           </div>
           <div className="space-y-2">
@@ -334,14 +334,14 @@ export default function CheckInPage() {
         <div
           className="rounded-xl p-5 space-y-3 transition-all duration-300"
           style={{
-            background: '#14141f',
+            background: 'var(--card)',
             border: `1px solid ${step >= 2 ? '#22223a' : '#191928'}`,
             opacity: form.stress_level ? 1 : 0.3,
             pointerEvents: form.stress_level ? 'auto' : 'none',
           }}
         >
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ background: '#22223a', color: '#5c5c7a' }}>03</span>
+            <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ background: 'var(--border)', color: 'var(--muted-foreground)' }}>03</span>
             <p className="font-semibold text-sm">Comment se sentent tes jambes ?</p>
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -366,14 +366,14 @@ export default function CheckInPage() {
         <div
           className="rounded-xl p-5 space-y-3 transition-all duration-300"
           style={{
-            background: '#14141f',
+            background: 'var(--card)',
             border: `1px solid ${step >= 3 ? '#22223a' : '#191928'}`,
             opacity: form.legs_feeling ? 1 : 0.3,
             pointerEvents: form.legs_feeling ? 'auto' : 'none',
           }}
         >
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ background: '#22223a', color: '#5c5c7a' }}>04</span>
+            <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ background: 'var(--border)', color: 'var(--muted-foreground)' }}>04</span>
             <p className="font-semibold text-sm">Niveau d&apos;énergie global aujourd&apos;hui ?</p>
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -398,17 +398,17 @@ export default function CheckInPage() {
         <div
           className="rounded-xl p-5 space-y-3 transition-all duration-300"
           style={{
-            background: '#14141f',
+            background: 'var(--card)',
             border: `1px solid ${step >= 4 ? '#22223a' : '#191928'}`,
             opacity: form.energy_global ? 1 : 0.3,
             pointerEvents: form.energy_global ? 'auto' : 'none',
           }}
         >
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ background: '#22223a', color: '#5c5c7a' }}>05</span>
+            <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ background: 'var(--border)', color: 'var(--muted-foreground)' }}>05</span>
             <p className="font-semibold text-sm">
               Note rapide{' '}
-              <span className="font-normal" style={{ color: '#5c5c7a' }}>(optionnel)</span>
+              <span className="font-normal" style={{ color: 'var(--muted-foreground)' }}>(optionnel)</span>
             </p>
           </div>
           <textarea
@@ -418,13 +418,13 @@ export default function CheckInPage() {
             rows={2}
             className="w-full rounded-lg px-3 py-2.5 text-sm resize-none outline-none"
             style={{
-              background: '#0e0e1a',
-              border: '1px solid #22223a',
-              color: '#eeeef4',
+              background: 'var(--surface-1)',
+              border: '1px solid var(--border)',
+              color: 'var(--foreground)',
             }}
           />
           {form.comment.length > 0 && (
-            <p className="text-right text-xs" style={{ color: '#5c5c7a' }}>
+            <p className="text-right text-xs" style={{ color: 'var(--muted-foreground)' }}>
               {form.comment.length}/140
             </p>
           )}
@@ -448,7 +448,7 @@ export default function CheckInPage() {
             : 'Enregistrer le check-in →'}
         </button>
 
-        <p className="text-center text-xs" style={{ color: '#5c5c7a' }}>
+        <p className="text-center text-xs" style={{ color: 'var(--muted-foreground)' }}>
           Données utilisées uniquement pour calibrer ton Allostatic Score.
         </p>
       </div>
