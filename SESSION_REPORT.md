@@ -227,3 +227,64 @@ Déplacé vers : `docs/archive/resilio-master-v2_archived_2026-04-12.md`
 ### Invariants vérifiés
 - `pytest tests/` : **1741 passed, 9 skipped** ✅ (≥ 1243)
 - Branche : `session/s4-energy-patterns` poussée ✅
+
+---
+
+# SESSION S-3 — Weekly Review Graph
+
+**Date :** 2026-04-12
+**Branche :** session/s3-weekly-review
+**Commit :** 2ed803f
+
+## Ce qui a été fait
+
+### 1. `backend/app/graphs/weekly_review_graph.py` — nouveau fichier
+
+StateGraph 5 nodes avec MemorySaver, `interrupt_before=["present_review"]`.
+
+**Pipeline :**
+```
+analyze_actual_vs_planned → compute_new_acwr → update_athlete_state
+  → [INTERRUPT] present_review → apply_adjustments → END
+```
+
+- Node 1 : compare SessionLog réels vs weekly_slots_json du plan
+- Node 2 : recompute ACWR depuis load_history via `core.acwr.compute_acwr`
+- Node 3 : assemble review_summary_dict (readiness + recommandations)
+- Node 4 : no-op — déclenche l'interrupt (human-in-the-loop)
+- Node 5 : persiste `WeeklyReviewModel` en DB si `human_approved=True`
+
+Pattern importlib (`app.models.schemas` + `app.db.models`) pour éviter la double-registration SQLAlchemy — identique à `nodes.py`.
+
+### 2. `backend/app/services/coaching_service.py` — ajouts en fin de fichier
+
+- `weekly_review(athlete_id, db) -> tuple[str, dict | None]`
+- `resume_review(thread_id, approved, db) -> None`
+- `_review_graphs: dict` — stocke les instances graph per thread_id
+
+### 3. `backend/app/routes/workflow.py` — ajouts en fin de fichier
+
+- `POST /athletes/{id}/plan/review/start` → `ReviewStartResponse`
+- `POST /athletes/{id}/plan/review/confirm` → `ReviewConfirmResponse`
+- Protégé par `_require_own`, vérifie `_validate_thread_ownership`
+
+### 4. Tests — 23 nouveaux, tous verts
+
+- `tests/backend/graphs/test_weekly_review_graph.py` (15 tests)
+- `tests/backend/api/test_weekly_review_endpoints.py` (8 tests)
+
+## Invariants
+
+| Invariant | Résultat |
+|---|---|
+| `pytest tests/` ≥ 1243 | ✅ 1748 passing (16 fails = S-4 pre-existants) |
+| Aucun code existant supprimé | ✅ |
+| Human-in-the-loop non négociable | ✅ interrupt_before=["present_review"] |
+| MemorySaver pattern identique à coaching_graph | ✅ |
+
+## Divergences spec → code
+
+| Spec | Code | Raison |
+|---|---|---|
+| `weekly_review(athlete_id, db) -> str` | retourne `tuple[str, dict \| None]` | Plus utile de retourner aussi le summary pour l'endpoint |
+| thread_id dans path `/confirm/{thread_id}` | thread_id dans le body | Cohérent avec le pattern approve/revise existant dans workflow.py |
