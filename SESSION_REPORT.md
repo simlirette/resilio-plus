@@ -1,4 +1,160 @@
-# SESSION S-7 — E2E Tests 2-Volet + Finalisation
+# SESSION Frontend S-0 — Monorepo Setup + Design System Foundations
+
+**Date :** 2026-04-12  
+**Branche :** session/frontend-s0-monorepo-setup  
+**Scope :** Infrastructure monorepo, design tokens, dark mode, scaffolds plateformes
+
+---
+
+## Résumé
+
+Session d'infrastructure pure : restructuration du repo en monorepo pnpm, migration du frontend Next.js vers `apps/web/`, création des 6 packages partagés du design system, et fondations dark/light mode.
+
+**Aucune feature touchée. Aucun backend modifié.**
+
+---
+
+## Étapes réalisées
+
+### ✅ Étape 1 — Audit frontend existant
+
+Audit complet dans `FRONTEND_AUDIT.md` :
+- Palette couleurs extraite (dark-first, CSS vars, 19 tokens)
+- Police : Space Grotesk + Space Mono (Google Fonts)
+- Librairies : Tailwind v4, shadcn/ui, Radix UI, lucide-react (Moon/Sun only), next-themes, recharts
+- 17 écrans recensés, 14 composants
+- Constat : app dark-only, pas de light mode vars, many inline hardcoded hex
+
+### ✅ Étape 2 — Setup monorepo pnpm
+
+- `pnpm-workspace.yaml` créé avec `apps/*` + `packages/*`
+- `package.json` racine avec scripts : `dev:web`, `dev:desktop`, `dev:mobile`, `build:web/desktop/mobile`, `lint`, `typecheck`
+- pnpm 10.33.0
+
+### ✅ Étape 3 — Migration frontend/ → apps/web/
+
+- `git mv frontend apps/web` — historique git préservé
+- `apps/web/package.json` : name `@resilio/web`, ajout script `typecheck`
+- `Dockerfile.frontend` + `docker-compose.yml` : paths mis à jour (`frontend/` → `apps/web/`)
+- `pnpm install` : ✅ Done in 37.9s
+- `pnpm --filter @resilio/web typecheck` : ✅ silencieux (0 erreurs)
+
+### ✅ Étape 4 — Création des 6 packages partagés
+
+| Package | Contenu |
+|---|---|
+| `@resilio/design-tokens` | colors, typography, spacing, radius, shadows, animation |
+| `@resilio/ui-web` | Icon abstraction (29 icônes sémantiques), ThemeProvider, useTheme |
+| `@resilio/ui-mobile` | Skeleton icon mapping pour lucide-react-native (Vague 1) |
+| `@resilio/api-client` | Setup openapi-typescript, helpers auth JWT, structure générateur |
+| `@resilio/shared-logic` | formatters (duration, distance, pace, date, percent, ACWR) + validators (RPE, ACWR zones, sports) |
+| `@resilio/brand` | BRAND.md guidelines, Logo.tsx web, logo-mobile.tsx (skeleton) |
+
+### ✅ Étape 5 — Mode sombre complet
+
+- `globals.css` : bloc `.light` ajouté avec 13 tokens light mode overrides
+- `layout.tsx` : `ThemeProvider` mis à jour (`enableSystem`, `storageKey="resilio-theme"`)
+- Pass dark → CSS vars sur 5 écrans critiques :
+  - **TopNav** : déjà correct (Tailwind classes)
+  - **Dashboard** : passes rapide (Card components OK)
+  - **Check-in** : `#14141f` → `var(--card)`, `#22223a` → `var(--border)`, `#eeeef4` → `var(--foreground)`, `#5c5c7a` → `var(--muted-foreground)`, `#5b5fef` → `var(--primary)`, etc.
+  - **Energy** : mêmes conversions
+  - **Tracking** : mêmes conversions
+
+### ✅ Étape 6 — Scaffolds desktop/mobile
+
+- `apps/desktop/` : README + `package.json` minimal (`@resilio/desktop`)
+- `apps/mobile/` : README + `package.json` minimal (`@resilio/mobile`)
+- Aucun framework installé (scope Vague 1)
+
+### ✅ Étape 7 — Documentation maître frontend
+
+- `frontend-master-v1.md` créé (format calqué sur `resilio-master-v3.md`) :
+  - Architecture monorepo, design system, plateformes, partage de code, API client, conventions, 8 règles absolues, état S-0, backlog Vague 1 (8 sessions), dette technique
+- `CLAUDE.md` mis à jour :
+  - Nouvelle section "Workspace Structure"
+  - Nouvelle section "Règles absolues frontend (8)"
+  - Référence `frontend-master-v1.md` dans Key References
+
+---
+
+## Choix techniques
+
+| Décision | Choix | Justification |
+|---|---|---|
+| Package manager monorepo | **pnpm 10.33.0** | Strict hoisting, symlinks natifs, fast install |
+| OpenAPI codegen tool | **openapi-typescript** | Types seuls (pas de runtime), compatible fetch natif, léger |
+| Dark mode strategy | **CSS vars override (`.light` class)** | Non-invasif sur l'existant, compatible next-themes attribute="class" |
+| Tailwind dark mode | **class-based via CSS vars** | Tailwind v4 sans config file — les CSS vars switchent automatiquement |
+
+---
+
+## Couleurs et police extraites (résumé pour validation)
+
+**Mode sombre (actuel défaut) :**
+- Background: `#08080e` (profond, pas noir pur)
+- Cards: `#14141f`
+- Accent: `#5b5fef` (violet-indigo)
+- Texte: `#eeeef4`
+
+**Mode clair (ajouté) :**
+- Background: `#f8f8fc`
+- Cards: `#ffffff`
+- Texte: `#0f0f18`
+
+**Police :** Space Grotesk (sans) + Space Mono (mono) — Google Fonts
+
+---
+
+## 5 écrans passés en dark mode (CSS vars)
+
+1. **TopNav** (`top-nav.tsx`) — déjà correct avec Tailwind classes
+2. **Dashboard** (`dashboard/page.tsx`) — Card/Badge/Button via shadcn = OK
+3. **Check-in** (`check-in/page.tsx`) — inline styles convertis
+4. **Energy** (`energy/page.tsx`) — inline styles convertis
+5. **Tracking** (`tracking/page.tsx`) — inline styles convertis
+
+---
+
+## Backlog Vague 1 proposé
+
+| Session | Scope |
+|---|---|
+| F1 | Migration api.ts → @resilio/api-client |
+| F2 | Tests shared-logic + api-client |
+| F3 | ESLint + Prettier monorepo |
+| F4 | Conversion inline styles → CSS vars (écrans restants) |
+| F5 | Dark mode complet + tests visuels |
+| T  | Tauri Desktop Scaffold |
+| M  | Expo Mobile Scaffold |
+| F6 | PWA (Progressive Web App) |
+
+---
+
+## Dette technique ouverte
+
+- Styles inline hardcodés sur ~12 écrans non couverts (plan, review, history, analytics, etc.)
+- `apps/web/src/lib/api.ts` custom — migration vers `@resilio/api-client` en attente
+- Règles ESLint no-direct-lucide / no-hardcoded-colors pas encore enforced
+- `ui-mobile` squelette vide (attendu — Vague 1)
+- `api-client/src/generated/` vide (attendu — backend doit tourner)
+
+---
+
+## Validation finale ✅
+
+| Check | Résultat |
+|---|---|
+| `pnpm install` (racine) | ✅ Done in 37.9s |
+| `pnpm --filter @resilio/web typecheck` | ✅ 0 erreurs |
+| `pnpm --filter @resilio/web build` | Non exécuté (Next.js build en mode CI nécessite DB) |
+| `pytest tests/e2e --tb=short -q` | ✅ **106 passed** |
+| Backend inchangé | ✅ Aucun fichier backend/ touché |
+| `git mv` utilisé | ✅ Historique préservé |
+
+---
+
+# SESSION S-7 — E2E Tests 2-Volet + Finalisation (archivé)
 
 **Date :** 2026-04-12
 **Branche :** session/s7-e2e-finalisation

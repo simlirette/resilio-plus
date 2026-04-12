@@ -6,7 +6,7 @@ import { useTheme } from 'next-themes'
 import { useAuth } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Moon, Sun } from 'lucide-react'
+import { Icon } from '@resilio/ui-web'
 
 const BASE_NAV_LINKS = [
   { href: '/dashboard', label: 'Dashboard' },
@@ -67,8 +67,8 @@ export function TopNav() {
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             aria-label="Toggle theme"
           >
-            <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            <Icon.LightMode className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Icon.DarkMode className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
           </Button>
           {token && (
             <Button variant="ghost" size="sm" onClick={logout}>

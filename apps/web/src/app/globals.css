@@ -76,9 +76,41 @@
   --font-mono: 'Space Mono', 'Courier New', monospace;
 }
 
+/* ── LIGHT MODE OVERRIDES ──────────────────────────────────────────────────── */
+/* Applied when next-themes adds class="light" to <html>                       */
+.light {
+  color-scheme: light;
+
+  /* Surface hierarchy */
+  --background:     #f8f8fc;
+  --surface-1:      #f0f0f8;
+  --surface-2:      #ffffff;
+  --surface-3:      #f4f4fb;
+  --border:         #e2e2ee;
+  --border-subtle:  #ebebf5;
+
+  /* Text */
+  --foreground:        #0f0f18;
+  --text-muted:        #6b6b88;
+  --text-secondary:    #888899;
+
+  /* Shadcn semantic tokens */
+  --card: #ffffff;
+  --card-foreground: #0f0f18;
+  --muted: #f0f0f8;
+  --muted-foreground: #6b6b88;
+  --secondary: #f0f0f8;
+  --secondary-foreground: #6b6b88;
+  --input: #f0f0f8;
+}
+
 /* ── BASE ──────────────────────────────────────────────────────────────────── */
 html {
   color-scheme: dark;
+}
+
+html.light {
+  color-scheme: light;
 }
 
 body {
