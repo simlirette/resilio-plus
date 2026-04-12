@@ -341,3 +341,38 @@ Pattern importlib (`app.models.schemas` + `app.db.models`) pour éviter la doubl
 |---|---|---|
 | `weekly_review(athlete_id, db) -> str` | retourne `tuple[str, dict \| None]` | Plus utile de retourner aussi le summary pour l'endpoint |
 | thread_id dans path `/confirm/{thread_id}` | thread_id dans le body | Cohérent avec le pattern approve/revise existant dans workflow.py |
+
+---
+
+## S-2 — External Plan Import (Claude Haiku) (2026-04-12)
+
+**Branche :** `session/s2-plan-import`  
+**Statut :** ✅ Terminé
+
+### Ce qui a été fait
+
+| Composant | Fichier | Tests |
+|---|---|---|
+| ExternalPlanDraft schemas | `backend/app/schemas/external_plan.py` (+2 classes) | — |
+| PlanImportService | `backend/app/services/plan_import_service.py` | 8 tests unitaires ✅ |
+| Routes FastAPI (2 endpoints) | `backend/app/routes/external_plan.py` (+2 routes) | 7 tests API ✅ |
+| anthropic>=0.25 | `pyproject.toml` | — |
+
+**Endpoints livrés :**
+- `POST /athletes/{id}/external-plan/import` [require_tracking_mode] — multipart upload → `ExternalPlanDraft`
+- `POST /athletes/{id}/external-plan/import/confirm` [require_tracking_mode] — `ExternalPlanDraft` → `ExternalPlanOut`
+
+### Invariants vérifiés
+
+- `pytest tests/` → 1812 passed ≥ 1243 ✅
+- Aucune régression sur les tests existants ✅
+- `anthropic 0.94.0` installé dans le venv ✅
+
+### Décisions notables
+
+1. **Source="file_import"** : Les plans importés via fichier ont `source="file_import"` (vs `"manual"` pour la création manuelle) — en accord avec le commentaire du modèle DB `"manual" | "file_import"`.
+2. **Pas d'écriture DB au parsing** : `/import` est non-destructif — l'athlète révise le draft avant de confirmer via `/import/confirm`.
+3. **Décodage UTF-8 universel** : Tous les types de fichiers (PDF/TXT/CSV/ICS) sont décodés `utf-8 errors='replace'`. Pour les PDFs binaires, Haiku note les problèmes de qualité dans `parse_warnings`.
+4. **session_date None → date.today()** : `ExternalSessionModel.session_date` est `nullable=False` en DB. Si Haiku ne peut pas déterminer la date d'une séance, elle est fixée à aujourd'hui (fallback minimal).
+5. **Truncation 40k chars** : Protection contre les fichiers volumineux — Haiku reçoit au max ~10k tokens de contenu.
+6. **Pas de db.refresh() en double** : La route `/import/confirm` délègue entièrement à `PlanImportService.confirm_import` qui fait déjà le refresh — pas de double-refresh.
