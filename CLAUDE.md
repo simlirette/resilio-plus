@@ -6,7 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 **What is this?** Resilio Plus is a multi-agent hybrid coaching platform for athletes who combine running, strength training, swimming, and cycling. A Head Coach AI orchestrates 7 specialist agents to create personalized, science-backed training and nutrition plans that adapt weekly based on real performance data.
 
-**Tech Stack**: Python 3.13 (FastAPI backend), Next.js (frontend), SQLite (persistence), Poetry (dependency management).
+**Tech Stack**: Python 3.13 (FastAPI backend), Next.js (frontend), PostgreSQL + psycopg2 (persistence), Poetry (dependency management), LangGraph (coaching orchestration).
+
+**Master Architecture Doc**: `resilio-master-v3.md` (racine du repo) — référence unique V3.
 
 **Key Principle**: Tools provide quantitative data; the agents provide domain expertise; the Head Coach provides integration and conflict resolution.
 
@@ -84,9 +86,15 @@ class FatigueScore:
 | 0–6 | Setup, schemas, agents v1, connectors, frontend, Docker, E2E | ✅ Complete — tagged v1.0.0 |
 | 7 | Biking + Swimming + Nutrition + Recovery agents + core logic + endpoints | ✅ Complete |
 | 8 | Session detail, logging, history (backend + frontend) | ✅ Complete |
-| 9 | Connector sync (Hevy→SessionLog, Terra→Recovery, Strava improved) + Settings UI | ❌ Not started |
-| 10 | Analytics dashboard (ACWR, CTL/ATL/TSB, sport breakdown, perf trends) | ❌ Not started |
-| 11 | Profile edit, plan customization, ACWR alerts, nutrition display | ❌ Not started |
+| 9 | Connector sync (Hevy→SessionLog, Terra→Recovery, Strava improved) + Settings UI | ✅ Complete |
+| V3-A | PostgreSQL + Alembic (4 migrations) | ✅ Complete |
+| V3-B | ModeGuard + coaching_mode + PATCH /mode | ✅ Complete |
+| V3-C | EnergyCycleService + check-in routes | ✅ Complete |
+| V3-D | LangGraph coaching graph (11 nodes) + CoachingService + approve/revise | ✅ Complete |
+| V3-E | ExternalPlan CRUD + import fichier (Claude Haiku) | ❌ Not started |
+| V3-F | detect_energy_patterns() + challenges proactifs | ❌ Not started |
+| V3-G | Frontend check-in + energy card + tracking page | ❌ Not started |
+| V3-H | E2E tests 2-volet + CLAUDE.md final | ❌ Not started |
 
 ---
 
@@ -148,11 +156,12 @@ Never increase total weekly load >10% in one step (applies across ALL sports com
 
 ## Key References
 
+- **Master Architecture V3**: `resilio-master-v3.md` ← RÉFÉRENCE PRINCIPALE
 - **Roadmap Phases 9–11**: `docs/superpowers/specs/2026-04-09-phases7-11-roadmap.md`
+- **Architecture Modulaire 2-Volets**: `docs/superpowers/specs/2026-04-11-modular-architecture-design.md`
 - **Phase 8 Design**: `docs/superpowers/specs/2026-04-10-phase8-design.md`
 - **Coaching Methodology**: `docs/coaching/methodology.md`
-- **Blueprint**: `C:\Users\simon\RESILIO PLUS\resilio-hybrid-coach-blueprint.md`
-- **Supplement v2**: `C:\Users\simon\RESILIO PLUS\resilio-knowledge-supplement-v2.md`
+- **Master V2 (archivé)**: `docs/archive/resilio-master-v2_archived_2026-04-12.md`
 
 ---
 
