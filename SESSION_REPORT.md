@@ -1,3 +1,60 @@
+# SESSION S-7 — E2E Tests 2-Volet + Finalisation
+
+**Date :** 2026-04-12
+**Branche :** session/s7-e2e-finalisation
+**Commits :** 3 (test × 1 + fix × 1 + docs × 1)
+
+## Ce qui a été fait
+
+### 1. 4 nouveaux fichiers E2E (`tests/e2e/`)
+
+| Fichier | Scénario | Tests |
+|---|---|---|
+| `test_full_mode_workflow.py` | onboarding(full) → checkin → readiness → create_plan → approve | 7 |
+| `test_tracking_only_workflow.py` | onboarding(tracking_only) → [403 full] → ExternalPlan CRUD → checkin → readiness | 9 |
+| `test_mode_switch.py` | Full → switch → Tracking Only (plan archivé) → switch back | 9 |
+| `test_volet2_standalone.py` | checkin+readiness sans plan, conflit 409, modularity invariant | 8 |
+
+**Total : 33 nouveaux tests. Suite complète : 1845 passed, 9 skipped.**
+
+### 2. Remplacement des stubs S-2 dans `frontend/src/lib/api.ts`
+
+| Méthode | Avant | Après |
+|---|---|---|
+| `importExternalPlan()` | Mock local 800ms | `fetch` multipart FormData → `POST /external-plan/import` |
+| `confirmImportExternalPlan()` | Mock local 500ms | `request()` JSON → `POST /external-plan/import/confirm` |
+
+Notice démo retirée de `tracking/import/page.tsx`.
+
+### 3. Mise à jour documentation
+
+- `CLAUDE.md` : V3-E → V3-H marquées ✅
+- `resilio-master-v3.md` : section 11 (NON IMPLÉMENTÉ → vide), section 12 (sessions toutes ✅)
+
+## Invariants vérifiés
+
+- `pytest tests/` → **1845 passed, 9 skipped** ✅ (≥ 1243)
+- `npx tsc --noEmit` → ✅ aucune erreur
+
+## Architecture testée — invariants validés par les E2E
+
+| Invariant | Test |
+|---|---|
+| Volet 2 fonctionne sans plan actif | `test_volet2_standalone.py::test_04` |
+| Volet 2 fonctionne en mode tracking_only | `test_volet2_standalone.py::test_08` |
+| ModeGuard bloque create-plan en tracking_only | `test_tracking_only_workflow.py::test_02` |
+| ModeGuard bloque external-plan en full | `test_mode_switch.py::test_09` |
+| Switch full→tracking archive les plans actifs | `test_mode_switch.py::test_04` |
+| Conflit checkin (1 par jour) → 409 | `test_volet2_standalone.py::test_06` |
+
+## Dette technique restante
+
+- `head_coach_messages` non exposés via API (pas de `GET /head-coach-messages`)
+- Singleton `_review_service` dans `workflow.py` — incompatible multi-worker production
+- `energy/cycle/page.tsx` : cycle menstruel codé en dur (démo, à connecter au backend)
+
+---
+
 # SESSION S-6 — Frontend Tracking Page
 
 **Date :** 2026-04-12

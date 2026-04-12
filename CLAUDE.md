@@ -75,7 +75,7 @@ class FatigueScore:
 | `docs/superpowers/specs/` | Design specs (phase0–phase8) | Phase 0+ |
 | `docs/superpowers/plans/` | Implementation plans | Phase 0+ |
 | `tests/backend/` | Unit + integration tests (~47 backend-specific) | Phase 0+ |
-| `tests/e2e/` | End-to-end workflow (7 scenarios, test_01–07) | Phase 6+ |
+| `tests/e2e/` | End-to-end workflow (33 tests across 6 files) | Phase 6+ |
 
 ---
 
@@ -91,10 +91,10 @@ class FatigueScore:
 | V3-B | ModeGuard + coaching_mode + PATCH /mode | ✅ Complete |
 | V3-C | EnergyCycleService + check-in routes | ✅ Complete |
 | V3-D | LangGraph coaching graph (11 nodes) + CoachingService + approve/revise | ✅ Complete |
-| V3-E | ExternalPlan CRUD + import fichier (Claude Haiku) | ❌ Not started |
-| V3-F | detect_energy_patterns() + challenges proactifs | ✅ Complete |
-| V3-G | Frontend check-in + energy card + tracking page | ❌ Not started |
-| V3-H | E2E tests 2-volet + CLAUDE.md final | ❌ Not started |
+| V3-E | ExternalPlan CRUD + import fichier (Claude Haiku) | ✅ Complete (S-1 + S-2) |
+| V3-F | detect_energy_patterns() + challenges proactifs | ✅ Complete (S-4) |
+| V3-G | Frontend check-in + energy card + tracking page | ✅ Complete (S-5 + S-6) |
+| V3-H | E2E tests 2-volet + CLAUDE.md final | ✅ Complete (S-7) |
 
 ---
 

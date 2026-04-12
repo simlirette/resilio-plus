@@ -93,13 +93,6 @@ export default function TrackingImportPage() {
           <p className="text-sm text-muted-foreground mt-1">PDF, TXT, CSV ou ICS</p>
         </div>
 
-        {/* Stub notice */}
-        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3">
-          <p className="text-xs text-amber-600 dark:text-amber-400">
-            <span className="font-semibold">Fonctionnalité en cours (S-2)</span> — L&apos;analyse IA utilise des données de démonstration. L&apos;endpoint backend sera disponible dans une prochaine session.
-          </p>
-        </div>
-
         {step === 'upload' && (
           <Card>
             <CardHeader>

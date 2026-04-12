@@ -2,7 +2,7 @@
 
 > **Ce document est la référence unique pour l'architecture V3 de Resilio+.**
 > Il remplace `resilio-master-v2.md` (archivé dans `docs/archive/`).
-> Il reflète l'état réel du code au 2026-04-12.
+> Il reflète l'état réel du code au 2026-04-12 (mis à jour S-7).
 > Toute décision architecturale non documentée ici doit y être ajoutée.
 
 ---
@@ -532,36 +532,32 @@ backend/app/
 | get_agent_view() — 8 agents | `models/athlete_state.py` | V3 |
 | detect_energy_patterns() APScheduler (4 patterns) | `core/sync_scheduler.py` | S-4 ✅ |
 | HeadCoachMessageModel + head_coach_messages table | `models/schemas.py`, migration 0005 | S-4 ✅ |
+| ExternalPlan CRUD (saisie manuelle + XOR invariant) | `services/external_plan_service.py`, `routes/external_plan.py` | S-1 ✅ |
+| Import fichier plan externe (Claude Haiku) | `routes/external_plan.py` (POST /import + /import/confirm) | S-2 ✅ |
+| Weekly review graph (5 nodes) + CoachingService.weekly_review() | `graphs/weekly_review_graph.py`, `services/coaching_service.py` | S-3 ✅ |
+| Frontend check-in page + EnergyCard dashboard | `frontend/src/app/check-in/`, `frontend/src/app/dashboard/` | S-5 ✅ |
+| Frontend tracking page + import wizard | `frontend/src/app/tracking/`, `frontend/src/app/tracking/import/` | S-6 ✅ |
+| E2E tests 2-volet (33 tests, 4 fichiers) | `tests/e2e/test_full_mode_workflow.py` + 3 autres | S-7 ✅ |
 
 ### NON IMPLÉMENTÉ ❌
 
-| Composant | Scope | Session cible |
-|---|---|---|
-| ExternalPlan CRUD (saisie manuelle) | `services/external_plan_service.py`, `routes/external_plan.py` | S-1 |
-| Import fichier plan externe (Claude Haiku) | `routes/external_plan.py` (POST /import) | S-2 |
-| Weekly review graph (5 nodes) | `graphs/weekly_review_graph.py` | S-3 |
-| CoachingService.weekly_review() | `services/coaching_service.py` (ajout) | S-3 |
-| Frontend check-in page | `frontend/src/app/checkin/` | S-5 |
-| Frontend energy card dashboard | `frontend/src/app/dashboard/` (ajout card) | S-5 |
-| Frontend tracking page (Tracking Only) | `frontend/src/app/tracking/` | S-6 |
-| Frontend import fichier | `frontend/src/app/tracking/import/` | S-6 |
-| E2E tests 2-volet | `tests/e2e/` (nouveaux scénarios) | S-7 |
+Toutes les sessions S-1 à S-7 sont terminées. Aucun composant V3 restant.
 
 ---
 
-## 12. TRAVAIL BACKEND RESTANT — SESSIONS PARALLÈLES
+## 12. TRAVAIL BACKEND — SESSIONS COMPLÈTES (2026-04-12)
 
-Ordre recommandé pour 7 sessions parallèles. Les sessions S-1, S-3, S-4, S-5 n'ont pas de dépendances mutuelles et peuvent démarrer simultanément.
+Toutes les sessions parallèles S-1 à S-7 sont terminées et mergées sur `main`.
 
-| Session | Scope | Dépend de | Fichiers clés |
-|---|---|---|---|
-| **S-1** | ExternalPlan backend — tables + CRUD saisie manuelle | aucune | `services/external_plan_service.py`, `routes/external_plan.py`, `db/models.py` |
-| **S-2** | Import fichier plan externe (Claude Haiku parse + confirm) | S-1 | `routes/external_plan.py` (POST /import, POST /import/confirm) |
-| **S-3** | Weekly review graph (5 nodes) + CoachingService.weekly_review() | aucune | `graphs/weekly_review_graph.py`, `services/coaching_service.py` |
-| **S-4** | detect_energy_patterns() + challenges proactifs | aucune | `core/sync_scheduler.py`, `services/energy_cycle_service.py` |
-| **S-5** | Frontend check-in + energy card dashboard | aucune | `frontend/src/app/checkin/page.tsx`, `frontend/src/app/dashboard/page.tsx` |
-| **S-6** | Frontend tracking page + import UI | S-1 (API ExternalPlan) | `frontend/src/app/tracking/page.tsx`, `frontend/src/app/tracking/import/page.tsx` |
-| **S-7** | E2E tests 2-volet + CLAUDE.md final | S-1 → S-4 terminées | `tests/e2e/` (nouveaux scénarios) |
+| Session | Scope | Statut |
+|---|---|---|
+| **S-1** | ExternalPlan CRUD — tables + service + 5 endpoints | ✅ mergé |
+| **S-2** | Import fichier plan externe (Claude Haiku + confirm) | ✅ mergé |
+| **S-3** | Weekly review graph (5 nodes) + CoachingService.weekly_review() | ✅ mergé |
+| **S-4** | detect_energy_patterns() + migration 0005 + APScheduler hebdo | ✅ mergé |
+| **S-5** | Frontend check-in page + EnergyCard dashboard + API réelle | ✅ mergé |
+| **S-6** | Frontend tracking page + import wizard (stubs → API réelle en S-7) | ✅ mergé |
+| **S-7** | E2E tests 2-volet (33 tests) + api.ts stubs remplacés + docs finaux | ✅ mergé |
 
 ### Décisions architecturales non-négociables (rappel pour sessions parallèles)
 
