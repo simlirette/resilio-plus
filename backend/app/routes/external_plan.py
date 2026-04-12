@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
 from ..db.models import AthleteModel
@@ -21,12 +21,14 @@ from ..dependencies import get_db
 from ..dependencies.mode_guard import require_tracking_mode
 from ..schemas.external_plan import (
     ExternalPlanCreate,
+    ExternalPlanDraft,
     ExternalPlanOut,
     ExternalSessionCreate,
     ExternalSessionOut,
     ExternalSessionUpdate,
 )
 from ..services.external_plan_service import ExternalPlanService
+from ..services.plan_import_service import PlanImportService
 
 router = APIRouter(prefix="/athletes", tags=["external-plan"])
 
@@ -145,3 +147,44 @@ def delete_external_session(
         athlete_id=athlete_id,
         db=db,
     )
+
+
+@router.post(
+    "/{athlete_id}/external-plan/import",
+    response_model=ExternalPlanDraft,
+    status_code=200,
+)
+async def import_plan_file(
+    athlete_id: str,
+    athlete: TrackingAthlete,
+    db: DB,
+    file: UploadFile = File(...),
+) -> ExternalPlanDraft:
+    """Upload a plan file; Claude Haiku parses it into an ExternalPlanDraft.
+
+    No DB write — the athlete reviews the draft and calls /import/confirm to persist.
+    """
+    raw = await file.read()
+    content = raw.decode("utf-8", errors="replace")
+    filename = file.filename or "upload"
+    return PlanImportService.parse_file(content=content, filename=filename)
+
+
+@router.post(
+    "/{athlete_id}/external-plan/import/confirm",
+    response_model=ExternalPlanOut,
+    status_code=201,
+)
+def confirm_plan_import(
+    athlete_id: str,
+    body: ExternalPlanDraft,
+    athlete: TrackingAthlete,
+    db: DB,
+) -> ExternalPlanOut:
+    """Persist a reviewed ExternalPlanDraft as the athlete's active ExternalPlan."""
+    plan = PlanImportService.confirm_import(
+        athlete_id=athlete_id,
+        draft=body,
+        db=db,
+    )
+    return ExternalPlanOut.model_validate(plan)
