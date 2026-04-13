@@ -146,7 +146,7 @@ def test_recent_activity_scores_higher_than_old():
 
     With the EWMA_7d/EWMA_28d formula:
     - Recent (today): EWMA_7d is large, EWMA_28d is small → ratio > 1 → capped at 100
-    - Old (24 days ago): EWMA_7d has decayed away, EWMA_28d partially decayed → ratio << 1 → score < 100
+    - Old (24 days ago): EWMA_7d has decayed away, EWMA_28d partially decayed → ratio < 1 → score < 100
     """
     from app.core.strain import compute_muscle_strain
     recent = _make_hevy_workout("Squat", weight_kg=100.0, reps=5, rpe=8.0, workout_date=TODAY)

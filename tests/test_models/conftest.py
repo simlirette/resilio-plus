@@ -14,6 +14,7 @@ from app.models.athlete_state import (
     EnergyCheckIn,
     EnergySnapshot,
     HormonalProfile,
+    MuscleStrainScore,
     PlanSnapshot,
     RecoveryVetoV3,
     SyncSource,
@@ -46,6 +47,19 @@ def full_state() -> AthleteState:
         acwr=1.1,
         acwr_status="safe",
         readiness_score=87.0,
+        muscle_strain=MuscleStrainScore(
+            quads=72.0,
+            posterior_chain=55.0,
+            glutes=60.0,
+            calves=45.0,
+            chest=30.0,
+            upper_pull=80.0,
+            shoulders=40.0,
+            triceps=35.0,
+            biceps=50.0,
+            core=65.0,
+            computed_at=datetime(2026, 4, 13, 8, 0, tzinfo=timezone.utc),
+        ),
     )
     connectors = ConnectorSnapshot()
     plan = PlanSnapshot(week_number=3, phase="build")
