@@ -48,7 +48,7 @@ def test_unknown_agent_returns_empty_view(full_state):
         assert getattr(view, section) is None
 
 
-def test_agent_view_is_pydantic_model(full_state):
+def test_agent_view_is_json_serializable(full_state):
     """AgentView must be a Pydantic BaseModel (serializable to JSON)."""
     view = get_agent_view(full_state, "running")
     dumped = view.model_dump()

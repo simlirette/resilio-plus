@@ -289,6 +289,8 @@ class AthleteState(BaseModel):
     # Optional sections
     energy: Optional[EnergySnapshot] = None
     hormonal: Optional[HormonalProfile] = None
+    # Never None — empty AllostaticSummary() is valid zero-state (no history yet).
+    # AgentView.allostatic is Optional since unauthorized agents receive None.
     allostatic: AllostaticSummary = Field(default_factory=AllostaticSummary)
     journal: Optional[DailyJournal] = None
 

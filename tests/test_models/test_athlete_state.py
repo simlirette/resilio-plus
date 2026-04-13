@@ -292,6 +292,10 @@ class TestDailyJournal:
         with pytest.raises(ValidationError):
             DailyJournal(date=date(2026, 4, 13), mood_score=11)
 
+    def test_comment_max_length_raises(self):
+        with pytest.raises(ValidationError):
+            DailyJournal(date=date(2026, 4, 13), comment="x" * 2001)
+
 
 def _make_athlete_profile() -> AthleteProfile:
     return AthleteProfile(
