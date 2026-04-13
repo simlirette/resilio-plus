@@ -96,7 +96,7 @@ git reset --hard origin/main
 
 ## CONFIRMATION GATE
 
-**Do not execute Step 6 (force push) without re-reading this document and confirming all prerequisites are met.**
+**Simon-Olivier must verify all items below before executing Step 6 (force push). Do not proceed without explicit confirmation.**
 
 Checklist before force push:
 - [ ] Strava client secret rotated and verified dead

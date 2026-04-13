@@ -38,10 +38,25 @@ The key `fe874ad5-90b6-437a-ad0b-81162c850400` was committed to GitHub in commit
 
 ---
 
+### Action 3 — Update `.env` with new credentials
+
+After Actions 1 and 2 are complete and new credentials are available:
+
+**Steps:**
+1. Open `.env` (local, gitignored)
+2. Replace `STRAVA_CLIENT_SECRET` with the new secret from Action 1 (Strava Developer Portal)
+3. Replace `HEVY_API_KEY` with the new key from Action 2 (Hevy Developer Portal)
+4. Verify both values are set and non-empty: `grep -E "^(STRAVA_CLIENT_SECRET|HEVY_API_KEY)=" .env`
+5. **Do not commit** `.env` — it is gitignored and should remain local only
+
+**Verify:** Test the new credentials by making a single API call to each service (e.g., fetch Strava athlete profile, query Hevy workouts).
+
+---
+
 ## Priority: WHEN READY
 
-### Action 3 — Execute BFG history rewrite
+### Action 4 — Execute BFG history rewrite
 
-After completing Actions 1 and 2 (credentials are dead before rewriting history), follow the procedure in `BFG-REWRITE-PLAN.md` to remove the secrets from git history entirely.
+After completing Actions 1, 2, and 3 (credentials are rotated and updated before rewriting history), follow the procedure in `BFG-REWRITE-PLAN.md` to remove the secrets from git history entirely.
 
 This step is optional once credentials are rotated (dead secrets in history are low risk), but is recommended for hygiene.

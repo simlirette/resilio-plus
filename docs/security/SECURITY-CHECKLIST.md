@@ -11,7 +11,8 @@ Run through this checklist before opening a PR or pushing to main.
   - Use environment variables in code: `os.environ.get("KEY", "default")`
 - [ ] `.env` is **not** staged: `git status` shows it as untracked or gitignored
 - [ ] New secrets added to `.env.example` with `CHANGEME` placeholder
-- [ ] Quick scan: `git diff --staged | grep -iE "sk-ant|client_secret=[a-f0-9]|api_key=[a-f0-9-]{30}"`
+- [ ] **Primary check:** `gitleaks detect --source . --log-opts="--all"` (required before every push)
+- [ ] **Supplemental check:** `git diff --staged | grep -iE "sk-ant|client_secret=[a-f0-9]|api_key=[a-f0-9-]{30}"`
 
 ### After any new credential exposure (however it happened)
 1. Rotate the credential immediately in the external dashboard
@@ -39,6 +40,7 @@ Run through this checklist before opening a PR or pushing to main.
 
 - [ ] `allow_origins` is never `["*"]` — always explicit list from `ALLOWED_ORIGINS` env var
 - [ ] New frontend origins added to both `.env.example` and the default fallback in `main.py`
+- [ ] Any CORS changes must include written justification (in PR description or commit message) explaining why the change is needed
 
 ---
 
