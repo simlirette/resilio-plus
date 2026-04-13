@@ -53,7 +53,7 @@ def athlete_model_to_response(m: AthleteModel) -> AthleteResponse:
 
 @router.get("/", response_model=list[AthleteResponse])
 def list_athletes(
-    current_id: Annotated[str, Depends(get_current_athlete_id)],
+    _: Annotated[str, Depends(get_current_athlete_id)],
     db: DB,
 ) -> list[AthleteResponse]:
     return [athlete_model_to_response(m) for m in db.query(AthleteModel).all()]
