@@ -6,12 +6,10 @@ Formula:
   - Lifting (Hevy): set_load = max(weight_kg, 1.0) × reps × (rpe / 10)
     (weight_kg is floored at 1.0 to handle bodyweight exercises)
   - Each session's load is distributed to muscle groups via recruitment maps.
-  - Score per muscle = EWMA_7d / MUSCLE_REFERENCE × 100, capped at 100.
-    MUSCLE_REFERENCE is calibrated so that a single moderate session
-    scores ~30–60 and a day of heavy training approaches 100.
-    When EWMA_7d == 0 (no load in window), score = 0.
+  - Score per muscle = min(100, EWMA_7d / EWMA_28d × 100)
+    When EWMA_28d == 0 (no history), score = 0.
 
-Reference: Impellizzeri et al. (2004) sRPE; Coggan TSS model.
+Reference: Impellizzeri et al. (2004) sRPE; Coggan TSS model; ACWR methodology.
 """
 from __future__ import annotations
 
@@ -35,25 +33,6 @@ MUSCLES: list[str] = [
 
 _LAMBDA_7D = 2 / (7 + 1)    # 0.25  — acute window
 _LAMBDA_28D = 2 / (28 + 1)  # ≈ 0.069 — chronic window
-
-# ---------------------------------------------------------------------------
-# Per-muscle reference loads for score normalization
-# Represents a "high but sustainable" daily EWMA load for each muscle group.
-# Calibrated so a single moderate strength session → score ≈ 30–60.
-# ---------------------------------------------------------------------------
-
-MUSCLE_REFERENCE: dict[str, float] = {
-    "quads":           200.0,
-    "posterior_chain": 200.0,
-    "glutes":          180.0,
-    "calves":          100.0,
-    "chest":           180.0,
-    "upper_pull":      180.0,
-    "shoulders":       120.0,
-    "triceps":         100.0,
-    "biceps":          100.0,
-    "core":            120.0,
-}
 
 # ---------------------------------------------------------------------------
 # Cardio recruitment map — sport_type → muscle recruitment coefficient
@@ -276,11 +255,11 @@ def compute_muscle_strain(
     scores: dict[str, float] = {}
     for m in MUSCLES:
         acute = _ewma(daily[m], _LAMBDA_7D)
-        if acute <= 0.0:
+        chronic = _ewma(daily[m], _LAMBDA_28D)
+        if chronic <= 0.0:
             scores[m] = 0.0
         else:
-            reference = MUSCLE_REFERENCE.get(m, 200.0)
-            scores[m] = min(100.0, round((acute / reference) * 100.0, 1))
+            scores[m] = min(100.0, round((acute / chronic) * 100.0, 1))
 
     return MuscleStrainScore(
         quads=scores["quads"],

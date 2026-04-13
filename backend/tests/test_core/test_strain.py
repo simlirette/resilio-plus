@@ -140,12 +140,21 @@ def test_result_has_computed_at():
     assert isinstance(result.computed_at, datetime)
 
 
-def test_repeated_sessions_accumulate():
-    """Two squat sessions score higher on quads than one."""
+def test_recent_activity_scores_higher_than_old():
+    """Activity within recent 7 days scores higher than same activity 24 days ago.
+
+    With the EWMA_7d/EWMA_28d formula:
+    - Recent (today): EWMA_7d is large, EWMA_28d is small → ratio > 1 → capped at 100
+    - Old (24 days ago): EWMA_7d has decayed away, EWMA_28d partially decayed → ratio << 1 → score < 100
+    """
     from app.core.strain import compute_muscle_strain
-    w1 = _make_hevy_workout("Squat", weight_kg=100.0, reps=5, rpe=8.0, workout_date=TODAY)
-    result_one = compute_muscle_strain([], [w1], reference_date=TODAY)
-    w2 = _make_hevy_workout("Squat", weight_kg=100.0, reps=5, rpe=8.0,
-                             workout_date=date(2026, 4, 12))
-    result_two = compute_muscle_strain([], [w1, w2], reference_date=TODAY)
-    assert result_two.quads > result_one.quads
+    recent = _make_hevy_workout("Squat", weight_kg=100.0, reps=5, rpe=8.0, workout_date=TODAY)
+    result_recent = compute_muscle_strain([], [recent], reference_date=TODAY)
+
+    old_date = date(2026, 3, 20)  # 24 days before TODAY (2026-04-13), still within 28d window
+    old = _make_hevy_workout("Squat", weight_kg=100.0, reps=5, rpe=8.0, workout_date=old_date)
+    result_old = compute_muscle_strain([], [old], reference_date=TODAY)
+
+    # Recent activity has high acute EWMA relative to chronic → score near 100
+    # Old activity has low acute EWMA (decayed) relative to higher chronic EWMA → lower score
+    assert result_recent.quads > result_old.quads
