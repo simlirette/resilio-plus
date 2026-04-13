@@ -52,10 +52,15 @@ def athlete_model_to_response(m: AthleteModel) -> AthleteResponse:
 
 
 @router.get("/", response_model=list[AthleteResponse])
-def list_athletes(db: DB) -> list[AthleteResponse]:
+def list_athletes(
+    current_id: Annotated[str, Depends(get_current_athlete_id)],
+    db: DB,
+) -> list[AthleteResponse]:
     return [athlete_model_to_response(m) for m in db.query(AthleteModel).all()]
 
 
+# TODO(auth-part8): protect with get_current_user once Part 8 auth session is implemented.
+# Do NOT add get_current_athlete_id here — this route is called pre-auth during onboarding.
 @router.post("/", response_model=AthleteResponse, status_code=201)
 def create_athlete(data: AthleteCreate, db: DB) -> AthleteResponse:
     model = AthleteModel(

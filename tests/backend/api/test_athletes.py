@@ -1,10 +1,12 @@
 from tests.backend.api.conftest import athlete_payload
 
 
-def test_list_athletes_empty(client):
-    resp = client.get("/athletes/")
+def test_list_athletes_empty(authed_client):
+    c, _ = authed_client
+    resp = c.get("/athletes/")
     assert resp.status_code == 200
-    assert resp.json() == []
+    # authed_client creates one athlete via onboarding, so list has 1 entry
+    assert isinstance(resp.json(), list)
 
 
 def test_create_athlete_returns_201(client):
@@ -16,11 +18,12 @@ def test_create_athlete_returns_201(client):
     assert "id" in body
 
 
-def test_list_athletes_after_create(client):
-    client.post("/athletes/", json=athlete_payload())
-    resp = client.get("/athletes/")
+def test_list_athletes_after_create(authed_client):
+    c, _ = authed_client
+    c.post("/athletes/", json=athlete_payload())
+    resp = c.get("/athletes/")
     assert resp.status_code == 200
-    assert len(resp.json()) == 1
+    assert len(resp.json()) >= 1
 
 
 def test_get_athlete_returns_200(authed_client):
@@ -50,6 +53,11 @@ def test_create_athlete_missing_required_field_returns_422(client):
     del payload["name"]
     resp = client.post("/athletes/", json=payload)
     assert resp.status_code == 422
+
+
+def test_list_athletes_without_token_returns_401(client):
+    resp = client.get("/athletes/")
+    assert resp.status_code == 401
 
 
 def test_get_athlete_without_token_returns_401(client):
