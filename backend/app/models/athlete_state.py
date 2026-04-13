@@ -185,6 +185,32 @@ class SyncSource(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# MuscleStrainScore  (index de fatigue musculaire par groupe)
+# ---------------------------------------------------------------------------
+
+
+class MuscleStrainScore(BaseModel):
+    """Strain index 0–100 per muscle group.
+
+    Computed as EWMA_7d / EWMA_28d × 100 (capped at 100).
+    0 = no recent load or insufficient history.
+    100 = acute load equals chronic baseline (fully loaded).
+    """
+
+    quads: float = Field(default=0.0, ge=0.0, le=100.0)
+    posterior_chain: float = Field(default=0.0, ge=0.0, le=100.0)
+    glutes: float = Field(default=0.0, ge=0.0, le=100.0)
+    calves: float = Field(default=0.0, ge=0.0, le=100.0)
+    chest: float = Field(default=0.0, ge=0.0, le=100.0)
+    upper_pull: float = Field(default=0.0, ge=0.0, le=100.0)
+    shoulders: float = Field(default=0.0, ge=0.0, le=100.0)
+    triceps: float = Field(default=0.0, ge=0.0, le=100.0)
+    biceps: float = Field(default=0.0, ge=0.0, le=100.0)
+    core: float = Field(default=0.0, ge=0.0, le=100.0)
+    computed_at: datetime
+
+
+# ---------------------------------------------------------------------------
 # AthleteMetrics  (valeurs brutes Terra + métriques calculées)
 # ---------------------------------------------------------------------------
 
@@ -204,6 +230,7 @@ class AthleteMetrics(BaseModel):
     acwr_status: Optional[Literal["safe", "caution", "danger"]] = None
     readiness_score: Optional[float] = Field(default=None, ge=0.0, le=100.0)
     fatigue_score: Optional[FatigueScore] = None
+    muscle_strain: Optional[MuscleStrainScore] = None
 
 
 # ---------------------------------------------------------------------------
