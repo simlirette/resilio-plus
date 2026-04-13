@@ -4,7 +4,8 @@ from datetime import date, datetime, timezone
 import pytest
 from pydantic import ValidationError
 
-from app.models.athlete_state import AllostaticComponents, AllostaticEntry, EnergyCheckIn
+from app.models.athlete_state import AllostaticComponents, AllostaticEntry, AthleteMetrics, EnergyCheckIn, SyncSource
+from app.schemas.fatigue import FatigueScore
 
 
 class TestEnergyCheckIn:
@@ -86,3 +87,62 @@ class TestAllostaticComponents:
             intensity_cap_applied=1.0,
         )
         assert entry.components.hrv is None
+
+
+class TestSyncSource:
+    def test_valid_ok(self):
+        s = SyncSource(
+            name="strava",
+            last_synced_at=datetime(2026, 4, 13, 8, 0, tzinfo=timezone.utc),
+            status="ok",
+        )
+        assert s.name == "strava"
+        assert s.status == "ok"
+
+    def test_invalid_name_raises(self):
+        with pytest.raises(ValidationError):
+            SyncSource(
+                name="garmin",
+                last_synced_at=datetime(2026, 4, 13, tzinfo=timezone.utc),
+                status="ok",
+            )
+
+    def test_invalid_status_raises(self):
+        with pytest.raises(ValidationError):
+            SyncSource(
+                name="terra",
+                last_synced_at=datetime(2026, 4, 13, tzinfo=timezone.utc),
+                status="pending",
+            )
+
+
+class TestAthleteMetrics:
+    def test_minimal(self):
+        m = AthleteMetrics(date=date(2026, 4, 13))
+        assert m.hrv_rmssd is None
+        assert m.acwr is None
+        assert m.hrv_history_7d == []
+
+    def test_full(self):
+        m = AthleteMetrics(
+            date=date(2026, 4, 13),
+            hrv_rmssd=65.4,
+            hrv_history_7d=[60.0, 62.0, 65.4, 58.0, 70.0, 64.0, 65.4],
+            sleep_hours=7.5,
+            sleep_quality_score=82.0,
+            resting_hr=48.0,
+            acwr=1.1,
+            acwr_status="safe",
+            readiness_score=87.0,
+            fatigue_score=FatigueScore(
+                local_muscular=20.0, cns_load=15.0,
+                metabolic_cost=18.0, recovery_hours=24.0, affected_muscles=[],
+            ),
+        )
+        assert m.hrv_rmssd == 65.4
+        assert m.acwr_status == "safe"
+        assert len(m.hrv_history_7d) == 7
+
+    def test_invalid_acwr_status_raises(self):
+        with pytest.raises(ValidationError):
+            AthleteMetrics(date=date(2026, 4, 13), acwr_status="warning")

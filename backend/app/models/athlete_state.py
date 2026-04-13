@@ -12,6 +12,8 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
+from ..schemas.fatigue import FatigueScore
+
 # ---------------------------------------------------------------------------
 # Types littéraux partagés
 # ---------------------------------------------------------------------------
@@ -203,6 +205,44 @@ _AGENT_VIEWS: dict[str, list[str] | str] = {
         "acwr",
     ],
 }
+
+
+# ---------------------------------------------------------------------------
+# SyncSource  (metadata sur la dernière sync par connecteur)
+# ---------------------------------------------------------------------------
+
+SyncSourceName = Literal["strava", "hevy", "terra", "manual"]
+SyncStatus = Literal["ok", "error", "stale"]
+
+
+class SyncSource(BaseModel):
+    """Tracks the last successful sync for one external data source."""
+
+    name: SyncSourceName
+    last_synced_at: datetime
+    status: SyncStatus
+
+
+# ---------------------------------------------------------------------------
+# AthleteMetrics  (valeurs brutes Terra + métriques calculées)
+# ---------------------------------------------------------------------------
+
+
+class AthleteMetrics(BaseModel):
+    """Raw connector values + derived metrics for today."""
+
+    date: date
+    # Raw Terra
+    hrv_rmssd: Optional[float] = None
+    hrv_history_7d: list[float] = Field(default_factory=list)
+    sleep_hours: Optional[float] = None
+    sleep_quality_score: Optional[float] = Field(default=None, ge=0.0, le=100.0)
+    resting_hr: Optional[float] = None
+    # Computed
+    acwr: Optional[float] = None
+    acwr_status: Optional[Literal["safe", "caution", "danger"]] = None
+    readiness_score: Optional[float] = Field(default=None, ge=0.0, le=100.0)
+    fatigue_score: Optional[FatigueScore] = None
 
 
 def get_agent_view(state: AthleteStateV3, agent: str) -> list[str] | str:
