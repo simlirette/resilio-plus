@@ -8,14 +8,21 @@ import pytest
 from pydantic import ValidationError
 
 from app.models.athlete_state import (
+    AgentView,
     AllostaticComponents,
     AllostaticEntry,
+    AthleteMetrics,
+    AthleteState,
     AthleteStateV3,
+    ConnectorSnapshot,
     EnergySnapshot,
     HormonalProfile,
+    PlanSnapshot,
     RecoveryVetoV3,
+    SyncSource,
     get_agent_view,
 )
+from app.schemas.athlete import AthleteProfile, Sport
 
 
 # ---------------------------------------------------------------------------
@@ -424,65 +431,98 @@ class TestAthleteStateV3:
 # ---------------------------------------------------------------------------
 
 class TestGetAgentView:
-    def _make_state(self) -> AthleteStateV3:
-        return AthleteStateV3(
+    def _make_state(self) -> AthleteState:
+        profile = AthleteProfile(
+            name="ViewTest",
+            age=30,
+            sex="F",
+            weight_kg=65.0,
+            height_cm=170.0,
+            sports=[Sport.RUNNING],
+            primary_sport=Sport.RUNNING,
+            goals=["marathon_sub4"],
+            available_days=[1, 3, 5],
+            hours_per_week=8.0,
+        )
+        metrics = AthleteMetrics(
+            date=date(2026, 4, 10),
+            hrv_rmssd=60.0,
+        )
+        recovery = RecoveryVetoV3(
+            status="green",
+            hrv_component="green",
+            acwr_component="green",
+            ea_component="green",
+            allostatic_component="green",
+            final_intensity_cap=1.0,
+            veto_triggered=False,
+            veto_reasons=[],
+        )
+        energy = EnergySnapshot(
+            timestamp=datetime(2026, 4, 10, tzinfo=timezone.utc),
+            allostatic_score=20.0,
+            cognitive_load=25.0,
+            energy_availability=50.0,
+            sleep_quality=85.0,
+            recommended_intensity_cap=1.0,
+            veto_triggered=False,
+        )
+        hormonal = HormonalProfile(
+            enabled=True,
+            tracking_source="manual",
+            current_phase="follicular",
+        )
+        return AthleteState(
             athlete_id="athlete-view-test",
-            recovery_coach_veto=RecoveryVetoV3(
-                status="green",
-                hrv_component="green",
-                acwr_component="green",
-                ea_component="green",
-                allostatic_component="green",
-                final_intensity_cap=1.0,
-                veto_triggered=False,
-                veto_reasons=[],
-            ),
-            energy_snapshot=EnergySnapshot(
-                timestamp=datetime(2026, 4, 10, tzinfo=timezone.utc),
-                allostatic_score=20.0,
-                cognitive_load=25.0,
-                energy_availability=50.0,
-                sleep_quality=85.0,
-                recommended_intensity_cap=1.0,
-                veto_triggered=False,
-            ),
-            hormonal_profile=HormonalProfile(
-                enabled=True,
-                tracking_source="manual",
-                current_phase="follicular",
-            ),
+            last_synced_at=datetime(2026, 4, 10, tzinfo=timezone.utc),
+            profile=profile,
+            metrics=metrics,
+            connectors=ConnectorSnapshot(),
+            plan=PlanSnapshot(),
+            recovery=recovery,
+            energy=energy,
+            hormonal=hormonal,
         )
 
     def test_head_coach_gets_full_access(self):
         state = self._make_state()
         view = get_agent_view(state, "head_coach")
-        assert view == "FULL"
+        assert isinstance(view, AgentView)
+        assert view.agent == "head_coach"
+        assert view.profile is not None
+        assert view.metrics is not None
+        assert view.energy is not None
+        assert view.hormonal is not None
 
-    def test_energy_coach_gets_v3_fields(self):
+    def test_energy_agent_gets_v3_fields(self):
         state = self._make_state()
-        view = get_agent_view(state, "energy_coach")
-        assert "energy_snapshot" in view
-        assert "hormonal_profile" in view
-        assert "allostatic_history" in view
-        assert "sleep_data" in view
-        assert "nutrition_summary" in view
+        view = get_agent_view(state, "energy")
+        assert isinstance(view, AgentView)
+        assert view.energy is not None
+        assert view.hormonal is not None
+        assert view.metrics is not None
 
-    def test_recovery_coach_gets_extended_v3_fields(self):
+    def test_recovery_agent_gets_extended_v3_fields(self):
         state = self._make_state()
-        view = get_agent_view(state, "recovery_coach")
-        assert "energy_snapshot" in view       # new V3
-        assert "hormonal_profile" in view      # new V3
-        assert "hrv_data" in view
-        assert "acwr" in view
+        view = get_agent_view(state, "recovery")
+        assert isinstance(view, AgentView)
+        assert view.energy is not None        # new V3
+        assert view.hormonal is not None      # new V3
+        assert view.metrics is not None
+        assert view.recovery is not None
 
-    def test_nutrition_coach_gets_ea_and_hormones(self):
+    def test_nutrition_agent_gets_ea_and_hormones(self):
         state = self._make_state()
-        view = get_agent_view(state, "nutrition_coach")
-        assert "energy_snapshot" in view       # EA en temps réel
-        assert "hormonal_profile" in view      # besoins par phase
-        assert "nutrition_profile" in view
+        view = get_agent_view(state, "nutrition")
+        assert isinstance(view, AgentView)
+        assert view.energy is not None        # EA en temps réel
+        assert view.hormonal is not None      # besoins par phase
+        assert view.profile is not None
 
-    def test_unknown_agent_returns_empty(self):
+    def test_unknown_agent_returns_empty_view(self):
         state = self._make_state()
         view = get_agent_view(state, "unknown_agent")
-        assert view == []
+        assert isinstance(view, AgentView)
+        assert view.agent == "unknown_agent"
+        assert view.profile is None
+        assert view.energy is None

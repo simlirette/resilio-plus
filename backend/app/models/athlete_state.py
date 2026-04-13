@@ -1,16 +1,24 @@
-"""AthleteState V3 — Nouveaux modèles Pydantic.
+"""AthleteState V1 — Source de vérité unique pour les données athlète.
 
-Ajoute : EnergySnapshot, HormonalProfile, AllostaticEntry, RecoveryVetoV3, AthleteStateV3
-Étend  : get_agent_view() avec les vues V3 (energy_coach, recovery_coach, nutrition_coach)
+Modèles principaux :
+  AthleteState      — agrégat racine (9 sections)
+  AgentView         — vue filtrée typée par agent
+  get_agent_view()  — matrice d'accès pour 8 agents
 
-Référence : docs/resilio-v3-master.md — sections 3.2, 4.3, 5.2, 7.1, 7.2
+Sous-modèles :
+  SyncSource, AthleteMetrics, ConnectorSnapshot, PlanSnapshot,
+  AllostaticSummary, DailyJournal, AllostaticComponents, EnergyCheckIn
+
+Modèles V3 conservés (compatibilité) :
+  EnergySnapshot, HormonalProfile, AllostaticEntry, RecoveryVetoV3,
+  AthleteStateV3 (déprécié — utiliser AthleteState)
 """
 from __future__ import annotations
 
 from datetime import date, datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from ..schemas.athlete import AthleteProfile
 from ..schemas.connector import HevyWorkout, StravaActivity
@@ -142,6 +150,7 @@ class RecoveryVetoV3(BaseModel):
 # ---------------------------------------------------------------------------
 
 
+# DEPRECATED: Use AthleteState instead. Kept for V3 compatibility.
 class AthleteStateV3(BaseModel):
     """Extension V3 de l'AthleteState.
 
@@ -157,57 +166,6 @@ class AthleteStateV3(BaseModel):
     hormonal_profile: Optional[HormonalProfile] = None
     allostatic_history: list[AllostaticEntry] = Field(default_factory=list)
     recovery_coach_veto: RecoveryVetoV3
-
-
-# ---------------------------------------------------------------------------
-# get_agent_view()  (section 7.2)
-# ---------------------------------------------------------------------------
-
-_AGENT_VIEWS: dict[str, list[str] | str] = {
-    "head_coach": "FULL",
-    "energy_coach": [
-        "energy_snapshot",
-        "hormonal_profile",
-        "allostatic_history",
-        "sleep_data",
-        "nutrition_summary",
-    ],
-    "recovery_coach": [
-        "hrv_data",
-        "sleep_data",
-        "acwr",
-        "energy_snapshot",      # nouveau V3
-        "hormonal_profile",     # nouveau V3
-        "fatigue_snapshots",
-    ],
-    "nutrition_coach": [
-        "nutrition_profile",
-        "training_today",
-        "energy_snapshot",      # EA en temps réel
-        "hormonal_profile",     # besoins nutritionnels par phase
-        "body_composition",
-    ],
-    # Agents inchangés vs V2 — vues minimales non étendues
-    "running_coach": [
-        "training_today",
-        "acwr",
-        "vdot",
-        "fatigue_snapshots",
-    ],
-    "lifting_coach": [
-        "training_today",
-        "acwr",
-        "fatigue_snapshots",
-    ],
-    "swimming_coach": [
-        "training_today",
-        "acwr",
-    ],
-    "biking_coach": [
-        "training_today",
-        "acwr",
-    ],
-}
 
 
 # ---------------------------------------------------------------------------
@@ -335,11 +293,52 @@ class AthleteState(BaseModel):
     journal: Optional[DailyJournal] = None
 
 
-def get_agent_view(state: AthleteStateV3, agent: str) -> list[str] | str:
-    """Retourne la vue autorisée pour un agent donné.
+# ---------------------------------------------------------------------------
+# AgentView + get_agent_view()  (section 7.2)
+# ---------------------------------------------------------------------------
 
-    - head_coach → "FULL" (accès complet)
-    - agents connus → liste de clés
-    - agent inconnu → []
+
+class AgentView(BaseModel):
+    """Typed filtered view of AthleteState for a specific agent.
+
+    Only sections the agent is authorized to see are populated.
+    All other sections are None. extra="forbid" prevents unauthorized access.
     """
-    return _AGENT_VIEWS.get(agent, [])
+
+    model_config = ConfigDict(extra="forbid")
+
+    agent: str
+    profile: Optional[AthleteProfile] = None
+    metrics: Optional[AthleteMetrics] = None
+    connectors: Optional[ConnectorSnapshot] = None
+    plan: Optional[PlanSnapshot] = None
+    energy: Optional[EnergySnapshot] = None
+    recovery: Optional[RecoveryVetoV3] = None
+    hormonal: Optional[HormonalProfile] = None
+    allostatic: Optional[AllostaticSummary] = None
+    journal: Optional[DailyJournal] = None
+
+
+_AGENT_VIEWS: dict[str, set[str]] = {
+    "head_coach": {"profile", "metrics", "connectors", "plan", "energy", "recovery", "hormonal", "allostatic", "journal"},
+    "running":    {"profile", "metrics", "connectors", "plan", "hormonal"},
+    "lifting":    {"profile", "metrics", "connectors", "plan", "hormonal"},
+    "swimming":   {"profile", "metrics", "connectors", "plan"},
+    "biking":     {"profile", "metrics", "connectors", "plan"},
+    "nutrition":  {"profile", "plan", "energy", "hormonal"},
+    "recovery":   {"profile", "metrics", "connectors", "plan", "energy", "recovery", "hormonal", "allostatic", "journal"},
+    "energy":     {"profile", "metrics", "energy", "recovery", "hormonal", "allostatic", "journal"},
+}
+
+
+def get_agent_view(state: AthleteState, agent: str) -> AgentView:
+    """Return a typed filtered view of AthleteState for the given agent.
+
+    - Known agents → populated sections per _AGENT_VIEWS matrix
+    - Unknown agents → AgentView with all sections None
+    """
+    allowed = _AGENT_VIEWS.get(agent, set())
+    return AgentView(
+        agent=agent,
+        **{k: getattr(state, k) for k in allowed},
+    )
