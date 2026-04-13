@@ -91,3 +91,39 @@ def test_test_fixture_is_idempotent(db_session):
 
     count = db_session.query(AthleteModel).filter_by(id=TEST_ATHLETE_ID).count()
     assert count == 1
+
+
+def test_alice_inserts_expected_rows(db_session):
+    from scripts.seed_data.alice import insert_alice, ALICE_ID
+    from app.db.models import (
+        AthleteModel, UserModel, TrainingPlanModel,
+        SessionLogModel, WeeklyReviewModel, NutritionPlanModel,
+    )
+    from app.models.schemas import (
+        AllostaticEntryModel, EnergySnapshotModel,
+        HormonalProfileModel, HeadCoachMessageModel,
+    )
+
+    insert_alice(db_session)
+    db_session.flush()
+
+    assert db_session.get(AthleteModel, ALICE_ID) is not None
+    assert db_session.query(UserModel).filter_by(athlete_id=ALICE_ID).count() == 1
+    assert db_session.query(TrainingPlanModel).filter_by(athlete_id=ALICE_ID).count() == 1
+    assert db_session.query(NutritionPlanModel).filter_by(athlete_id=ALICE_ID).count() == 1
+    assert db_session.query(SessionLogModel).filter_by(athlete_id=ALICE_ID).count() == 35
+    assert db_session.query(AllostaticEntryModel).filter_by(athlete_id=ALICE_ID).count() == 28
+    assert db_session.query(EnergySnapshotModel).filter_by(athlete_id=ALICE_ID).count() == 14
+    assert db_session.query(WeeklyReviewModel).filter_by(athlete_id=ALICE_ID).count() == 2
+    assert db_session.query(HormonalProfileModel).filter_by(athlete_id=ALICE_ID).count() == 1
+    assert db_session.query(HeadCoachMessageModel).filter_by(athlete_id=ALICE_ID).count() == 1
+
+
+def test_alice_is_idempotent(db_session):
+    from scripts.seed_data.alice import insert_alice, ALICE_ID
+    from app.db.models import AthleteModel
+
+    insert_alice(db_session)
+    insert_alice(db_session)
+    db_session.flush()
+    assert db_session.query(AthleteModel).filter_by(id=ALICE_ID).count() == 1
