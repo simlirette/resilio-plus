@@ -7,6 +7,9 @@ from ..core.recovery_logic import compute_recovery_status
 from ..schemas.athlete import Sport
 from ..schemas.fatigue import FatigueScore
 from ..schemas.plan import WorkoutSlot
+from .prompts import RECOVERY_COACH_PROMPT
+
+_SYSTEM_PROMPT = RECOVERY_COACH_PROMPT
 
 _LOW_READINESS_THRESHOLD = 0.7
 
