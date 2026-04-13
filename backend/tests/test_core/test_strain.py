@@ -108,9 +108,9 @@ def test_no_history_returns_all_zeros():
     """No activities → EWMA_28d == 0 → all scores == 0.0."""
     from app.core.strain import compute_muscle_strain
     result = compute_muscle_strain([], [], reference_date=TODAY)
-    assert result.quads == 0.0
-    assert result.posterior_chain == 0.0
-    assert result.core == 0.0
+    for field in ["quads", "posterior_chain", "glutes", "calves", "chest",
+                  "upper_pull", "shoulders", "triceps", "biceps", "core"]:
+        assert getattr(result, field) == 0.0, f"{field} should be 0.0 with no history"
 
 
 def test_score_is_bounded_0_to_100():
@@ -138,6 +138,7 @@ def test_result_has_computed_at():
     from app.core.strain import compute_muscle_strain
     result = compute_muscle_strain([], [], reference_date=TODAY)
     assert isinstance(result.computed_at, datetime)
+    assert result.computed_at.tzinfo is not None, "computed_at must be timezone-aware"
 
 
 def test_recent_activity_scores_higher_than_old():

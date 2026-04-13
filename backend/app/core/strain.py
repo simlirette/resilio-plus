@@ -16,7 +16,7 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta, timezone
 
 from ..models.athlete_state import MuscleStrainScore
-from ..schemas.connector import HevyWorkout, StravaActivity
+from ..schemas.connector import HevySet, HevyWorkout, StravaActivity
 
 # ---------------------------------------------------------------------------
 # Muscle groups
@@ -180,7 +180,7 @@ def _ewma(loads: list[float], lam: float) -> float:
     return result
 
 
-def _rpe_fallback(sets: list, exercise_default: float = 7.0) -> list[float]:
+def _rpe_fallback(sets: list["HevySet"], exercise_default: float = 7.0) -> list[float]:
     """Return RPE for each set using cascade: set RPE → exercise avg → 7.0."""
     available = [s.rpe for s in sets if s.rpe is not None]
     exercise_avg = sum(available) / len(available) if available else exercise_default
@@ -254,8 +254,9 @@ def compute_muscle_strain(
     # --- Normalise to 0–100 ---
     scores: dict[str, float] = {}
     for m in MUSCLES:
-        acute = _ewma(daily[m], _LAMBDA_7D)
-        chronic = _ewma(daily[m], _LAMBDA_28D)
+        # Both EWMAs run over the full 28-day series; λ controls the effective window.
+        acute = _ewma(daily[m], _LAMBDA_7D)    # λ=0.25 weights recent days heavily
+        chronic = _ewma(daily[m], _LAMBDA_28D)  # λ≈0.069 weights load over ~28 days
         if chronic <= 0.0:
             scores[m] = 0.0
         else:
