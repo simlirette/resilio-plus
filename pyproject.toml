@@ -32,12 +32,16 @@ dependencies = [
 
 [project.scripts]
 resilio = "resilio.cli:app"
+db-migrate   = "scripts.db_commands:migrate"
+db-seed      = "scripts.db_commands:seed_dev"
+db-seed-test = "scripts.db_commands:seed_test"
+db-reset     = "scripts.db_commands:reset"
 
 [project.urls]
 Repository = "https://github.com/du-phan/resilio-app"
 
 [tool.poetry]
-packages = [{include = "resilio"}]
+packages = [{include = "resilio"}, {include = "scripts", from = "backend"}]
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4"
