@@ -29,7 +29,7 @@
 | T-pace volume cap | weekly_mileage | max_T_volume = weekly_mileage × 10% | Single continuous T run also capped `[ref: §2 T-Pace]` |
 | I-pace volume cap | weekly_mileage | max_I_volume = min(10 km, weekly_mileage × 8%) | Per session `[ref: §2 I-Pace]` |
 | R-pace volume cap | weekly_mileage | max_R_volume = min(8 km, weekly_mileage × 5%) | Per session `[ref: §2 R-Pace]` |
-| Long run cap | weekly_mileage | max_long = min(weekly_mileage × 25-30%, 150 min) | 150 min = practical cap `[ref: §2 L-Pace]` |
+| Long run cap | weekly_mileage | max_long = min(weekly_mileage × 25-30%, 150 min) | 150 min (2.5 h) duration cap; % cap of weekly_mileage also applies `[ref: §2 L-Pace]` |
 | VDOT break — short | pre_break_VDOT, break_days (6-28) | adjusted_VDOT = pre_break_VDOT × 0.93-0.99 | `[ref: Table 9.2]` |
 | VDOT break — long | pre_break_VDOT, cross_trained (bool) | adjusted_VDOT = pre_break_VDOT × 0.80-0.92 | For break > 8 weeks `[ref: Table 9.2]` |
 
@@ -64,11 +64,13 @@
 - IF runner has no recent race time AND has a recent mile time THEN use mile race pace as R-pace for 400m repetitions `[ref: §3 Pace Selection Logic]`
 - IF runner has no recent race time AND has a recent mile time THEN calculate I-pace as R-pace − 6 s/400m AND T-pace as I-pace − 6 s/400m (6-Second Rule) `[ref: §3 Pace Selection Logic]`
 - IF VDOT is in the 40-50 range AND using 6-Second Rule THEN use 7-8 seconds per 400m instead of 6 seconds `[ref: §3 Pace Selection Logic]`
+- IF VDOT > 50 AND using 6-Second Rule THEN use exactly 6 seconds per 400m `[ref: §3 Pace Selection Logic]`
 - IF runner is a novice with very slow performance THEN use Table 5.3 to determine R, I, T, and M paces based on their Mile or 5K time `[ref: §3 Pace Selection Logic]`
 
 ### Progression Logic
 
-- IF runner completes 4-6 weeks of consistent training at a given VDOT level AND workouts begin to feel easier THEN a new race to recalculate VDOT is warranted `[ref: §3 Progression Logic]`
+- IF weekly_mileage_target > previous_week_mileage × 1.10 THEN cap weekly_mileage_target at previous_week_mileage × 1.10 `[ref: §2 Volume Progression]`
+- IF runner completes 4-6 weeks of consistent training at a given VDOT level THEN a new race to recalculate VDOT is warranted `[ref: §3 Progression Logic]`
 - IF runner completes a new race AND achieves a better time THEN recalculate VDOT based on the new performance AND adjust all training paces accordingly `[ref: §3 Progression Logic]`
 - IF a new race performance occurs within 3-4 weeks of the last VDOT update THEN note the result but do NOT update training paces until the adaptation period has elapsed `[ref: §3 Progression Logic]`
 
@@ -88,6 +90,12 @@
 - IF returning from a break of more than 8 weeks THEN follow a structured multi-week return plan: 3 weeks at 33% load, 3 weeks at 50% load, with mileage caps `[ref: §3 Scaling & Return-to-Running Logic]`
 - IF returning from a break of more than 8 weeks THEN reduce VDOT to ~80-92% of pre-break VDOT per Table 9.2, depending on whether cross-training was maintained `[ref: §3 Scaling & Return-to-Running Logic]`
 
+### Warm-Up / Cool-Down Guardrails
+
+- IF generating T, I, or R workout THEN prepend 10-15 min E-pace warm-up `[ref: §2 Workout Structure]`
+- IF generating I or R workout THEN include 4-6 strides at R-pace after warm-up and before first quality rep `[ref: §2 Workout Structure]`
+- IF generating T, I, or R workout THEN append 10-15 min E-pace cool-down `[ref: §2 Workout Structure]`
+
 ### Guardrail Rules (§2 and §4)
 
 - IF total_T_volume_in_session > weekly_mileage × 10% THEN reduce T volume to cap `[ref: §2 T-Pace]`
@@ -104,9 +112,10 @@
 - Do NOT run I-pace work bouts > 5 min — stimulus shifts away from VO2max `[ref: §2 I-Pace, Figure 4.3]`
 - Do NOT run R-pace work bouts > 2 min — neuromuscular purpose degrades; form suffers `[ref: §2 R-Pace]`
 - Do NOT train when sick or injured — no exceptions `[ref: §0, §1]`
-- Phase III (I-pace) can be skipped for short seasons (< 9 weeks) — go Phase II → Phase IV directly `[ref: §5]`
+- Phase III (I-pace) can be skipped for very short seasons — compress all 4 phases proportionally when total season < 24 weeks; skip Phase III entirely only when season length makes a full 6-week I-phase impossible `[ref: §5]`
 - Altitude ≥ 7,000 ft: R_pace unchanged but increase recovery; T_pace and I_pace by effort only, not target pace `[ref: §3]`
 - VDOT 6-Second Rule uses 7-8s/400m for VDOT 40-50 range, not 6s `[ref: §3]`
+- Break duration 29-56 days: no explicit Daniels protocol; apply VDOT × 0.93 (minimum short-break decay) and use structured return at 33-50% load until fitness confirmed by race or workout `[ref: Table 9.2 — gap in source]`
 
 ---
 
