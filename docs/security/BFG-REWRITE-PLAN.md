@@ -35,6 +35,19 @@ cd resilio-plus-mirror.git
 
 ## Step 3 — Run BFG to delete the file from history
 
+**⚠️ CRITICAL: BFG's `--delete-files` matches on filename only, not the full path.**
+
+Before running BFG, verify there is **only one file** with the name `2026-04-05-session3-connectors.md` in the entire git history. If multiple files with the same name exist in different directories, BFG will delete all of them.
+
+**Pre-check command:**
+```bash
+git log --all -- "docs/superpowers/plans/2026-04-05-session3-connectors.md" | head -5
+```
+
+Expected: commits containing only this file. If the output shows multiple different paths, abort and clarify with BFG's `--filter-by-pathspec` or other options.
+
+---
+
 The target file is `docs/superpowers/plans/2026-04-05-session3-connectors.md`.
 
 ```bash
@@ -77,11 +90,31 @@ git push --force
 
 ## Step 7 — Update local clone
 
-Back in your working copy (`C:\Users\simon\resilio-plus`):
+**⚠️ PREREQUISITE: Ensure your working copy is clean before proceeding.**
+
+Before running the reset, verify there are no uncommitted changes:
+
+```bash
+git status
+```
+
+Expected: `working tree clean` (no staged or unstaged changes).
+
+If you have uncommitted work:
+```bash
+git stash
+```
+
+Then proceed with the reset:
 
 ```bash
 git fetch --all
 git reset --hard origin/main
+```
+
+After the reset succeeds, restore any stashed work:
+```bash
+git stash pop
 ```
 
 ---

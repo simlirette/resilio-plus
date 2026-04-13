@@ -12,7 +12,7 @@ Run through this checklist before opening a PR or pushing to main.
 - [ ] `.env` is **not** staged: `git status` shows it as untracked or gitignored
 - [ ] New secrets added to `.env.example` with `CHANGEME` placeholder
 - [ ] **Primary check:** `gitleaks detect --source . --log-opts="--all"` (required before every push)
-- [ ] **Supplemental check:** `git diff --staged | grep -iE "sk-ant|client_secret=[a-f0-9]|api_key=[a-f0-9-]{30}"`
+- [ ] **Supplemental check:** `git diff --staged | grep -iE "sk-ant|client_secret=[a-f0-9]{20,}|api_key=[a-f0-9-]{32,}"`
 
 ### After any new credential exposure (however it happened)
 1. Rotate the credential immediately in the external dashboard

@@ -38,18 +38,28 @@ The key `fe874ad5-90b6-437a-ad0b-81162c850400` was committed to GitHub in commit
 
 ---
 
-### Action 3 — Update `.env` with new credentials
+### Action 3 — Verify `.env` after rotation
 
-After Actions 1 and 2 are complete and new credentials are available:
+**Prerequisites:** Actions 1 and 2 must be complete, and both new credentials must be available in your `.env` file (updated during Actions 1–2).
+
+This is an explicit verification step to confirm the new credentials are in place and accessible.
 
 **Steps:**
-1. Open `.env` (local, gitignored)
-2. Replace `STRAVA_CLIENT_SECRET` with the new secret from Action 1 (Strava Developer Portal)
-3. Replace `HEVY_API_KEY` with the new key from Action 2 (Hevy Developer Portal)
-4. Verify both values are set and non-empty: `grep -E "^(STRAVA_CLIENT_SECRET|HEVY_API_KEY)=" .env`
-5. **Do not commit** `.env` — it is gitignored and should remain local only
+1. Verify both new credentials are set and non-empty:
+   ```bash
+   grep -E "^(STRAVA_CLIENT_SECRET|HEVY_API_KEY)=" .env
+   ```
+   Expected output:
+   ```
+   STRAVA_CLIENT_SECRET=<new_40_char_hex_string>
+   HEVY_API_KEY=<new_uuid_format_key>
+   ```
 
-**Verify:** Test the new credentials by making a single API call to each service (e.g., fetch Strava athlete profile, query Hevy workouts).
+2. (Optional) Test the new credentials by making a single API call to each service:
+   - Fetch Strava athlete profile (requires valid OAuth)
+   - Query Hevy workouts (requires valid API key)
+
+3. Confirm: `.env` is gitignored and remains local only (never committed).
 
 ---
 
