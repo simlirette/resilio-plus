@@ -224,6 +224,10 @@ packages/*/node_modules/
 apps/*/node_modules/
 pnpm-debug.log*
 
+# Next.js
+.next/
+out/
+
 # Resilio - LOCAL DATA (NEVER COMMIT)
 data/*
 !data/.gitkeep
