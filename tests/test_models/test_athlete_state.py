@@ -54,6 +54,11 @@ class TestAllostaticComponents:
         with pytest.raises(ValidationError):
             AllostaticComponents(sleep=-1.0)
 
+    def test_unknown_fields_are_ignored(self):
+        # Pydantic v2 default: extra fields are ignored, not rejected.
+        c = AllostaticComponents(hrv=50.0, unknown_key=99.0)
+        assert not hasattr(c, "unknown_key")
+
     def test_allostatic_entry_accepts_components_model(self):
         entry = AllostaticEntry(
             date=date(2026, 4, 10),
