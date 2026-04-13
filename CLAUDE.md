@@ -80,7 +80,8 @@ class FatigueScore:
 | `backend/app/core/` | Stateless logic: ACWR, fatigue, periodization, conflict, goal_analysis, running/lifting/swimming/biking/nutrition/recovery, **strain** | Phase 7 |
 | `backend/app/routes/` | FastAPI routers: auth, onboarding, athletes, plans, reviews, sessions, nutrition, recovery, connectors | Phase 7-8 |
 | `backend/app/schemas/` | Pydantic models: athlete, plan, fatigue, nutrition, session_log, review | Phase 7-8 |
-| `backend/app/db/` | SQLAlchemy models (7 tables) + SQLite engine | Phase 2+ |
+| `backend/app/db/` | SQLAlchemy models + PostgreSQL engine | Phase 2+ |
+| `backend/scripts/` | DB CLI entry points (migrate, seed, reset) + seed personas (Alice, Marc) | V3-K |
 | `backend/app/connectors/` | Strava, Hevy, Terra, FatSecret (class) | Phase 2+ |
 | `frontend/src/app/` | Next.js pages: login, onboarding, dashboard, plan, review, session/[id], history | Phase 4-8 |
 | `frontend/src/components/` | TopNav, ProtectedRoute, shadcn/ui components | Phase 4+ |
@@ -111,8 +112,9 @@ class FatigueScore:
 | V3-H | E2E tests 2-volet + CLAUDE.md final | ✅ Complete (S-7) |
 | V3-I | Agent system prompts (`prompts.py`) — 6 agents, clinical tone, hard limits | ✅ Complete (2026-04-13) |
 | V3-J | Muscle Strain Index — `MuscleStrainScore`, `compute_muscle_strain()`, 20 tests | ✅ Complete (2026-04-13) |
+| V3-K | DB Migrations + Seed Data (Docker db-test, 4 CLI commands, Alice + Marc personas, db_session fixture) | ✅ Complete (2026-04-13) |
 
-**Dernières phases complétées (2026-04-13) :** Agent system prompts centralisés + Muscle Strain Index livré. 2021 tests passing.
+**Dernières phases complétées (2026-04-13) :** Agent system prompts centralisés + Muscle Strain Index + DB Migrations & Seed Data livrés. 2021 tests passing.
 
 **Dernières phases complétées (2026-04-12) :** Backend V3 finalisé — architecture 2-volets opérationnelle, 35 tests E2E, mode switch validé, invariants modularité prouvés. Voir `BACKEND_V3_COMPLETE.md` pour l'état consolidé.
 
@@ -186,6 +188,7 @@ Never increase total weekly load >10% in one step (applies across ALL sports com
 - **Phase 8 Design**: `docs/superpowers/specs/2026-04-10-phase8-design.md`
 - **Coaching Methodology**: `docs/coaching/methodology.md`
 - **Strain Index ADR**: `docs/backend/STRAIN-DEFINITION.md`
+- **Database Guide**: `docs/backend/DATABASE.md`
 - **Agent Prompts Spec**: `docs/superpowers/specs/2026-04-13-agent-prompts-design.md`
 - **Muscle Strain Spec**: `docs/superpowers/specs/2026-04-13-muscle-strain-design.md`
 - **Master V2 (archivé)**: `docs/archive/resilio-master-v2_archived_2026-04-12.md`
