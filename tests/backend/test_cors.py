@@ -58,4 +58,4 @@ def test_cors_blocked_origin(client):
             "Access-Control-Request-Method": "GET",
         },
     )
-    assert resp.headers.get("access-control-allow-origin") != "http://evil.com"
+    assert "access-control-allow-origin" not in resp.headers
