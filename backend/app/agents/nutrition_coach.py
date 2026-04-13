@@ -4,6 +4,9 @@ from ..agents.base import AgentContext, AgentRecommendation, BaseAgent
 from ..core.hormonal import get_nutrition_adjustments
 from ..core.nutrition_logic import compute_nutrition_directives
 from ..schemas.fatigue import FatigueScore
+from .prompts import NUTRITION_COACH_PROMPT
+
+_SYSTEM_PROMPT = NUTRITION_COACH_PROMPT
 
 
 class NutritionCoach(BaseAgent):
