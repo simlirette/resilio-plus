@@ -4,7 +4,8 @@ from datetime import date, datetime, timezone
 import pytest
 from pydantic import ValidationError
 
-from app.models.athlete_state import AllostaticComponents, AllostaticEntry, AthleteMetrics, EnergyCheckIn, SyncSource
+from app.models.athlete_state import AllostaticComponents, AllostaticEntry, AthleteMetrics, ConnectorSnapshot, EnergyCheckIn, SyncSource
+from app.schemas.connector import HevyWorkout, StravaActivity
 from app.schemas.fatigue import FatigueScore
 
 
@@ -146,3 +147,52 @@ class TestAthleteMetrics:
     def test_invalid_acwr_status_raises(self):
         with pytest.raises(ValidationError):
             AthleteMetrics(date=date(2026, 4, 13), acwr_status="warning")
+
+
+def _make_strava() -> StravaActivity:
+    return StravaActivity(
+        id="strava_1",
+        name="Morning run",
+        sport_type="Run",
+        date=date(2026, 4, 12),
+        duration_seconds=3600,
+    )
+
+
+def _make_hevy() -> HevyWorkout:
+    return HevyWorkout(
+        id="hevy_1",
+        title="Upper A",
+        date=date(2026, 4, 11),
+        duration_seconds=3600,
+        exercises=[],
+    )
+
+
+class TestConnectorSnapshot:
+    def test_empty(self):
+        cs = ConnectorSnapshot()
+        assert cs.strava_last_activity is None
+        assert cs.strava_activities_7d == []
+        assert cs.hevy_last_workout is None
+        assert cs.hevy_workouts_7d == []
+        assert cs.terra_last_sync is None
+
+    def test_with_strava(self):
+        activity = _make_strava()
+        cs = ConnectorSnapshot(
+            strava_last_activity=activity,
+            strava_activities_7d=[activity],
+            strava_last_sync=datetime(2026, 4, 13, 6, 0, tzinfo=timezone.utc),
+        )
+        assert cs.strava_last_activity.id == "strava_1"
+        assert len(cs.strava_activities_7d) == 1
+
+    def test_with_hevy(self):
+        workout = _make_hevy()
+        cs = ConnectorSnapshot(
+            hevy_last_workout=workout,
+            hevy_workouts_7d=[workout],
+            hevy_last_sync=datetime(2026, 4, 13, 6, 0, tzinfo=timezone.utc),
+        )
+        assert cs.hevy_last_workout.id == "hevy_1"

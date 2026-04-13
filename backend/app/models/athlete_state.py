@@ -12,6 +12,7 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
+from ..schemas.connector import HevyWorkout, StravaActivity
 from ..schemas.fatigue import FatigueScore
 
 # ---------------------------------------------------------------------------
@@ -243,6 +244,23 @@ class AthleteMetrics(BaseModel):
     acwr_status: Optional[Literal["safe", "caution", "danger"]] = None
     readiness_score: Optional[float] = Field(default=None, ge=0.0, le=100.0)
     fatigue_score: Optional[FatigueScore] = None
+
+
+# ---------------------------------------------------------------------------
+# ConnectorSnapshot  (dernière synchro des connecteurs)
+# ---------------------------------------------------------------------------
+
+
+class ConnectorSnapshot(BaseModel):
+    """Last known data from all external connectors."""
+
+    strava_last_activity: Optional[StravaActivity] = None
+    strava_activities_7d: list[StravaActivity] = Field(default_factory=list)
+    hevy_last_workout: Optional[HevyWorkout] = None
+    hevy_workouts_7d: list[HevyWorkout] = Field(default_factory=list)
+    terra_last_sync: Optional[datetime] = None
+    strava_last_sync: Optional[datetime] = None
+    hevy_last_sync: Optional[datetime] = None
 
 
 def get_agent_view(state: AthleteStateV3, agent: str) -> list[str] | str:
