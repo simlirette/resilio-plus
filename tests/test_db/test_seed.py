@@ -127,3 +127,58 @@ def test_alice_is_idempotent(db_session):
     insert_alice(db_session)
     db_session.flush()
     assert db_session.query(AthleteModel).filter_by(id=ALICE_ID).count() == 1
+
+
+def test_marc_inserts_expected_rows(db_session):
+    from scripts.seed_data.marc import insert_marc, MARC_ID
+    from app.db.models import (
+        AthleteModel, UserModel, TrainingPlanModel,
+        SessionLogModel, WeeklyReviewModel, ConnectorCredentialModel,
+    )
+    from app.models.schemas import AllostaticEntryModel, EnergySnapshotModel
+
+    insert_marc(db_session)
+    db_session.flush()
+
+    assert db_session.get(AthleteModel, MARC_ID) is not None
+    assert db_session.query(UserModel).filter_by(athlete_id=MARC_ID).count() == 1
+    assert db_session.query(ConnectorCredentialModel).filter_by(athlete_id=MARC_ID).count() == 1
+    assert db_session.query(TrainingPlanModel).filter_by(athlete_id=MARC_ID).count() == 1
+    assert db_session.query(SessionLogModel).filter_by(athlete_id=MARC_ID).count() == 41
+    assert db_session.query(AllostaticEntryModel).filter_by(athlete_id=MARC_ID).count() == 28
+    assert db_session.query(EnergySnapshotModel).filter_by(athlete_id=MARC_ID).count() == 14
+    assert db_session.query(WeeklyReviewModel).filter_by(athlete_id=MARC_ID).count() == 2
+
+
+def test_marc_is_idempotent(db_session):
+    from scripts.seed_data.marc import insert_marc, MARC_ID
+    from app.db.models import AthleteModel
+
+    insert_marc(db_session)
+    insert_marc(db_session)
+    db_session.flush()
+    assert db_session.query(AthleteModel).filter_by(id=MARC_ID).count() == 1
+
+
+def test_seed_dev_inserts_both_athletes(db_session):
+    """seed_dev inserts Alice and Marc without errors."""
+    from scripts.seed_data.alice import insert_alice, ALICE_ID
+    from scripts.seed_data.marc import insert_marc, MARC_ID
+    from app.db.models import AthleteModel
+
+    insert_alice(db_session)
+    insert_marc(db_session)
+    db_session.flush()
+
+    assert db_session.query(AthleteModel).filter_by(id=ALICE_ID).count() == 1
+    assert db_session.query(AthleteModel).filter_by(id=MARC_ID).count() == 1
+
+
+def test_db_reset_guard_requires_confirm(monkeypatch):
+    """reset() exits with code 1 if --confirm not in argv."""
+    import sys
+    monkeypatch.setattr(sys, "argv", ["db-reset"])
+    with pytest.raises(SystemExit) as exc_info:
+        from scripts.db_commands import reset
+        reset()
+    assert exc_info.value.code == 1
