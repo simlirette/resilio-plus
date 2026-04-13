@@ -233,6 +233,11 @@ config/secrets.local.yaml
 *.backup
 .env.local
 
+# Local SQLite databases (should not exist — PostgreSQL is used — but just in case)
+*.db
+*.sqlite
+data/resilio.db
+
 # Documentation build artifacts
 docs/artifacts/
 

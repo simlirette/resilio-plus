@@ -15,6 +15,17 @@ services:
     ports:
       - "5432:5432"
 
+  db-test:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: resilio
+      POSTGRES_PASSWORD: resilio
+      POSTGRES_DB: resilio_test
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+
   backend:
     build:
       context: .
