@@ -194,7 +194,7 @@ class MuscleStrainScore(BaseModel):
 
     Computed as EWMA_7d / EWMA_28d × 100 (capped at 100).
     0 = no recent load or insufficient history.
-    100 = acute load equals chronic baseline (fully loaded).
+    100 = acute load matches chronic baseline (ACWR = 1.0, healthy peak load).
     """
 
     quads: float = Field(default=0.0, ge=0.0, le=100.0)

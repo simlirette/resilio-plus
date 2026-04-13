@@ -63,10 +63,10 @@ def test_muscle_strain_score_below_zero_raises():
         )
 
 
-def test_muscle_strain_score_computed_at_is_datetime():
+def test_muscle_strain_score_computed_at_required():
     from app.models.athlete_state import MuscleStrainScore
-    s = MuscleStrainScore(computed_at=datetime(2026, 4, 13, 8, 0, tzinfo=timezone.utc))
-    assert isinstance(s.computed_at, datetime)
+    with pytest.raises(ValidationError):
+        MuscleStrainScore()  # no computed_at
 
 
 def test_athlete_metrics_muscle_strain_defaults_none():
@@ -86,3 +86,14 @@ def test_athlete_metrics_accepts_muscle_strain():
     m = AthleteMetrics(date=date(2026, 4, 13), muscle_strain=strain)
     assert m.muscle_strain is not None
     assert m.muscle_strain.quads == 50.0
+
+
+def test_muscle_strain_score_boundary_values_are_valid():
+    from app.models.athlete_state import MuscleStrainScore
+    s = MuscleStrainScore(
+        quads=0.0,
+        core=100.0,
+        computed_at=datetime(2026, 4, 13, tzinfo=timezone.utc),
+    )
+    assert s.quads == 0.0
+    assert s.core == 100.0
