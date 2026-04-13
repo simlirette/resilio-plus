@@ -12,6 +12,7 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
+from ..schemas.athlete import AthleteProfile
 from ..schemas.connector import HevyWorkout, StravaActivity
 from ..schemas.fatigue import FatigueScore
 from ..schemas.plan import WorkoutSlot
@@ -302,6 +303,36 @@ class DailyJournal(BaseModel):
     check_in: Optional[EnergyCheckIn] = None
     comment: Optional[str] = Field(default=None, max_length=2000)
     mood_score: Optional[int] = Field(default=None, ge=1, le=10)
+
+
+# ---------------------------------------------------------------------------
+# AthleteState  (source de vérité unique — section 7.1)
+# ---------------------------------------------------------------------------
+
+
+class AthleteState(BaseModel):
+    """Single source of truth for all athlete data.
+
+    Persisted snapshot — refreshed on every sync, falls back to last known
+    version when connectors are unavailable.
+    """
+
+    athlete_id: str
+    last_synced_at: datetime
+    sync_sources: list[SyncSource] = Field(default_factory=list)
+
+    # Domain sections
+    profile: AthleteProfile
+    metrics: AthleteMetrics
+    connectors: ConnectorSnapshot
+    plan: PlanSnapshot
+    recovery: RecoveryVetoV3
+
+    # Optional sections
+    energy: Optional[EnergySnapshot] = None
+    hormonal: Optional[HormonalProfile] = None
+    allostatic: AllostaticSummary = Field(default_factory=AllostaticSummary)
+    journal: Optional[DailyJournal] = None
 
 
 def get_agent_view(state: AthleteStateV3, agent: str) -> list[str] | str:

@@ -9,13 +9,17 @@ from app.models.athlete_state import (
     AllostaticEntry,
     AllostaticSummary,
     AthleteMetrics,
+    AthleteState,
     ConnectorSnapshot,
     DailyJournal,
     EnergyCheckIn,
+    EnergySnapshot,
+    HormonalProfile,
     PlanSnapshot,
+    RecoveryVetoV3,
     SyncSource,
 )
-from app.schemas.athlete import Sport
+from app.schemas.athlete import AthleteProfile, Sport
 from app.schemas.connector import HevyWorkout, StravaActivity
 from app.schemas.fatigue import FatigueScore
 from app.schemas.plan import WorkoutSlot
@@ -287,3 +291,99 @@ class TestDailyJournal:
     def test_mood_above_10_raises(self):
         with pytest.raises(ValidationError):
             DailyJournal(date=date(2026, 4, 13), mood_score=11)
+
+
+def _make_athlete_profile() -> AthleteProfile:
+    return AthleteProfile(
+        name="Alice",
+        age=28,
+        sex="F",
+        weight_kg=60.0,
+        height_cm=168.0,
+        sports=[Sport.RUNNING, Sport.LIFTING],
+        primary_sport=Sport.RUNNING,
+        goals=["marathon_sub4"],
+        available_days=[1, 3, 5, 6],
+        hours_per_week=8.0,
+    )
+
+
+def _make_veto() -> RecoveryVetoV3:
+    return RecoveryVetoV3(
+        status="green",
+        hrv_component="green",
+        acwr_component="green",
+        ea_component="green",
+        allostatic_component="green",
+        final_intensity_cap=1.0,
+        veto_triggered=False,
+        veto_reasons=[],
+    )
+
+
+class TestAthleteState:
+    def test_minimal_valid(self):
+        state = AthleteState(
+            athlete_id="athlete-001",
+            last_synced_at=datetime(2026, 4, 13, 8, 0, tzinfo=timezone.utc),
+            sync_sources=[],
+            profile=_make_athlete_profile(),
+            metrics=AthleteMetrics(date=date(2026, 4, 13)),
+            connectors=ConnectorSnapshot(),
+            plan=PlanSnapshot(),
+            recovery=_make_veto(),
+            allostatic=AllostaticSummary(),
+        )
+        assert state.athlete_id == "athlete-001"
+        assert state.energy is None
+        assert state.hormonal is None
+        assert state.journal is None
+
+    def test_with_all_optional_sections(self):
+        snap = EnergySnapshot(
+            timestamp=datetime(2026, 4, 13, 8, 0, tzinfo=timezone.utc),
+            allostatic_score=30.0,
+            cognitive_load=25.0,
+            energy_availability=45.0,
+            sleep_quality=80.0,
+            recommended_intensity_cap=1.0,
+            veto_triggered=False,
+        )
+        hormonal = HormonalProfile(enabled=True, tracking_source="manual", current_phase="follicular")
+        journal = DailyJournal(
+            date=date(2026, 4, 13),
+            check_in=EnergyCheckIn(work_intensity="normal", stress_level="none"),
+            comment="Good day.",
+            mood_score=8,
+        )
+        state = AthleteState(
+            athlete_id="athlete-002",
+            last_synced_at=datetime(2026, 4, 13, 8, 0, tzinfo=timezone.utc),
+            sync_sources=[SyncSource(
+                name="strava",
+                last_synced_at=datetime(2026, 4, 13, 8, 0, tzinfo=timezone.utc),
+                status="ok",
+            )],
+            profile=_make_athlete_profile(),
+            metrics=AthleteMetrics(date=date(2026, 4, 13), hrv_rmssd=65.0, acwr=1.1, acwr_status="safe"),
+            connectors=ConnectorSnapshot(),
+            plan=PlanSnapshot(week_number=3, phase="build"),
+            energy=snap,
+            recovery=_make_veto(),
+            hormonal=hormonal,
+            allostatic=AllostaticSummary(trend="improving", avg_score_7d=32.0),
+            journal=journal,
+        )
+        assert state.energy.allostatic_score == 30.0
+        assert state.hormonal.current_phase == "follicular"
+        assert state.journal.mood_score == 8
+        assert state.plan.phase == "build"
+
+    def test_missing_required_field_raises(self):
+        with pytest.raises(ValidationError):
+            AthleteState(
+                athlete_id="athlete-003",
+                last_synced_at=datetime(2026, 4, 13, tzinfo=timezone.utc),
+                sync_sources=[],
+                # missing profile, metrics, connectors, plan, recovery
+            )
