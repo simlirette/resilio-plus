@@ -30,6 +30,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 All agents live in `backend/app/agents/`. The `_agent_factory.py` builds the active agent list dynamically from the athlete's sports profile.
 
+System prompts for all 6 active agents are centralized in `backend/app/agents/prompts.py` (constants: `HEAD_COACH_PROMPT`, `RUNNING_COACH_PROMPT`, `LIFTING_COACH_PROMPT`, `RECOVERY_COACH_PROMPT`, `NUTRITION_COACH_PROMPT`, `ENERGY_COACH_PROMPT`). Clinical tone, zero encouragement, hard limits per agent. Recovery and Energy prompts contain non-overridable veto rules.
+
+### Muscle Strain Index
+
+`AthleteMetrics.muscle_strain: Optional[MuscleStrainScore]` — per-muscle-group fatigue score (0–100, 10 axes: quads, posterior_chain, glutes, calves, chest, upper_pull, shoulders, triceps, biceps, core).
+
+Computed by `backend/app/core/strain.py` → `compute_muscle_strain(strava_activities, hevy_workouts, reference_date)`:
+- Formula: `min(100, EWMA_7d / EWMA_28d × 100)`, capped at 100, = 0 when EWMA_28d == 0
+- Cardio: `base_au = hours × IF² × 100` (IF = RPE/10, TSS-equivalent)
+- Lifting: `set_load = weight_kg × reps × (rpe/10)`, distributed via `EXERCISE_MUSCLE_MAP`
+- See `docs/backend/STRAIN-DEFINITION.md` for full ADR
+
+**Radar chart thresholds:** 0–69% green, 70–84% orange, 85–100% red.
+
 ### Unified Fatigue Score (Head Coach Language)
 
 All agents communicate via a shared `FatigueScore` (`backend/app/schemas/fatigue.py`):
@@ -63,7 +77,7 @@ class FatigueScore:
 | `resilio/` | Legacy Python CLI — read-only | Existing |
 | `resilio/core/vdot/` | VDOT calculator — reused by Running Coach | Existing |
 | `backend/app/agents/` | 7 coaching agents + base class | Phase 7 |
-| `backend/app/core/` | Stateless logic: ACWR, fatigue, periodization, conflict, goal_analysis, running/lifting/swimming/biking/nutrition/recovery | Phase 7 |
+| `backend/app/core/` | Stateless logic: ACWR, fatigue, periodization, conflict, goal_analysis, running/lifting/swimming/biking/nutrition/recovery, **strain** | Phase 7 |
 | `backend/app/routes/` | FastAPI routers: auth, onboarding, athletes, plans, reviews, sessions, nutrition, recovery, connectors | Phase 7-8 |
 | `backend/app/schemas/` | Pydantic models: athlete, plan, fatigue, nutrition, session_log, review | Phase 7-8 |
 | `backend/app/db/` | SQLAlchemy models (7 tables) + SQLite engine | Phase 2+ |
@@ -95,6 +109,10 @@ class FatigueScore:
 | V3-F | detect_energy_patterns() + challenges proactifs | ✅ Complete (S-4) |
 | V3-G | Frontend check-in + energy card + tracking page | ✅ Complete (S-5 + S-6) |
 | V3-H | E2E tests 2-volet + CLAUDE.md final | ✅ Complete (S-7) |
+| V3-I | Agent system prompts (`prompts.py`) — 6 agents, clinical tone, hard limits | ✅ Complete (2026-04-13) |
+| V3-J | Muscle Strain Index — `MuscleStrainScore`, `compute_muscle_strain()`, 20 tests | ✅ Complete (2026-04-13) |
+
+**Dernières phases complétées (2026-04-13) :** Agent system prompts centralisés + Muscle Strain Index livré. 2021 tests passing.
 
 **Dernières phases complétées (2026-04-12) :** Backend V3 finalisé — architecture 2-volets opérationnelle, 35 tests E2E, mode switch validé, invariants modularité prouvés. Voir `BACKEND_V3_COMPLETE.md` pour l'état consolidé.
 
@@ -139,7 +157,7 @@ The Running Coach has the richest existing knowledge base.
 4. **Frequent atomic commits** — one commit per logical task
 5. **Verify invariants after every task**:
    - `poetry install` must succeed
-   - `pytest tests/` must pass (≥1847 passing — état S-7)
+   - `pytest tests/` must pass (≥2021 passing — état V3-J)
    - `npx tsc --noEmit` (frontend) must have no errors
 
 **pytest path (Windows):** `C:\Users\simon\AppData\Local\pypoetry\Cache\virtualenvs\resilio-8kDCl3fk-py3.13\Scripts\pytest.exe`
@@ -167,6 +185,9 @@ Never increase total weekly load >10% in one step (applies across ALL sports com
 - **Architecture Modulaire 2-Volets**: `docs/superpowers/specs/2026-04-11-modular-architecture-design.md`
 - **Phase 8 Design**: `docs/superpowers/specs/2026-04-10-phase8-design.md`
 - **Coaching Methodology**: `docs/coaching/methodology.md`
+- **Strain Index ADR**: `docs/backend/STRAIN-DEFINITION.md`
+- **Agent Prompts Spec**: `docs/superpowers/specs/2026-04-13-agent-prompts-design.md`
+- **Muscle Strain Spec**: `docs/superpowers/specs/2026-04-13-muscle-strain-design.md`
 - **Master V2 (archivé)**: `docs/archive/resilio-master-v2_archived_2026-04-12.md`
 
 ---
