@@ -10,6 +10,9 @@ from ..core.running_logic import (
     compute_running_fatigue, estimate_vdot, generate_running_sessions,
 )
 from ..schemas.athlete import Sport
+from .prompts import RUNNING_COACH_PROMPT
+
+_SYSTEM_PROMPT = RUNNING_COACH_PROMPT
 
 
 class RunningCoach(BaseAgent):
