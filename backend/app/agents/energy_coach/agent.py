@@ -29,7 +29,7 @@ from ...core.energy_availability import (
     detect_reds_risk,
     get_ea_status,
 )
-from ...models.athlete_state import EnergyCheckIn, EnergySnapshot
+from ...models.athlete_state import EnergyCheckIn, EnergySnapshot, StressLevel, WorkIntensity
 
 
 # ---------------------------------------------------------------------------
@@ -73,8 +73,8 @@ class EnergyCoach:
         self,
         hrv_deviation: float,
         sleep_quality: float,
-        work_intensity: str,
-        stress_level: str,
+        work_intensity: WorkIntensity,
+        stress_level: StressLevel,
         cycle_phase: Optional[str],
         ea_status: str,
     ) -> float:
@@ -94,8 +94,8 @@ class EnergyCoach:
 
     def assess_cognitive_load(
         self,
-        work_intensity: str,
-        stress_level: str,
+        work_intensity: WorkIntensity,
+        stress_level: StressLevel,
     ) -> float:
         """Évalue la charge cognitive normalisée 0-100.
 
