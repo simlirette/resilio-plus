@@ -30,6 +30,9 @@ from ...core.energy_availability import (
     get_ea_status,
 )
 from ...models.athlete_state import EnergyCheckIn, EnergySnapshot, StressLevel, WorkIntensity
+from ..prompts import ENERGY_COACH_PROMPT
+
+_SYSTEM_PROMPT = ENERGY_COACH_PROMPT
 
 
 # ---------------------------------------------------------------------------
