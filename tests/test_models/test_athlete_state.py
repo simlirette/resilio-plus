@@ -4,7 +4,17 @@ from datetime import date, datetime, timezone
 import pytest
 from pydantic import ValidationError
 
-from app.models.athlete_state import AllostaticComponents, AllostaticEntry, AllostaticSummary, AthleteMetrics, ConnectorSnapshot, DailyJournal, EnergyCheckIn, PlanSnapshot, SyncSource
+from app.models.athlete_state import (
+    AllostaticComponents,
+    AllostaticEntry,
+    AllostaticSummary,
+    AthleteMetrics,
+    ConnectorSnapshot,
+    DailyJournal,
+    EnergyCheckIn,
+    PlanSnapshot,
+    SyncSource,
+)
 from app.schemas.athlete import Sport
 from app.schemas.connector import HevyWorkout, StravaActivity
 from app.schemas.fatigue import FatigueScore
@@ -132,7 +142,7 @@ class TestAthleteMetrics:
             hrv_rmssd=65.4,
             hrv_history_7d=[60.0, 62.0, 65.4, 58.0, 70.0, 64.0, 65.4],
             sleep_hours=7.5,
-            sleep_quality_score=82.0,
+            terra_sleep_score=82.0,
             resting_hr=48.0,
             acwr=1.1,
             acwr_status="safe",
@@ -178,14 +188,12 @@ class TestConnectorSnapshot:
         assert cs.strava_activities_7d == []
         assert cs.hevy_last_workout is None
         assert cs.hevy_workouts_7d == []
-        assert cs.terra_last_sync is None
 
     def test_with_strava(self):
         activity = _make_strava()
         cs = ConnectorSnapshot(
             strava_last_activity=activity,
             strava_activities_7d=[activity],
-            strava_last_sync=datetime(2026, 4, 13, 6, 0, tzinfo=timezone.utc),
         )
         assert cs.strava_last_activity.id == "strava_1"
         assert len(cs.strava_activities_7d) == 1
@@ -195,7 +203,6 @@ class TestConnectorSnapshot:
         cs = ConnectorSnapshot(
             hevy_last_workout=workout,
             hevy_workouts_7d=[workout],
-            hevy_last_sync=datetime(2026, 4, 13, 6, 0, tzinfo=timezone.utc),
         )
         assert cs.hevy_last_workout.id == "hevy_1"
 

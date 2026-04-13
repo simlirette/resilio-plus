@@ -238,7 +238,7 @@ class AthleteMetrics(BaseModel):
     hrv_rmssd: Optional[float] = None
     hrv_history_7d: list[float] = Field(default_factory=list)
     sleep_hours: Optional[float] = None
-    sleep_quality_score: Optional[float] = Field(default=None, ge=0.0, le=100.0)
+    terra_sleep_score: Optional[float] = Field(default=None, ge=0.0, le=100.0)
     resting_hr: Optional[float] = None
     # Computed
     acwr: Optional[float] = None
@@ -259,9 +259,6 @@ class ConnectorSnapshot(BaseModel):
     strava_activities_7d: list[StravaActivity] = Field(default_factory=list)
     hevy_last_workout: Optional[HevyWorkout] = None
     hevy_workouts_7d: list[HevyWorkout] = Field(default_factory=list)
-    terra_last_sync: Optional[datetime] = None
-    strava_last_sync: Optional[datetime] = None
-    hevy_last_sync: Optional[datetime] = None
 
 
 # ---------------------------------------------------------------------------
@@ -290,7 +287,7 @@ class AllostaticSummary(BaseModel):
 
     history_28d: list[AllostaticEntry] = Field(default_factory=list)
     trend: AllostaticTrend = "stable"
-    avg_score_7d: float = 0.0
+    avg_score_7d: float = Field(default=0.0, ge=0.0, le=100.0)
 
 
 # ---------------------------------------------------------------------------
@@ -303,7 +300,7 @@ class DailyJournal(BaseModel):
 
     date: date
     check_in: Optional[EnergyCheckIn] = None
-    comment: Optional[str] = None
+    comment: Optional[str] = Field(default=None, max_length=2000)
     mood_score: Optional[int] = Field(default=None, ge=1, le=10)
 
 
