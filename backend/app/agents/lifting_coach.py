@@ -10,6 +10,9 @@ from ..core.lifting_logic import (
 from ..core.periodization import get_current_phase
 from ..core.readiness import compute_readiness
 from ..schemas.athlete import Sport
+from .prompts import LIFTING_COACH_PROMPT
+
+_SYSTEM_PROMPT = LIFTING_COACH_PROMPT
 
 
 class LiftingCoach(BaseAgent):
