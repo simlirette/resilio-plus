@@ -10,6 +10,9 @@ from ..core.conflict import Conflict, ConflictSeverity, detect_conflicts
 from ..core.fatigue import GlobalFatigue, aggregate_fatigue
 from ..core.periodization import PeriodizationPhase, get_current_phase
 from ..schemas.plan import WorkoutSlot
+from .prompts import HEAD_COACH_PROMPT
+
+_SYSTEM_PROMPT = HEAD_COACH_PROMPT
 
 
 @dataclass
