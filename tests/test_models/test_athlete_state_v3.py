@@ -8,6 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from app.models.athlete_state import (
+    AllostaticComponents,
     AllostaticEntry,
     AthleteStateV3,
     EnergySnapshot,
@@ -231,7 +232,7 @@ class TestAllostaticEntry:
             intensity_cap_applied=0.85,
         )
         assert entry.allostatic_score == 55.0
-        assert entry.components["work"] == 65.0
+        assert entry.components.work == 65.0
         assert entry.intensity_cap_applied == 0.85
 
     def test_score_bounds(self):
@@ -401,7 +402,7 @@ class TestAthleteStateV3:
             AllostaticEntry(
                 date=date(2026, 4, i),
                 allostatic_score=float(30 + i),
-                components={"hrv": 20.0},
+                components=AllostaticComponents(hrv=20.0),
                 intensity_cap_applied=1.0,
             )
             for i in range(1, 8)

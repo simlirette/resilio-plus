@@ -76,6 +76,22 @@ class HormonalProfile(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# AllostaticComponents  (section 5.2 / 7.1)
+# ---------------------------------------------------------------------------
+
+
+class AllostaticComponents(BaseModel):
+    """Six sub-scores contributing to the daily allostatic score (each 0–100)."""
+
+    hrv: Optional[float] = Field(default=None, ge=0.0, le=100.0)
+    sleep: Optional[float] = Field(default=None, ge=0.0, le=100.0)
+    work: Optional[float] = Field(default=None, ge=0.0, le=100.0)
+    stress: Optional[float] = Field(default=None, ge=0.0, le=100.0)
+    cycle: Optional[float] = Field(default=None, ge=0.0, le=100.0)
+    ea: Optional[float] = Field(default=None, ge=0.0, le=100.0)
+
+
+# ---------------------------------------------------------------------------
 # AllostaticEntry  (section 5.2 / 7.1)
 # ---------------------------------------------------------------------------
 
@@ -89,7 +105,7 @@ class AllostaticEntry(BaseModel):
 
     date: date
     allostatic_score: float = Field(..., ge=0.0, le=100.0)
-    components: dict  # {"hrv": float, "sleep": float, ...}
+    components: AllostaticComponents
     intensity_cap_applied: float = Field(..., ge=0.0, le=1.0)
 
 
