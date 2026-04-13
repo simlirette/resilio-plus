@@ -293,6 +293,20 @@ class AllostaticSummary(BaseModel):
     avg_score_7d: float = 0.0
 
 
+# ---------------------------------------------------------------------------
+# DailyJournal  (check-in structuré + commentaire libre)
+# ---------------------------------------------------------------------------
+
+
+class DailyJournal(BaseModel):
+    """Daily athlete journal: structured check-in + free-text comment."""
+
+    date: date
+    check_in: Optional[EnergyCheckIn] = None
+    comment: Optional[str] = None
+    mood_score: Optional[int] = Field(default=None, ge=1, le=10)
+
+
 def get_agent_view(state: AthleteStateV3, agent: str) -> list[str] | str:
     """Retourne la vue autorisée pour un agent donné.
 

@@ -4,7 +4,7 @@ from datetime import date, datetime, timezone
 import pytest
 from pydantic import ValidationError
 
-from app.models.athlete_state import AllostaticComponents, AllostaticEntry, AllostaticSummary, AthleteMetrics, ConnectorSnapshot, EnergyCheckIn, PlanSnapshot, SyncSource
+from app.models.athlete_state import AllostaticComponents, AllostaticEntry, AllostaticSummary, AthleteMetrics, ConnectorSnapshot, DailyJournal, EnergyCheckIn, PlanSnapshot, SyncSource
 from app.schemas.athlete import Sport
 from app.schemas.connector import HevyWorkout, StravaActivity
 from app.schemas.fatigue import FatigueScore
@@ -253,3 +253,30 @@ class TestAllostaticSummary:
         s = AllostaticSummary(history_28d=entries, trend="improving", avg_score_7d=34.0)
         assert len(s.history_28d) == 7
         assert s.trend == "improving"
+
+
+class TestDailyJournal:
+    def test_minimal(self):
+        j = DailyJournal(date=date(2026, 4, 13))
+        assert j.check_in is None
+        assert j.comment is None
+        assert j.mood_score is None
+
+    def test_full(self):
+        j = DailyJournal(
+            date=date(2026, 4, 13),
+            check_in=EnergyCheckIn(work_intensity="normal", stress_level="mild"),
+            comment="Felt tired after yesterday's long run.",
+            mood_score=7,
+        )
+        assert j.check_in.work_intensity == "normal"
+        assert j.comment == "Felt tired after yesterday's long run."
+        assert j.mood_score == 7
+
+    def test_mood_below_1_raises(self):
+        with pytest.raises(ValidationError):
+            DailyJournal(date=date(2026, 4, 13), mood_score=0)
+
+    def test_mood_above_10_raises(self):
+        with pytest.raises(ValidationError):
+            DailyJournal(date=date(2026, 4, 13), mood_score=11)
