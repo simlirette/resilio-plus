@@ -44,7 +44,7 @@
 | I-pace work bout (min) | 3 | min | Per repetition `[ref: §2 I-Pace]` |
 | I-pace work bout (max) | 5 | min | Per repetition `[ref: §2 I-Pace]` |
 | R-pace work bout (max) | 2 | min | Per repetition `[ref: §2 R-Pace]` |
-| I-pace recovery duration | ≥ work bout duration | min | Equal or slightly less `[ref: §2 I-Pace]` |
+| I-pace recovery duration | ≥ work bout duration | min | Equal to work bout duration; never less `[ref: §2 I-Pace]` |
 | R-pace recovery duration | 2-3× work bout duration | min | Near-full recovery required `[ref: §2 R-Pace]` |
 | Phase length (ideal) | 6 | weeks | Compress if season < 24 weeks `[ref: §5]` |
 | VDOT update minimum interval | 3-4 | weeks | Between updates `[ref: §3]` |
