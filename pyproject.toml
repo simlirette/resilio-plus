@@ -72,3 +72,6 @@ select = ["E", "F", "I", "N", "W"]
 [tool.pytest.ini_options]
 pythonpath = ["backend"]
 testpaths = ["tests"]
+markers = [
+    "db_integration: marks tests that require a live PostgreSQL test instance (port 5433)",
+]
