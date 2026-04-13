@@ -4,9 +4,11 @@ from datetime import date, datetime, timezone
 import pytest
 from pydantic import ValidationError
 
-from app.models.athlete_state import AllostaticComponents, AllostaticEntry, AthleteMetrics, ConnectorSnapshot, EnergyCheckIn, SyncSource
+from app.models.athlete_state import AllostaticComponents, AllostaticEntry, AllostaticSummary, AthleteMetrics, ConnectorSnapshot, EnergyCheckIn, PlanSnapshot, SyncSource
+from app.schemas.athlete import Sport
 from app.schemas.connector import HevyWorkout, StravaActivity
 from app.schemas.fatigue import FatigueScore
+from app.schemas.plan import WorkoutSlot
 
 
 class TestEnergyCheckIn:
@@ -196,3 +198,58 @@ class TestConnectorSnapshot:
             hevy_last_sync=datetime(2026, 4, 13, 6, 0, tzinfo=timezone.utc),
         )
         assert cs.hevy_last_workout.id == "hevy_1"
+
+
+def _make_slot() -> WorkoutSlot:
+    return WorkoutSlot(
+        date=date(2026, 4, 14),
+        sport=Sport.RUNNING,
+        workout_type="easy_z1",
+        duration_min=45,
+        fatigue_score=FatigueScore(
+            local_muscular=10.0, cns_load=5.0,
+            metabolic_cost=10.0, recovery_hours=12.0, affected_muscles=[],
+        ),
+    )
+
+
+class TestPlanSnapshot:
+    def test_defaults(self):
+        ps = PlanSnapshot()
+        assert ps.today == []
+        assert ps.week == []
+        assert ps.week_number == 1
+        assert ps.phase == "base"
+
+    def test_with_sessions(self):
+        slot = _make_slot()
+        ps = PlanSnapshot(today=[slot], week=[slot], week_number=3, phase="build")
+        assert len(ps.today) == 1
+        assert ps.week_number == 3
+        assert ps.phase == "build"
+
+
+class TestAllostaticSummary:
+    def test_defaults(self):
+        s = AllostaticSummary()
+        assert s.history_28d == []
+        assert s.trend == "stable"
+        assert s.avg_score_7d == 0.0
+
+    def test_invalid_trend_raises(self):
+        with pytest.raises(ValidationError):
+            AllostaticSummary(trend="worsening")
+
+    def test_with_history(self):
+        entries = [
+            AllostaticEntry(
+                date=date(2026, 4, i),
+                allostatic_score=float(30 + i),
+                components=AllostaticComponents(),
+                intensity_cap_applied=1.0,
+            )
+            for i in range(1, 8)
+        ]
+        s = AllostaticSummary(history_28d=entries, trend="improving", avg_score_7d=34.0)
+        assert len(s.history_28d) == 7
+        assert s.trend == "improving"

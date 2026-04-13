@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 
 from ..schemas.connector import HevyWorkout, StravaActivity
 from ..schemas.fatigue import FatigueScore
+from ..schemas.plan import WorkoutSlot
 
 # ---------------------------------------------------------------------------
 # Types littéraux partagés
@@ -261,6 +262,35 @@ class ConnectorSnapshot(BaseModel):
     terra_last_sync: Optional[datetime] = None
     strava_last_sync: Optional[datetime] = None
     hevy_last_sync: Optional[datetime] = None
+
+
+# ---------------------------------------------------------------------------
+# PlanSnapshot  (plan du jour et de la semaine)
+# ---------------------------------------------------------------------------
+
+
+class PlanSnapshot(BaseModel):
+    """Today's and this week's planned sessions."""
+
+    today: list[WorkoutSlot] = Field(default_factory=list)
+    week: list[WorkoutSlot] = Field(default_factory=list)
+    week_number: int = 1
+    phase: str = "base"
+
+
+# ---------------------------------------------------------------------------
+# AllostaticSummary  (historique 28 jours + tendance)
+# ---------------------------------------------------------------------------
+
+AllostaticTrend = Literal["improving", "stable", "declining"]
+
+
+class AllostaticSummary(BaseModel):
+    """28-day allostatic history with computed trend."""
+
+    history_28d: list[AllostaticEntry] = Field(default_factory=list)
+    trend: AllostaticTrend = "stable"
+    avg_score_7d: float = 0.0
 
 
 def get_agent_view(state: AthleteStateV3, agent: str) -> list[str] | str:
