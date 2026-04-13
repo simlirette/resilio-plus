@@ -29,21 +29,12 @@ from ...core.energy_availability import (
     detect_reds_risk,
     get_ea_status,
 )
-from ...models.athlete_state import EnergySnapshot
+from ...models.athlete_state import EnergyCheckIn, EnergySnapshot
 
 
 # ---------------------------------------------------------------------------
 # Structures de données d'entrée
 # ---------------------------------------------------------------------------
-
-@dataclass
-class EnergyCheckIn:
-    """Résultats du check-in quotidien (max 60 secondes)."""
-
-    work_intensity: str             # "light" | "normal" | "heavy" | "exhausting"
-    stress_level: str               # "none" | "mild" | "significant"
-    cycle_phase: Optional[str] = None  # "menstrual" | "follicular" | "ovulation" | "luteal"
-
 
 @dataclass
 class EnergyInput:

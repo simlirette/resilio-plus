@@ -20,6 +20,18 @@ CyclePhase = Literal["menstrual", "follicular", "ovulation", "luteal"]
 TrafficLight = Literal["green", "yellow", "red"]
 TrackingSource = Literal["manual", "apple_health"]
 
+WorkIntensity = Literal["light", "normal", "heavy", "exhausting"]
+StressLevel = Literal["none", "mild", "significant"]
+
+
+class EnergyCheckIn(BaseModel):
+    """Daily check-in — work load, stress, optional cycle phase."""
+
+    work_intensity: WorkIntensity
+    stress_level: StressLevel
+    cycle_phase: Optional[CyclePhase] = None
+
+
 # ---------------------------------------------------------------------------
 # EnergySnapshot  (section 3.2 / 3.5)
 # ---------------------------------------------------------------------------
