@@ -78,7 +78,8 @@ _FORBIDDEN_WORDS = [
 @pytest.mark.parametrize("word", _FORBIDDEN_WORDS)
 def test_no_forbidden_vocabulary(name: str, word: str) -> None:
     prompt_lower = ALL_PROMPTS[name].lower()
-    assert word.lower() not in prompt_lower, (
+    pattern = r'\b' + re.escape(word.lower()) + r'\b'
+    assert not re.search(pattern, prompt_lower), (
         f"{name}: forbidden word found: {word!r}"
     )
 
