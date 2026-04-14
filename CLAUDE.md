@@ -116,7 +116,10 @@ class FatigueScore:
 | V3-L | Security Audit — CORS whitelist (env-driven), auth on `GET /athletes/`, `.gitignore` hardening, security docs (`docs/security/`) | ✅ Complete (2026-04-13) |
 | V3-M | Book Extractions — 5 running books → structured agent-actionable extracts + INDEX.md (`docs/backend/books/`) | ✅ Complete (2026-04-13) |
 | V3-N | Knowledge JSONs Audit — 9 JSON files enriched (111 rules total, 2→20 per file), common schema, 90 pytest tests, KNOWLEDGE-JSONS.md | ✅ Complete (2026-04-14) |
+| V3-N2 | Knowledge JSONs Enrichment — book extractions as primary source, 9 files re-enriched (111→164 rules), source_books fields populated | ✅ Complete (2026-04-14) |
 | V3-O | Auth System — refresh tokens, SMTP reset, /auth/me, /logout | ✅ Complete (2026-04-14) |
+
+**Dernières phases complétées (2026-04-14) :** Knowledge JSONs V3-N2 livré — 9 fichiers enrichis (164 règles total, +53 vs V3-N), book extractions used as primary source. 90 tests passing.
 
 **Dernières phases complétées (2026-04-14) :** Auth system V3-O livré — refresh tokens rotation, SMTP password reset, /auth/me + /auth/logout. ~2161 tests passing.
 
