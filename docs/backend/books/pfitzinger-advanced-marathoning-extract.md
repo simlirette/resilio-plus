@@ -38,8 +38,8 @@
 | Long run pace (fast bound) | MP | long_run_pace_fast | MP × 1.10 (10% slower than MP) `[ref: §3 Long Run]` |
 | Long run pace (slow bound) | MP | long_run_pace_slow | MP × 1.20 (20% slower than MP) `[ref: §3 Long Run]` |
 | Long run distance cap (% mileage) | weekly_mileage | max_long_run_distance | min(weekly_mileage × 0.29, 22 miles); use whichever is lower `[ref: §3 Long Run]` |
-| GA run pace (slow bound) | Goal MP | MP × 1.15 | 15% slower than goal MP |
-| GA run pace (fast bound) | Goal MP | MP × 1.25 | 25% slower than goal MP |
+| GA run pace (fast bound) | Goal MP | MP × 1.15 | 15% slower than goal MP |
+| GA run pace (slow bound) | Goal MP | MP × 1.25 | 25% slower than goal MP |
 | Weekly volume increase cap (%) | Current weekly mileage | ≤ current_mileage × 0.10 | Hard ceiling: never exceed 10% week-over-week |
 | Weekly volume increase cap (absolute) | Sessions per week, current mileage | ≤ n_sessions × 1 mile added | E.g., 6 sessions/week → max +6 miles; use whichever cap is lower |
 | Taper week 1 volume | Peak weekly mileage | peak × 0.75–0.80 | 20–25% reduction from peak |
