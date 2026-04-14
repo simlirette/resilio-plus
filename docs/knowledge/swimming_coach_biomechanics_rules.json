@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "target_agent": "Swimming Coach",
   "language": "en",
-  "last_updated": "2026-04-13",
+  "last_updated": "2026-04-14",
   "source_books": [],
   "extracted_rules": [
     {
@@ -113,6 +113,72 @@
       "priority": "medium",
       "confidence": "strong",
       "source": "Systematic review: variability of energy cost in breaststroke (original swimming_coach_biomechanics source)",
+      "applies_to": ["swimming"]
+    },
+    {
+      "rule_name": "CSS derivation — worked example for coaching clarity",
+      "category": "Pace Prescription",
+      "condition": "When explaining or computing CSS from a time trial result",
+      "action": "Apply the CSS formula with concrete values to derive pace; express result as min:sec per 100m for usability",
+      "formula_or_value": "CSS formula: CSS_speed (m/s) = (400 − 200) / (T400_sec − T200_sec); example: 400m in 360s, 200m in 160s → CSS = 200 / (360−160) = 200/200 = 1.0 m/s = 1:40/100m; convert to pace: pace_per_100m = 100 / CSS_speed (seconds)",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Wakayoshi et al. 1992 CSS derivation; applied pace prescription for swim coaching",
+      "applies_to": ["swimming"]
+    },
+    {
+      "rule_name": "SWOLF optimization — stroke rate vs distance-per-stroke trade-off",
+      "category": "Technique Monitoring",
+      "condition": "When analyzing a swimmer's SWOLF score to guide technique improvement",
+      "action": "Identify whether high SWOLF is caused by excessive stroke count or slow pace; for distance events, lower stroke count (higher DPS) generally indicates better technique; test both directions",
+      "formula_or_value": "SWOLF = stroke_count_per_length + time_seconds_per_length; to reduce SWOLF: option A = reduce strokes (improve DPS), option B = increase pace (accept higher stroke rate); for distance events: DPS improvement preferred; DPS = pool_length / strokes_per_length",
+      "priority": "medium",
+      "confidence": "moderate",
+      "source": "Swimming efficiency research; Costill et al. stroke mechanics; SWOLF as efficiency index literature",
+      "applies_to": ["swimming"]
+    },
+    {
+      "rule_name": "CSS zone sets — aerobic threshold development protocol",
+      "category": "Training Zones",
+      "condition": "When designing a training set targeting aerobic threshold development in swimming",
+      "action": "Use CSS ±3 seconds per 100m as the aerobic threshold zone; key aerobic set: 6-10 × 100m at CSS pace with 20 seconds rest",
+      "formula_or_value": "CSS threshold zone: CSS pace ±3 sec/100m; aerobic development set: 6-10 × 100m at CSS, 20s rest; total CSS zone volume: 1500-3000m per session; Wakayoshi 1992: CSS is maximal lactate steady state for swimming",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Wakayoshi et al. 1992; Pyne et al. swimming training zones; CSS threshold application research",
+      "applies_to": ["swimming"]
+    },
+    {
+      "rule_name": "Underwater dolphin kick — breakout distance",
+      "category": "Technique Prescription",
+      "condition": "When prescribing or coaching flip turns and push-offs",
+      "action": "Train underwater dolphin kick to 15m breakout post-turn and post-start; underwater dolphin kick is faster than surface freestyle for most trained swimmers at ≤15m",
+      "formula_or_value": "Underwater dolphin kick: faster than surface swimming for distances ≤15m; FINA legal limit: 15m after starts/turns; optimal: 10-15 dolphin kicks post-push-off; kick rate: 2.0-2.5 Hz; train breakout distance progressively",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Biomechanics consensus: underwater dolphin kick efficiency; competitive swimming hydrodynamics research",
+      "applies_to": ["swimming"]
+    },
+    {
+      "rule_name": "Open water vs pool pace adjustment",
+      "category": "Race Tactics",
+      "condition": "When translating pool CSS paces to open-water race pacing targets",
+      "action": "Add 5-8% time penalty for open-water vs pool at equivalent effort; wetsuits provide partial offset; navigation overhead and sighting cost account for the difference",
+      "formula_or_value": "Open water time adjustment: +5-8% vs pool time at same CSS pace; wetsuit effect: approximately −3-5% time (partial offset); combined: open water with wetsuit ≈ +2-4% vs pool; CSS-derived paces require upward adjustment for open water race planning",
+      "priority": "medium",
+      "confidence": "moderate",
+      "source": "Open water vs pool swimming performance research; triathlon swim pacing literature",
+      "applies_to": ["swimming"]
+    },
+    {
+      "rule_name": "Bilateral breathing — aerobic vs high-intensity prescription",
+      "category": "Technique Prescription",
+      "condition": "When prescribing breathing patterns for freestyle swim sets",
+      "action": "Prescribe bilateral breathing (every 3 strokes) for aerobic sessions to improve stroke symmetry; allow unilateral (every 2 strokes) for high-intensity and race efforts where oxygen demand is critical",
+      "formula_or_value": "Aerobic sessions (CSS Zone 1-2): bilateral every 3 strokes; threshold sessions (CSS Zone 3): bilateral preferred, unilateral acceptable; high-intensity/race (CSS Zone 4): every 2 strokes permitted; bilateral breathing reduces stroke asymmetry by training both sides equally",
+      "priority": "medium",
+      "confidence": "moderate",
+      "source": "Swimming biomechanics research; bilateral breathing and stroke balance literature; competitive coaching consensus",
       "applies_to": ["swimming"]
     }
   ]
