@@ -296,7 +296,7 @@ def log_manual_workout(
         raise HTTPException(status_code=404, detail="Athlete not found")
 
     session_id = f"manual-{uuid.uuid4()}"
-    actual_data = {"sport": req.sport.value, "workout_type": req.workout_type, **req.actual_data}
+    actual_data = {**req.actual_data, "sport": req.sport.value, "workout_type": req.workout_type, "date": str(req.date)}
 
     log = SessionLogModel(
         id=str(uuid.uuid4()),
