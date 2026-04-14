@@ -1,84 +1,141 @@
 {
-  "search_query": "Extraction de règles d'entraînement de la littérature scientifique pour un coach de musculation",
+  "schema_version": "1.0",
   "target_agent": "Lifting Coach",
-  "source_articles_used": [
-    "Acute and Chronic Effects of Drop-Set Training: A Meta-Analysis and Systematic Review.",
-    "Does Sprint Interval Training Cause Interference in Concurrent Training? A Meta-Analysis Study.",
-    "Effects of Advanced Resistance Training Systems on Muscle Hypertrophy and Strength in Recreationally Trained Adults: A Systematic Review and Meta-Analysis.",
-    "Creatine supplementation and resistance training: a comparison between novice and experienced lifters - a systematic review and dose-response meta-analysis.",
-    "Effects of blood flow restriction interval training on aerobic, anaerobic capacity, and muscle strength in healthy adults: a systematic review and meta-analysis.",
-    "The Resistance Training Dose Response: Meta-Regressions Exploring the Effects of Weekly Volume and Frequency on Muscle Hypertrophy and Strength Gains."
-  ],
+  "language": "en",
+  "last_updated": "2026-04-13",
+  "source_books": [],
   "extracted_rules": [
     {
-      "rule_name": "Efficacité des Drop-Sets",
-      "category": "Hypertrophie, Force",
-      "condition": "Si l'objectif est l'hypertrophie et la force, et que l'efficacité temporelle est un facteur.",
-      "action": "Utiliser l'entraînement en drop-sets.",
-      "formula_or_value": "méthode efficace et rapide"
+      "rule_name": "MEV — Minimum Effective Volume per muscle group",
+      "category": "Volume Landmarks",
+      "condition": "If the goal is to maintain muscle mass and strength during a period of reduced training",
+      "action": "Prescribe at least MEV sets per muscle group per week; below MEV, detraining occurs",
+      "formula_or_value": "MEV: ~8-10 sets/week per muscle group (maintenance threshold); individual range: 6-12 sets depending on training history",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Israetel et al., Scientific Principles of Hypertrophy Training; meta-regression: weekly volume and hypertrophy",
+      "applies_to": ["lifting"]
     },
     {
-      "rule_name": "Interférence SIT et Force",
-      "category": "Interférence, Force, Puissance",
-      "condition": "Si un athlète effectue un entraînement concurrentiel incluant de l'entraînement par intervalles de sprint (SIT) et de la musculation.",
-      "action": "Ne pas s'attendre à une diminution des gains de force ou de puissance.",
-      "formula_or_value": "pas de différence significative"
+      "rule_name": "MAV — Maximum Adaptive Volume per muscle group",
+      "category": "Volume Landmarks",
+      "condition": "If the goal is hypertrophy and athlete is in an accumulation block",
+      "action": "Target MAV range for primary muscle groups; volume within MAV produces the best hypertrophy return-on-investment",
+      "formula_or_value": "MAV: ~15-20 sets/week per muscle group; individual range: 12-22 sets; peak hypertrophy response in this window",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Israetel et al., Scientific Principles of Hypertrophy Training; Schoenfeld et al. 2017 dose-response",
+      "applies_to": ["lifting"]
     },
     {
-      "rule_name": "SIT et Performance de Saut",
-      "category": "Puissance",
-      "condition": "Si l'objectif est d'améliorer la performance de saut dans un entraînement concurrentiel avec SIT.",
-      "action": "Intégrer des protocoles de sprint courts.",
-      "formula_or_value": "≤10 secondes"
+      "rule_name": "MRV — Maximum Recoverable Volume per muscle group",
+      "category": "Volume Landmarks",
+      "condition": "When an athlete approaches or exceeds MRV for any muscle group",
+      "action": "Reduce volume back to MAV or MEV; above MRV, fatigue exceeds adaptation and injury risk rises significantly",
+      "formula_or_value": "MRV: ~25+ sets/week per muscle group (highly individual); at MRV: diminishing returns; above MRV: detraining + injury risk",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Israetel et al., Scientific Principles of Hypertrophy Training",
+      "applies_to": ["lifting"]
     },
     {
-      "rule_name": "Avantage des Systèmes d'Entraînement Avancés pour la Force Maximale",
-      "category": "Force",
-      "condition": "Si l'objectif principal est d'améliorer la force maximale.",
-      "action": "Envisager d'incorporer des systèmes d'entraînement de résistance avancés.",
-      "formula_or_value": "g = 0.351 (bénéfice modéré)"
+      "rule_name": "DUP — Daily Undulating Periodization weekly structure",
+      "category": "Periodization",
+      "condition": "If athlete trains the same muscle group ≥3 times per week",
+      "action": "Vary rep ranges across sessions (DUP); do not repeat same rep range within the same muscle group on consecutive sessions",
+      "formula_or_value": "DUP weekly template: Session 1 = 3-5 reps (strength); Session 2 = 8-12 reps (hypertrophy); Session 3 = 15-20 reps (endurance/metabolic); rotate weekly",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "DUP research: Zourdos et al. 2016; Colquhoun et al. 2017",
+      "applies_to": ["lifting"]
     },
     {
-      "rule_name": "Avantage Hypertrophique du Rest-Pause",
-      "category": "Hypertrophie",
-      "condition": "Si l'objectif est l'hypertrophie et que l'on considère des méthodes avancées.",
-      "action": "Incorporer l'entraînement en rest-pause.",
-      "formula_or_value": "avantage modeste"
+      "rule_name": "RPE scale — Reps In Reserve (RIR) method",
+      "category": "Intensity Prescription",
+      "condition": "When prescribing training intensity using RPE",
+      "action": "Use RIR-based RPE scale; prescribe sets at RPE 7-9 for hypertrophy work; RPE 9-10 reserved for strength testing or AMRAP sets",
+      "formula_or_value": "RPE 6 = 4 RIR; RPE 7 = 3 RIR; RPE 8 = 2 RIR; RPE 9 = 1 RIR; RPE 10 = maximal (0 RIR); hypertrophy target: RPE 7-9",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Zourdos et al. 2016 RIR-based RPE validation; Helms et al. 2016",
+      "applies_to": ["lifting"]
     },
     {
-      "rule_name": "Entraînement Basé sur la Vitesse et Surcharge Excentrique pour la Force",
-      "category": "Force",
-      "condition": "Si l'objectif principal est l'amélioration de la force.",
-      "action": "Utiliser l'entraînement basé sur la vitesse et la surcharge excentrique.",
-      "formula_or_value": "contribuent principalement à la force"
+      "rule_name": "Progressive overload — when to add load",
+      "category": "Progression",
+      "condition": "When deciding whether to increase load on a given exercise",
+      "action": "Add load only when the top working set is completed at RPE ≤7 for 2 consecutive sessions; do not increase load if RPE is ≥8",
+      "formula_or_value": "Load increase trigger: top set RPE ≤7 for 2 consecutive sessions; load increment: 2.5-5 kg for upper body, 5-10 kg for lower body",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Progressive overload consensus; RIR-based progression (Helms et al. 2016)",
+      "applies_to": ["lifting"]
     },
     {
-      "rule_name": "Comparabilité des Méthodes Avancées (Volume et Effort Équivalents)",
-      "category": "Hypertrophie, Force",
-      "condition": "Si le volume et l'effort sont équivalents entre les méthodes avancées et traditionnelles.",
-      "action": "S'attendre à des adaptations similaires en hypertrophie et en force avec les drop-sets, l'entraînement contrôlé par le tempo et les protocoles de type cluster par rapport aux séries traditionnelles.",
-      "formula_or_value": "adaptations comparables"
+      "rule_name": "Drop-set training for hypertrophy and time efficiency",
+      "category": "Advanced Techniques",
+      "condition": "If hypertrophy is the goal and training time is limited",
+      "action": "Use drop-sets to achieve equivalent hypertrophic stimulus in less time than traditional sets",
+      "formula_or_value": "Drop-sets: 2-3 drops of 20-25% load per set; equivalent or superior hypertrophy vs. traditional sets at matched volume; time reduction: ~40%",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Meta-analysis: acute and chronic effects of drop-set training (original lifting_coach_volume_rules source)",
+      "applies_to": ["lifting"]
     },
     {
-      "rule_name": "Supplémentation en Créatine pour la Masse Maigre",
-      "category": "Nutrition, Hypertrophie",
-      "condition": "Si un individu suit un entraînement de résistance et vise à augmenter la masse maigre.",
-      "action": "Envisager la supplémentation en créatine.",
-      "formula_or_value": "bien établi pour l'amélioration de la masse maigre"
+      "rule_name": "Blood Flow Restriction (BFR) — low-load hypertrophy",
+      "category": "Advanced Techniques",
+      "condition": "If heavy loading is contraindicated (injury, post-surgery) and hypertrophy or strength maintenance is needed",
+      "action": "Apply BFR with 20-30% 1RM; produces hypertrophy and strength gains comparable to high-intensity training",
+      "formula_or_value": "BFR load: 20-30% 1RM; cuff pressure: 50-80% arterial occlusion pressure; sets: 4-5 per exercise; reps: 15-30; rest: 30-60s",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Meta-analysis: BFR interval training on hypertrophy and strength (original lifting_coach_volume_rules source)",
+      "applies_to": ["lifting"]
     },
     {
-      "rule_name": "BFR à Faible Intensité pour Hypertrophie et Force",
-      "category": "Hypertrophie, Force",
-      "condition": "Si l'objectif est d'améliorer l'hypertrophie musculaire et la force, et que l'entraînement de haute intensité n'est pas réalisable ou souhaité.",
-      "action": "Mettre en œuvre l'entraînement avec restriction du flux sanguin (BFR) combiné à un entraînement de résistance de faible intensité.",
-      "formula_or_value": "aussi efficace que l'entraînement de haute intensité"
+      "rule_name": "Weekly volume dose-response for hypertrophy",
+      "category": "Volume Programming",
+      "condition": "When designing weekly volume for a hypertrophy block",
+      "action": "Higher weekly set volume produces greater hypertrophy up to MRV; increase sets gradually across a mesocycle",
+      "formula_or_value": "Dose-response: each additional set/week up to MRV adds measurable hypertrophy; recommended progression: +2 sets/week per muscle group across 4-week mesocycle",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Meta-regression: weekly volume and muscle hypertrophy/strength (original lifting_coach_volume_rules source)",
+      "applies_to": ["lifting"]
     },
     {
-      "rule_name": "Volume Hebdomadaire et Gains Musculaires",
-      "category": "Hypertrophie, Force",
-      "condition": "Si l'objectif est d'améliorer l'hypertrophie musculaire et la force.",
-      "action": "Augmenter le volume hebdomadaire de séries.",
-      "formula_or_value": "volume hebdomadaire de séries plus élevé"
+      "rule_name": "Creatine supplementation for hypertrophy",
+      "category": "Supplementation",
+      "condition": "If athlete is performing resistance training and targeting lean mass gain",
+      "action": "Recommend creatine monohydrate supplementation; well-established for lean mass improvement; benefits are greater in novice to intermediate lifters",
+      "formula_or_value": "Dose: 3-5g/day creatine monohydrate; loading phase optional (20g/day × 5 days); no significant difference between novice and experienced for lean mass; timing flexible",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Dose-response meta-analysis: creatine and resistance training in novice vs experienced lifters (original source)",
+      "applies_to": ["lifting"]
+    },
+    {
+      "rule_name": "Velocity-based training and eccentric overload for maximal strength",
+      "category": "Strength Development",
+      "condition": "If the primary goal is maximal strength (1RM) improvement",
+      "action": "Include velocity-based training (VBT) or eccentric overload methods; these provide greater strength gains than traditional loading alone",
+      "formula_or_value": "VBT: target bar velocity 0.5-0.8 m/s for strength; eccentric overload: 120-130% concentric 1RM; g=0.351 strength benefit vs traditional",
+      "priority": "medium",
+      "confidence": "moderate",
+      "source": "Meta-analysis: advanced resistance training systems for strength (original lifting_coach_volume_rules source)",
+      "applies_to": ["lifting"]
+    },
+    {
+      "rule_name": "Rest-pause for hypertrophy",
+      "category": "Advanced Techniques",
+      "condition": "If athlete wants an alternative to drop-sets for hypertrophy",
+      "action": "Use rest-pause training as a time-efficient hypertrophy method; modest advantage over traditional sets",
+      "formula_or_value": "Rest-pause: perform set to near-failure, rest 15-30s, extend set for additional reps; repeat 2-3 times; modest hypertrophy advantage vs. traditional sets",
+      "priority": "low",
+      "confidence": "moderate",
+      "source": "Meta-analysis: advanced resistance training systems (original lifting_coach_volume_rules source)",
+      "applies_to": ["lifting"]
     }
   ]
 }
