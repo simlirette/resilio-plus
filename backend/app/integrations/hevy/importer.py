@@ -52,7 +52,8 @@ def import_hevy_workouts(
 
         if plan_session_id:
             session_id = plan_session_id
-            plan_id: str | None = plan.id  # type: ignore[union-attr]
+            assert plan is not None  # plan is non-None when plan_session_id is set
+            plan_id: str | None = plan.id
             matched = True
             matched_count += 1
         else:

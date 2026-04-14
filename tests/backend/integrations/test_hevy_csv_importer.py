@@ -1,8 +1,8 @@
 import json
 import uuid
-from datetime import date
+from datetime import date, datetime, timezone
 
-from app.db.models import AthleteModel, SessionLogModel
+from app.db.models import AthleteModel, SessionLogModel, TrainingPlanModel
 from app.integrations.hevy.importer import import_hevy_workouts
 from app.schemas.connector import HevyExercise, HevySet, HevyWorkout
 
@@ -135,3 +135,50 @@ def test_import_sets_imported_count(db_session):
     )
     result = import_hevy_workouts(athlete.id, [workout], db_session)
     assert result["workouts"][0]["sets_imported"] == 3
+
+
+def _make_plan_with_slot(athlete_id: str, slot_date: str, db_session) -> TrainingPlanModel:
+    plan = TrainingPlanModel(
+        id=str(uuid.uuid4()),
+        athlete_id=athlete_id,
+        start_date=date.fromisoformat(slot_date),
+        end_date=date.fromisoformat(slot_date),
+        phase="base",
+        total_weekly_hours=5.0,
+        acwr=1.0,
+        weekly_slots_json=json.dumps([
+            {"id": "lifting-slot-abc", "date": slot_date, "sport": "lifting"},
+        ]),
+        status="active",
+        created_at=datetime.now(timezone.utc),
+    )
+    db_session.add(plan)
+    db_session.commit()
+    return plan
+
+
+def test_import_matches_plan_slot_by_date(db_session):
+    athlete = _make_athlete(db_session)
+    _make_plan_with_slot(athlete.id, "2026-04-01", db_session)
+    result = import_hevy_workouts(athlete.id, [_make_workout()], db_session)
+
+    assert result["matched"] == 1
+    assert result["standalone"] == 0
+    assert result["workouts"][0]["matched"] is True
+    assert result["workouts"][0]["session_id"] == "lifting-slot-abc"
+
+    log = db_session.query(SessionLogModel).filter_by(athlete_id=athlete.id).first()
+    assert log.session_id == "lifting-slot-abc"
+    assert log.plan_id is not None
+
+
+def test_import_falls_back_to_standalone_when_no_matching_slot(db_session):
+    athlete = _make_athlete(db_session)
+    # Plan exists but no lifting slot on the workout date
+    _make_plan_with_slot(athlete.id, "2026-04-05", db_session)  # different date
+    result = import_hevy_workouts(athlete.id, [_make_workout()], db_session)
+
+    assert result["matched"] == 0
+    assert result["standalone"] == 1
+    assert result["workouts"][0]["matched"] is False
+    assert result["workouts"][0]["session_id"].startswith("hevy-standalone-")
