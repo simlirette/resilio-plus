@@ -115,6 +115,9 @@ class FatigueScore:
 | V3-K | DB Migrations + Seed Data (Docker db-test, 4 CLI commands, Alice + Marc personas, db_session fixture) | ✅ Complete (2026-04-13) |
 | V3-L | Security Audit — CORS whitelist (env-driven), auth on `GET /athletes/`, `.gitignore` hardening, security docs (`docs/security/`) | ✅ Complete (2026-04-13) |
 | V3-M | Book Extractions — 5 running books → structured agent-actionable extracts + INDEX.md (`docs/backend/books/`) | ✅ Complete (2026-04-13) |
+| V3-N | Knowledge JSONs Audit — 9 JSON files enriched (111 rules total, 2→20 per file), common schema, 90 pytest tests, KNOWLEDGE-JSONS.md | ✅ Complete (2026-04-14) |
+
+**Dernières phases complétées (2026-04-14) :** Knowledge JSONs audit livré — 9 fichiers enrichis (111 règles), JSON Schema, 90 tests parametrized. 2115 tests passing.
 
 **Dernières phases complétées (2026-04-13) :** Agent system prompts centralisés + Muscle Strain Index + DB Migrations & Seed Data + Security Audit + Book Extractions livrés. 2024 tests passing.
 
@@ -198,6 +201,9 @@ Never increase total weekly load >10% in one step (applies across ALL sports com
 - **Security Checklist**: `docs/security/SECURITY-CHECKLIST.md` — pre-PR security gates
 - **Book Extractions Index**: `docs/backend/books/INDEX.md` — coverage matrix, conflicts, JSON + prompt candidates
 - **Book Extraction Spec**: `docs/superpowers/specs/2026-04-13-book-extraction-design.md`
+- **Knowledge JSONs Reference**: `docs/backend/KNOWLEDGE-JSONS.md` — coverage table, schema, validation command
+- **Knowledge JSONs Audit Spec**: `docs/superpowers/specs/2026-04-13-knowledge-jsons-audit-design.md`
+- **Knowledge JSONs Schema**: `docs/knowledge/schemas/common_rule.schema.json`
 - **Master V2 (archivé)**: `docs/archive/resilio-master-v2_archived_2026-04-12.md`
 
 ---
