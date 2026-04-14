@@ -25,7 +25,7 @@ from sqlalchemy.pool import StaticPool
 # ---------------------------------------------------------------------------
 
 STABLE_LOAD: list[float] = [400.0] * 28    # ACWR safe (~1.0)
-ELEVATED_LOAD: list[float] = [600.0] * 28  # ACWR caution (~1.3)
+ELEVATED_LOAD: list[float] = [600.0] * 28  # higher absolute load, ACWR still ~1.0 (uniform history)
 FRESH_LOAD: list[float] = [50.0] * 28      # new athlete, low load
 
 # Fixed reference dates (deterministic)
@@ -133,7 +133,6 @@ def seed_energy_snapshot(
 ) -> None:
     """Insert today's EnergySnapshotModel (timestamp=now UTC) for apply_energy_snapshot node."""
     import importlib
-    importlib.import_module("app.models.schemas")
     _schemas = importlib.import_module("app.models.schemas")
     EnergySnapshotModel = _schemas.EnergySnapshotModel
 
