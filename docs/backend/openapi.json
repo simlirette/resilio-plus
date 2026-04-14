@@ -1,0 +1,6445 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Resilio Plus API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Login",
+        "operationId": "login_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/onboarding": {
+      "post": {
+        "tags": [
+          "onboarding"
+        ],
+        "summary": "Onboard Athlete",
+        "operationId": "onboard_athlete_athletes_onboarding_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OnboardingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardingResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/": {
+      "get": {
+        "tags": [
+          "athletes"
+        ],
+        "summary": "List Athletes",
+        "operationId": "list_athletes_athletes__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AthleteProfile"
+                  },
+                  "type": "array",
+                  "title": "Response List Athletes Athletes  Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "athletes"
+        ],
+        "summary": "Create Athlete",
+        "operationId": "create_athlete_athletes__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AthleteCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AthleteProfile"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}": {
+      "get": {
+        "tags": [
+          "athletes"
+        ],
+        "summary": "Get Athlete",
+        "operationId": "get_athlete_athletes__athlete_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AthleteProfile"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "athletes"
+        ],
+        "summary": "Update Athlete",
+        "operationId": "update_athlete_athletes__athlete_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AthleteUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AthleteProfile"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "athletes"
+        ],
+        "summary": "Delete Athlete",
+        "operationId": "delete_athlete_athletes__athlete_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/connectors/files/gpx": {
+      "post": {
+        "tags": [
+          "connectors"
+        ],
+        "summary": "Upload Gpx",
+        "description": "Upload GPX file \u2192 parse \u2192 map to running session \u2192 SessionLogModel.",
+        "operationId": "upload_gpx_athletes__athlete_id__connectors_files_gpx_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_gpx_athletes__athlete_id__connectors_files_gpx_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Upload Gpx Athletes  Athlete Id  Connectors Files Gpx Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/connectors/files/fit": {
+      "post": {
+        "tags": [
+          "connectors"
+        ],
+        "summary": "Upload Fit",
+        "description": "Upload FIT file \u2192 parse \u2192 map to running/biking session \u2192 SessionLogModel.",
+        "operationId": "upload_fit_athletes__athlete_id__connectors_files_fit_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_fit_athletes__athlete_id__connectors_files_fit_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Upload Fit Athletes  Athlete Id  Connectors Files Fit Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/connectors/strava/authorize": {
+      "post": {
+        "tags": [
+          "connectors"
+        ],
+        "summary": "Strava Authorize",
+        "operationId": "strava_authorize_athletes__athlete_id__connectors_strava_authorize_post",
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Strava Authorize Athletes  Athlete Id  Connectors Strava Authorize Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/connectors/strava/callback": {
+      "get": {
+        "tags": [
+          "connectors"
+        ],
+        "summary": "Strava Callback",
+        "operationId": "strava_callback_athletes__athlete_id__connectors_strava_callback_get",
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Strava Callback Athletes  Athlete Id  Connectors Strava Callback Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/connectors/hevy": {
+      "post": {
+        "tags": [
+          "connectors"
+        ],
+        "summary": "Hevy Connect",
+        "operationId": "hevy_connect_athletes__athlete_id__connectors_hevy_post",
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HevyConnectRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectorStatus"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/connectors/terra": {
+      "post": {
+        "tags": [
+          "connectors"
+        ],
+        "summary": "Terra Connect",
+        "operationId": "terra_connect_athletes__athlete_id__connectors_terra_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TerraConnectRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectorStatus"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/connectors/apple-health/upload": {
+      "post": {
+        "tags": [
+          "connectors"
+        ],
+        "summary": "Apple Health Upload",
+        "description": "Upload Apple Health data JSON \u2192 store latest HRV/sleep in connector creds.",
+        "operationId": "apple_health_upload_athletes__athlete_id__connectors_apple_health_upload_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppleHealthUploadRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Apple Health Upload Athletes  Athlete Id  Connectors Apple Health Upload Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/connectors/hevy/sync": {
+      "post": {
+        "tags": [
+          "connectors"
+        ],
+        "summary": "Hevy Sync",
+        "description": "Fetch last 7 days of Hevy workouts \u2192 map to lifting sessions \u2192 SessionLogModel.",
+        "operationId": "hevy_sync_athletes__athlete_id__connectors_hevy_sync_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Hevy Sync Athletes  Athlete Id  Connectors Hevy Sync Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/connectors/terra/sync": {
+      "post": {
+        "tags": [
+          "connectors"
+        ],
+        "summary": "Terra Sync",
+        "description": "Fetch today's Terra health data and store latest HRV/sleep in connector creds.",
+        "operationId": "terra_sync_athletes__athlete_id__connectors_terra_sync_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Terra Sync Athletes  Athlete Id  Connectors Terra Sync Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/connectors/strava/sync": {
+      "post": {
+        "tags": [
+          "connectors"
+        ],
+        "summary": "Strava Sync",
+        "description": "Fetch last 7 days of Strava activities \u2192 map to run/bike/swim sessions \u2192 SessionLogModel.",
+        "operationId": "strava_sync_athletes__athlete_id__connectors_strava_sync_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Strava Sync Athletes  Athlete Id  Connectors Strava Sync Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/connectors": {
+      "get": {
+        "tags": [
+          "connectors"
+        ],
+        "summary": "List Connectors",
+        "operationId": "list_connectors_athletes__athlete_id__connectors_get",
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectorListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/connectors/sync": {
+      "post": {
+        "tags": [
+          "connectors"
+        ],
+        "summary": "Sync All",
+        "operationId": "sync_all_athletes__athlete_id__connectors_sync_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncAllResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/connectors/{provider}": {
+      "delete": {
+        "tags": [
+          "connectors"
+        ],
+        "summary": "Delete Connector",
+        "operationId": "delete_connector_athletes__athlete_id__connectors__provider__delete",
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          },
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "enum": [
+                "strava",
+                "hevy",
+                "terra"
+              ],
+              "type": "string",
+              "title": "Provider"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/plan": {
+      "post": {
+        "tags": [
+          "plans"
+        ],
+        "summary": "Generate Plan",
+        "operationId": "generate_plan_athletes__athlete_id__plan_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingPlanResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "plans"
+        ],
+        "summary": "Get Latest Plan",
+        "operationId": "get_latest_plan_athletes__athlete_id__plan_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingPlanResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/plans": {
+      "get": {
+        "tags": [
+          "plans"
+        ],
+        "summary": "List Plans",
+        "operationId": "list_plans_athletes__athlete_id__plans_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrainingPlanResponse"
+                  },
+                  "title": "Response List Plans Athletes  Athlete Id  Plans Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/week-status": {
+      "get": {
+        "tags": [
+          "reviews"
+        ],
+        "summary": "Get Week Status",
+        "operationId": "get_week_status_athletes__athlete_id__week_status_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeekStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/review": {
+      "post": {
+        "tags": [
+          "reviews"
+        ],
+        "summary": "Submit Weekly Review",
+        "operationId": "submit_weekly_review_athletes__athlete_id__review_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeeklyReviewRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeeklyReviewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/nutrition-directives": {
+      "get": {
+        "tags": [
+          "nutrition"
+        ],
+        "summary": "Get Nutrition Directives",
+        "description": "Return per-day-type macro targets for the athlete.",
+        "operationId": "get_nutrition_directives_athletes__athlete_id__nutrition_directives_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NutritionPlan"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/nutrition-today": {
+      "get": {
+        "tags": [
+          "nutrition"
+        ],
+        "summary": "Get Nutrition Today",
+        "operationId": "get_nutrition_today_athletes__athlete_id__nutrition_today_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          },
+          {
+            "name": "target_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Target Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NutritionTodayResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/recovery-status": {
+      "get": {
+        "tags": [
+          "recovery"
+        ],
+        "summary": "Get Recovery Status",
+        "description": "Return current recovery status based on Terra/HRV data.",
+        "operationId": "get_recovery_status_athletes__athlete_id__recovery_status_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/sessions/{session_id}": {
+      "get": {
+        "tags": [
+          "sessions"
+        ],
+        "summary": "Get Session Detail",
+        "operationId": "get_session_detail_athletes__athlete_id__sessions__session_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/sessions/{session_id}/log": {
+      "post": {
+        "tags": [
+          "sessions"
+        ],
+        "summary": "Log Session",
+        "operationId": "log_session_athletes__athlete_id__sessions__session_id__log_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionLogRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionLogResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "sessions"
+        ],
+        "summary": "Get Session Log",
+        "operationId": "get_session_log_athletes__athlete_id__sessions__session_id__log_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionLogResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/history": {
+      "get": {
+        "tags": [
+          "sessions"
+        ],
+        "summary": "Get History",
+        "operationId": "get_history_athletes__athlete_id__history_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WeekSummary"
+                  },
+                  "title": "Response Get History Athletes  Athlete Id  History Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/today": {
+      "get": {
+        "tags": [
+          "sessions"
+        ],
+        "summary": "Get Today",
+        "operationId": "get_today_athletes__athlete_id__today_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          },
+          {
+            "name": "target_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Target Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodayResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/workouts": {
+      "post": {
+        "tags": [
+          "sessions"
+        ],
+        "summary": "Log Manual Workout",
+        "operationId": "log_manual_workout_athletes__athlete_id__workouts_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualWorkoutRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualWorkoutResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/analytics/load": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "Get Load Analytics",
+        "operationId": "get_load_analytics_athletes__athlete_id__analytics_load_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Load Analytics Athletes  Athlete Id  Analytics Load Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/analytics/sport-breakdown": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "Get Sport Breakdown",
+        "operationId": "get_sport_breakdown_athletes__athlete_id__analytics_sport_breakdown_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "title": "Response Get Sport Breakdown Athletes  Athlete Id  Analytics Sport Breakdown Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/analytics/performance": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "Get Performance Analytics",
+        "operationId": "get_performance_analytics_athletes__athlete_id__analytics_performance_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Performance Analytics Athletes  Athlete Id  Analytics Performance Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/food/search": {
+      "get": {
+        "tags": [
+          "food"
+        ],
+        "summary": "Search Food",
+        "description": "Search local cache first, then USDA FoodData Central (if API key set).\nReturns merged results sorted by source: cache \u2192 usda.",
+        "operationId": "search_food_athletes__athlete_id__food_search_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response Search Food Athletes  Athlete Id  Food Search Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/food/search/fcen": {
+      "get": {
+        "tags": [
+          "food"
+        ],
+        "summary": "Search Fcen",
+        "description": "Search local FC\u00c9N (Sant\u00e9 Canada) items only.",
+        "operationId": "search_fcen_athletes__athlete_id__food_search_fcen_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response Search Fcen Athletes  Athlete Id  Food Search Fcen Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/food/barcode/{barcode}": {
+      "get": {
+        "tags": [
+          "food"
+        ],
+        "summary": "Get By Barcode",
+        "description": "Look up a product by barcode via Open Food Facts.\nReturns 404 if the product is not found.",
+        "operationId": "get_by_barcode_athletes__athlete_id__food_barcode__barcode__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          },
+          {
+            "name": "barcode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Barcode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get By Barcode Athletes  Athlete Id  Food Barcode  Barcode  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/workflow/status": {
+      "get": {
+        "tags": [
+          "workflow"
+        ],
+        "summary": "Get Workflow Status",
+        "description": "Return the athlete's current workflow phase and readiness for next step.\n\nPhases:\n  - onboarding:       athlete created but no plan yet and no target date\n  - no_plan:          athlete has target date but no plan generated\n  - active:           plan exists and is current\n  - weekly_review_due: active plan but this week's review is not done",
+        "operationId": "get_workflow_status_athletes__athlete_id__workflow_status_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowStatus"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/workflow/create-plan": {
+      "post": {
+        "tags": [
+          "workflow"
+        ],
+        "summary": "Create Plan Workflow",
+        "description": "Trigger the LangGraph plan creation workflow (V3-D).\n\nRuns the coaching graph until the present_to_athlete interrupt, then\nreturns the proposed plan with thread_id for approval/revision.",
+        "operationId": "create_plan_workflow_athletes__athlete_id__workflow_create_plan_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/workflow/plans/{thread_id}/approve": {
+      "post": {
+        "tags": [
+          "workflow"
+        ],
+        "summary": "Approve Plan",
+        "description": "Approve the proposed plan \u2014 finalize and persist to DB.",
+        "operationId": "approve_plan_athletes__athlete_id__workflow_plans__thread_id__approve_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          },
+          {
+            "name": "thread_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Thread Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanApproveResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/workflow/plans/{thread_id}/revise": {
+      "post": {
+        "tags": [
+          "workflow"
+        ],
+        "summary": "Revise Plan Endpoint",
+        "description": "Reject the proposed plan with feedback and request a revision.",
+        "operationId": "revise_plan_endpoint_athletes__athlete_id__workflow_plans__thread_id__revise_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          },
+          {
+            "name": "thread_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Thread Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanReviseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/workflow/weekly-sync": {
+      "post": {
+        "tags": [
+          "workflow"
+        ],
+        "summary": "Weekly Sync",
+        "description": "Trigger the H1-H5 weekly review cycle.\n\nH1: Pull session data from DB (connector syncs happen via /connectors/*)\nH2: Compare planned vs actual sessions\nH3: Compute ACWR, update readiness\nH4: Generate recommendations\nH5: Create WeeklyReview record for the current week",
+        "operationId": "weekly_sync_athletes__athlete_id__workflow_weekly_sync_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeeklySyncResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/plan/review/start": {
+      "post": {
+        "tags": [
+          "workflow"
+        ],
+        "summary": "Start Weekly Review",
+        "description": "Start the weekly review graph (S-3).\n\nRuns nodes 1\u20133 (analyze \u2192 acwr \u2192 summary), then pauses at the\npresent_review interrupt. Returns thread_id + review_summary for\nthe athlete to inspect before confirming.",
+        "operationId": "start_weekly_review_athletes__athlete_id__plan_review_start_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewStartResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/plan/review/confirm": {
+      "post": {
+        "tags": [
+          "workflow"
+        ],
+        "summary": "Confirm Weekly Review",
+        "description": "Confirm or cancel a pending weekly review (S-3).\n\nPOST body: {\"thread_id\": \"...\", \"approved\": true}\n\nResumes the graph from the present_review checkpoint.\nIf approved=True, persists WeeklyReviewModel to DB.\nIf approved=False, cancels without writing.",
+        "operationId": "confirm_weekly_review_athletes__athlete_id__plan_review_confirm_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewConfirmRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewConfirmResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/mode": {
+      "patch": {
+        "tags": [
+          "mode"
+        ],
+        "summary": "Switch Mode",
+        "operationId": "switch_mode_athletes__athlete_id__mode_patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModeSwitchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModeSwitchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/checkin": {
+      "post": {
+        "tags": [
+          "energy"
+        ],
+        "summary": "Submit Checkin",
+        "operationId": "submit_checkin_athletes__athlete_id__checkin_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckInInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/readiness": {
+      "get": {
+        "tags": [
+          "energy"
+        ],
+        "summary": "Get Readiness",
+        "operationId": "get_readiness_athletes__athlete_id__readiness_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/energy/history": {
+      "get": {
+        "tags": [
+          "energy"
+        ],
+        "summary": "Get Energy History",
+        "operationId": "get_energy_history_athletes__athlete_id__energy_history_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 90,
+              "minimum": 1,
+              "default": 28,
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EnergySnapshotSummary"
+                  },
+                  "title": "Response Get Energy History Athletes  Athlete Id  Energy History Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/hormonal-profile": {
+      "patch": {
+        "tags": [
+          "energy"
+        ],
+        "summary": "Update Hormonal Profile",
+        "operationId": "update_hormonal_profile_athletes__athlete_id__hormonal_profile_patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HormonalProfileUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HormonalProfileResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/external-plan": {
+      "post": {
+        "tags": [
+          "external-plan"
+        ],
+        "summary": "Create External Plan",
+        "description": "Create a new external plan (archives any previous active plan).",
+        "operationId": "create_external_plan_athletes__athlete_id__external_plan_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExternalPlanCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalPlanOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "external-plan"
+        ],
+        "summary": "Get Active External Plan",
+        "description": "Get the athlete's active external plan with all sessions.",
+        "operationId": "get_active_external_plan_athletes__athlete_id__external_plan_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalPlanOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/external-plan/sessions": {
+      "post": {
+        "tags": [
+          "external-plan"
+        ],
+        "summary": "Add External Session",
+        "description": "Add a session to the athlete's active external plan.",
+        "operationId": "add_external_session_athletes__athlete_id__external_plan_sessions_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExternalSessionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalSessionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/external-plan/sessions/{session_id}": {
+      "patch": {
+        "tags": [
+          "external-plan"
+        ],
+        "summary": "Update External Session",
+        "description": "Partially update an external session.",
+        "operationId": "update_external_session_athletes__athlete_id__external_plan_sessions__session_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExternalSessionUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalSessionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "external-plan"
+        ],
+        "summary": "Delete External Session",
+        "description": "Hard-delete an external session.",
+        "operationId": "delete_external_session_athletes__athlete_id__external_plan_sessions__session_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/external-plan/import": {
+      "post": {
+        "tags": [
+          "external-plan"
+        ],
+        "summary": "Import Plan File",
+        "description": "Upload a plan file; Claude Haiku parses it into an ExternalPlanDraft.\n\nNo DB write \u2014 the athlete reviews the draft and calls /import/confirm to persist.",
+        "operationId": "import_plan_file_athletes__athlete_id__external_plan_import_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import_plan_file_athletes__athlete_id__external_plan_import_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalPlanDraft"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/external-plan/import/confirm": {
+      "post": {
+        "tags": [
+          "external-plan"
+        ],
+        "summary": "Confirm Plan Import",
+        "description": "Persist a reviewed ExternalPlanDraft as the athlete's active ExternalPlan.",
+        "operationId": "confirm_plan_import_athletes__athlete_id__external_plan_import_confirm_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExternalPlanDraft"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalPlanOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/athletes/{athlete_id}/strain": {
+      "get": {
+        "tags": [
+          "strain"
+        ],
+        "summary": "Get Strain",
+        "operationId": "get_strain_athletes__athlete_id__strain_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "athlete_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Athlete Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MuscleStrainResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AppleHealthUploadRequest": {
+        "properties": {
+          "snapshot_date": {
+            "type": "string",
+            "title": "Snapshot Date"
+          },
+          "hrv_rmssd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hrv Rmssd"
+          },
+          "sleep_hours": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sleep Hours"
+          },
+          "hr_rest": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hr Rest"
+          }
+        },
+        "type": "object",
+        "required": [
+          "snapshot_date"
+        ],
+        "title": "AppleHealthUploadRequest"
+      },
+      "AthleteCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "age": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 14.0,
+            "title": "Age"
+          },
+          "sex": {
+            "type": "string",
+            "enum": [
+              "M",
+              "F",
+              "other"
+            ],
+            "title": "Sex"
+          },
+          "weight_kg": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Weight Kg"
+          },
+          "height_cm": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Height Cm"
+          },
+          "sports": {
+            "items": {
+              "$ref": "#/components/schemas/Sport"
+            },
+            "type": "array",
+            "title": "Sports"
+          },
+          "primary_sport": {
+            "$ref": "#/components/schemas/Sport"
+          },
+          "goals": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Goals"
+          },
+          "target_race_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Race Date"
+          },
+          "available_days": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Available Days",
+            "description": "0=Mon \u2026 6=Sun"
+          },
+          "hours_per_week": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Hours Per Week"
+          },
+          "equipment": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Equipment"
+          },
+          "max_hr": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Hr"
+          },
+          "resting_hr": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resting Hr"
+          },
+          "ftp_watts": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ftp Watts"
+          },
+          "vdot": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vdot"
+          },
+          "css_per_100m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Css Per 100M"
+          },
+          "sleep_hours_typical": {
+            "type": "number",
+            "title": "Sleep Hours Typical",
+            "default": 7.0
+          },
+          "stress_level": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Stress Level",
+            "default": 5
+          },
+          "job_physical": {
+            "type": "boolean",
+            "title": "Job Physical",
+            "default": false
+          },
+          "coaching_mode": {
+            "type": "string",
+            "enum": [
+              "full",
+              "tracking_only"
+            ],
+            "title": "Coaching Mode",
+            "default": "full"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "age",
+          "sex",
+          "weight_kg",
+          "height_cm",
+          "sports",
+          "primary_sport",
+          "goals",
+          "available_days",
+          "hours_per_week"
+        ],
+        "title": "AthleteCreate"
+      },
+      "AthleteProfile": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "age": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 14.0,
+            "title": "Age"
+          },
+          "sex": {
+            "type": "string",
+            "enum": [
+              "M",
+              "F",
+              "other"
+            ],
+            "title": "Sex"
+          },
+          "weight_kg": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Weight Kg"
+          },
+          "height_cm": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Height Cm"
+          },
+          "sports": {
+            "items": {
+              "$ref": "#/components/schemas/Sport"
+            },
+            "type": "array",
+            "title": "Sports"
+          },
+          "primary_sport": {
+            "$ref": "#/components/schemas/Sport"
+          },
+          "goals": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Goals"
+          },
+          "target_race_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Race Date"
+          },
+          "available_days": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Available Days",
+            "description": "0=Mon \u2026 6=Sun"
+          },
+          "hours_per_week": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Hours Per Week"
+          },
+          "equipment": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Equipment"
+          },
+          "max_hr": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Hr"
+          },
+          "resting_hr": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resting Hr"
+          },
+          "ftp_watts": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ftp Watts"
+          },
+          "vdot": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vdot"
+          },
+          "css_per_100m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Css Per 100M"
+          },
+          "sleep_hours_typical": {
+            "type": "number",
+            "title": "Sleep Hours Typical",
+            "default": 7.0
+          },
+          "stress_level": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Stress Level",
+            "default": 5
+          },
+          "job_physical": {
+            "type": "boolean",
+            "title": "Job Physical",
+            "default": false
+          },
+          "coaching_mode": {
+            "type": "string",
+            "enum": [
+              "full",
+              "tracking_only"
+            ],
+            "title": "Coaching Mode",
+            "default": "full"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "age",
+          "sex",
+          "weight_kg",
+          "height_cm",
+          "sports",
+          "primary_sport",
+          "goals",
+          "available_days",
+          "hours_per_week"
+        ],
+        "title": "AthleteProfile"
+      },
+      "AthleteUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "age": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100.0,
+                "minimum": 14.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age"
+          },
+          "sex": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "M",
+                  "F",
+                  "other"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sex"
+          },
+          "weight_kg": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight Kg"
+          },
+          "height_cm": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Height Cm"
+          },
+          "sports": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Sport"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sports"
+          },
+          "primary_sport": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Sport"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "goals": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Goals"
+          },
+          "target_race_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Race Date"
+          },
+          "available_days": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Available Days"
+          },
+          "hours_per_week": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hours Per Week"
+          },
+          "equipment": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Equipment"
+          },
+          "max_hr": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Hr"
+          },
+          "resting_hr": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resting Hr"
+          },
+          "ftp_watts": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ftp Watts"
+          },
+          "vdot": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vdot"
+          },
+          "css_per_100m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Css Per 100M"
+          },
+          "sleep_hours_typical": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sleep Hours Typical"
+          },
+          "stress_level": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stress Level"
+          },
+          "job_physical": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Physical"
+          },
+          "coaching_mode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "full",
+                  "tracking_only"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coaching Mode"
+          }
+        },
+        "type": "object",
+        "title": "AthleteUpdate"
+      },
+      "Body_import_plan_file_athletes__athlete_id__external_plan_import_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_import_plan_file_athletes__athlete_id__external_plan_import_post"
+      },
+      "Body_upload_fit_athletes__athlete_id__connectors_files_fit_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_fit_athletes__athlete_id__connectors_files_fit_post"
+      },
+      "Body_upload_gpx_athletes__athlete_id__connectors_files_gpx_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_gpx_athletes__athlete_id__connectors_files_gpx_post"
+      },
+      "CheckInInput": {
+        "properties": {
+          "work_intensity": {
+            "type": "string",
+            "enum": [
+              "light",
+              "normal",
+              "heavy",
+              "exhausting"
+            ],
+            "title": "Work Intensity"
+          },
+          "stress_level": {
+            "type": "string",
+            "enum": [
+              "none",
+              "mild",
+              "significant"
+            ],
+            "title": "Stress Level"
+          },
+          "legs_feeling": {
+            "type": "string",
+            "enum": [
+              "fresh",
+              "normal",
+              "heavy",
+              "dead"
+            ],
+            "title": "Legs Feeling"
+          },
+          "energy_global": {
+            "type": "string",
+            "enum": [
+              "great",
+              "ok",
+              "low",
+              "exhausted"
+            ],
+            "title": "Energy Global"
+          },
+          "cycle_phase": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "menstrual",
+                  "follicular",
+                  "ovulation",
+                  "luteal"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cycle Phase"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 140
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          }
+        },
+        "type": "object",
+        "required": [
+          "work_intensity",
+          "stress_level",
+          "legs_feeling",
+          "energy_global"
+        ],
+        "title": "CheckInInput"
+      },
+      "ConnectorListResponse": {
+        "properties": {
+          "connectors": {
+            "items": {
+              "$ref": "#/components/schemas/ConnectorStatus"
+            },
+            "type": "array",
+            "title": "Connectors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "connectors"
+        ],
+        "title": "ConnectorListResponse"
+      },
+      "ConnectorStatus": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "connected": {
+            "type": "boolean",
+            "title": "Connected"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "last_sync": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Sync"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider",
+          "connected",
+          "expires_at"
+        ],
+        "title": "ConnectorStatus"
+      },
+      "DayNutrition": {
+        "properties": {
+          "day_type": {
+            "$ref": "#/components/schemas/DayType"
+          },
+          "macro_target": {
+            "$ref": "#/components/schemas/MacroTarget"
+          },
+          "intra_effort_carbs_g_per_h": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Intra Effort Carbs G Per H"
+          },
+          "sodium_mg_per_h": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sodium Mg Per H"
+          }
+        },
+        "type": "object",
+        "required": [
+          "day_type",
+          "macro_target"
+        ],
+        "title": "DayNutrition"
+      },
+      "DayType": {
+        "type": "string",
+        "enum": [
+          "rest",
+          "strength",
+          "endurance_short",
+          "endurance_long",
+          "race"
+        ],
+        "title": "DayType"
+      },
+      "EnergySnapshotSummary": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "objective_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Objective Score"
+          },
+          "subjective_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subjective Score"
+          },
+          "allostatic_score": {
+            "type": "number",
+            "title": "Allostatic Score"
+          },
+          "energy_availability": {
+            "type": "number",
+            "title": "Energy Availability"
+          },
+          "intensity_cap": {
+            "type": "number",
+            "title": "Intensity Cap"
+          },
+          "veto_triggered": {
+            "type": "boolean",
+            "title": "Veto Triggered"
+          },
+          "traffic_light": {
+            "type": "string",
+            "title": "Traffic Light"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "objective_score",
+          "subjective_score",
+          "allostatic_score",
+          "energy_availability",
+          "intensity_cap",
+          "veto_triggered",
+          "traffic_light"
+        ],
+        "title": "EnergySnapshotSummary"
+      },
+      "ExternalPlanCreate": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "title": "ExternalPlanCreate"
+      },
+      "ExternalPlanDraft": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "sessions_parsed": {
+            "type": "integer",
+            "title": "Sessions Parsed"
+          },
+          "sessions": {
+            "items": {
+              "$ref": "#/components/schemas/ExternalPlanDraftSession"
+            },
+            "type": "array",
+            "title": "Sessions"
+          },
+          "parse_warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Parse Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "sessions_parsed",
+          "sessions",
+          "parse_warnings"
+        ],
+        "title": "ExternalPlanDraft"
+      },
+      "ExternalPlanDraftSession": {
+        "properties": {
+          "session_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Date"
+          },
+          "sport": {
+            "type": "string",
+            "title": "Sport"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "duration_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Min"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sport",
+          "title"
+        ],
+        "title": "ExternalPlanDraftSession"
+      },
+      "ExternalPlanOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "athlete_id": {
+            "type": "string",
+            "title": "Athlete Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "sessions": {
+            "items": {
+              "$ref": "#/components/schemas/ExternalSessionOut"
+            },
+            "type": "array",
+            "title": "Sessions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "athlete_id",
+          "title",
+          "source",
+          "status",
+          "start_date",
+          "end_date",
+          "created_at",
+          "sessions"
+        ],
+        "title": "ExternalPlanOut"
+      },
+      "ExternalSessionCreate": {
+        "properties": {
+          "session_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Session Date"
+          },
+          "sport": {
+            "type": "string",
+            "title": "Sport"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "duration_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Min"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_date",
+          "sport",
+          "title"
+        ],
+        "title": "ExternalSessionCreate"
+      },
+      "ExternalSessionOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "plan_id": {
+            "type": "string",
+            "title": "Plan Id"
+          },
+          "athlete_id": {
+            "type": "string",
+            "title": "Athlete Id"
+          },
+          "session_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Session Date"
+          },
+          "sport": {
+            "type": "string",
+            "title": "Sport"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "duration_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Min"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "plan_id",
+          "athlete_id",
+          "session_date",
+          "sport",
+          "title",
+          "description",
+          "duration_min",
+          "status"
+        ],
+        "title": "ExternalSessionOut"
+      },
+      "ExternalSessionUpdate": {
+        "properties": {
+          "session_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Date"
+          },
+          "sport": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sport"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "duration_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Min"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "planned",
+                  "completed",
+                  "skipped"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "title": "ExternalSessionUpdate"
+      },
+      "FatigueScore": {
+        "properties": {
+          "local_muscular": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Local Muscular"
+          },
+          "cns_load": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Cns Load"
+          },
+          "metabolic_cost": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Metabolic Cost"
+          },
+          "recovery_hours": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Recovery Hours"
+          },
+          "affected_muscles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Affected Muscles"
+          }
+        },
+        "type": "object",
+        "required": [
+          "local_muscular",
+          "cns_load",
+          "metabolic_cost",
+          "recovery_hours"
+        ],
+        "title": "FatigueScore"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HevyConnectRequest": {
+        "properties": {
+          "api_key": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Api Key"
+          }
+        },
+        "type": "object",
+        "required": [
+          "api_key"
+        ],
+        "title": "HevyConnectRequest"
+      },
+      "HormonalProfileResponse": {
+        "properties": {
+          "athlete_id": {
+            "type": "string",
+            "title": "Athlete Id"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          },
+          "cycle_length_days": {
+            "type": "integer",
+            "title": "Cycle Length Days"
+          },
+          "last_period_start": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Period Start"
+          },
+          "tracking_source": {
+            "type": "string",
+            "title": "Tracking Source"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "athlete_id",
+          "enabled",
+          "cycle_length_days",
+          "last_period_start",
+          "tracking_source",
+          "notes"
+        ],
+        "title": "HormonalProfileResponse"
+      },
+      "HormonalProfileUpdate": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          },
+          "cycle_length_days": {
+            "type": "integer",
+            "maximum": 45.0,
+            "minimum": 21.0,
+            "title": "Cycle Length Days",
+            "default": 28
+          },
+          "last_period_start": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Period Start"
+          },
+          "tracking_source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "apple_health"
+            ],
+            "title": "Tracking Source",
+            "default": "manual"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "enabled"
+        ],
+        "title": "HormonalProfileUpdate"
+      },
+      "LoginRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginRequest"
+      },
+      "MacroTarget": {
+        "properties": {
+          "carbs_g_per_kg": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Carbs G Per Kg"
+          },
+          "protein_g_per_kg": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Protein G Per Kg"
+          },
+          "fat_g_per_kg": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Fat G Per Kg"
+          },
+          "calories_total": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Calories Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "carbs_g_per_kg",
+          "protein_g_per_kg",
+          "fat_g_per_kg",
+          "calories_total"
+        ],
+        "title": "MacroTarget"
+      },
+      "ManualWorkoutRequest": {
+        "properties": {
+          "sport": {
+            "$ref": "#/components/schemas/Sport"
+          },
+          "workout_type": {
+            "type": "string",
+            "title": "Workout Type"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "actual_duration_min": {
+            "type": "integer",
+            "maximum": 600.0,
+            "minimum": 1.0,
+            "title": "Actual Duration Min"
+          },
+          "rpe": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rpe"
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes",
+            "default": ""
+          },
+          "actual_data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Actual Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sport",
+          "workout_type",
+          "date",
+          "actual_duration_min"
+        ],
+        "title": "ManualWorkoutRequest"
+      },
+      "ManualWorkoutResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "sport": {
+            "$ref": "#/components/schemas/Sport"
+          },
+          "workout_type": {
+            "type": "string",
+            "title": "Workout Type"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "actual_duration_min": {
+            "type": "integer",
+            "title": "Actual Duration Min"
+          },
+          "rpe": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rpe"
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes"
+          },
+          "actual_data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Actual Data"
+          },
+          "logged_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Logged At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "session_id",
+          "sport",
+          "workout_type",
+          "date",
+          "actual_duration_min",
+          "rpe",
+          "notes",
+          "actual_data",
+          "logged_at"
+        ],
+        "title": "ManualWorkoutResponse"
+      },
+      "ModeSwitchRequest": {
+        "properties": {
+          "coaching_mode": {
+            "type": "string",
+            "enum": [
+              "full",
+              "tracking_only"
+            ],
+            "title": "Coaching Mode"
+          }
+        },
+        "type": "object",
+        "required": [
+          "coaching_mode"
+        ],
+        "title": "ModeSwitchRequest"
+      },
+      "ModeSwitchResponse": {
+        "properties": {
+          "athlete_id": {
+            "type": "string",
+            "title": "Athlete Id"
+          },
+          "coaching_mode": {
+            "type": "string",
+            "title": "Coaching Mode"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "athlete_id",
+          "coaching_mode",
+          "message"
+        ],
+        "title": "ModeSwitchResponse"
+      },
+      "MuscleStrainResponse": {
+        "properties": {
+          "computed_at": {
+            "type": "string",
+            "format": "date",
+            "title": "Computed At"
+          },
+          "scores": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Scores"
+          },
+          "peak_group": {
+            "type": "string",
+            "title": "Peak Group"
+          },
+          "peak_score": {
+            "type": "number",
+            "title": "Peak Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "computed_at",
+          "scores",
+          "peak_group",
+          "peak_score"
+        ],
+        "title": "MuscleStrainResponse"
+      },
+      "NutritionPlan": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "athlete_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Athlete Id"
+          },
+          "weight_kg": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Weight Kg"
+          },
+          "targets_by_day_type": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/DayNutrition"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/DayType"
+            },
+            "type": "object",
+            "title": "Targets By Day Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "athlete_id",
+          "weight_kg"
+        ],
+        "title": "NutritionPlan"
+      },
+      "NutritionTodayResponse": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "day_type": {
+            "$ref": "#/components/schemas/DayType"
+          },
+          "macro_target": {
+            "$ref": "#/components/schemas/MacroTarget"
+          },
+          "intra_effort_carbs_g_per_h": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Intra Effort Carbs G Per H"
+          },
+          "sodium_mg_per_h": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sodium Mg Per H"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "day_type",
+          "macro_target"
+        ],
+        "title": "NutritionTodayResponse"
+      },
+      "OnboardingRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "age": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 14.0,
+            "title": "Age"
+          },
+          "sex": {
+            "type": "string",
+            "enum": [
+              "M",
+              "F",
+              "other"
+            ],
+            "title": "Sex"
+          },
+          "weight_kg": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Weight Kg"
+          },
+          "height_cm": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Height Cm"
+          },
+          "sports": {
+            "items": {
+              "$ref": "#/components/schemas/Sport"
+            },
+            "type": "array",
+            "title": "Sports"
+          },
+          "primary_sport": {
+            "$ref": "#/components/schemas/Sport"
+          },
+          "goals": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Goals"
+          },
+          "target_race_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Race Date"
+          },
+          "available_days": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Available Days",
+            "description": "0=Mon \u2026 6=Sun"
+          },
+          "hours_per_week": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Hours Per Week"
+          },
+          "equipment": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Equipment"
+          },
+          "max_hr": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Hr"
+          },
+          "resting_hr": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resting Hr"
+          },
+          "ftp_watts": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ftp Watts"
+          },
+          "vdot": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vdot"
+          },
+          "css_per_100m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Css Per 100M"
+          },
+          "sleep_hours_typical": {
+            "type": "number",
+            "title": "Sleep Hours Typical",
+            "default": 7.0
+          },
+          "stress_level": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Stress Level",
+            "default": 5
+          },
+          "job_physical": {
+            "type": "boolean",
+            "title": "Job Physical",
+            "default": false
+          },
+          "coaching_mode": {
+            "type": "string",
+            "enum": [
+              "full",
+              "tracking_only"
+            ],
+            "title": "Coaching Mode",
+            "default": "full"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "title": "Password"
+          },
+          "plan_start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Plan Start Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "age",
+          "sex",
+          "weight_kg",
+          "height_cm",
+          "sports",
+          "primary_sport",
+          "goals",
+          "available_days",
+          "hours_per_week",
+          "email",
+          "password",
+          "plan_start_date"
+        ],
+        "title": "OnboardingRequest"
+      },
+      "OnboardingResponse": {
+        "properties": {
+          "athlete": {
+            "$ref": "#/components/schemas/AthleteProfile"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/TrainingPlanResponse"
+          },
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "athlete",
+          "plan",
+          "access_token",
+          "refresh_token"
+        ],
+        "title": "OnboardingResponse"
+      },
+      "PlanApproveResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "plan_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Id"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "PlanApproveResponse"
+      },
+      "PlanCreateRequest": {
+        "properties": {
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date"
+          },
+          "weeks": {
+            "type": "integer",
+            "title": "Weeks",
+            "default": 8
+          }
+        },
+        "type": "object",
+        "required": [
+          "start_date"
+        ],
+        "title": "PlanCreateRequest"
+      },
+      "PlanCreateResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "plan_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Id"
+          },
+          "phase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phase"
+          },
+          "weeks": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weeks"
+          },
+          "sessions_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sessions Total"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": ""
+          },
+          "thread_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thread Id"
+          },
+          "requires_approval": {
+            "type": "boolean",
+            "title": "Requires Approval",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "PlanCreateResponse"
+      },
+      "PlanRequest": {
+        "properties": {
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date",
+            "title": "End Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start_date",
+          "end_date"
+        ],
+        "title": "PlanRequest"
+      },
+      "PlanReviseRequest": {
+        "properties": {
+          "feedback": {
+            "type": "string",
+            "title": "Feedback"
+          },
+          "weeks": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weeks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "feedback"
+        ],
+        "title": "PlanReviseRequest"
+      },
+      "ReadinessResponse": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "objective_score": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Objective Score"
+          },
+          "subjective_score": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Subjective Score"
+          },
+          "final_readiness": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Final Readiness"
+          },
+          "divergence": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Divergence"
+          },
+          "divergence_flag": {
+            "type": "string",
+            "enum": [
+              "none",
+              "moderate",
+              "high"
+            ],
+            "title": "Divergence Flag"
+          },
+          "traffic_light": {
+            "type": "string",
+            "enum": [
+              "green",
+              "yellow",
+              "red"
+            ],
+            "title": "Traffic Light"
+          },
+          "allostatic_score": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Allostatic Score"
+          },
+          "energy_availability": {
+            "type": "number",
+            "title": "Energy Availability"
+          },
+          "intensity_cap": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Intensity Cap"
+          },
+          "insights": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Insights"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "objective_score",
+          "subjective_score",
+          "final_readiness",
+          "divergence",
+          "divergence_flag",
+          "traffic_light",
+          "allostatic_score",
+          "energy_availability",
+          "intensity_cap"
+        ],
+        "title": "ReadinessResponse"
+      },
+      "RecoveryStatusResponse": {
+        "properties": {
+          "readiness_modifier": {
+            "type": "number",
+            "title": "Readiness Modifier"
+          },
+          "hrv_trend": {
+            "type": "string",
+            "title": "Hrv Trend"
+          },
+          "sleep_avg_hours": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sleep Avg Hours"
+          },
+          "sleep_banking_active": {
+            "type": "boolean",
+            "title": "Sleep Banking Active"
+          },
+          "recommendation": {
+            "type": "string",
+            "title": "Recommendation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "readiness_modifier",
+          "hrv_trend",
+          "sleep_avg_hours",
+          "sleep_banking_active",
+          "recommendation"
+        ],
+        "title": "RecoveryStatusResponse"
+      },
+      "ReviewConfirmRequest": {
+        "properties": {
+          "thread_id": {
+            "type": "string",
+            "title": "Thread Id"
+          },
+          "approved": {
+            "type": "boolean",
+            "title": "Approved",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "thread_id"
+        ],
+        "title": "ReviewConfirmRequest"
+      },
+      "ReviewConfirmResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "review_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Id"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "ReviewConfirmResponse"
+      },
+      "ReviewStartResponse": {
+        "properties": {
+          "thread_id": {
+            "type": "string",
+            "title": "Thread Id"
+          },
+          "review_summary": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Summary"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "thread_id"
+        ],
+        "title": "ReviewStartResponse"
+      },
+      "SessionDetailResponse": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "plan_id": {
+            "type": "string",
+            "title": "Plan Id"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "sport": {
+            "$ref": "#/components/schemas/Sport"
+          },
+          "workout_type": {
+            "type": "string",
+            "title": "Workout Type"
+          },
+          "duration_min": {
+            "type": "integer",
+            "title": "Duration Min"
+          },
+          "fatigue_score": {
+            "$ref": "#/components/schemas/FatigueScore"
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes"
+          },
+          "log": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SessionLogResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "plan_id",
+          "date",
+          "sport",
+          "workout_type",
+          "duration_min",
+          "fatigue_score",
+          "notes"
+        ],
+        "title": "SessionDetailResponse"
+      },
+      "SessionLogRequest": {
+        "properties": {
+          "actual_duration_min": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Duration Min"
+          },
+          "skipped": {
+            "type": "boolean",
+            "title": "Skipped",
+            "default": false
+          },
+          "rpe": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rpe"
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes",
+            "default": ""
+          },
+          "actual_data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Actual Data"
+          }
+        },
+        "type": "object",
+        "title": "SessionLogRequest"
+      },
+      "SessionLogResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "actual_duration_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Duration Min"
+          },
+          "skipped": {
+            "type": "boolean",
+            "title": "Skipped"
+          },
+          "rpe": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rpe"
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes"
+          },
+          "actual_data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Actual Data"
+          },
+          "logged_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Logged At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "session_id",
+          "actual_duration_min",
+          "skipped",
+          "rpe",
+          "notes",
+          "actual_data",
+          "logged_at"
+        ],
+        "title": "SessionLogResponse"
+      },
+      "Sport": {
+        "type": "string",
+        "enum": [
+          "running",
+          "lifting",
+          "swimming",
+          "biking"
+        ],
+        "title": "Sport"
+      },
+      "SyncAllResponse": {
+        "properties": {
+          "synced_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Synced At"
+          },
+          "results": {
+            "additionalProperties": {
+              "type": "string",
+              "enum": [
+                "ok",
+                "skipped",
+                "error"
+              ]
+            },
+            "type": "object",
+            "title": "Results"
+          },
+          "errors": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Errors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "synced_at",
+          "results",
+          "errors"
+        ],
+        "title": "SyncAllResponse"
+      },
+      "TerraConnectRequest": {
+        "properties": {
+          "terra_user_id": {
+            "type": "string",
+            "title": "Terra User Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "terra_user_id"
+        ],
+        "title": "TerraConnectRequest"
+      },
+      "TodayResponse": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "is_rest_day": {
+            "type": "boolean",
+            "title": "Is Rest Day"
+          },
+          "plan_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Id"
+          },
+          "sessions": {
+            "items": {
+              "$ref": "#/components/schemas/SessionDetailResponse"
+            },
+            "type": "array",
+            "title": "Sessions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "is_rest_day",
+          "plan_id",
+          "sessions"
+        ],
+        "title": "TodayResponse"
+      },
+      "TokenResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          },
+          "athlete_id": {
+            "type": "string",
+            "title": "Athlete Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "refresh_token",
+          "athlete_id"
+        ],
+        "title": "TokenResponse"
+      },
+      "TrainingPlanResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "athlete_id": {
+            "type": "string",
+            "title": "Athlete Id"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date",
+            "title": "End Date"
+          },
+          "phase": {
+            "type": "string",
+            "title": "Phase"
+          },
+          "total_weekly_hours": {
+            "type": "number",
+            "title": "Total Weekly Hours"
+          },
+          "acwr": {
+            "type": "number",
+            "title": "Acwr"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "active"
+          },
+          "sessions": {
+            "items": {
+              "$ref": "#/components/schemas/WorkoutSlot"
+            },
+            "type": "array",
+            "title": "Sessions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "athlete_id",
+          "start_date",
+          "end_date",
+          "phase",
+          "total_weekly_hours",
+          "acwr",
+          "sessions"
+        ],
+        "title": "TrainingPlanResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WeekStatusResponse": {
+        "properties": {
+          "week_number": {
+            "type": "integer",
+            "title": "Week Number"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/TrainingPlanResponse"
+          },
+          "planned_hours": {
+            "type": "number",
+            "title": "Planned Hours"
+          },
+          "actual_hours": {
+            "type": "number",
+            "title": "Actual Hours"
+          },
+          "completion_pct": {
+            "type": "number",
+            "title": "Completion Pct"
+          },
+          "acwr": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acwr"
+          }
+        },
+        "type": "object",
+        "required": [
+          "week_number",
+          "plan",
+          "planned_hours",
+          "actual_hours",
+          "completion_pct",
+          "acwr"
+        ],
+        "title": "WeekStatusResponse"
+      },
+      "WeekSummary": {
+        "properties": {
+          "plan_id": {
+            "type": "string",
+            "title": "Plan Id"
+          },
+          "week_number": {
+            "type": "integer",
+            "title": "Week Number"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date",
+            "title": "End Date"
+          },
+          "phase": {
+            "type": "string",
+            "title": "Phase"
+          },
+          "planned_hours": {
+            "type": "number",
+            "title": "Planned Hours"
+          },
+          "sessions_total": {
+            "type": "integer",
+            "title": "Sessions Total"
+          },
+          "sessions_logged": {
+            "type": "integer",
+            "title": "Sessions Logged"
+          },
+          "completion_pct": {
+            "type": "number",
+            "title": "Completion Pct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plan_id",
+          "week_number",
+          "start_date",
+          "end_date",
+          "phase",
+          "planned_hours",
+          "sessions_total",
+          "sessions_logged",
+          "completion_pct"
+        ],
+        "title": "WeekSummary"
+      },
+      "WeeklyReviewRequest": {
+        "properties": {
+          "week_end_date": {
+            "type": "string",
+            "title": "Week End Date"
+          },
+          "readiness_score": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 10.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Readiness Score"
+          },
+          "hrv_rmssd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hrv Rmssd"
+          },
+          "sleep_hours_avg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sleep Hours Avg"
+          },
+          "comment": {
+            "type": "string",
+            "title": "Comment",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "week_end_date"
+        ],
+        "title": "WeeklyReviewRequest"
+      },
+      "WeeklyReviewResponse": {
+        "properties": {
+          "review_id": {
+            "type": "string",
+            "title": "Review Id"
+          },
+          "week_number": {
+            "type": "integer",
+            "title": "Week Number"
+          },
+          "planned_hours": {
+            "type": "number",
+            "title": "Planned Hours"
+          },
+          "actual_hours": {
+            "type": "number",
+            "title": "Actual Hours"
+          },
+          "acwr": {
+            "type": "number",
+            "title": "Acwr"
+          },
+          "adjustment_applied": {
+            "type": "number",
+            "title": "Adjustment Applied"
+          },
+          "next_week_suggestion": {
+            "type": "string",
+            "title": "Next Week Suggestion"
+          }
+        },
+        "type": "object",
+        "required": [
+          "review_id",
+          "week_number",
+          "planned_hours",
+          "actual_hours",
+          "acwr",
+          "adjustment_applied",
+          "next_week_suggestion"
+        ],
+        "title": "WeeklyReviewResponse"
+      },
+      "WeeklySyncResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "week_number": {
+            "type": "integer",
+            "title": "Week Number"
+          },
+          "sessions_completed": {
+            "type": "integer",
+            "title": "Sessions Completed"
+          },
+          "sessions_planned": {
+            "type": "integer",
+            "title": "Sessions Planned"
+          },
+          "completion_rate": {
+            "type": "number",
+            "title": "Completion Rate"
+          },
+          "acwr": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acwr"
+          },
+          "readiness": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "green",
+                  "yellow",
+                  "red"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Readiness"
+          },
+          "recommendations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Recommendations"
+          },
+          "next_week_adjusted": {
+            "type": "boolean",
+            "title": "Next Week Adjusted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "week_number",
+          "sessions_completed",
+          "sessions_planned",
+          "completion_rate",
+          "acwr",
+          "readiness",
+          "recommendations",
+          "next_week_adjusted"
+        ],
+        "title": "WeeklySyncResponse"
+      },
+      "WorkflowStatus": {
+        "properties": {
+          "athlete_id": {
+            "type": "string",
+            "title": "Athlete Id"
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "onboarding",
+              "no_plan",
+              "active",
+              "weekly_review_due"
+            ],
+            "title": "Phase"
+          },
+          "has_plan": {
+            "type": "boolean",
+            "title": "Has Plan"
+          },
+          "plan_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Id"
+          },
+          "plan_start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Start Date"
+          },
+          "plan_end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan End Date"
+          },
+          "weeks_completed": {
+            "type": "integer",
+            "title": "Weeks Completed"
+          },
+          "sessions_logged_this_week": {
+            "type": "integer",
+            "title": "Sessions Logged This Week"
+          },
+          "weekly_review_due": {
+            "type": "boolean",
+            "title": "Weekly Review Due"
+          },
+          "acwr": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acwr"
+          },
+          "readiness": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "green",
+                  "yellow",
+                  "red"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Readiness"
+          }
+        },
+        "type": "object",
+        "required": [
+          "athlete_id",
+          "phase",
+          "has_plan",
+          "plan_id",
+          "plan_start_date",
+          "plan_end_date",
+          "weeks_completed",
+          "sessions_logged_this_week",
+          "weekly_review_due",
+          "acwr",
+          "readiness"
+        ],
+        "title": "WorkflowStatus"
+      },
+      "WorkoutSlot": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "sport": {
+            "$ref": "#/components/schemas/Sport"
+          },
+          "workout_type": {
+            "type": "string",
+            "title": "Workout Type"
+          },
+          "duration_min": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Duration Min"
+          },
+          "fatigue_score": {
+            "$ref": "#/components/schemas/FatigueScore"
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "sport",
+          "workout_type",
+          "duration_min",
+          "fatigue_score"
+        ],
+        "title": "WorkoutSlot"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}
