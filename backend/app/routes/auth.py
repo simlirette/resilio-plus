@@ -15,7 +15,6 @@ from ..core.security import (
     hash_password,
     hash_token,
     verify_password,
-    verify_token,
 )
 from ..db.models import PasswordResetTokenModel, RefreshTokenModel, UserModel
 from ..dependencies import get_current_athlete_id, get_db

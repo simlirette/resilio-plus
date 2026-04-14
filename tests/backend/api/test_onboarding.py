@@ -28,6 +28,8 @@ def test_onboarding_creates_athlete_plan_and_token(client):
     assert "plan" in body
     assert "access_token" in body
     assert body["token_type"] == "bearer"
+    assert "refresh_token" in body
+    assert len(body["refresh_token"]) > 20
     assert body["athlete"]["name"] == "Alice"
 
 
