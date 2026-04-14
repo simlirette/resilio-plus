@@ -67,3 +67,32 @@ def login(req: LoginRequest, db: DB) -> TokenResponse:
         refresh_token=refresh,
         athlete_id=user.athlete_id,
     )
+
+
+@router.post("/refresh", response_model=TokenResponse)
+def refresh(req: RefreshRequest, db: DB) -> TokenResponse:
+    token_hash = hash_token(req.refresh_token)
+    record = db.query(RefreshTokenModel).filter(
+        RefreshTokenModel.token_hash == token_hash,
+        RefreshTokenModel.revoked.is_(False),
+        RefreshTokenModel.expires_at > datetime.now(timezone.utc),
+    ).first()
+
+    if record is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Invalid or expired refresh token")
+
+    user = db.query(UserModel).filter(UserModel.id == record.user_id).first()
+    if user is None or not user.is_active:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+    # Rotate: revoke old, issue new
+    record.revoked = True
+    new_refresh = _issue_refresh_token(user.id, db)
+    db.commit()
+
+    return TokenResponse(
+        access_token=create_access_token(athlete_id=user.athlete_id),
+        refresh_token=new_refresh,
+        athlete_id=user.athlete_id,
+    )

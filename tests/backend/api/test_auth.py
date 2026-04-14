@@ -69,3 +69,42 @@ def test_login_returns_refresh_token(client_and_db):
     body = resp.json()
     assert "refresh_token" in body
     assert len(body["refresh_token"]) > 20
+
+
+def test_refresh_returns_new_tokens(client_and_db):
+    client, db = client_and_db
+    _seed_user(db)
+
+    # Login to get initial tokens
+    resp = client.post("/auth/login", json={"email": "alice@test.com", "password": "password123"})
+    original_refresh = resp.json()["refresh_token"]
+    original_access = resp.json()["access_token"]
+
+    # Refresh
+    resp2 = client.post("/auth/refresh", json={"refresh_token": original_refresh})
+    assert resp2.status_code == 200
+    body = resp2.json()
+    assert "access_token" in body
+    assert "refresh_token" in body
+    assert body["refresh_token"] != original_refresh  # rotated
+    assert body["access_token"] != original_access    # new token
+
+
+def test_refresh_old_token_is_invalidated(client_and_db):
+    client, db = client_and_db
+    _seed_user(db)
+
+    resp = client.post("/auth/login", json={"email": "alice@test.com", "password": "password123"})
+    original_refresh = resp.json()["refresh_token"]
+
+    # Use refresh token once
+    client.post("/auth/refresh", json={"refresh_token": original_refresh})
+
+    # Try to use old refresh token again — must fail
+    resp3 = client.post("/auth/refresh", json={"refresh_token": original_refresh})
+    assert resp3.status_code == 401
+
+
+def test_refresh_invalid_token_returns_401(client):
+    resp = client.post("/auth/refresh", json={"refresh_token": "not-a-real-token"})
+    assert resp.status_code == 401
