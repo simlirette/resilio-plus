@@ -74,3 +74,13 @@ def test_missing_required_column_raises_value_error():
     bad = b"Date,Exercise Name\n2026-04-01,Squat\n"
     with pytest.raises(ValueError, match="Missing required columns"):
         parse_hevy_csv(bad)
+
+
+def test_rpe_zero_treated_as_none():
+    """Hevy can export RPE=0 for unrated sets — must be stored as None."""
+    csv_with_zero_rpe = (
+        b"Date,Workout Name,Exercise Name,Set Order,Weight,Reps,Distance,Seconds,Notes,Workout Notes,RPE\n"
+        b"2026-04-01,Push Day A,Squat,1,100,5,,,,,0\n"
+    )
+    workouts = parse_hevy_csv(csv_with_zero_rpe)
+    assert workouts[0].exercises[0].sets[0].rpe is None

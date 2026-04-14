@@ -1,6 +1,5 @@
 import csv
 import io
-from collections import OrderedDict
 from datetime import date
 
 from ...schemas.connector import HevyExercise, HevySet, HevyWorkout
@@ -24,6 +23,10 @@ def parse_hevy_csv(content: bytes, unit: str = "kg") -> list[HevyWorkout]:
 
     Raises:
         ValueError: If unit is invalid, required columns are missing, or no data rows.
+
+    Note:
+        Standard Hevy CSV export does not include Set Type or workout duration.
+        All sets are stored as set_type="normal". duration_seconds is set to 0.
     """
     if unit not in ("kg", "lbs"):
         raise ValueError(f"Invalid unit: {unit!r}. Must be 'kg' or 'lbs'")
@@ -42,8 +45,8 @@ def parse_hevy_csv(content: bytes, unit: str = "kg") -> list[HevyWorkout]:
     if not rows:
         raise ValueError("no workouts found")
 
-    # Group by (Date, Workout Name) preserving CSV order via OrderedDict
-    workout_map: OrderedDict[tuple[str, str], list[dict]] = OrderedDict()
+    # Group by (Date, Workout Name) preserving CSV order
+    workout_map: dict[tuple[str, str], list[dict]] = {}
     for row in rows:
         key = (row["Date"].strip(), row["Workout Name"].strip())
         if key not in workout_map:
@@ -59,7 +62,7 @@ def parse_hevy_csv(content: bytes, unit: str = "kg") -> list[HevyWorkout]:
             raise ValueError(f"Invalid date: {date_str!r}")
 
         # Group rows by exercise name, preserving first-appearance order
-        exercise_map: OrderedDict[str, list[dict]] = OrderedDict()
+        exercise_map: dict[str, list[dict]] = {}
         for row in workout_rows:
             ex_name = row["Exercise Name"].strip()
             if ex_name not in exercise_map:
@@ -74,20 +77,25 @@ def parse_hevy_csv(content: bytes, unit: str = "kg") -> list[HevyWorkout]:
                 reps_raw = row["Reps"].strip()
                 rpe_raw = row["RPE"].strip()
 
-                weight_kg = None
-                if weight_raw:
-                    w = float(weight_raw)
-                    weight_kg = w * 0.453592 if unit == "lbs" else w
+                try:
+                    weight_kg = None
+                    if weight_raw:
+                        w = float(weight_raw)
+                        weight_kg = w * 0.453592 if unit == "lbs" else w
 
-                reps = int(reps_raw) if reps_raw else None
-                rpe = float(rpe_raw) if rpe_raw else None
+                    reps = int(reps_raw) if reps_raw else None
+                    rpe = (float(rpe_raw) or None) if rpe_raw else None  # 0.0 treated as unset
 
-                sets.append(HevySet(
-                    reps=reps,
-                    weight_kg=weight_kg,
-                    rpe=rpe,
-                    set_type="normal",
-                ))
+                    sets.append(HevySet(
+                        reps=reps,
+                        weight_kg=weight_kg,
+                        rpe=rpe,
+                        set_type="normal",
+                    ))
+                except (ValueError, Exception) as e:
+                    raise ValueError(
+                        f"Invalid data in row for exercise '{ex_name}': {e}"
+                    ) from e
             exercises.append(HevyExercise(name=ex_name, sets=sets))
 
         workout_id = f"{workout_date.isoformat()}-{_slugify(workout_name)}"
