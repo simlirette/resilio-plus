@@ -15,7 +15,7 @@ from .routes.nutrition import router as nutrition_router
 from .routes.recovery import router as recovery_router
 from .routes.sessions import router as sessions_router
 from .routes.analytics import router as analytics_router
-from .routes.food import router as food_router
+from .routes.food_search import router as food_search_router
 from .routes.workflow import router as workflow_router
 from .routes.mode import router as mode_router
 from .routes.checkin import router as checkin_router
@@ -59,7 +59,7 @@ app.include_router(nutrition_router)
 app.include_router(recovery_router)
 app.include_router(sessions_router)
 app.include_router(analytics_router)
-app.include_router(food_router)
+app.include_router(food_search_router)
 app.include_router(workflow_router)
 app.include_router(mode_router)
 app.include_router(checkin_router)
