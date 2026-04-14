@@ -92,7 +92,8 @@ class FatigueScore:
 | `docs/superpowers/specs/` | Design specs (phase0–phase8) | Phase 0+ |
 | `docs/superpowers/plans/` | Implementation plans | Phase 0+ |
 | `tests/backend/` | Unit + integration tests (~47 backend-specific) | Phase 0+ |
-| `tests/e2e/` | End-to-end workflow (33 tests across 6 files) | Phase 6+ |
+| `tests/e2e/` | End-to-end workflow (71 tests across 14 files, including 8 scenario files) | Phase 6+ |
+| `tests/fixtures/` | Shared E2E factories: `athlete_states.py` (Simon/Layla profiles, seed helpers) | V3-Q |
 
 ---
 
@@ -121,6 +122,9 @@ class FatigueScore:
 | V3-N2 | Knowledge JSONs Enrichment — book extractions as primary source, 9 files re-enriched (111→164 rules), source_books fields populated | ✅ Complete (2026-04-14) |
 | V3-O | Auth System — refresh tokens, SMTP reset, /auth/me, /logout | ✅ Complete (2026-04-14) |
 | V3-P | Hevy CSV Import (`POST /integrations/hevy/import`) + Nutrition Lookup Service (`GET /nutrition/search`, `GET /nutrition/food/{id}`) — USDA FDC + OFF + FCÉN, SQLite TTL cache, Alembic migration 0007 | ✅ Complete (2026-04-14) |
+| V3-Q | E2E Coaching Scenarios — 8 scenario tests (CoachingService + HeadCoach.build_week), shared `athlete_states.py` fixtures, energy cap, RED-S veto, reject/revise, luteal phase, living spec `docs/backend/E2E-SCENARIOS.md` | ✅ Complete (2026-04-14) |
+
+**Dernières phases complétées (2026-04-14) :** V3-Q livré — 8 E2E scenario tests (38 tests), shared `athlete_states.py` fixtures, living spec `docs/backend/E2E-SCENARIOS.md`. Key discoveries: `apply_energy_snapshot` runs post-interrupt (after approval), luteal phase adjusts notes not `readiness_level`. 2221 tests passing (14 strava pre-existing failures from parallel session).
 
 **Dernières phases complétées (2026-04-14) :** V3-P livré — Hevy CSV import (26 tests) + Nutrition Lookup Service (USDA/OFF/FCÉN, cache TTL, ~35 new tests). 2211 tests passing.
 
