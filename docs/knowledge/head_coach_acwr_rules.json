@@ -2,8 +2,8 @@
   "schema_version": "1.0",
   "target_agent": "Head Coach",
   "language": "en",
-  "last_updated": "2026-04-13",
-  "source_books": [],
+  "last_updated": "2026-04-14",
+  "source_books": ["daniels-running-formula", "pfitzinger-advanced-marathoning"],
   "extracted_rules": [
     {
       "rule_name": "ACWR safe zone — no action",
@@ -113,6 +113,83 @@
       "priority": "high",
       "confidence": "moderate",
       "source": "Systematic review: integrated injury risk assessment (head_coach_acwr_rules original)",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "Training monotony index — Foster protocol",
+      "category": "Load Calculation",
+      "condition": "When computing weekly training load quality for any athlete",
+      "action": "Calculate training monotony; monotony >2.0 indicates dangerous daily load uniformity and elevated illness/injury risk; prescribe session variety to reduce monotony",
+      "formula_or_value": "monotony = weekly_avg_daily_load / StdDev(daily_loads); monotony >2.0: elevated illness/injury risk; ideal range: 1.0-1.5 (varied sessions)",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Foster 1998 training monotony and strain; session RPE method",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "Training strain composite — weekly load x monotony",
+      "category": "Load Calculation",
+      "condition": "When evaluating overall weekly training stress and illness/injury risk",
+      "action": "Compute training strain as the product of weekly total load and monotony; strain >6000 arbitrary units signals high illness risk; alert Head Coach",
+      "formula_or_value": "strain = weekly_total_load x monotony; strain >6000: high illness/injury risk flag; strain >8000: mandatory load reduction",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Foster 1998; Impellizzeri et al. 2004 session-RPE training monitoring",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "Post-marathon mandatory recovery block",
+      "category": "Load Management",
+      "condition": "After an athlete completes a marathon or ultra-endurance event (>3h)",
+      "action": "Enforce mandatory recovery block before resuming quality training; do not allow ACWR to increase during this block",
+      "formula_or_value": "Post-marathon: 1 week complete rest (no structured training) + 1 week Z1-only easy (ACWR floor ≤0.5) + 1 week transition (Z1-Z2, ACWR ≤0.8) before any quality sessions",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Pfitzinger & Douglas, Advanced Marathoning; post-marathon recovery consensus",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "Back-to-back hard days — advanced athlete exception",
+      "category": "Load Management",
+      "condition": "If athlete is advanced (>60 mi/week or >10h training/week) and weekly structure demands consecutive hard days",
+      "action": "Permit back-to-back hard days maximum 1 occurrence per month; must be followed by 2 mandatory easy days; never two back-to-back hard weeks",
+      "formula_or_value": "Back-to-back hard days: max 1x/month, advanced athletes only (>60 mi/wk or >10h/wk); mandatory: 2 easy days after; ACWR must be <1.3 before attempting",
+      "priority": "medium",
+      "confidence": "moderate",
+      "source": "Pfitzinger & Douglas, Advanced Marathoning; concurrent training tolerance research",
+      "applies_to": ["running", "cycling"]
+    },
+    {
+      "rule_name": "Session variety for monotony prevention",
+      "category": "Load Management",
+      "condition": "If the same session type (same zone, same duration) is repeated more than 3 consecutive days",
+      "action": "Prescribe a different session type or intensity zone; identical daily sessions inflate monotony index above safe threshold",
+      "formula_or_value": "Identical session type >3 consecutive days: flag monotony risk; solution: vary zone (Z1 to Z2), duration (short to long), or modality (run to bike); daily load variance target: StdDev ≥ 30% of daily mean",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Daniels' Running Formula §2 variety principle; Foster 1998 monotony model",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "ACWR + HRV compound danger flag",
+      "category": "Load Management",
+      "condition": "If athlete's ACWR is >1.3 AND morning RMSSD is <15ms on the same day",
+      "action": "Apply compound danger flag: mandatory load reduction; no hard or threshold sessions; injury and illness risk substantially elevated beyond either signal alone",
+      "formula_or_value": "ACWR >1.3 + RMSSD <15ms: compound danger flag; mandatory: replace all Z3+ sessions with Z1 only; reassess both signals next morning before any load increase",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Gabbett 2016 ACWR injury model; Plews et al. 2013 HRV readiness; combined load-readiness research",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "Single-session load spike cap",
+      "category": "Load Management",
+      "condition": "When planning any individual training session",
+      "action": "Cap any single session's load at 1.5x the athlete's 7-day average daily load; even if the weekly total is within the 10% cap, a single spike elevates acute injury risk",
+      "formula_or_value": "Single session load ≤ EWMA_7d_daily_load x 1.5; if planned session exceeds this: split into two sessions or reduce volume",
+      "priority": "high",
+      "confidence": "moderate",
+      "source": "Hulin et al. 2014 single-session spike and injury risk; Gabbett 2016",
       "applies_to": ["running", "cycling", "swimming", "lifting"]
     }
   ]
