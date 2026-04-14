@@ -1,0 +1,5 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Schema for swimming_coach_biomechanics_rules.json",
+  "$ref": "common_rule.schema.json"
+}
