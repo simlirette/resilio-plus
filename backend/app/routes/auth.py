@@ -122,3 +122,60 @@ def me(current_id: AuthedId, db: DB) -> MeResponse:
         created_at=user.created_at,
         is_active=user.is_active,
     )
+
+
+@router.post("/forgot-password")
+def forgot_password(req: ForgotPasswordRequest, db: DB) -> dict:
+    user = db.query(UserModel).filter(UserModel.email == req.email).first()
+    _msg = {"message": "If this email is registered, a reset link has been sent."}
+
+    if user is None:
+        return _msg  # no-op — prevent email enumeration
+
+    # Invalidate any existing unused reset tokens
+    db.query(PasswordResetTokenModel).filter(
+        PasswordResetTokenModel.user_id == user.id,
+        PasswordResetTokenModel.used.is_(False),
+    ).update({"used": True})
+
+    raw = generate_token()
+    db.add(PasswordResetTokenModel(
+        id=str(uuid.uuid4()),
+        user_id=user.id,
+        token_hash=hash_token(raw),
+        expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
+    ))
+    db.commit()
+
+    base_url = os.getenv("APP_BASE_URL", "http://localhost:3000")
+    reset_url = f"{base_url}/reset-password?token={raw}"
+    send_reset_email(user.email, reset_url)
+
+    return _msg
+
+
+@router.post("/reset-password")
+def reset_password(req: ResetPasswordRequest, db: DB) -> dict:
+    token_hash = hash_token(req.token)
+    record = db.query(PasswordResetTokenModel).filter(
+        PasswordResetTokenModel.token_hash == token_hash,
+        PasswordResetTokenModel.used.is_(False),
+        PasswordResetTokenModel.expires_at > datetime.now(timezone.utc),
+    ).first()
+
+    if record is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Invalid or expired reset token")
+
+    record.used = True
+    user = db.query(UserModel).filter(UserModel.id == record.user_id).first()
+    user.hashed_password = hash_password(req.new_password)
+
+    # Revoke all active refresh tokens — password changed, all sessions invalidated
+    db.query(RefreshTokenModel).filter(
+        RefreshTokenModel.user_id == user.id,
+        RefreshTokenModel.revoked.is_(False),
+    ).update({"revoked": True})
+
+    db.commit()
+    return {"message": "Password updated successfully. Please log in again."}

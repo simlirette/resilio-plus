@@ -150,3 +150,99 @@ def test_me_returns_current_user(client_and_db):
 def test_me_without_token_returns_401(client):
     resp = client.get("/auth/me")
     assert resp.status_code == 401
+
+
+from unittest.mock import patch as _patch
+
+
+def test_forgot_password_always_returns_200(client_and_db):
+    client, db = client_and_db
+    _seed_user(db)
+
+    with _patch("app.routes.auth.send_reset_email") as mock_send:
+        # Known email
+        resp = client.post("/auth/forgot-password", json={"email": "alice@test.com"})
+        assert resp.status_code == 200
+        mock_send.assert_called_once()
+
+        # Unknown email — still 200, no email sent
+        resp2 = client.post("/auth/forgot-password", json={"email": "nobody@test.com"})
+        assert resp2.status_code == 200
+        assert mock_send.call_count == 1  # not called again
+
+
+def test_reset_password_updates_password(client_and_db):
+    client, db = client_and_db
+    _seed_user(db)
+
+    captured_url = {}
+
+    def capture_email(to_email, reset_url):
+        captured_url["url"] = reset_url
+
+    with _patch("app.routes.auth.send_reset_email", side_effect=capture_email):
+        client.post("/auth/forgot-password", json={"email": "alice@test.com"})
+
+    # Extract token from URL
+    token = captured_url["url"].split("token=")[1]
+
+    resp = client.post("/auth/reset-password", json={"token": token, "new_password": "newpassword99"})
+    assert resp.status_code == 200
+
+    # Login with new password succeeds
+    resp2 = client.post("/auth/login", json={"email": "alice@test.com", "password": "newpassword99"})
+    assert resp2.status_code == 200
+
+    # Login with old password fails
+    resp3 = client.post("/auth/login", json={"email": "alice@test.com", "password": "password123"})
+    assert resp3.status_code == 401
+
+
+def test_reset_password_token_is_single_use(client_and_db):
+    client, db = client_and_db
+    _seed_user(db)
+
+    captured_url = {}
+
+    def capture_email(to_email, reset_url):
+        captured_url["url"] = reset_url
+
+    with _patch("app.routes.auth.send_reset_email", side_effect=capture_email):
+        client.post("/auth/forgot-password", json={"email": "alice@test.com"})
+
+    token = captured_url["url"].split("token=")[1]
+
+    client.post("/auth/reset-password", json={"token": token, "new_password": "newpassword99"})
+
+    # Second use of same token must fail
+    resp = client.post("/auth/reset-password", json={"token": token, "new_password": "anotherpass1"})
+    assert resp.status_code == 400
+
+
+def test_reset_password_revokes_refresh_tokens(client_and_db):
+    client, db = client_and_db
+    _seed_user(db)
+
+    # Login to get a refresh token
+    login_resp = client.post("/auth/login", json={"email": "alice@test.com", "password": "password123"})
+    old_refresh = login_resp.json()["refresh_token"]
+
+    captured_url = {}
+
+    def capture_email(to_email, reset_url):
+        captured_url["url"] = reset_url
+
+    with _patch("app.routes.auth.send_reset_email", side_effect=capture_email):
+        client.post("/auth/forgot-password", json={"email": "alice@test.com"})
+
+    token = captured_url["url"].split("token=")[1]
+    client.post("/auth/reset-password", json={"token": token, "new_password": "newpassword99"})
+
+    # Old refresh token must be revoked
+    resp = client.post("/auth/refresh", json={"refresh_token": old_refresh})
+    assert resp.status_code == 401
+
+
+def test_reset_password_invalid_token_returns_400(client):
+    resp = client.post("/auth/reset-password", json={"token": "fake-token", "new_password": "newpass99"})
+    assert resp.status_code == 400
