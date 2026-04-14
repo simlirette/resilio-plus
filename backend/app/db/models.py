@@ -13,10 +13,42 @@ class UserModel(Base):
     email = Column(String, unique=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     athlete_id = Column(String, ForeignKey("athletes.id"), nullable=False)
+    is_active = Column(Boolean, nullable=False, default=True)
+    last_login_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), nullable=False,
                         default=lambda: datetime.now(timezone.utc))
 
     athlete = relationship("AthleteModel", back_populates="user")
+    refresh_tokens = relationship("RefreshTokenModel", back_populates="user",
+                                  cascade="all, delete-orphan")
+    reset_tokens = relationship("PasswordResetTokenModel", back_populates="user",
+                                cascade="all, delete-orphan")
+
+
+class RefreshTokenModel(Base):
+    __tablename__ = "refresh_tokens"
+
+    id = Column(String, primary_key=True)
+    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    token_hash = Column(String, unique=True, nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    created_at = Column(DateTime(timezone=True), nullable=False,
+                        default=lambda: datetime.now(timezone.utc))
+    revoked = Column(Boolean, nullable=False, default=False)
+
+    user = relationship("UserModel", back_populates="refresh_tokens")
+
+
+class PasswordResetTokenModel(Base):
+    __tablename__ = "password_reset_tokens"
+
+    id = Column(String, primary_key=True)
+    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    token_hash = Column(String, unique=True, nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    used = Column(Boolean, nullable=False, default=False)
+
+    user = relationship("UserModel", back_populates="reset_tokens")
 
 
 class AthleteModel(Base):
