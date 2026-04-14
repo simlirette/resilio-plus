@@ -238,6 +238,9 @@ config/secrets.local.yaml
 *.backup2
 .env.local
 
+# Knowledge JSON backups
+*.json.backup
+
 # Local SQLite databases (should not exist — PostgreSQL is used — but just in case)
 *.db
 *.sqlite
