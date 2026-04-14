@@ -99,7 +99,7 @@ IF the athlete reports that easy runs feel "somewhat hard" or conversation requi
 
 IF the athlete reports feeling stagnant in performance or consistently fatigued after easy runs, THEN diagnose as moderate-intensity rut and enforce strict Zone 1-2 discipline on all non-quality sessions immediately. `[ref: §0, §1]`
 
-IF Zone 3 time exceeds approximately 5% of weekly training time, THEN reallocate that time to Zone 1-2 in the following week. `[ref: §0]`
+IF Zone 3 time exceeds 5% of weekly training time THEN reallocate that time to Zone 1-2 in the following week. `[ref: §0]`
 
 ### Race Handling Within Training
 
