@@ -1,24 +1,235 @@
 {
-  "search_query": "règles d'entraînement pour coureurs d'endurance basées sur la distribution d'intensité",
+  "schema_version": "1.0",
   "target_agent": "Running Coach",
-  "source_articles_used": [
-    "The Effect of Polarized Training Intensity Distribution on Maximal Oxygen Uptake and Work Economy Among Endurance Athletes: A Systematic Review.",
-    "Training-intensity Distribution on Middle- and Long-distance Runners: A Systematic Review."
+  "language": "en",
+  "last_updated": "2026-04-13",
+  "source_books": [
+    "daniels-running-formula",
+    "pfitzinger-advanced-marathoning",
+    "pfitzinger-faster-road-racing",
+    "fitzgerald-8020",
+    "pierce-first"
   ],
   "extracted_rules": [
     {
-      "rule_name": "Distribution d'intensité d'entraînement polarisée (POL)",
-      "category": "Distribution d'intensité",
-      "condition": "Si l'objectif est d'améliorer la VO2max, la VO2peak et l'économie de travail chez les athlètes d'endurance.",
-      "action": "Adopter une distribution d'intensité d'entraînement polarisée.",
-      "formula_or_value": "15-20% d'entraînement à haute intensité (HIT) et 75-80% d'entraînement à basse intensité (LIT)."
+      "rule_name": "80/20 TID — polarized split default",
+      "category": "Intensity Distribution",
+      "condition": "If athlete trains for any endurance event and no specific methodology is prescribed",
+      "action": "Distribute at least 80% of weekly training TIME at Zone 1-2 (below first ventilatory threshold) and no more than 20% at Zone 3+",
+      "formula_or_value": "Z1-2: ≥80% of weekly training time; Z3+: ≤20%; measured in minutes, not distance or sessions",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Fitzgerald 80/20 Running + Seiler 2010 polarized model meta-analysis",
+      "applies_to": ["running", "cycling", "swimming"]
     },
     {
-      "rule_name": "Optimisation des adaptations à l'entraînement d'endurance",
-      "category": "Distribution d'intensité",
-      "condition": "Pour optimiser les adaptations à l'entraînement d'endurance chez les coureurs de moyenne et longue distance.",
-      "action": "Combiner un volume élevé d'entraînement à basse intensité avec un faible volume d'entraînement au seuil et d'entraînement par intervalles à haute intensité.",
-      "formula_or_value": "≥ 70% du volume total d'entraînement à basse intensité et ≤ 30% au seuil et à haute intensité."
+      "rule_name": "Polarized TID — VO2max and work economy",
+      "category": "Intensity Distribution",
+      "condition": "If objective is to improve VO2max and work economy in endurance runners",
+      "action": "Apply polarized intensity distribution: 15-20% high-intensity, 75-80% low-intensity",
+      "formula_or_value": "HIT: 15-20% of weekly volume; LIT: 75-80%; threshold work: remaining 5-10%",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Systematic review: polarized TID vs threshold TID in endurance athletes",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "VDOT — derive training paces from race performance",
+      "category": "Pace Prescription",
+      "condition": "If athlete has a recent race time (within 4-6 weeks) for any standard distance",
+      "action": "Look up VDOT from Daniels Table 5.1 using race distance + time, then derive all training paces (E/M/T/I/R) from Table 5.2",
+      "formula_or_value": "VDOT = lookup(race_distance, race_time) → E_pace, M_pace, T_pace, I_pace, R_pace from Table 5.2",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Daniels' Running Formula, 3rd ed., Tables 5.1 and 5.2",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "6-Second Rule — pace zone spacing",
+      "category": "Pace Prescription",
+      "condition": "If athlete has a recent mile time but no full race time for VDOT lookup, and VDOT > 50",
+      "action": "Use mile race pace as R-pace; each slower zone adds 6 sec/400m: R → I (+6s) → T (+12s)",
+      "formula_or_value": "I_pace = R_pace + 6s per 400m; T_pace = I_pace + 6s per 400m; for VDOT 40-50 use 7-8s; R is fastest",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Daniels' Running Formula, 3rd ed., §2",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "Easy pace (E-pace) zone",
+      "category": "Pace Zones",
+      "condition": "If scheduling an easy or recovery run",
+      "action": "Run at fully conversational effort; no HR cap specified; this forms 60-75% of weekly mileage",
+      "formula_or_value": "Conversational pace; ~59-74% vVO2max; 60-75% of total weekly volume at this intensity",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Daniels' Running Formula §2 E-Pace",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "Threshold pace (T-pace) zone and volume cap",
+      "category": "Pace Zones",
+      "condition": "If scheduling a tempo or lactate threshold session",
+      "action": "Run at 'comfortably hard' controlled effort; cap T-pace volume at 10% of weekly mileage per session",
+      "formula_or_value": "~83-88% vVO2max; max T-volume per session = weekly_mileage × 10%",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Daniels' Running Formula §2 T-Pace",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "Interval pace (I-pace) zone and volume cap",
+      "category": "Pace Zones",
+      "condition": "If scheduling interval work targeting VO2max",
+      "action": "Run 3-5 min work bouts at I-pace; recovery ≥ work duration; cap session volume",
+      "formula_or_value": "~95-100% vVO2max; work bouts: 3-5 min; recovery: ≥ work duration; max I-volume = min(10 km, weekly_mileage × 8%)",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Daniels' Running Formula §2 I-Pace",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "Repetition pace (R-pace) zone and volume cap",
+      "category": "Pace Zones",
+      "condition": "If scheduling speed and running economy work (200-400m reps)",
+      "action": "Run 200-400m at R-pace; near-full recovery (2-3× work duration); cap session volume",
+      "formula_or_value": "~105-120% vVO2max; work bouts: ≤2 min; recovery: 2-3× work duration; max R-volume = min(8 km, weekly_mileage × 5%)",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Daniels' Running Formula §2 R-Pace",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "10% weekly volume progression cap",
+      "category": "Load Management",
+      "condition": "Always — when increasing weekly mileage",
+      "action": "Never increase weekly mileage by more than 10% over the previous week; hold new level 3-4 weeks before next increase",
+      "formula_or_value": "new_weekly_mileage ≤ previous_week_mileage × 1.10; hold 3-4 weeks before next increase",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Daniels' Running Formula §2; Pfitzinger Advanced Marathoning Ch.2; consensus across all 5 books",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "Long run ceiling — marathon plan",
+      "category": "Load Management",
+      "condition": "If athlete is on a marathon training plan",
+      "action": "Cap long run distance and duration using the most conservative binding rule",
+      "formula_or_value": "long_run ≤ min(weekly_mileage × 0.29, 22 miles) AND projected_duration ≤ 210 min (3.5 h); Pfitz-Adv rule is primary",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Pfitzinger Advanced Marathoning; Daniels (25-30% + 150 min cap); INDEX.md conflict resolution",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "Long run ceiling — 5K to half-marathon plan",
+      "category": "Load Management",
+      "condition": "If athlete is on a 5K, 10K, or half-marathon training plan",
+      "action": "Cap long run at 20-25% of weekly mileage; no absolute distance cap for these distances",
+      "formula_or_value": "long_run ≤ weekly_mileage × 0.20-0.25; no absolute mi cap for sub-marathon",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Pfitzinger Faster Road Racing; INDEX.md coverage matrix",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "Cutback week protocol",
+      "category": "Load Management",
+      "condition": "If athlete has trained at consistent volume for 3-4 weeks",
+      "action": "Schedule a cutback week with 20-25% volume reduction; maintain intensity, reduce mileage only",
+      "formula_or_value": "Every 3-4 weeks: volume reduction = 20-25%; intensity sessions unchanged",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Pfitzinger Advanced Marathoning Ch.2; Pfitzinger Faster Road Racing",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "Quality session limits per week",
+      "category": "Session Structure",
+      "condition": "Always — when scheduling weekly training",
+      "action": "Limit quality sessions (containing T/I/R pace work or Z4-5) to ≤3/week for all athletes; Z4-5 sessions hard-capped at 2/week regardless of level",
+      "formula_or_value": "Q-days ≤ 3/week; Z4-5 sessions ≤ 2/week (all athletes); never schedule 2 consecutive hard days",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Daniels' Running Formula §2; Fitzgerald 80/20 Ch.3; INDEX.md conflict resolution",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "Return-from-break — short break",
+      "category": "Return to Training",
+      "condition": "If athlete returns after a break of ≤5 days",
+      "action": "Resume at 100% of previous training load; no adjustment needed",
+      "formula_or_value": "Break ≤5 days → resume at 100% load; no VDOT adjustment",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Daniels' Running Formula §3, Table 9.2",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "Return-from-break — medium break (6-28 days)",
+      "category": "Return to Training",
+      "condition": "If athlete returns after a break of 6-28 days",
+      "action": "Resume at 50% load for first half of return period, then 75% for second half; adjust VDOT by -1 to -3 points",
+      "formula_or_value": "Break 6-28 days → first half at 50%, second half at 75%; VDOT adjustment: ×0.93-0.99",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Daniels' Running Formula §3, Table 9.2",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "Return-from-break — long break (>8 weeks)",
+      "category": "Return to Training",
+      "condition": "If athlete returns after a break of more than 8 weeks",
+      "action": "Start at 33-50% of previous load; recalculate VDOT from a recent time trial; expect significant fitness decay",
+      "formula_or_value": "Break >8 wk → start at 33-50% load; VDOT × 0.80-0.92; new race or time trial required to reset paces",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Daniels' Running Formula §3, Table 9.2",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "Altitude adjustment",
+      "category": "Environmental Adaptation",
+      "condition": "If training at altitude ≥7,000 feet (2,133 m)",
+      "action": "Keep R-pace unchanged; adjust I and T sessions by effort (not pace); expect paces to be 3-5% slower at same physiological cost",
+      "formula_or_value": "Altitude ≥7,000 ft: R_pace unchanged; I and T → run by effort; expected pace slowing: 3-5%",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Daniels' Running Formula §3",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "Warm-up protocol for quality sessions",
+      "category": "Session Structure",
+      "condition": "Before any T, I, or R-pace session",
+      "action": "Run 10-15 min at E-pace, then 4-6 strides (20-30 sec at R-pace effort); cool down 10-15 min E-pace after session",
+      "formula_or_value": "Warm-up: 10-15 min E-pace + 4-6 strides × 20-30s at R-effort; cool-down: 10-15 min E-pace",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Daniels' Running Formula §2; Pfitzinger Advanced Marathoning Ch.3",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "Marathon taper structure",
+      "category": "Taper",
+      "condition": "If athlete is tapering for a marathon (A-race)",
+      "action": "Apply 3-week taper: each week reduce volume by 20%, 40%, 60% from peak; maintain intensity throughout",
+      "formula_or_value": "Week -3: volume × 0.80; Week -2: volume × 0.60; Week -1 (race week): volume × 0.40; intensity sessions maintained",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Pfitzinger Advanced Marathoning Ch.9",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "Cross-training equivalency",
+      "category": "Cross-Training",
+      "condition": "If athlete substitutes cycling or pool running for road running sessions",
+      "action": "Apply equivalency factor to compare aerobic load; maintain 80/20 TID across all modalities",
+      "formula_or_value": "Cycling: 1.5× bike miles = 1 run mile (aerobic equivalency); pool running: target HR −10% vs equivalent road run HR",
+      "priority": "medium",
+      "confidence": "moderate",
+      "source": "Pfitzinger Advanced Marathoning; Fitzgerald 80/20 Running",
+      "applies_to": ["running", "cycling"]
     }
   ]
 }
