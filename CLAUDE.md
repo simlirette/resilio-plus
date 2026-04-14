@@ -78,11 +78,13 @@ class FatigueScore:
 | `resilio/core/vdot/` | VDOT calculator — reused by Running Coach | Existing |
 | `backend/app/agents/` | 7 coaching agents + base class | Phase 7 |
 | `backend/app/core/` | Stateless logic: ACWR, fatigue, periodization, conflict, goal_analysis, running/lifting/swimming/biking/nutrition/recovery, **strain** | Phase 7 |
-| `backend/app/routes/` | FastAPI routers: auth, onboarding, athletes, plans, reviews, sessions, nutrition, recovery, connectors | Phase 7-8 |
-| `backend/app/schemas/` | Pydantic models: athlete, plan, fatigue, nutrition, session_log, review | Phase 7-8 |
+| `backend/app/routes/` | FastAPI routers: auth, onboarding, athletes, plans, reviews, sessions, nutrition, recovery, connectors, food_search, integrations | Phase 7-8 |
+| `backend/app/schemas/` | Pydantic models: athlete, plan, fatigue, nutrition, session_log, review, **food** | Phase 7-8 |
 | `backend/app/db/` | SQLAlchemy models + PostgreSQL engine | Phase 2+ |
-| `backend/scripts/` | DB CLI entry points (migrate, seed, reset) + seed personas (Alice, Marc) | V3-K |
+| `backend/scripts/` | DB CLI entry points (migrate, seed, reset) + seed personas (Alice, Marc) + **load_fcen** | V3-K |
 | `backend/app/connectors/` | Strava, Hevy, Terra, FatSecret (class) | Phase 2+ |
+| `backend/app/integrations/hevy/` | Hevy CSV parser + importer (`POST /integrations/hevy/import`) | V3-P |
+| `backend/app/integrations/nutrition/` | USDA + OFF + FCÉN clients + unified cache-first search service | V3-P |
 | `frontend/src/app/` | Next.js pages: login, onboarding, dashboard, plan, review, session/[id], history | Phase 4-8 |
 | `frontend/src/components/` | TopNav, ProtectedRoute, shadcn/ui components | Phase 4+ |
 | `frontend/src/lib/` | api.ts (typed client), auth.tsx (JWT context) | Phase 4+ |
@@ -118,6 +120,9 @@ class FatigueScore:
 | V3-N | Knowledge JSONs Audit — 9 JSON files enriched (111 rules total, 2→20 per file), common schema, 90 pytest tests, KNOWLEDGE-JSONS.md | ✅ Complete (2026-04-14) |
 | V3-N2 | Knowledge JSONs Enrichment — book extractions as primary source, 9 files re-enriched (111→164 rules), source_books fields populated | ✅ Complete (2026-04-14) |
 | V3-O | Auth System — refresh tokens, SMTP reset, /auth/me, /logout | ✅ Complete (2026-04-14) |
+| V3-P | Hevy CSV Import (`POST /integrations/hevy/import`) + Nutrition Lookup Service (`GET /nutrition/search`, `GET /nutrition/food/{id}`) — USDA FDC + OFF + FCÉN, SQLite TTL cache, Alembic migration 0007 | ✅ Complete (2026-04-14) |
+
+**Dernières phases complétées (2026-04-14) :** V3-P livré — Hevy CSV import (26 tests) + Nutrition Lookup Service (USDA/OFF/FCÉN, cache TTL, ~35 new tests). 2211 tests passing.
 
 **Dernières phases complétées (2026-04-14) :** Knowledge JSONs V3-N2 livré — 9 fichiers enrichis (164 règles total, +53 vs V3-N), book extractions used as primary source. 90 tests passing.
 
@@ -211,6 +216,7 @@ Never increase total weekly load >10% in one step (applies across ALL sports com
 - **Knowledge JSONs Audit Spec**: `docs/superpowers/specs/2026-04-13-knowledge-jsons-audit-design.md`
 - **Knowledge JSONs Schema**: `docs/knowledge/schemas/common_rule.schema.json`
 - **Auth System**: `docs/backend/AUTH.md` — endpoints, flows, curl/TypeScript examples
+- **Integrations Reference**: `docs/backend/INTEGRATIONS.md` — Hevy CSV import + Nutrition Lookup (USDA/OFF/FCÉN, TTL cache, FCÉN bootstrap)
 - **Master V2 (archivé)**: `docs/archive/resilio-master-v2_archived_2026-04-12.md`
 
 ---
