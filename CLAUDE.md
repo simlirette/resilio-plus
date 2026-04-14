@@ -116,6 +116,9 @@ class FatigueScore:
 | V3-L | Security Audit — CORS whitelist (env-driven), auth on `GET /athletes/`, `.gitignore` hardening, security docs (`docs/security/`) | ✅ Complete (2026-04-13) |
 | V3-M | Book Extractions — 5 running books → structured agent-actionable extracts + INDEX.md (`docs/backend/books/`) | ✅ Complete (2026-04-13) |
 | V3-N | Knowledge JSONs Audit — 9 JSON files enriched (111 rules total, 2→20 per file), common schema, 90 pytest tests, KNOWLEDGE-JSONS.md | ✅ Complete (2026-04-14) |
+| V3-O | Auth System — refresh tokens, SMTP reset, /auth/me, /logout | ✅ Complete (2026-04-14) |
+
+**Dernières phases complétées (2026-04-14) :** Auth system V3-O livré — refresh tokens rotation, SMTP password reset, /auth/me + /auth/logout. ~2161 tests passing.
 
 **Dernières phases complétées (2026-04-14) :** Knowledge JSONs audit livré — 9 fichiers enrichis (111 règles), JSON Schema, 90 tests parametrized. 2115 tests passing.
 
@@ -204,6 +207,7 @@ Never increase total weekly load >10% in one step (applies across ALL sports com
 - **Knowledge JSONs Reference**: `docs/backend/KNOWLEDGE-JSONS.md` — coverage table, schema, validation command
 - **Knowledge JSONs Audit Spec**: `docs/superpowers/specs/2026-04-13-knowledge-jsons-audit-design.md`
 - **Knowledge JSONs Schema**: `docs/knowledge/schemas/common_rule.schema.json`
+- **Auth System**: `docs/backend/AUTH.md` — endpoints, flows, curl/TypeScript examples
 - **Master V2 (archivé)**: `docs/archive/resilio-master-v2_archived_2026-04-12.md`
 
 ---
