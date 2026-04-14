@@ -92,26 +92,6 @@ def test_terra_sync_delegates_to_sync_service(authed_client):
     assert resp.json()["hrv_rmssd"] == 52.0
 
 
-def test_strava_sync_delegates_to_sync_service(authed_client):
-    """strava/sync endpoint must call SyncService.sync_strava."""
-    client, athlete_id = authed_client
-
-    # Connect Strava (directly inject cred)
-    with patch("app.routes.connectors.SyncService") as MockSvc:
-        MockSvc.sync_strava.return_value = {"synced": 2, "skipped": 0}
-        # First we need a strava credential - inject manually via hevy as placeholder
-        # Actually let's just test the 404 path when not connected
-        pass
-
-    # Test that ConnectorNotFoundError → 404
-    with patch("app.routes.connectors.SyncService") as MockSvc:
-        from app.services.sync_service import ConnectorNotFoundError
-        MockSvc.sync_strava.side_effect = ConnectorNotFoundError("not connected")
-        resp = client.post(f"/athletes/{athlete_id}/connectors/strava/sync")
-
-    assert resp.status_code == 404
-
-
 def test_hevy_sync_not_connected_returns_404(authed_client):
     """hevy/sync when SyncService raises ConnectorNotFoundError → 404."""
     client, athlete_id = authed_client

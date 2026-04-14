@@ -1,10 +1,8 @@
 import json
-import os
 import uuid
 from datetime import datetime, timezone, timedelta
 from typing import Annotated, Literal
 
-import httpx
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -13,11 +11,9 @@ from ..connectors.apple_health import AppleHealthConnector
 from ..connectors.fit import FitConnector
 from ..connectors.gpx import GpxConnector
 from ..connectors.hevy import HevyConnector
-from ..connectors.strava import StravaConnector
 from ..connectors.terra import TerraConnector
 from ..db.models import AthleteModel, ConnectorCredentialModel, SessionLogModel, TrainingPlanModel
 from ..dependencies import get_db, get_current_athlete_id
-from ..schemas.connector import ConnectorCredential
 from ..schemas.connector_api import (
     ConnectorListResponse,
     ConnectorStatus,
@@ -199,57 +195,6 @@ def upload_fit(
     return _file_import_to_session_log(athlete_id, parsed, "running", "fit", db)
 
 
-# ── Strava OAuth2 ────────────────────────────────────────────────────────────
-
-
-@router.post("/{athlete_id}/connectors/strava/authorize")
-def strava_authorize(athlete_id: str, db: DB) -> dict:
-    if db.get(AthleteModel, athlete_id) is None:
-        raise HTTPException(status_code=404)
-
-    # Dummy credential — only client_id is needed for get_auth_url()
-    cred = ConnectorCredential(
-        athlete_id=athlete_id,  # type: ignore[arg-type]
-        provider="strava",
-    )
-    client_id = os.getenv("STRAVA_CLIENT_ID", "")
-    with StravaConnector(cred, client_id=client_id, client_secret="") as connector:
-        auth_url = connector.get_auth_url()
-
-    # Append state for anti-CSRF; not validated on callback in Phase 1
-    auth_url += f"&state={athlete_id}"
-    return {"auth_url": auth_url}
-
-
-@router.get("/{athlete_id}/connectors/strava/callback")
-def strava_callback(athlete_id: str, code: str, db: DB) -> dict:
-    if db.get(AthleteModel, athlete_id) is None:
-        raise HTTPException(status_code=404)
-
-    cred = ConnectorCredential(
-        athlete_id=athlete_id,  # type: ignore[arg-type]
-        provider="strava",
-    )
-    client_id = os.getenv("STRAVA_CLIENT_ID", "")
-    client_secret = os.getenv("STRAVA_CLIENT_SECRET", "")
-
-    try:
-        with StravaConnector(cred, client_id=client_id, client_secret=client_secret) as connector:
-            updated = connector.exchange_code(code)
-    except httpx.HTTPStatusError:
-        raise HTTPException(status_code=502, detail="Strava token exchange failed")
-
-    _upsert_credential(
-        athlete_id=athlete_id,
-        provider="strava",
-        access_token_enc=updated.access_token,
-        refresh_token_enc=updated.refresh_token,
-        expires_at=updated.expires_at,
-        db=db,
-    )
-    return {"connected": True}
-
-
 # ── Hevy ─────────────────────────────────────────────────────────────────────
 
 
@@ -395,22 +340,6 @@ def terra_sync(
         raise HTTPException(status_code=404, detail="Terra connector not connected")
 
 
-# ── Strava Sync ───────────────────────────────────────────────────────────────
-
-
-@router.post("/{athlete_id}/connectors/strava/sync")
-def strava_sync(
-    athlete_id: str,
-    db: DB,
-    _: Annotated[str, Depends(_require_own)],
-) -> dict:
-    """Fetch last 7 days of Strava activities → map to run/bike/swim sessions → SessionLogModel."""
-    try:
-        return SyncService.sync_strava(athlete_id, db)
-    except ConnectorNotFoundError:
-        raise HTTPException(status_code=404, detail="Strava connector not connected")
-
-
 # ── List & Delete ─────────────────────────────────────────────────────────────
 
 
@@ -445,7 +374,6 @@ def sync_all(
     errors: dict[str, str] = {}
 
     for provider, sync_fn in [
-        ("strava", SyncService.sync_strava),
         ("hevy", SyncService.sync_hevy),
         ("terra", SyncService.sync_terra),
     ]:

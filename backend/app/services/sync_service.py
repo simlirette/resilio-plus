@@ -17,7 +17,6 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from ..connectors.hevy import HevyConnector
-from ..connectors.strava import StravaConnector
 from ..connectors.terra import TerraConnector
 from ..db.models import ConnectorCredentialModel, SessionLogModel, TrainingPlanModel
 from ..schemas.connector import ConnectorCredential
@@ -87,94 +86,6 @@ def _set_last_sync(cred_model: ConnectorCredentialModel, db: Session) -> None:
 # ---------------------------------------------------------------------------
 
 class SyncService:
-
-    @staticmethod
-    def sync_strava(athlete_id: str, db: Session) -> dict[str, Any]:
-        """Fetch Strava activities (last 7 days) → map to SessionLogModel.
-
-        Persists refreshed OAuth tokens when Strava silently renews them.
-
-        Returns: {"synced": int, "skipped": int}
-        Raises: ConnectorNotFoundError if Strava not connected.
-        """
-        cred_model = (
-            db.query(ConnectorCredentialModel)
-            .filter_by(athlete_id=athlete_id, provider="strava")
-            .first()
-        )
-        if cred_model is None:
-            raise ConnectorNotFoundError(f"Strava not connected for athlete {athlete_id}")
-
-        cred = ConnectorCredential(
-            athlete_id=athlete_id,  # type: ignore[arg-type]
-            provider="strava",
-            access_token=cred_model.access_token_enc,
-            refresh_token=cred_model.refresh_token_enc,
-            expires_at=cred_model.expires_at,
-        )
-        client_id = os.getenv("STRAVA_CLIENT_ID", "")
-        client_secret = os.getenv("STRAVA_CLIENT_SECRET", "")
-
-        since = datetime.now(timezone.utc) - timedelta(days=7)
-        until = datetime.now(timezone.utc)
-
-        with StravaConnector(cred, client_id=client_id, client_secret=client_secret) as connector:
-            activities = connector.fetch_activities(since, until)
-            if connector.credential.access_token != cred_model.access_token_enc:
-                cred_model.access_token_enc = connector.credential.access_token
-                cred_model.refresh_token_enc = connector.credential.refresh_token
-                cred_model.expires_at = connector.credential.expires_at
-                db.commit()
-
-        sport_map = {
-            "Run": "running",
-            "Ride": "biking",
-            "Swim": "swimming",
-            "VirtualRide": "biking",
-            "TrailRun": "running",
-        }
-
-        plan = _get_latest_plan(athlete_id, db)
-        if plan is None:
-            _set_last_sync(cred_model, db)
-            return {"synced": 0, "skipped": len(activities), "reason": "no plan found"}
-
-        slots = json.loads(plan.weekly_slots_json)
-        session_map: dict[tuple[str, str], str] = {
-            (s["date"], s["sport"]): s["id"] for s in slots
-        }
-
-        synced = 0
-        skipped = 0
-        for activity in activities:
-            sport = sport_map.get(activity.sport_type)
-            if sport is None:
-                skipped += 1
-                continue
-            date_key = activity.date.isoformat()
-            session_id = session_map.get((date_key, sport))
-            if session_id is None:
-                skipped += 1
-                continue
-            _upsert_session_log(
-                athlete_id=athlete_id,
-                plan_id=plan.id,
-                session_id=session_id,
-                actual_duration_min=activity.duration_seconds // 60 if activity.duration_seconds else None,
-                actual_data={
-                    "source": "strava",
-                    "strava_activity_id": activity.id,
-                    "distance_meters": activity.distance_meters,
-                    "elevation_gain_meters": activity.elevation_gain_meters,
-                    "average_hr": activity.average_hr,
-                    "max_hr": activity.max_hr,
-                },
-                db=db,
-            )
-            synced += 1
-
-        _set_last_sync(cred_model, db)
-        return {"synced": synced, "skipped": skipped}
 
     @staticmethod
     def sync_hevy(athlete_id: str, db: Session) -> dict[str, Any]:

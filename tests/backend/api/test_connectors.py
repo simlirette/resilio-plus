@@ -1,21 +1,10 @@
 import json
 import uuid
 
-import httpx
-import pytest
-import respx
-
 from app.db.models import AthleteModel, ConnectorCredentialModel
 
 
 # ─── fixtures ──────────────────────────────────────────────────────────────────
-
-@pytest.fixture(autouse=True)
-def strava_env(monkeypatch):
-    """Set Strava env vars for all tests in this file."""
-    monkeypatch.setenv("STRAVA_CLIENT_ID", "test_client_id")
-    monkeypatch.setenv("STRAVA_CLIENT_SECRET", "test_secret")
-    monkeypatch.setenv("STRAVA_REDIRECT_URI", "http://localhost/callback")
 
 
 def _create_athlete(client):
@@ -28,94 +17,6 @@ def _create_athlete(client):
     })
     assert resp.status_code == 201
     return resp.json()["id"]
-
-
-# ─── authorize ─────────────────────────────────────────────────────────────────
-
-def test_strava_authorize_returns_auth_url(client):
-    athlete_id = _create_athlete(client)
-    resp = client.post(f"/athletes/{athlete_id}/connectors/strava/authorize")
-    assert resp.status_code == 200
-    data = resp.json()
-    assert "auth_url" in data
-    assert "strava.com" in data["auth_url"]
-    assert "test_client_id" in data["auth_url"]
-    assert str(athlete_id) in data["auth_url"]  # state param
-
-
-def test_strava_authorize_unknown_athlete_returns_404(client):
-    resp = client.post(f"/athletes/{uuid.uuid4()}/connectors/strava/authorize")
-    assert resp.status_code == 404
-
-
-# ─── callback ──────────────────────────────────────────────────────────────────
-
-@respx.mock
-def test_strava_callback_strava_error_returns_502(client):
-    athlete_id = _create_athlete(client)
-    respx.post("https://www.strava.com/oauth/token").mock(
-        return_value=httpx.Response(400, json={"message": "Bad Request"})
-    )
-    resp = client.get(f"/athletes/{athlete_id}/connectors/strava/callback?code=bad_code")
-    assert resp.status_code == 502
-
-
-def test_strava_callback_unknown_athlete_returns_404(client):
-    resp = client.get(
-        f"/athletes/{uuid.uuid4()}/connectors/strava/callback?code=abc"
-    )
-    assert resp.status_code == 404
-
-
-@respx.mock
-def test_strava_callback_stores_credential(client_and_db):
-    client, session = client_and_db
-    athlete_id = _create_athlete(client)
-
-    respx.post("https://www.strava.com/oauth/token").mock(
-        return_value=httpx.Response(200, json={
-            "access_token": "tok", "refresh_token": "ref", "expires_at": 9999999999,
-        })
-    )
-    resp = client.get(f"/athletes/{athlete_id}/connectors/strava/callback?code=abc")
-    assert resp.status_code == 200
-    assert resp.json()["connected"] is True
-
-    session.expire_all()
-    cred = session.query(ConnectorCredentialModel).filter_by(
-        athlete_id=athlete_id, provider="strava"
-    ).first()
-    assert cred is not None
-    assert cred.access_token_enc == "tok"
-
-
-@respx.mock
-def test_strava_callback_upsert_updates_existing(client_and_db):
-    client, session = client_and_db
-    athlete_id = _create_athlete(client)
-
-    # First call: creates the credential with tok_v1
-    respx.post("https://www.strava.com/oauth/token").mock(
-        return_value=httpx.Response(200, json={
-            "access_token": "tok_v1", "refresh_token": "ref", "expires_at": 9999999999,
-        })
-    )
-    client.get(f"/athletes/{athlete_id}/connectors/strava/callback?code=abc")
-
-    # Second call: updates the existing credential with tok_v2
-    respx.post("https://www.strava.com/oauth/token").mock(
-        return_value=httpx.Response(200, json={
-            "access_token": "tok_v2", "refresh_token": "ref2", "expires_at": 9999999999,
-        })
-    )
-    client.get(f"/athletes/{athlete_id}/connectors/strava/callback?code=abc")
-
-    session.expire_all()
-    creds = session.query(ConnectorCredentialModel).filter_by(
-        athlete_id=athlete_id, provider="strava"
-    ).all()
-    assert len(creds) == 1
-    assert creds[0].access_token_enc == "tok_v2"
 
 
 # ─── hevy ──────────────────────────────────────────────────────────────────────

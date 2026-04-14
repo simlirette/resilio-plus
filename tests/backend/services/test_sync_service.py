@@ -9,7 +9,7 @@ import pytest
 from app.db.models import ConnectorCredentialModel, SessionLogModel, TrainingPlanModel
 from app.db.models import AthleteModel
 from app.services.sync_service import ConnectorNotFoundError, SyncService
-from app.schemas.connector import HevyExercise, HevySet, HevyWorkout, StravaActivity, TerraHealthData
+from app.schemas.connector import HevyExercise, HevySet, HevyWorkout, TerraHealthData
 
 _ATHLETE_ID = str(uuid.uuid4())
 
@@ -46,111 +46,6 @@ def _make_cred(db, provider: str, extra: dict | None = None):
     db.add(c)
     db.commit()
     return c
-
-
-# ── sync_strava ────────────────────────────────────────────────────────────────
-
-def test_sync_strava_raises_if_not_connected(db_session):
-    _make_athlete(db_session)
-    with pytest.raises(ConnectorNotFoundError):
-        SyncService.sync_strava(_ATHLETE_ID, db_session)
-
-
-def test_sync_strava_maps_activity_to_session_log(db_session):
-    _make_athlete(db_session)
-    today = date.today().isoformat()
-    _make_plan(db_session, json.dumps([
-        {"id": "s1", "date": today, "sport": "running", "workout_type": "easy_z1", "duration_min": 60}
-    ]))
-    cred = _make_cred(db_session, "strava")
-    cred.access_token_enc = "tok"
-    cred.refresh_token_enc = "ref"
-    db_session.commit()
-
-    mock_activity = StravaActivity(
-        id="strava_123", name="Morning Run", sport_type="Run",
-        date=date.today(), duration_seconds=3600,
-        distance_meters=10000.0, elevation_gain_meters=50.0,
-        average_hr=145.0, max_hr=165.0, perceived_exertion=None,
-    )
-
-    with patch("app.services.sync_service.StravaConnector") as MockStrava:
-        instance = MockStrava.return_value.__enter__.return_value
-        instance.fetch_activities.return_value = [mock_activity]
-        instance.credential.access_token = "tok"
-        result = SyncService.sync_strava(_ATHLETE_ID, db_session)
-
-    assert result["synced"] == 1
-    assert result["skipped"] == 0
-    log = db_session.query(SessionLogModel).filter_by(athlete_id=_ATHLETE_ID, session_id="s1").first()
-    assert log is not None
-    assert log.actual_duration_min == 60
-    data = json.loads(log.actual_data_json)
-    assert data["source"] == "strava"
-    assert data["strava_activity_id"] == "strava_123"
-
-
-def test_sync_strava_updates_last_sync(db_session):
-    _make_athlete(db_session)
-    _make_plan(db_session)
-    cred = _make_cred(db_session, "strava")
-    cred.access_token_enc = "tok"
-    cred.refresh_token_enc = "ref"
-    db_session.commit()
-
-    with patch("app.services.sync_service.StravaConnector") as MockStrava:
-        instance = MockStrava.return_value.__enter__.return_value
-        instance.fetch_activities.return_value = []
-        instance.credential.access_token = "tok"
-        SyncService.sync_strava(_ATHLETE_ID, db_session)
-
-    db_session.refresh(cred)
-    extra = json.loads(cred.extra_json)
-    assert "last_sync" in extra
-
-
-def test_sync_strava_persists_refreshed_token(db_session):
-    _make_athlete(db_session)
-    _make_plan(db_session)
-    cred = _make_cred(db_session, "strava")
-    cred.access_token_enc = "old_tok"
-    cred.refresh_token_enc = "old_ref"
-    db_session.commit()
-
-    with patch("app.services.sync_service.StravaConnector") as MockStrava:
-        instance = MockStrava.return_value.__enter__.return_value
-        instance.fetch_activities.return_value = []
-        instance.credential.access_token = "new_tok"
-        instance.credential.refresh_token = "new_ref"
-        instance.credential.expires_at = 9999999999
-        SyncService.sync_strava(_ATHLETE_ID, db_session)
-
-    db_session.refresh(cred)
-    assert cred.access_token_enc == "new_tok"
-    assert cred.refresh_token_enc == "new_ref"
-
-
-def test_sync_strava_returns_zero_when_no_plan(db_session):
-    _make_athlete(db_session)
-    cred = _make_cred(db_session, "strava")
-    cred.access_token_enc = "tok"
-    cred.refresh_token_enc = "ref"
-    db_session.commit()
-
-    mock_activity = StravaActivity(
-        id="strava_1", name="Run", sport_type="Run", date=date.today(),
-        duration_seconds=3600, distance_meters=10000.0,
-        elevation_gain_meters=None, average_hr=None, max_hr=None, perceived_exertion=None,
-    )
-
-    with patch("app.services.sync_service.StravaConnector") as MockStrava:
-        instance = MockStrava.return_value.__enter__.return_value
-        instance.fetch_activities.return_value = [mock_activity]
-        instance.credential.access_token = "tok"
-        result = SyncService.sync_strava(_ATHLETE_ID, db_session)
-
-    assert result["synced"] == 0
-    assert "reason" in result
 
 
 # ── sync_hevy ──────────────────────────────────────────────────────────────────

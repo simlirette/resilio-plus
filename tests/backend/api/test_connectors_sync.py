@@ -97,20 +97,6 @@ def test_terra_sync_with_mock(authed_client):
     assert body["hrv_rmssd"] == 55.0
 
 
-def test_strava_sync_no_credential_returns_404(authed_client):
-    client, athlete_id = authed_client
-    resp = client.post(f"/athletes/{athlete_id}/connectors/strava/sync")
-    assert resp.status_code == 404
-    assert "Strava" in resp.json()["detail"]
-
-
-def test_strava_sync_wrong_athlete_returns_403(authed_client):
-    client, _ = authed_client
-    import uuid as _uuid
-    resp = client.post(f"/athletes/{str(_uuid.uuid4())}/connectors/strava/sync")
-    assert resp.status_code == 403
-
-
 def test_apple_health_upload(authed_client):
     client, athlete_id = authed_client
     resp = client.post(
