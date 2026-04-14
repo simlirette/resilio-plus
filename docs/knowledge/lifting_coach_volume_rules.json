@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "target_agent": "Lifting Coach",
   "language": "en",
-  "last_updated": "2026-04-13",
+  "last_updated": "2026-04-14",
   "source_books": [],
   "extracted_rules": [
     {
@@ -135,6 +135,61 @@
       "priority": "low",
       "confidence": "moderate",
       "source": "Meta-analysis: advanced resistance training systems (original lifting_coach_volume_rules source)",
+      "applies_to": ["lifting"]
+    },
+    {
+      "rule_name": "Training frequency — 2×/week per muscle group for hypertrophy",
+      "category": "Frequency",
+      "condition": "When designing weekly training frequency for a hypertrophy block",
+      "action": "Split total weekly volume across at least 2 sessions per muscle group per week; 2×/week produces superior hypertrophy vs. 1×/week at equal total volume",
+      "formula_or_value": "2×/week per muscle group: superior hypertrophy vs. 1×/week (matched total volume); Schoenfeld et al. 2016 meta-analysis: 2×/week groups +ESd vs. 1×/week; 3×/week shows marginal additional benefit over 2×/week for most muscles",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Schoenfeld et al. 2016 meta-analysis: resistance training frequency and hypertrophy",
+      "applies_to": ["lifting"]
+    },
+    {
+      "rule_name": "Deload week protocol for strength blocks",
+      "category": "Periodization",
+      "condition": "Every 4-6 weeks during a strength or hypertrophy block, or when accumulated fatigue is high",
+      "action": "Prescribe a deload week: reduce volume to MEV (8-10 sets/week per muscle group), maintain load intensity; 1 week sufficient for fatigue dissipation; full unloading not required",
+      "formula_or_value": "Deload frequency: every 4-6 weeks; volume: reduce to MEV (8-10 sets/wk per muscle group); intensity: maintain ≥80% of working loads; duration: 1 week; Issurin 2010: deload prevents accumulated fatigue that blunts supercompensation",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Issurin 2010 block periodization; Israetel et al. deload principles; fatigue dissipation research",
+      "applies_to": ["lifting"]
+    },
+    {
+      "rule_name": "Compound lift priority for hybrid endurance-lifting athletes",
+      "category": "Exercise Selection",
+      "condition": "When designing strength programming for an athlete who also does endurance training",
+      "action": "Prioritize compound multi-joint lifts over isolation work; compounds deliver higher hypertrophy stimulus per unit of endurance interference compared to isolation exercises",
+      "formula_or_value": "Priority exercises: squat, deadlift, bench press, barbell row, pull-up/chin-up; isolation exercises: supplement only; ratio for hybrid athletes: 70-80% compound, 20-30% isolation; endurance interference per hypertrophy unit: lower for compounds",
+      "priority": "high",
+      "confidence": "moderate",
+      "source": "Concurrent training interference research; Hickson 1980; Kraemer et al. 1995 compound vs. isolation interference",
+      "applies_to": ["lifting"]
+    },
+    {
+      "rule_name": "Double progression — systematic load progression method",
+      "category": "Progression",
+      "condition": "When implementing load progression for hypertrophy-focused training",
+      "action": "Use double progression: increase reps within the target range first, then increase load and reset reps to lower bound; more systematic than RPE-only or load-only progression",
+      "formula_or_value": "Double progression: target range e.g. 3×8-12; progress reps until 3×12 achieved at RPE ≤7; then increase load by minimum increment (2.5kg upper / 5kg lower) and reset to 3×8; repeat cycle",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Strength and hypertrophy progression research; Helms et al. 2016 RPE-based progression; practical programming literature",
+      "applies_to": ["lifting"]
+    },
+    {
+      "rule_name": "Exercise selection — avoid high-DOMS risk before key endurance sessions",
+      "category": "Exercise Selection",
+      "condition": "When scheduling leg-dominant exercises for athletes with upcoming long endurance sessions",
+      "action": "Avoid high-eccentric-DOMS exercises on legs within 72 hours of a key long run, ride, or race; DOMS impairs power output and increases injury risk in endurance sessions",
+      "formula_or_value": "High-DOMS-risk exercises: Bulgarian split squat, Romanian deadlift, Nordic curl, walking lunges; schedule ≥72h before long run/ride/race; lower-risk alternatives for proximity: leg press, goblet squat, calf raises",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "DOMS and subsequent exercise performance research; concurrent training scheduling literature",
       "applies_to": ["lifting"]
     }
   ]
