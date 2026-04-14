@@ -194,3 +194,21 @@ from app.models.schemas import (  # noqa: E402, F401
     ExternalSessionModel,
     HeadCoachMessageModel,
 )
+
+
+class FoodCacheModel(Base):
+    __tablename__ = "food_cache"
+
+    id = Column(String, primary_key=True)         # "usda_789" etc.
+    source = Column(String, nullable=False)        # "usda" | "off" | "fcen"
+    name = Column(String, nullable=False)
+    name_fr = Column(String, nullable=True)
+    calories_per_100g = Column(Float, nullable=True)
+    protein_g = Column(Float, nullable=True)
+    carbs_g = Column(Float, nullable=True)
+    fat_g = Column(Float, nullable=True)
+    fiber_g = Column(Float, nullable=True)
+    sodium_mg = Column(Float, nullable=True)
+    sugar_g = Column(Float, nullable=True)
+    cached_at = Column(DateTime(timezone=True), nullable=False)
+    ttl_hours = Column(Integer, nullable=True)     # NULL = permanent (FCÉN)
