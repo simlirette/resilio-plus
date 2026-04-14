@@ -165,7 +165,7 @@ class StravaActivityModel(Base):
     __tablename__ = "strava_activities"
 
     id = Column(String, primary_key=True)                  # "strava_{strava_id}"
-    athlete_id = Column(String, ForeignKey("athletes.id"), nullable=False)
+    athlete_id = Column(String, ForeignKey("athletes.id", ondelete="CASCADE"), nullable=False)
     strava_id = Column(BigInteger, nullable=False, unique=True)
     sport_type = Column(String, nullable=False)            # "running"|"biking"|"swimming"
     name = Column(String, nullable=False)
