@@ -1,5 +1,5 @@
 """Contract tests — GET /athletes/{id}/today."""
-from datetime import date, timedelta
+from datetime import date
 
 
 def test_today_requires_auth(api_client, auth_state):
@@ -17,6 +17,7 @@ def test_today_returns_200(api_client, auth_state):
     assert "date" in body
     assert "is_rest_day" in body
     assert "sessions" in body
+    assert "plan_id" in body
     assert isinstance(body["sessions"], list)
 
 
@@ -45,6 +46,7 @@ def test_today_session_fields(api_client, auth_state):
         params={"target_date": start_date},
     )
     body = resp.json()
+    assert len(body["sessions"]) > 0, "expected sessions on plan start_date"
     for session in body["sessions"]:
         assert "session_id" in session
         assert "plan_id" in session
