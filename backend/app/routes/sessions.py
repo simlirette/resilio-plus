@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import date as date_type, datetime, timezone
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
@@ -16,6 +16,7 @@ from ..schemas.session_log import (
     SessionDetailResponse,
     SessionLogRequest,
     SessionLogResponse,
+    TodayResponse,
     WeekSummary,
 )
 
@@ -223,3 +224,60 @@ def get_history(
             )
         )
     return summaries
+
+
+@router.get("/{athlete_id}/today", response_model=TodayResponse)
+def get_today(
+    athlete_id: str,
+    db: DB,
+    _: Annotated[str, Depends(_require_own)],
+    target_date: date_type | None = Query(default=None),
+) -> TodayResponse:
+    if db.get(AthleteModel, athlete_id) is None:
+        raise HTTPException(status_code=404, detail="Athlete not found")
+
+    today = target_date or date_type.today()
+
+    plan = (
+        db.query(TrainingPlanModel)
+        .filter(TrainingPlanModel.athlete_id == athlete_id)
+        .order_by(desc(TrainingPlanModel.created_at))
+        .first()
+    )
+
+    if plan is None:
+        return TodayResponse(date=today, is_rest_day=True, plan_id=None, sessions=[])
+
+    slots = [WorkoutSlot.model_validate(s) for s in json.loads(plan.weekly_slots_json)]
+    today_slots = [s for s in slots if s.date == today]
+
+    sessions = []
+    for slot in today_slots:
+        log_model = (
+            db.query(SessionLogModel)
+            .filter(
+                SessionLogModel.athlete_id == athlete_id,
+                SessionLogModel.session_id == slot.id,
+            )
+            .first()
+        )
+        sessions.append(
+            SessionDetailResponse(
+                session_id=slot.id,
+                plan_id=plan.id,
+                date=slot.date,
+                sport=slot.sport,
+                workout_type=slot.workout_type,
+                duration_min=slot.duration_min,
+                fatigue_score=slot.fatigue_score,
+                notes=slot.notes,
+                log=_log_to_response(log_model) if log_model else None,
+            )
+        )
+
+    return TodayResponse(
+        date=today,
+        is_rest_day=len(sessions) == 0,
+        plan_id=plan.id,
+        sessions=sessions,
+    )

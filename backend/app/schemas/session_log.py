@@ -50,3 +50,10 @@ class WeekSummary(BaseModel):
     sessions_total: int
     sessions_logged: int
     completion_pct: float
+
+
+class TodayResponse(BaseModel):
+    date: date
+    is_rest_day: bool
+    plan_id: str | None
+    sessions: list[SessionDetailResponse]
