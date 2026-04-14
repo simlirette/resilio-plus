@@ -3,7 +3,6 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from sqlalchemy.orm import Session
 
-from ..db.models import AthleteModel
 from ..dependencies import get_db, get_current_athlete_id
 from ..integrations.hevy.csv_parser import parse_hevy_csv
 from ..integrations.hevy.importer import import_hevy_workouts
@@ -25,9 +24,6 @@ def hevy_csv_import(
     Matches workouts to active training plan lifting slots by date.
     Falls back to standalone session logs when no plan slot exists.
     """
-    if db.get(AthleteModel, athlete_id) is None:
-        raise HTTPException(status_code=404, detail="Athlete not found")
-
     content = file.file.read()
     try:
         workouts = parse_hevy_csv(content, unit=unit)

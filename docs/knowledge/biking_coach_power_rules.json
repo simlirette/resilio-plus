@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "target_agent": "Biking Coach",
   "language": "en",
-  "last_updated": "2026-04-13",
+  "last_updated": "2026-04-14",
   "source_books": [],
   "extracted_rules": [
     {
@@ -168,6 +168,39 @@
       "priority": "medium",
       "confidence": "moderate",
       "source": "Systematic review: bike fitting and lower back pain in cyclists (original biking_coach_power_rules source)",
+      "applies_to": ["cycling"]
+    },
+    {
+      "rule_name": "Weekly TSS load thresholds by training category",
+      "category": "Load Monitoring",
+      "condition": "When classifying weekly training stress for a cyclist",
+      "action": "Categorize weekly TSS to determine training stress level and OTS risk; sustained >600 TSS/week for >3 weeks requires monitoring for non-functional overreaching",
+      "formula_or_value": "<300 TSS/wk: minimal aerobic load; 300-450: moderate training stress; 450-600: high training stress (well-adapted athletes); >600: very high — OTS risk if sustained >3 weeks without deload; peak CTL builders: 800-1000 TSS/wk (professional endurance athletes only)",
+      "priority": "high",
+      "confidence": "moderate",
+      "source": "Coggan & Allen, Training and Racing with a Power Meter; TSS application in applied cycling coaching",
+      "applies_to": ["cycling"]
+    },
+    {
+      "rule_name": "Coggan Zone 7 — Neuromuscular Power",
+      "category": "Training Zones",
+      "condition": "If scheduling sprint or explosive power efforts on the bike",
+      "action": "Ride at >150% FTP for very short sprints (<30 seconds); HR is not a useful metric (too slow to respond); track only as peak power in watts and peak power-to-weight ratio",
+      "formula_or_value": ">150% FTP; efforts <30s; HR: not quantifiable (lag too large); primary metric: peak power watts + W/kg; typical elite sprint: 15-23 W/kg for 5-second peak; recreational: 10-14 W/kg",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Coggan & Allen, Training and Racing with a Power Meter (Zone 7 definition); sprint physiology research",
+      "applies_to": ["cycling"]
+    },
+    {
+      "rule_name": "FTP test selection — ramp vs 20-minute based on fatigue state",
+      "category": "Fitness Assessment",
+      "condition": "When choosing between the ramp test and the 20-minute FTP test",
+      "action": "Prefer ramp test for fatigued athletes, mid-block assessments, or frequent retesting; use 20-minute test when fully rested (taper state) for most accurate absolute FTP; both are valid but bias differently",
+      "formula_or_value": "Ramp test: FTP = last_completed_minute_avg_power × 0.75; suitable for fatigued states; tends to overestimate FTP slightly for track/sprint-biased athletes; 20-min test: FTP = avg_power × 0.95; best when fully rested; tends to underestimate for long-course athletes",
+      "priority": "medium",
+      "confidence": "moderate",
+      "source": "Borszcz et al. 2020 ramp test validity; FTP assessment comparison research; Coggan & Allen practical guidance",
       "applies_to": ["cycling"]
     }
   ]
