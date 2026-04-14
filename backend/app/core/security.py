@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import hashlib
+import hmac
 import os
+import secrets
 from datetime import datetime, timedelta, timezone
 
 from jose import JWTError, jwt
@@ -8,7 +11,8 @@ from passlib.context import CryptContext
 
 _SECRET = os.getenv("JWT_SECRET", "resilio-dev-secret")
 _ALGORITHM = "HS256"
-_EXPIRE_HOURS = 24
+_ACCESS_TTL_MINUTES = int(os.getenv("JWT_ACCESS_TTL_MINUTES", "15"))
+_REFRESH_TTL_DAYS = int(os.getenv("JWT_REFRESH_TTL_DAYS", "30"))
 
 _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -22,7 +26,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 
 def create_access_token(athlete_id: str) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(hours=_EXPIRE_HOURS)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=_ACCESS_TTL_MINUTES)
     payload = {"sub": athlete_id, "exp": expire}
     return jwt.encode(payload, _SECRET, algorithm=_ALGORITHM)
 
@@ -32,3 +36,18 @@ def decode_access_token(token: str) -> dict | None:
         return jwt.decode(token, _SECRET, algorithms=[_ALGORITHM])
     except JWTError:
         return None
+
+
+def generate_token() -> str:
+    """Generate a cryptographically secure URL-safe token (32 bytes)."""
+    return secrets.token_urlsafe(32)
+
+
+def hash_token(raw: str) -> str:
+    """Hash a raw token with SHA-256 for DB storage. Deterministic — suitable for lookup."""
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+
+def verify_token(raw: str, hashed: str) -> bool:
+    """Constant-time comparison of raw token against stored hash."""
+    return hmac.compare_digest(hashlib.sha256(raw.encode()).hexdigest(), hashed)
