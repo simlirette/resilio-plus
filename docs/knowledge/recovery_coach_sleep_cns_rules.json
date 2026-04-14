@@ -2,8 +2,8 @@
   "schema_version": "1.0",
   "target_agent": "Recovery Coach",
   "language": "en",
-  "last_updated": "2026-04-13",
-  "source_books": [],
+  "last_updated": "2026-04-14",
+  "source_books": ["pfitzinger-advanced-marathoning", "daniels-running-formula"],
   "extracted_rules": [
     {
       "rule_name": "Sleep duration target for athletes",
@@ -124,6 +124,72 @@
       "priority": "medium",
       "confidence": "strong",
       "source": "Caffeine pharmacokinetics research; sleep-caffeine interaction consensus",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "Pfitz 'rest is training' — prioritize recovery over forced sessions",
+      "category": "Recovery Philosophy",
+      "condition": "When an athlete shows poor recovery signals (low HRV, high fatigue, poor sleep) before a scheduled hard session",
+      "action": "Replace the planned hard session with rest or easy movement; recovery is the adaptation stimulus, not the session itself; unscheduled rest > forced hard session",
+      "formula_or_value": "If ≥2 of: RMSSD <15ms, sleep <6h, subjective fatigue ≥4/5, RPE inflation >2: replace hard session with Z1 ≤45 min or full rest; adaptation occurs during recovery, not during the session",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Pfitzinger & Douglas, Advanced Marathoning (rest as training); Daniels' Running Formula §2 rest principle",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "Post-marathon elevated sleep need",
+      "category": "Sleep",
+      "condition": "In the 1-2 weeks following a marathon or endurance event >3 hours",
+      "action": "Prescribe elevated sleep target; expect athlete to need more sleep than their normal baseline due to systemic inflammation and muscle repair",
+      "formula_or_value": "Post-marathon weeks 1-2: target 9-10h sleep/night (vs normal 8h target); elevated sleep need driven by systemic inflammation; do not penalize as laziness — it is appropriate physiological response",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Pfitzinger & Douglas, Advanced Marathoning; post-marathon recovery physiology research",
+      "applies_to": ["running", "cycling"]
+    },
+    {
+      "rule_name": "Daniels 3-4 week hold — CNS consolidation principle",
+      "category": "CNS Recovery",
+      "condition": "When deciding whether to increase training load after a period of consistent training",
+      "action": "Hold training volume at current level for 3-4 weeks before increasing; this is CNS and musculoskeletal consolidation, not just muscular adaptation",
+      "formula_or_value": "Volume hold: 3-4 weeks at consistent level before increasing; rationale: neuromuscular, tendon, and bone adaptations lag muscular adaptations by 2-4 weeks; premature increase = elevated injury risk",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Daniels' Running Formula §2 Volume Progression; bone and tendon adaptation research",
+      "applies_to": ["running", "cycling", "lifting"]
+    },
+    {
+      "rule_name": "Sleep deprivation — RPE inflation and session adjustment",
+      "category": "Sleep",
+      "condition": "If athlete slept <6 hours the night before a planned session",
+      "action": "Reduce session intensity targets by 10-15%; do not cancel but adjust; perceived exertion is artificially elevated due to sleep deprivation",
+      "formula_or_value": "Sleep <6h: RPE inflated by +1 to +2 vs normal; pace/power target reduction: 5-10%; cancel only if sleep <5h + subjective fatigue ≥4/5; adjusted session > no session for adaptation signal",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Fullagar et al. 2015 sleep and athletic performance; Skein et al. 2011 sleep and sport performance",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "Screen and blue-light cutoff for sleep quality",
+      "category": "Sleep",
+      "condition": "When advising an athlete on sleep hygiene practices",
+      "action": "Prescribe screen/blue-light avoidance 60-90 minutes before planned bedtime; blue light suppresses melatonin onset",
+      "formula_or_value": "Screen cutoff: 60-90 min before bedtime; blue light (wavelength 460-480 nm) suppresses melatonin by 50-60%; alternatives: blue-light blocking glasses (partial effect), dim red/warm lighting",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Chang et al. 2015 blue-light and melatonin; Harvard chronobiology lab sleep hygiene research",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "Napping — timing and duration protocol",
+      "category": "Sleep",
+      "condition": "When prescribing naps to supplement nocturnal sleep or for performance recovery",
+      "action": "Use power naps (10-20 min) or full-cycle naps (90 min); avoid the 20-90 min sleep inertia zone; schedule before 3pm to minimize circadian disruption",
+      "formula_or_value": "Power nap: 10-20 min (light sleep + REM; no inertia); Full-cycle nap: 90 min (complete sleep cycle; maximal restoration); AVOID: 21-89 min naps (deep NREM onset = strong sleep inertia); all naps: schedule before 3pm",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Mednick et al. 2002 nap optimization; sleep architecture research; Waterhouse et al. 2007",
       "applies_to": ["running", "cycling", "swimming", "lifting"]
     }
   ]
