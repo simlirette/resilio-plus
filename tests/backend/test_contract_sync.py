@@ -45,8 +45,9 @@ def test_sync_all_unconfigured_connectors_skipped(api_client, auth_state):
         headers=auth_state["headers"],
     )
     body = resp.json()
-    # strava, hevy, terra should all be skipped (no credentials stored)
-    for provider in ("strava", "hevy", "terra"):
+    # hevy, terra should be skipped (no credentials stored)
+    # strava sync now lives at /integrations/strava/sync (not in sync_all)
+    for provider in ("hevy", "terra"):
         assert body["results"].get(provider) == "skipped"
 
 
