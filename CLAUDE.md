@@ -61,7 +61,7 @@ class FatigueScore:
 
 | Connector | Status | Location | Data |
 |---|---|---|---|
-| Strava | ✅ Active (OAuth2) | `backend/app/connectors/strava.py` | Running, cycling, swimming (GPS, HR, power) |
+| Strava | ✅ Active (OAuth2 V2) | `backend/app/integrations/strava/` | Running, cycling, swimming — encrypted tokens, incremental sync, `strava_activities` table |
 | Hevy | ✅ Implemented (API key) | `backend/app/connectors/hevy.py` | Strength sets, reps, load |
 | Terra | ✅ Implemented | `backend/app/connectors/terra.py` | HRV (RMSSD), sleep hours → Recovery Coach |
 | FatSecret | ⚠️ Class only — out of scope | `backend/app/connectors/fatsecret.py` | Not used — nutrition calculated internally |
@@ -84,6 +84,7 @@ class FatigueScore:
 | `backend/scripts/` | DB CLI entry points (migrate, seed, reset) + seed personas (Alice, Marc) + **load_fcen** | V3-K |
 | `backend/app/connectors/` | Strava, Hevy, Terra, FatSecret (class) | Phase 2+ |
 | `backend/app/integrations/hevy/` | Hevy CSV parser + importer (`POST /integrations/hevy/import`) | V3-P |
+| `backend/app/integrations/strava/` | Strava OAuth V2: `oauth_service.py` (Fernet encryption), `activity_mapper.py`, `sync_service.py` (incremental) | V3-R |
 | `backend/app/integrations/nutrition/` | USDA + OFF + FCÉN clients + unified cache-first search service | V3-P |
 | `frontend/src/app/` | Next.js pages: login, onboarding, dashboard, plan, review, session/[id], history | Phase 4-8 |
 | `frontend/src/components/` | TopNav, ProtectedRoute, shadcn/ui components | Phase 4+ |
@@ -123,8 +124,11 @@ class FatigueScore:
 | V3-O | Auth System — refresh tokens, SMTP reset, /auth/me, /logout | ✅ Complete (2026-04-14) |
 | V3-P | Hevy CSV Import (`POST /integrations/hevy/import`) + Nutrition Lookup Service (`GET /nutrition/search`, `GET /nutrition/food/{id}`) — USDA FDC + OFF + FCÉN, SQLite TTL cache, Alembic migration 0007 | ✅ Complete (2026-04-14) |
 | V3-Q | E2E Coaching Scenarios — 8 scenario tests (CoachingService + HeadCoach.build_week), shared `athlete_states.py` fixtures, energy cap, RED-S veto, reject/revise, luteal phase, living spec `docs/backend/E2E-SCENARIOS.md` | ✅ Complete (2026-04-14) |
+| V3-R | Strava OAuth V2 — Fernet-encrypted tokens, incremental sync (`last_sync_at`), `strava_activities` table, `/integrations/strava/{connect,callback,sync}`, Alembic 0008, old Strava routes removed | ✅ Complete (2026-04-14) |
 
-**Dernières phases complétées (2026-04-14) :** V3-Q livré — 8 E2E scenario tests (38 tests), shared `athlete_states.py` fixtures, living spec `docs/backend/E2E-SCENARIOS.md`. Key discoveries: `apply_energy_snapshot` runs post-interrupt (after approval), luteal phase adjusts notes not `readiness_level`. 2221 tests passing (14 strava pre-existing failures from parallel session).
+**Dernières phases complétées (2026-04-14) :** V3-R livré — Strava OAuth V2 with encrypted tokens (`cryptography.fernet`), incremental sync, `strava_activities` DB table, new routes at `/integrations/strava/`. Old plaintext Strava routes removed. Alembic migration 0008 renames columns (preserves data). 2271 tests passing.
+
+**Dernières phases complétées (2026-04-14) :** V3-Q livré — 8 E2E scenario tests (38 tests), shared `athlete_states.py` fixtures, living spec `docs/backend/E2E-SCENARIOS.md`.
 
 **Dernières phases complétées (2026-04-14) :** V3-P livré — Hevy CSV import (26 tests) + Nutrition Lookup Service (USDA/OFF/FCÉN, cache TTL, ~35 new tests). 2211 tests passing.
 
@@ -179,7 +183,7 @@ The Running Coach has the richest existing knowledge base.
 4. **Frequent atomic commits** — one commit per logical task
 5. **Verify invariants after every task**:
    - `poetry install` must succeed
-   - `pytest tests/` must pass (≥2021 passing — état V3-J)
+   - `pytest tests/` must pass (≥2271 passing — état V3-R)
    - `npx tsc --noEmit` (frontend) must have no errors
 
 **pytest path (Windows):** `C:\Users\simon\AppData\Local\pypoetry\Cache\virtualenvs\resilio-8kDCl3fk-py3.13\Scripts\pytest.exe`
@@ -221,6 +225,8 @@ Never increase total weekly load >10% in one step (applies across ALL sports com
 - **Knowledge JSONs Schema**: `docs/knowledge/schemas/common_rule.schema.json`
 - **Auth System**: `docs/backend/AUTH.md` — endpoints, flows, curl/TypeScript examples
 - **Integrations Reference**: `docs/backend/INTEGRATIONS.md` — Hevy CSV import + Nutrition Lookup (USDA/OFF/FCÉN, TTL cache, FCÉN bootstrap)
+- **Strava OAuth V2 Spec**: `docs/superpowers/specs/2026-04-14-strava-oauth-design.md`
+- **Strava OAuth V2 Plan**: `docs/superpowers/plans/2026-04-14-strava-oauth.md`
 - **Master V2 (archivé)**: `docs/archive/resilio-master-v2_archived_2026-04-12.md`
 
 ---
