@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "target_agent": "Recovery Coach",
   "language": "en",
-  "last_updated": "2026-04-13",
+  "last_updated": "2026-04-14",
   "source_books": [],
   "extracted_rules": [
     {
@@ -124,6 +124,72 @@
       "priority": "high",
       "confidence": "strong",
       "source": "Systematic review: HRV and overtraining in soccer (original recovery_coach_hrv_rules source); Meeusen et al. 2013",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "Orthostatic HRV test protocol",
+      "category": "Measurement Protocol",
+      "condition": "When morning RMSSD reading is ambiguous or inconsistent with athlete's subjective feel",
+      "action": "Apply orthostatic HRV test: measure RMSSD supine for 2 minutes, then stand and measure for 2 more minutes; elevated HR delta signals sympathetic elevation",
+      "formula_or_value": "Orthostatic test: supine 2 min → standing 2 min; HR delta >15 bpm (supine-to-standing rise) = sympathetic elevation flag; supplement RMSSD with orthostatic HR delta when ambiguous",
+      "priority": "medium",
+      "confidence": "moderate",
+      "source": "Orthostatic HRV testing research; sympathetic/parasympathetic balance literature",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "HRV-guided periodization — daily load decision model",
+      "category": "Training Load Management",
+      "condition": "When an athlete uses daily HRV monitoring to guide session intensity decisions",
+      "action": "Apply HRV-guided load rule: if daily RMSSD is within ±8% of rolling baseline, train as planned; if below threshold, reduce; this model outperforms fixed programming for VO2max gains",
+      "formula_or_value": "HRV-guided model: RMSSD within ±8% of 7-day rolling baseline → train as planned; >8% below → reduce intensity by 15-20%; >8% above → optional increase; Kiviniemi et al. 2010: HRV-guided group +3.7 mL/kg/min VO2max vs. fixed group +1.0 mL/kg/min",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Kiviniemi et al. 2010 HRV-guided training vs. fixed programming; Plews et al. 2013 HRV monitoring consensus",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "Female athlete HRV baseline correction — menstrual cycle",
+      "category": "Readiness Assessment",
+      "condition": "When monitoring HRV in female athletes across a training month",
+      "action": "Apply phase-adjusted baseline: expect higher RMSSD in follicular phase and lower in luteal phase; use 28-day rolling baseline to normalize; flag only deviations vs. phase-adjusted personal baseline, not absolute values",
+      "formula_or_value": "RMSSD variation: follicular phase (days 1-14): baseline higher; luteal phase (days 15-28): baseline lower by ~5-10ms; 28-day rolling baseline normalizes this variation; flag thresholds apply vs. phase-adjusted baseline, not vs. global baseline",
+      "priority": "medium",
+      "confidence": "moderate",
+      "source": "Menstrual cycle and HRV research; Bär et al. 2004 cardiac autonomic modulation across cycle phases",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "ln-RMSSD vs raw RMSSD — metric selection",
+      "category": "Measurement Protocol",
+      "condition": "When selecting HRV metric for monitoring or comparing athletes",
+      "action": "Use ln-RMSSD for population-level comparisons or research contexts; use raw RMSSD for intra-athlete longitudinal monitoring; most consumer apps report raw RMSSD — this is acceptable for individual athlete tracking",
+      "formula_or_value": "ln-RMSSD = natural log of RMSSD (ms); preferred for population comparisons (normalizes skewed distribution); raw RMSSD: acceptable for within-athlete tracking over time; typical athlete range: 20-100ms raw; 3.0-4.6 ln-RMSSD",
+      "priority": "low",
+      "confidence": "strong",
+      "source": "Plews et al. 2013 HRV metric selection; HRV methodology consensus literature",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "Dehydration effect on HRV — measurement validity",
+      "category": "Measurement Protocol",
+      "condition": "When morning HRV reading is unusually low on a hot day, after travel, or following inadequate fluid intake",
+      "action": "Flag as potential dehydration artifact; do not make hard load decisions on this reading alone; ensure consistent hydration before measurement to maintain validity",
+      "formula_or_value": "Dehydration >2% body weight: RMSSD suppressed; effect: ~5-15ms reduction in RMSSD; confound check: hot day + travel + poor intake = dehydration flag; rehydrate and re-measure next day if pattern is unexpected",
+      "priority": "medium",
+      "confidence": "moderate",
+      "source": "Dehydration and autonomic function research; HRV measurement reliability literature",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "Nocturnal HRV — superior primary signal when available",
+      "category": "Measurement Protocol",
+      "condition": "If athlete's wearable device provides nocturnal (sleep-time) HRV data in addition to morning measurement",
+      "action": "Prefer nocturnal HRV as the primary readiness signal; it reflects full recovery arc without measurement-day confounds (posture, hydration, stress); morning RMSSD serves as secondary confirmation",
+      "formula_or_value": "Nocturnal HRV (avg RMSSD during sleep) > morning spot RMSSD for readiness prediction; if nocturnal available: use as primary; morning RMSSD: use as secondary; both below threshold = stronger compound signal",
+      "priority": "medium",
+      "confidence": "moderate",
+      "source": "Nocturnal HRV prediction research; Plews et al. 2017 overnight HRV vs. morning HRV comparison",
       "applies_to": ["running", "cycling", "swimming", "lifting"]
     }
   ]
