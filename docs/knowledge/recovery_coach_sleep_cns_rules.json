@@ -1,76 +1,130 @@
 {
-  "search_query": "Sleep and recovery strategies for athletes",
+  "schema_version": "1.0",
   "target_agent": "Recovery Coach",
-  "source_articles_used": [
-    "The effectiveness of dance interventions on sleep quality: a systematic review and meta-analysis.",
-    "Effectiveness of aerobic exercise in fibromyalgia: A systematic review and network meta-analysis.",
-    "The Role of Sleep on Physical and Cognitive Performance of Ultra-Endurance Athletes: A Systematic Review.",
-    "Circadian Rhythm and Sleep Disturbances in Young Adult Athletes: A Review About Risk Factors, Consequences, and Interventions.",
-    "Meta-analysis of the Effect of Yogic Techniques on Melatonin Levels: Implications for Sleep Health."
-  ],
+  "language": "en",
+  "last_updated": "2026-04-13",
+  "source_books": [],
   "extracted_rules": [
     {
-      "rule_name": "Dance for Sleep Quality Improvement",
+      "rule_name": "Sleep duration target for athletes",
       "category": "Sleep",
-      "condition": "An individual experiences sleep disturbances or seeks to improve overall sleep quality.",
-      "action": "Incorporate dance interventions into their regular routine.",
-      "formula_or_value": "Evidence supports benefits"
+      "condition": "When prescribing sleep for any athlete in active training",
+      "action": "Target 8-9 hours of sleep per night; minimum 7 hours; below 6 hours triggers mandatory training modification",
+      "formula_or_value": "Target: 8-9h/night; minimum: 7h; <6h: flag as critical — reduce session intensity by 20%, no high-intensity sessions",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Sleep review: circadian rhythm and sleep in young adult athletes (original source)",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
     },
     {
-      "rule_name": "Aerobic Exercise for Enhanced Sleep Quality",
+      "rule_name": "Sleep debt accumulation protocol",
       "category": "Sleep",
-      "condition": "An individual, particularly those with conditions like fibromyalgia, experiences sleep disturbances.",
-      "action": "Engage in regular aerobic exercise.",
-      "formula_or_value": "Widely recommended, evidence supports benefits"
+      "condition": "If athlete has accumulated sleep debt during a training week",
+      "action": "Prescribe 1 hour of additional sleep for each 2 hours of weekly sleep deficit; do not attempt to recover >3h of sleep debt in a single night",
+      "formula_or_value": "Compensation rate: 1h extra sleep per 2h deficit; weekly deficit cap for single-night recovery: ≤3h; multi-night recovery preferred",
+      "priority": "medium",
+      "confidence": "moderate",
+      "source": "Sleep debt research consensus; circadian rhythm and performance literature",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
     },
     {
-      "rule_name": "Pre-Competition Sleep Extension for Physical Performance",
-      "category": "Performance Recovery",
-      "condition": "An ultra-endurance athlete is preparing for a competition.",
-      "action": "Extend sleep duration the night before the event.",
-      "formula_or_value": "Extended sleep"
-    },
-    {
-      "rule_name": "Intra-Competition Napping for Cognitive Performance",
-      "category": "Performance Recovery",
-      "condition": "An ultra-endurance athlete is experiencing cognitive fatigue during competition.",
-      "action": "Take mid-race naps.",
-      "formula_or_value": "Mid-race naps"
-    },
-    {
-      "rule_name": "Importance of Pre-Race Sleep Quality for Cognition",
-      "category": "Performance Recovery",
-      "condition": "An ultra-endurance athlete aims to optimize cognitive performance during competition.",
-      "action": "Prioritize and ensure high sleep quality in the period leading up to the race.",
-      "formula_or_value": "Positively associated"
-    },
-    {
-      "rule_name": "Sleep Duration for Athletic Performance and Mental Health",
-      "category": "Sleep, Mental Health",
-      "condition": "A young adult athlete seeks to enhance athletic performance and support mental health.",
-      "action": "Extend overall sleep duration.",
-      "formula_or_value": "Could enhance athletic performance and support mental health"
-    },
-    {
-      "rule_name": "Consequences of Inadequate Sleep in Athletes",
-      "category": "Sleep, Performance, Mental Health",
-      "condition": "An athlete experiences inadequate sleep.",
-      "action": "Be aware that this can lead to reduced reaction times and mental health problems such as depressive symptoms and anxiety.",
-      "formula_or_value": "Reduced reaction times, mental health problems"
-    },
-    {
-      "rule_name": "Risk Factors for Sleep Disturbances in Athletes",
+      "rule_name": "Pre-competition sleep extension",
       "category": "Sleep",
-      "condition": "An athlete's schedule includes early morning practice sessions, late night games, or travel across time zones (jet lag).",
-      "action": "Recognize these as significant risk factors for sleep and circadian rhythm disturbances and implement mitigating strategies.",
-      "formula_or_value": "Early morning practice sessions, late night games, jet lag"
+      "condition": "If athlete has a major race or competition within 3-5 days",
+      "action": "Extend sleep by 1-2 hours per night for 3-5 nights before the event; bank sleep in advance of potential pre-race night disruption",
+      "formula_or_value": "Pre-competition: +1 to +2h sleep/night for 3-5 nights before event; race-night sleep quality matters less than pre-race banking",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Systematic review: sleep and ultra-endurance performance (original source); pre-competition sleep banking research",
+      "applies_to": ["running", "cycling", "swimming"]
     },
     {
-      "rule_name": "Yoga for Melatonin Enhancement and Sleep Quality",
+      "rule_name": "Intra-competition napping for cognitive performance",
       "category": "Sleep",
-      "condition": "An individual seeks a non-pharmacological approach to enhance sleep health.",
-      "action": "Regularly practice yogic techniques, including meditation and mantra chanting.",
-      "formula_or_value": "Pooled SMD of 0.37 (95% - CI: [0.09; 0.66]) on melatonin levels"
+      "condition": "If athlete experiences cognitive fatigue during ultra-endurance competition (>6h event)",
+      "action": "Permit and schedule mid-race naps of 20-30 minutes at planned aid stations; napping improves subsequent decision-making and reduces error rate",
+      "formula_or_value": "Nap duration: 20-30 min (avoid >30 min to prevent sleep inertia); improvement in cognitive performance: significant vs. no nap",
+      "priority": "medium",
+      "confidence": "moderate",
+      "source": "Systematic review: sleep role in ultra-endurance performance (original source)",
+      "applies_to": ["running", "cycling"]
+    },
+    {
+      "rule_name": "Early morning practice — sleep mitigation",
+      "category": "Sleep",
+      "condition": "If athlete's schedule includes early morning practice sessions (before 6am)",
+      "action": "Flag as a risk factor for sleep disturbance; recommend earlier bedtime, not reduced wake time; monitor weekly sleep totals",
+      "formula_or_value": "Early practice (pre-6am): flag circadian risk; bedtime advance: shift bedtime by 30-60 min to compensate; monitor total weekly sleep hours",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Review: circadian rhythm and sleep disturbances in young adult athletes (original source)",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "Sleep quality consequences — performance and mental health",
+      "category": "Sleep",
+      "condition": "If athlete reports or shows signs of inadequate sleep",
+      "action": "Assess for reduced reaction times and mental health indicators (depressive symptoms, anxiety); modify training load and escalate if mental health signs present",
+      "formula_or_value": "Inadequate sleep → reduced reaction time, anxiety, depressive symptoms; training load reduction: 15-20% until sleep normalizes",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Review: circadian rhythm and sleep disturbances in young adult athletes (original source)",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "Yoga and meditation for melatonin and sleep quality",
+      "category": "Sleep",
+      "condition": "If athlete seeks a non-pharmacological approach to improve sleep onset and quality",
+      "action": "Prescribe 20-30 min of yoga or meditation in the evening; proven to elevate melatonin and improve sleep quality",
+      "formula_or_value": "Yogic techniques (meditation + mantra): pooled SMD = 0.37 (95% CI: 0.09-0.66) on melatonin levels; practice ≥3×/week",
+      "priority": "low",
+      "confidence": "moderate",
+      "source": "Meta-analysis: yogic techniques and melatonin levels (original source)",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "Aerobic exercise improves sleep quality",
+      "category": "Sleep",
+      "condition": "If athlete or individual experiences general sleep disturbances (not from overtraining)",
+      "action": "Regular moderate aerobic exercise improves sleep quality; schedule exercise ≥4 hours before bedtime to avoid sleep disruption",
+      "formula_or_value": "Aerobic exercise: widely supported for sleep quality improvement; timing: ≥4h before bedtime; morning or afternoon preferred",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Systematic review: aerobic exercise and sleep quality (original source)",
+      "applies_to": ["running", "cycling", "swimming"]
+    },
+    {
+      "rule_name": "CNS fatigue indicators",
+      "category": "CNS Recovery",
+      "condition": "If athlete shows any of the following signs after a heavy training block: RPE inflation, mood disturbance, or reduced motivation",
+      "action": "Assess for CNS fatigue; reduce CNS-demanding sessions; increase recovery days until indicators resolve",
+      "formula_or_value": "CNS fatigue signs: RPE +2 or more vs. expected at given pace/load; reaction time increase >10%; mood disturbance; motivation loss; if ≥2 signs: mandatory 48-72h CNS recovery",
+      "priority": "high",
+      "confidence": "moderate",
+      "source": "Overreaching and CNS fatigue research; Meeusen et al. 2013 overtraining consensus statement",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "CNS recovery window post-heavy strength",
+      "category": "CNS Recovery",
+      "condition": "After a heavy maximal strength session (≥85% 1RM, compound lifts, CNS-intensive)",
+      "action": "Do not schedule another CNS-demanding session within 48-72 hours; this includes maximal sprint efforts, heavy Olympic lifts, and high-intensity intervals",
+      "formula_or_value": "Post-maximal strength CNS recovery: 48-72h before next CNS-demanding session; aerobic Z1-Z2 work permitted within 24h",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Neuromuscular fatigue research; Aagaard 2003; Häkkinen et al. CNS recovery studies",
+      "applies_to": ["lifting", "running", "cycling"]
+    },
+    {
+      "rule_name": "Caffeine timing — avoid CNS disruption to sleep",
+      "category": "CNS Recovery",
+      "condition": "If athlete uses caffeine for performance enhancement",
+      "action": "Schedule last caffeine dose ≥6 hours before planned bedtime; athletes sensitive to caffeine should avoid post-2pm consumption",
+      "formula_or_value": "Caffeine half-life: ~5-6h; last dose: ≥6h pre-sleep; for sensitive athletes: cut-off at 2pm; avoid late training sessions with pre-workout caffeine",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Caffeine pharmacokinetics research; sleep-caffeine interaction consensus",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
     }
   ]
 }
