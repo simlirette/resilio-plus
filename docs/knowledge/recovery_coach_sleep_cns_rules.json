@@ -160,11 +160,11 @@
       "applies_to": ["running", "cycling", "lifting"]
     },
     {
-      "rule_name": "Sleep deprivation — RPE inflation and session adjustment",
+      "rule_name": "Sleep deprivation — RPE inflation mechanism (5–6h sleep)",
       "category": "Sleep",
-      "condition": "If athlete slept <6 hours the night before a planned session",
-      "action": "Reduce session intensity targets by 10-15%; do not cancel but adjust; perceived exertion is artificially elevated due to sleep deprivation",
-      "formula_or_value": "Sleep <6h: RPE inflated by +1 to +2 vs normal; pace/power target reduction: 5-10%; cancel only if sleep <5h + subjective fatigue ≥4/5; adjusted session > no session for adaptation signal",
+      "condition": "If athlete slept 5–6 hours the night before a planned session (below minimum threshold; session is being undertaken with Rule 1 modification active)",
+      "action": "Within the 20% intensity reduction prescribed by Rule 1, expect RPE to be artificially inflated; reduce pace/power targets by 5-10% from planned to compensate; this is the RPE inflation mechanism — the session proceeds but with adjusted targets, not raw feel-based effort",
+      "formula_or_value": "5–6h sleep: RPE inflated +1 to +2 vs. normal; pace/power target reduction: 5–10% from planned (implements Rule 1's 20% intensity reduction); adjusted session > no session for adaptation signal; for sleep <5h: Rule 1 critical flag applies — no high-intensity sessions, full rest preferred",
       "priority": "high",
       "confidence": "strong",
       "source": "Fullagar et al. 2015 sleep and athletic performance; Skein et al. 2011 sleep and sport performance",
