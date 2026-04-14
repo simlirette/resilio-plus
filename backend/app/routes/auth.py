@@ -96,3 +96,29 @@ def refresh(req: RefreshRequest, db: DB) -> TokenResponse:
         refresh_token=new_refresh,
         athlete_id=user.athlete_id,
     )
+
+
+@router.post("/logout")
+def logout(req: LogoutRequest, current_id: AuthedId, db: DB) -> dict:
+    token_hash = hash_token(req.refresh_token)
+    record = db.query(RefreshTokenModel).filter(
+        RefreshTokenModel.token_hash == token_hash,
+        RefreshTokenModel.revoked.is_(False),
+    ).first()
+    if record is not None:
+        record.revoked = True
+        db.commit()
+    return {"message": "Logged out"}
+
+
+@router.get("/me", response_model=MeResponse)
+def me(current_id: AuthedId, db: DB) -> MeResponse:
+    user = db.query(UserModel).filter(UserModel.athlete_id == current_id).first()
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return MeResponse(
+        athlete_id=user.athlete_id,
+        email=user.email,
+        created_at=user.created_at,
+        is_active=user.is_active,
+    )
