@@ -134,9 +134,9 @@ def test_strava_token_refresh_on_expiry_persisted_to_db(db_session):
     cred = db_session.query(ConnectorCredentialModel).filter_by(
         athlete_id=athlete_id, provider="strava"
     ).first()
-    assert cred.access_token == "new_access"
+    assert cred.access_token_enc == "new_access"
     assert cred.expires_at == 9999999999
-    assert cred.refresh_token == "new_refresh"
+    assert cred.refresh_token_enc == "new_refresh"
 
 
 def test_fetch_strava_network_error_returns_empty(db_session):
