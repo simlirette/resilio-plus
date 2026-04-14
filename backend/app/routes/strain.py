@@ -47,14 +47,13 @@ def get_strain(
     strain = compute_muscle_strain(
         strava_activities=connector_data["strava_activities"],
         hevy_workouts=connector_data["hevy_workouts"],
-        reference_date=date.today(),
     )
 
     scores = {m: getattr(strain, m) for m in MUSCLES}
     peak_group = max(scores, key=lambda k: scores[k])
 
     return MuscleStrainResponse(
-        computed_at=date.today(),
+        computed_at=strain.computed_at.date(),
         scores=scores,
         peak_group=peak_group,
         peak_score=scores[peak_group],
