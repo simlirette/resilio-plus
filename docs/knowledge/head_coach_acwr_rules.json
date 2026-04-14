@@ -1,47 +1,119 @@
 {
-  "search_query": "Extraction de règles de prévention des blessures et de gestion de l'entraînement à partir d'articles scientifiques",
+  "schema_version": "1.0",
   "target_agent": "Head Coach",
-  "source_articles_used": [
-    "Muscle, Neuromuscular, and Cardiac Damage in Trail Running: A Systematic Review.",
-    "Acute to chronic workload ratio (ACWR) for predicting sports injury risk: a systematic review and meta-analysis.",
-    "Kinetic Variables as Indicators of Lower Limb Indirect Injury Risk in Professional Soccer: A Systematic Review.",
-    "Adherence to Strength Training and Lower Rates of Sports Injury in Contact Sports: A Systematic Review and Meta-analysis."
-  ],
+  "language": "en",
+  "last_updated": "2026-04-13",
+  "source_books": [],
   "extracted_rules": [
     {
-      "rule_name": "Gestion du stress en trail running",
-      "category": "Récupération, Prévention des blessures",
-      "condition": "Si un athlète participe à du trail running, en particulier avec une charge excentrique élevée.",
-      "action": "Surveiller les marqueurs biochimiques et neuromusculaires.",
-      "formula_or_value": "N/A"
+      "rule_name": "ACWR safe zone — no action",
+      "category": "Load Management",
+      "condition": "If athlete's ACWR is between 0.8 and 1.3",
+      "action": "Training load is in the safe zone; proceed with planned sessions; no modification required",
+      "formula_or_value": "ACWR 0.8–1.3: safe zone; no intervention",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "ACWR meta-analysis (head_coach_acwr_rules original); Gabbett 2016; CLAUDE.md ACWR section",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
     },
     {
-      "rule_name": "Prédiction du risque de blessure par le ratio charge aiguë/chronique (ACWR)",
-      "category": "Prévention des blessures, Gestion de la charge d'entraînement",
-      "condition": "Si l'objectif est de gérer la charge d'entraînement et de prédire le risque de blessures sportives.",
-      "action": "Utiliser le ratio charge aiguë/chronique (ACWR).",
-      "formula_or_value": "ACWR"
+      "rule_name": "ACWR caution zone — flag and reduce",
+      "category": "Load Management",
+      "condition": "If athlete's ACWR is between 1.3 and 1.5",
+      "action": "Flag elevated injury risk to athlete; reduce the next planned session load by 10-15%; do not increase load until ACWR returns to safe zone",
+      "formula_or_value": "ACWR 1.3–1.5: caution zone; reduce next session load by 10-15%; flag athlete",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Gabbett 2016 ACWR injury risk meta-analysis; CLAUDE.md ACWR section",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
     },
     {
-      "rule_name": "Surveillance des variables cinétiques pour le risque de blessure des membres inférieurs",
-      "category": "Prévention des blessures, Force musculaire",
-      "condition": "Si l'on évalue le risque de blessures musculo-squelettiques indirectes des membres inférieurs chez les joueurs de football.",
-      "action": "Surveiller les variables cinétiques, en particulier les mesures de force isocinétique (force excentrique des ischio-jambiers, couple concentrique des quadriceps).",
-      "formula_or_value": "N/A"
+      "rule_name": "ACWR danger zone — mandatory load reduction",
+      "category": "Load Management",
+      "condition": "If athlete's ACWR exceeds 1.5",
+      "action": "Mandatory significant load reduction; notify athlete of high injury risk; replace planned hard sessions with easy/recovery sessions until ACWR drops below 1.3",
+      "formula_or_value": "ACWR >1.5: danger zone; mandatory load reduction; replace hard sessions with easy/recovery",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Gabbett 2016 ACWR injury risk meta-analysis; CLAUDE.md ACWR section",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
     },
     {
-      "rule_name": "Évaluation intégrée du risque de blessure",
-      "category": "Prévention des blessures, Gestion de la charge d'entraînement",
-      "condition": "Si l'on évalue le risque de blessure.",
-      "action": "Intégrer les données cinétiques avec des indicateurs contextuels tels que le bien-être, la fatigue et la charge d'entraînement.",
-      "formula_or_value": "N/A"
+      "rule_name": "ACWR formula — EWMA-based",
+      "category": "Load Calculation",
+      "condition": "When computing ACWR for any athlete",
+      "action": "Use EWMA (not simple rolling average) for both acute (7-day) and chronic (28-day) load windows",
+      "formula_or_value": "ACWR = EWMA_7d_load / EWMA_28d_load; EWMA_n = load_n × λ + EWMA_{n-1} × (1 − λ); λ_acute = 2/(7+1)=0.25; λ_chronic = 2/(28+1)=0.067",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Hulin et al. 2016; CLAUDE.md ACWR section",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
     },
     {
-      "rule_name": "Entraînement en force pour la prévention des blessures",
-      "category": "Prévention des blessures, Force musculaire",
-      "condition": "Si l'objectif est de prévenir les blessures sportives, en particulier dans les sports de contact.",
-      "action": "Mettre en œuvre et assurer l'adhésion à l'entraînement en force.",
-      "formula_or_value": "N/A"
+      "rule_name": "Multi-sport combined load for ACWR",
+      "category": "Load Calculation",
+      "condition": "If athlete trains across multiple sports (hybrid athlete)",
+      "action": "Sum TSS-equivalent load across all sports before computing ACWR; do not compute separate ACWRs per sport",
+      "formula_or_value": "total_daily_load = Σ(sport_TSS_equivalent); ACWR computed on total_daily_load; run TSS: hours × IF² × 100; cycling TSS: standard",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "CLAUDE.md ACWR section; strain.py EWMA implementation",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "10% weekly total load cap — all sports combined",
+      "category": "Load Management",
+      "condition": "Always — when planning the next training week for any athlete",
+      "action": "Never increase total weekly load (across all sports) by more than 10% from the previous week",
+      "formula_or_value": "next_week_total_load ≤ current_week_total_load × 1.10",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "CLAUDE.md Development Rules; consensus across Daniels, Pfitzinger",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "Trail running eccentric load multiplier",
+      "category": "Load Calculation",
+      "condition": "If athlete performs trail running, especially with significant elevation change",
+      "action": "Apply eccentric load multiplier to TSS; monitor biochemical and neuromuscular markers post-session",
+      "formula_or_value": "Trail run TSS multiplier: 1.1–1.3× road equivalent (higher on steep descents); monitor CK and RPE next morning",
+      "priority": "medium",
+      "confidence": "moderate",
+      "source": "Systematic review: muscle damage in trail running (head_coach_acwr_rules original)",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "Kinetic variables for lower limb injury monitoring",
+      "category": "Injury Prevention",
+      "condition": "If athlete shows ACWR >1.3 AND reports lower limb fatigue or asymmetry",
+      "action": "Flag for kinetic variable assessment; specifically monitor eccentric hamstring strength and concentric quad torque; integrate with wellness scores",
+      "formula_or_value": "Flag: ACWR >1.3 + lower limb fatigue report → request kinetic assessment; eccentric hamstring / concentric quad ratio <0.6 = elevated risk",
+      "priority": "medium",
+      "confidence": "moderate",
+      "source": "Systematic review: kinetic variables and lower limb injury in soccer (head_coach_acwr_rules original)",
+      "applies_to": ["running", "lifting"]
+    },
+    {
+      "rule_name": "Strength training adherence reduces injury risk",
+      "category": "Injury Prevention",
+      "condition": "If athlete participates in contact or high-impact sports",
+      "action": "Prescribe and monitor adherence to strength training; consistent strength training reduces sports injury rate",
+      "formula_or_value": "Consistent strength training adherence: reduces injury rate (meta-analysis effect; RR reduction significant in contact sports)",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Meta-analysis: strength training adherence and injury rates in contact sports (head_coach_acwr_rules original)",
+      "applies_to": ["running", "lifting", "cycling"]
+    },
+    {
+      "rule_name": "Integrated injury risk assessment",
+      "category": "Injury Prevention",
+      "condition": "When evaluating overall injury risk for any athlete",
+      "action": "Integrate ACWR data with contextual indicators: wellness score, RPE trend, sleep quality, and training monotony",
+      "formula_or_value": "Risk score = f(ACWR, wellness_score, RPE_trend, sleep_hours, training_monotony); flag if ≥2 indicators are elevated simultaneously",
+      "priority": "high",
+      "confidence": "moderate",
+      "source": "Systematic review: integrated injury risk assessment (head_coach_acwr_rules original)",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
     }
   ]
 }
