@@ -101,7 +101,7 @@
 
 ### 4.1 Sélection des allures
 
-- IF workout_type = VO₂max interval, THEN set pace = current 3K–5K race pace. [ref: §2 VO₂max / §3]
+- IF workout_type = VO₂max interval THEN set pace = current 5K race pace (effort range: 3K–5K) [ref: §2 VO2max Training]
 - IF workout_type = Lactate Threshold run, THEN set pace = current ~60-min race pace (15K–HM race pace equivalent). [ref: §2 LT / §3]
 - IF workout_type = Long Run, THEN set pace between 10K_pace × 1.20 and 10K_pace × 1.33 (20–33% slower than 10K pace). [ref: §2 Endurance Runs]
 - IF workout_type = General Aerobic, THEN set pace at conversational effort, HR 70–81% MHR. [ref: §2 GA / §3]
