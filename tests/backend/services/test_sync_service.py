@@ -63,8 +63,8 @@ def test_sync_strava_maps_activity_to_session_log(db_session):
         {"id": "s1", "date": today, "sport": "running", "workout_type": "easy_z1", "duration_min": 60}
     ]))
     cred = _make_cred(db_session, "strava")
-    cred.access_token = "tok"
-    cred.refresh_token = "ref"
+    cred.access_token_enc = "tok"
+    cred.refresh_token_enc = "ref"
     db_session.commit()
 
     mock_activity = StravaActivity(
@@ -94,8 +94,8 @@ def test_sync_strava_updates_last_sync(db_session):
     _make_athlete(db_session)
     _make_plan(db_session)
     cred = _make_cred(db_session, "strava")
-    cred.access_token = "tok"
-    cred.refresh_token = "ref"
+    cred.access_token_enc = "tok"
+    cred.refresh_token_enc = "ref"
     db_session.commit()
 
     with patch("app.services.sync_service.StravaConnector") as MockStrava:
@@ -113,8 +113,8 @@ def test_sync_strava_persists_refreshed_token(db_session):
     _make_athlete(db_session)
     _make_plan(db_session)
     cred = _make_cred(db_session, "strava")
-    cred.access_token = "old_tok"
-    cred.refresh_token = "old_ref"
+    cred.access_token_enc = "old_tok"
+    cred.refresh_token_enc = "old_ref"
     db_session.commit()
 
     with patch("app.services.sync_service.StravaConnector") as MockStrava:
@@ -126,15 +126,15 @@ def test_sync_strava_persists_refreshed_token(db_session):
         SyncService.sync_strava(_ATHLETE_ID, db_session)
 
     db_session.refresh(cred)
-    assert cred.access_token == "new_tok"
-    assert cred.refresh_token == "new_ref"
+    assert cred.access_token_enc == "new_tok"
+    assert cred.refresh_token_enc == "new_ref"
 
 
 def test_sync_strava_returns_zero_when_no_plan(db_session):
     _make_athlete(db_session)
     cred = _make_cred(db_session, "strava")
-    cred.access_token = "tok"
-    cred.refresh_token = "ref"
+    cred.access_token_enc = "tok"
+    cred.refresh_token_enc = "ref"
     db_session.commit()
 
     mock_activity = StravaActivity(
