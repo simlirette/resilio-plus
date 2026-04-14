@@ -2,8 +2,8 @@
   "schema_version": "1.0",
   "target_agent": "Head Coach",
   "language": "en",
-  "last_updated": "2026-04-13",
-  "source_books": [],
+  "last_updated": "2026-04-14",
+  "source_books": ["pfitzinger-advanced-marathoning", "pierce-first"],
   "extracted_rules": [
     {
       "rule_name": "Concurrent HIIT + resistance — preserve musculoskeletal function",
@@ -114,6 +114,61 @@
       "confidence": "strong",
       "source": "Baar 2014 molecular review; Hawley et al. 2016 concurrent training signaling",
       "applies_to": ["lifting", "running", "cycling"]
+    },
+    {
+      "rule_name": "FIRST cross-training as interference buffer",
+      "category": "Session Scheduling",
+      "condition": "If a hybrid athlete needs active recovery on a high-stress week without adding CNS or mechanical load",
+      "action": "Prescribe FIRST-style non-weight-bearing cross-training (cycling, swimming) as interference-free active recovery; preserves aerobic load without adding musculoskeletal stress",
+      "formula_or_value": "Non-weight-bearing XT: cycling or pool running; CNS load ≈ 0; mechanical stress ≈ 0; aerobic load maintained; use on days where running interference with strength is a concern",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Pierce, Murr & Moss, Run Less Run Faster (FIRST); cross-training interference research",
+      "applies_to": ["running", "cycling", "lifting"]
+    },
+    {
+      "rule_name": "Strength before long run — Pfitz sequencing",
+      "category": "Session Scheduling",
+      "condition": "If a heavy lower-body strength session and a long run are scheduled within 24 hours of each other",
+      "action": "Always perform the strength session before the long run, not after; residual fatigue from a long run degrades strength quality more than the reverse",
+      "formula_or_value": "Order: Strength -> (rest ≥6h or next morning) -> Long Run; reverse order (Long Run -> Strength) reduces peak force output by 15-25% in the strength session",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Pfitzinger & Douglas, Advanced Marathoning; concurrent training sequencing meta-analysis",
+      "applies_to": ["running", "lifting"]
+    },
+    {
+      "rule_name": "Block periodization for interference reduction",
+      "category": "Periodization",
+      "condition": "When designing an annual training plan for a hybrid endurance-strength athlete",
+      "action": "Consider alternating 4-week strength-emphasis blocks and 4-week endurance-emphasis blocks rather than concurrent year-round programming; reduces chronic interference vs simultaneous high loads",
+      "formula_or_value": "Strength block: 3-4 sessions/week at MAV-MRV; endurance at MEV; Endurance block: 4-6 sessions/week at peak volume; strength at MEV (maintenance); transition week: 1 deload between blocks",
+      "priority": "medium",
+      "confidence": "moderate",
+      "source": "Issurin 2010 block periodization theory; concurrent training interference meta-analysis",
+      "applies_to": ["running", "cycling", "lifting"]
+    },
+    {
+      "rule_name": "Taper period strength protocol",
+      "category": "Session Scheduling",
+      "condition": "During the taper phase (final 2-3 weeks before A-race)",
+      "action": "Reduce strength training to MEV (maintenance); maintain intensity, reduce volume by 40-60%; avoid DOMS-inducing sessions within 7 days of A-race",
+      "formula_or_value": "Taper strength: MEV sets/week (8-10 sets/muscle group); load unchanged; volume cut 40-60%; no novel exercises; no eccentric-heavy work (Nordic curls, tempo squats) within 7 days of race",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Concurrent training taper consensus; Pfitzinger & Douglas, Advanced Marathoning (taper principles applied to strength)",
+      "applies_to": ["running", "cycling", "lifting"]
+    },
+    {
+      "rule_name": "Double session same-day default ordering",
+      "category": "Session Scheduling",
+      "condition": "If two training sessions are scheduled on the same day with any combination of modalities",
+      "action": "Follow fixed priority ordering based on goal; default for hybrid athletes: endurance AM + strength PM is acceptable, but strength AM + quality run PM is not",
+      "formula_or_value": "Priority A (strength-primary): Strength AM -> Endurance PM (if endurance is Z1-Z2 only); Priority B (endurance-primary): Easy run AM -> Strength PM; NEVER: Hard endurance (Z3+) AM -> Strength PM same day",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Coffey & Hawley 2017; concurrent training sequencing research consensus",
+      "applies_to": ["running", "cycling", "lifting"]
     }
   ]
 }
