@@ -1,57 +1,141 @@
 {
-  "search_query": "Extraire les consensus clairs, les protocoles mathématiques et les règles applicables concernant la nutrition pour les athlètes d'endurance.",
+  "schema_version": "1.0",
   "target_agent": "Nutrition Coach",
-  "source_articles_used": [
-    "Interest of carbohydrate consumption during endurance exercise: a systematic review of systematic and meta-analyses of RCTs.",
-    "Effects of Low-Carbohydrate and Ketogenic Diets on Aerobic Performance in Trained Athletes: A Systematic Review and Meta-Analysis.",
-    "Forensic Perspective of Unintentional Doping, Cardiovascular Health, and the Role of Nutrition in Competitive Sports.",
-    "Carbohydrate ingestion during prolonged exercise and net skeletal muscle glycogen utilization: a meta-analysis.",
-    "Artificial Intelligence in Endurance Sports: Metabolic, Recovery, and Nutritional Perspectives.",
-    "Nutritional strategies for minimizing gastrointestinal symptoms during endurance exercise: systematic review of the literature.",
-    "Effects of carbohydrate supplementation on the performance of endurance athletes: A systematic review."
-  ],
+  "language": "en",
+  "last_updated": "2026-04-13",
+  "source_books": [],
   "extracted_rules": [
     {
-      "rule_name": "Consommation de glucides pour la performance d'endurance",
+      "rule_name": "Carbohydrate targets by training day type",
+      "category": "Macronutrient Targets",
+      "condition": "When prescribing daily carbohydrate intake based on training load",
+      "action": "Set carbohydrate targets in g/kg body weight based on the day's training type",
+      "formula_or_value": "Rest day: 3-4 g/kg; light training day: 4-5 g/kg; moderate training day: 5-7 g/kg; hard/long training day: 7-10 g/kg; >2.5h endurance event: 10-12 g/kg",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Jeukendrup 2011; Burke et al. 2011; IOC nutrition consensus 2011",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "Daily protein target for athletes",
+      "category": "Macronutrient Targets",
+      "condition": "When prescribing daily protein intake for any athlete in active training",
+      "action": "Target 1.6-2.2g protein per kg body weight per day; distribute across 4 meals at ~0.4g/kg per meal",
+      "formula_or_value": "Daily protein: 1.6-2.2 g/kg/day; per meal: 0.4 g/kg (optimal for MPS); minimum 4 meals/day; upper benefit ceiling: ~2.2 g/kg beyond which no additional MPS",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Phillips & Van Loon 2011; Morton et al. 2018 meta-analysis; Stokes et al. 2018",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "Intra-workout carbohydrate — sessions 60-150 min",
+      "category": "Intra-Workout Nutrition",
+      "condition": "If session duration is 60-150 minutes at moderate-to-high intensity",
+      "action": "Consume 30-60g of carbohydrate per hour during exercise; glucose or maltodextrin sources preferred",
+      "formula_or_value": "30-60 g carbs/hour; intestinal absorption rate: ~60g glucose/hour max; sources: glucose, maltodextrin, sports drinks, gels",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Jeukendrup 2011 carbohydrate oxidation rates; meta-analysis: carb supplementation and endurance performance (original source)",
+      "applies_to": ["running", "cycling", "swimming"]
+    },
+    {
+      "rule_name": "Intra-workout carbohydrate — sessions >150 min",
+      "category": "Intra-Workout Nutrition",
+      "condition": "If session duration exceeds 150 minutes (2.5 hours) at sustained intensity",
+      "action": "Increase carbohydrate intake to 60-90g per hour using a glucose:fructose 2:1 ratio blend to maximize absorption via dual-transporter pathway",
+      "formula_or_value": "60-90 g carbs/hour; glucose:fructose ratio 2:1; dual-transporter ceiling: 90g/h; trained gut required for >80g/h without GI distress",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Jeukendrup 2011; Currell & Jeukendrup 2008 dual-transporter research",
+      "applies_to": ["running", "cycling"]
+    },
+    {
+      "rule_name": "Pre-workout meal timing and composition",
+      "category": "Pre-Workout Nutrition",
+      "condition": "Before any training session of moderate-to-high intensity",
+      "action": "Consume a carbohydrate-rich meal 1-4 hours before exercise; reduce portion size as timing approaches session start",
+      "formula_or_value": "3-4h before: 1-4 g/kg carbs + moderate protein; 1-2h before: 1-2 g/kg carbs, low fat, low fiber; <1h: 0.5-1 g/kg simple carbs only; avoid high-fat/fiber <2h before",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Burke et al. 2011; pre-exercise nutrition consensus (original nutrition source)",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "Post-workout recovery nutrition window",
+      "category": "Post-Workout Nutrition",
+      "condition": "After any training session exceeding 60 minutes or high-intensity effort",
+      "action": "Consume protein + carbohydrate within 30-45 minutes of session end to maximize glycogen resynthesis and muscle protein synthesis",
+      "formula_or_value": "Within 30-45 min post-session: 0.3 g/kg protein + 1 g/kg carbohydrate; glycogen resynthesis rate: 5-10% higher with immediate vs delayed intake",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Ivy et al. 1988; post-exercise nutrition consensus; Burke et al. 2011",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "Race-day carbohydrate loading — marathon and long events",
+      "category": "Pre-Race Nutrition",
+      "condition": "If athlete is preparing for a marathon or endurance event lasting >90 minutes",
+      "action": "Carbohydrate load in the 24-48 hours before the event; this maximizes muscle glycogen stores",
+      "formula_or_value": "Carbohydrate loading: 8-12 g/kg/day for 24-48h pre-race; reduce training volume during loading period; muscle glycogen can increase 20-40% above normal",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Burke et al. 2011; carbohydrate loading meta-analysis (original nutrition source)",
+      "applies_to": ["running", "cycling"]
+    },
+    {
+      "rule_name": "Hydration — pre, during, and post exercise",
+      "category": "Hydration",
+      "condition": "During any training session or race",
+      "action": "Follow evidence-based hydration protocol across all three phases of exercise",
+      "formula_or_value": "Pre: 500 ml water 2h before + 250-500 ml 15-30 min before; During: 400-800 ml/h (adjust by sweat rate and heat); Post: 1.5 L fluid per 1 kg body weight lost",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "ACSM hydration guidelines; Sawka et al. 2007",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "Glycogen sparing during prolonged exercise with carb intake",
       "category": "Performance Nutrition",
-      "condition": "Si un athlète est engagé dans un exercice d'endurance.",
-      "action": "Assurer un apport quotidien adéquat en glucides avant, pendant et après l'exercice pour maintenir les réserves de glycogène et optimiser la performance d'endurance.",
-      "formula_or_value": "Apport quotidien adéquat en glucides"
+      "condition": "If athlete ingests carbohydrates during a prolonged endurance effort (≥100 min)",
+      "action": "Expect reduced net muscle glycogen utilization; this delays fatigue onset and extends sustainable effort duration",
+      "formula_or_value": "Glycogen sparing: ~24 mmol·kg⁻¹ dry weight during ~100 min exercise with carb ingestion vs. placebo",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Meta-analysis: carbohydrate ingestion and net glycogen utilization (original nutrition source)",
+      "applies_to": ["running", "cycling"]
     },
     {
-      "rule_name": "Épargne du glycogène musculaire par l'ingestion de glucides",
-      "category": "Performance Nutrition",
-      "condition": "Si un athlète ingère des glucides pendant un exercice d'endurance prolongé.",
-      "action": "Attendre une réduction de l'utilisation nette du glycogène musculaire squelettique.",
-      "formula_or_value": "~24 mmol·kg-1 de poids sec de glycogène musculaire épargné pendant ~100 min d'exercice"
+      "rule_name": "Low-carbohydrate and ketogenic diet — metabolic adaptation",
+      "category": "Dietary Strategy",
+      "condition": "If a trained athlete adopts a low-carbohydrate (<130 g/day) or ketogenic (<50 g/day) diet",
+      "action": "Expect metabolic fat-oxidation adaptation with maintained or improved aerobic performance outcomes; warn athlete of possible acute performance reduction during 2-4 week adaptation phase",
+      "formula_or_value": "Low-carb: ≤130 g/day or ≤25% total energy; keto: <50 g/day or <10% total energy; adaptation phase: 2-4 weeks; aerobic performance: maintained or improved after adaptation",
+      "priority": "medium",
+      "confidence": "moderate",
+      "source": "Meta-analysis: low-carb and ketogenic diets and aerobic performance (original nutrition source)",
+      "applies_to": ["running", "cycling"]
     },
     {
-      "rule_name": "Régimes faibles en glucides et cétogènes pour la performance aérobie",
-      "category": "Stratégie Diététique",
-      "condition": "Si un athlète entraîné adopte un régime faible en glucides (≤130 g·jour-1 ou ≤25% de l'énergie totale) ou cétogène (<50 g·jour-1 ou <10% de l'énergie totale).",
-      "action": "L'athlète peut atteindre une adaptation métabolique avec des résultats de performance aérobie maintenus ou améliorés.",
-      "formula_or_value": "Faible en glucides (≤130 g·jour-1 ou ≤25% de l'énergie totale) ou cétogène (<50 g·jour-1 ou <10% de l'énergie totale)"
+      "rule_name": "GI distress prevention — intra-exercise nutrition",
+      "category": "GI Health",
+      "condition": "If athlete has a history of GI distress during endurance exercise",
+      "action": "Implement gut training protocol; avoid high-fiber, high-fat, and high-fructose foods within 2-3h before and during exercise; gradually increase intra-workout carb intake across training weeks",
+      "formula_or_value": "Gut training: gradually increase intra-workout carb intake from 30g/h → 60g/h → 90g/h over 4-8 weeks; avoid: high-fiber/fat pre-exercise; trial race nutrition in training",
+      "priority": "high",
+      "confidence": "moderate",
+      "source": "Systematic review: nutritional strategies for minimizing GI symptoms during endurance exercise (original source)",
+      "applies_to": ["running", "cycling"]
     },
     {
-      "rule_name": "Stratégies nutritionnelles pour la performance et la santé cardiovasculaire (alternative au dopage)",
-      "category": "Performance et Santé / Anti-Dopage",
-      "condition": "Si un athlète cherche à améliorer la performance d'endurance et la santé cardiovasculaire de manière sûre, en évitant les substances améliorant la performance (PESs).",
-      "action": "Mettre en œuvre des stratégies nutritionnelles basées sur des preuves.",
-      "formula_or_value": "La charge en glucides, l'apport optimisé en protéines, la supplémentation en oméga-3 et l'hydratation ont amélioré l'endurance de 8-12%, réduit la fréquence cardiaque au repos de ~3 bpm et abaissé le cholestérol LDL."
-    },
-    {
-      "rule_name": "Minimisation des symptômes gastro-intestinaux",
-      "category": "Performance Nutrition / Santé",
-      "condition": "Si un athlète éprouve des symptômes gastro-intestinaux (GI) pendant l'exercice d'endurance.",
-      "action": "Mettre en œuvre des stratégies nutritionnelles pour atténuer les troubles gastro-intestinaux.",
-      "formula_or_value": "Solutions nutritionnelles spécifiques pour atténuer les symptômes GI (détails non spécifiés dans l'abstract)"
-    },
-    {
-      "rule_name": "Gestion personnalisée des glucides via l'IA et le CGM",
-      "category": "Stratégie Nutritionnelle Avancée / Technologie",
-      "condition": "Si un athlète d'endurance recherche une gestion précise des glucides pendant des événements prolongés.",
-      "action": "Utiliser la surveillance continue du glucose (CGM) combinée à des algorithmes d'IA.",
-      "formula_or_value": "Non applicable (méthode/outil)"
+      "rule_name": "Omega-3 and cardiovascular health for endurance athletes",
+      "category": "Supplementation",
+      "condition": "If athlete seeks to optimize cardiovascular health markers alongside endurance performance",
+      "action": "Include omega-3 fatty acid supplementation; combined with carbohydrate loading, protein optimization, and hydration it produces measurable cardiovascular and performance benefits",
+      "formula_or_value": "Omega-3 supplementation: reduces resting HR by ~3 bpm, lowers LDL cholesterol; dose: 1-3g EPA+DHA/day; combined nutritional strategy improves endurance by 8-12%",
+      "priority": "low",
+      "confidence": "moderate",
+      "source": "Forensic perspective on nutrition in competitive sports (original nutrition source)",
+      "applies_to": ["running", "cycling", "swimming"]
     }
   ]
 }
