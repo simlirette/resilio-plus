@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "target_agent": "Running Coach",
   "language": "en",
-  "last_updated": "2026-04-13",
+  "last_updated": "2026-04-14",
   "source_books": [
     "daniels-running-formula",
     "pfitzinger-advanced-marathoning",
@@ -230,6 +230,105 @@
       "confidence": "moderate",
       "source": "Pfitzinger Advanced Marathoning; Fitzgerald 80/20 Running",
       "applies_to": ["running", "cycling"]
+    },
+    {
+      "rule_name": "Marathon pace (M-pace) zone",
+      "category": "Pace Zones",
+      "condition": "If scheduling a marathon-pace run or goal marathon-pace segment within a long run",
+      "action": "Run at current goal marathon pace; embed M-pace in long runs or as standalone medium-long runs; effort is controlled and sustainable for 26.2 miles",
+      "formula_or_value": "M-pace: 75-84% vVO2max; 75-84% HRmax; volume embedded in long run = unlimited; standalone M-pace run capped at 29% of weekly mileage",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Daniels' Running Formula, 3rd ed., §2 M-Pace",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "4-phase training structure — Daniels model",
+      "category": "Periodization",
+      "condition": "When structuring a seasonal training plan for a runner",
+      "action": "Apply Daniels 4-phase structure: Phase I (Foundation/E+L), Phase II (Repetition/R), Phase III (Interval/I), Phase IV (Threshold/T); compress proportionally if season <24 weeks",
+      "formula_or_value": "Phase I: E-pace + Long runs; Phase II: R-pace reps (economy); Phase III: I-pace intervals (VO2max); Phase IV: T-pace tempo (threshold); ideal duration: 6 weeks/phase; season <24 weeks: compress each phase to 4 weeks",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Daniels' Running Formula, 3rd ed., §5 Training Plans",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "FIRST 3-run-only model — structural constraint",
+      "category": "Session Structure",
+      "condition": "If athlete is following a FIRST (Run Less, Run Faster) training model",
+      "action": "Prescribe exactly 3 key runs per week: Track Repeats (TR, Z4-5), Tempo Run (TMP, Z3), Long Run (LR, Z1-2); mandate 2 non-weight-bearing cross-training sessions per week; adding a 4th run defeats the model",
+      "formula_or_value": "TR: 5K pace or faster (Z4-5, 1 session); TMP: 10K-HM pace (Z3, 1 session); LR: goal MP+45-90s/mile (Z1-2, 1 session); XT: 2x/week non-weight-bearing (cycling, swimming); 4th run = model violation",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Pierce, Murr & Moss, Run Less Run Faster (FIRST program)",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "Pfitz-FRR VO2max repetitions — 5K/10K specificity",
+      "category": "Session Structure",
+      "condition": "If athlete is on a 5K or 10K plan and scheduling a VO2max-targeted interval session",
+      "action": "Prescribe 600m-1 mile repeats at 5K race pace with full recovery intervals; use only during 5K/10K-specific plan weeks, not marathon prep",
+      "formula_or_value": "Rep distance: 600m-1 mile at 5K race pace; recovery: full jog equal duration; reps: 4-6; total VO2max volume: 4-6 km per session; not applicable in marathon or >10K blocks",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Pfitzinger & Latter, Faster Road Racing",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "General Aerobic (GA) run — Pfitz-Adv definition",
+      "category": "Pace Zones",
+      "condition": "When scheduling a medium-effort aerobic run that is not a recovery run and not a quality session",
+      "action": "Assign General Aerobic pace: MP+15-25% slower than goal marathon pace; fills the majority of non-quality weekly mileage; never slower than E-pace",
+      "formula_or_value": "GA pace: marathon_pace x 1.15 to marathon_pace x 1.25; HR: approximately 73-84% HRmax; typical run duration: 60-110 min",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Pfitzinger & Douglas, Advanced Marathoning",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "Adverse weather — quality session substitution",
+      "category": "Session Structure",
+      "condition": "If a quality session (T/I/R-pace) is scheduled and weather is adverse (high wind, ice, extreme heat)",
+      "action": "Swap the quality day with a scheduled E-day; perform the quality session when weather improves; acceptable substitutes: fartlek or hard hill repeats to achieve similar physiological stimulus",
+      "formula_or_value": "Option A: swap Q-day with E-day in same week; Option B: substitute fartlek (unstructured) or hill repeats (same CV stimulus without pace precision required); pace targets secondary to physiological effort",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Daniels' Running Formula, 3rd ed., §3 Workout Substitution Logic",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "Pfitz-FRR taper structure — sub-marathon distances",
+      "category": "Taper",
+      "condition": "If athlete is tapering for a 5K, 10K, or half-marathon",
+      "action": "Apply distance-specific taper: shorter taper for 5K, longer for half-marathon; reduce volume progressively while maintaining intensity",
+      "formula_or_value": "5K taper: 1-2 weeks; Week-1: -20-25%, Week-2 (race week): -35-40%; 10K taper: 2 weeks; Week-1: -20-25%, Week-2: -35-40%; HM taper: 2-3 weeks; Week-1: -20-25%, Week-2: -35-40%, Week-3: -50-60%; intensity sessions maintained throughout",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Pfitzinger & Latter, Faster Road Racing",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "Return from break — Pfitz protocol (>20 days)",
+      "category": "Return to Training",
+      "condition": "If athlete returns after a break of more than 20 days",
+      "action": "Skip all missed sessions entirely; revise goal race time downward; do not attempt to make up lost volume; resume with easy weeks and reassess fitness before setting new goals",
+      "formula_or_value": "Break >20 days: zero makeup sessions; weeks 1-2: Z1-Z2 only at 50-60% of pre-break volume; revise goal race time; reassess pace targets after 3-4 weeks of resumed training",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Pfitzinger & Douglas, Advanced Marathoning",
+      "applies_to": ["running"]
+    },
+    {
+      "rule_name": "80/20 return from break (>2 weeks)",
+      "category": "Return to Training",
+      "condition": "If an athlete following the 80/20 model returns after a break of more than 2 weeks",
+      "action": "First week back at 50% of pre-break volume; maintain 80/20 TID from the first session back; reduce volume, not intensity distribution",
+      "formula_or_value": "Break >2 weeks: week 1 = 50% volume, full 80/20 TID; week 2 = 70% volume; week 3 = 85%; week 4 = full volume if no adverse HRV or fatigue signals",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Fitzgerald, 80/20 Running",
+      "applies_to": ["running"]
     }
   ]
 }
