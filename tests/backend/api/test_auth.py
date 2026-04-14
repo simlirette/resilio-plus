@@ -58,3 +58,14 @@ def test_login_wrong_password_returns_401(client_and_db):
 def test_login_unknown_email_returns_401(client):
     resp = client.post("/auth/login", json={"email": "nobody@test.com", "password": "pass"})
     assert resp.status_code == 401
+
+
+def test_login_returns_refresh_token(client_and_db):
+    client, db = client_and_db
+    _seed_user(db)
+
+    resp = client.post("/auth/login", json={"email": "alice@test.com", "password": "password123"})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "refresh_token" in body
+    assert len(body["refresh_token"]) > 20

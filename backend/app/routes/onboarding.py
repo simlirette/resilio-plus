@@ -6,7 +6,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from ..core.security import create_access_token, hash_password, generate_token
+from ..core.security import create_access_token, hash_password
 from ..db.models import AthleteModel, UserModel
 from ..dependencies import get_db
 from ..routes.athletes import athlete_model_to_response
@@ -66,11 +66,13 @@ def onboard_athlete(req: OnboardingRequest, db: DB) -> OnboardingResponse:
     end_date = req.plan_start_date + timedelta(days=6)
     plan_model = _create_plan_for_athlete(athlete_id, athlete, req.plan_start_date, end_date, db)
 
-    token = create_access_token(athlete_id=athlete_id)
-    refresh_token = generate_token()
+    from ..routes.auth import _issue_refresh_token
+    access_token = create_access_token(athlete_id=athlete_id)
+    refresh_token = _issue_refresh_token(user.id, db)
+    db.commit()
     return OnboardingResponse(
         athlete=athlete,
         plan=TrainingPlanResponse.from_model(plan_model),
-        access_token=token,
+        access_token=access_token,
         refresh_token=refresh_token,
     )
