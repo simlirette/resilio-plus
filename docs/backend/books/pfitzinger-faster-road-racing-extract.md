@@ -11,7 +11,7 @@
 - **Training success is built on consistency, staying healthy, and long-term perseverance**; no individual workout overrides the need for sustainable progression.
 - **Four primary training types exist**: endurance runs (long runs), lactate threshold (LT) runs, VO₂max intervals, and speed work; all other runs are general aerobic or recovery.
 - **LT pace = the pace a well-trained runner can sustain in a race lasting approximately 60 minutes**; HR sits at 82–91% MHR (77–88% HRR); the single best predictor of race performance for distances 8K to half marathon.
-- **VO₂max interval pace = current 3K to 5K race pace**; intervals of 600 m–1600 m (2–6 min each); recovery jog = 50–90% of interval duration; total session volume accumulates time at 95–100% VO₂max.
+- **VO₂max interval pace = current 5K race pace (effort equivalent to 3K-5K race effort, pace anchored at 5K)**; intervals of 600 m–1600 m (2–6 min each); recovery jog = 50–90% of interval duration; total session volume accumulates time at 95–100% VO₂max.
 - **Long run pace = 20–33% slower than current 10K race pace** (or 17–29% slower than 15K–HM race pace); HR 74–84% MHR (65–78% HRR); performed once per week as cornerstone of training.
 - **General aerobic (GA) run pace = conversational effort**; HR 70–81% MHR (62–75% HRR); constitutes the majority of weekly mileage between quality sessions.
 - **Recovery run**: short, easy; sole purpose is blood-flow flushing of metabolic waste and promoting adaptation; must be truly easy to preserve the quality of subsequent hard sessions.
@@ -24,7 +24,7 @@
 - **Hard/Easy principle**: hard sessions (long runs, LT, VO₂max) must be separated by at least one easy day; the easy day must be genuinely easy (not moderately hard) to allow positive physiological adaptation.
 - **Taper structure varies by race distance**: shorter races (5K) need shorter tapers (~1–2 weeks); half marathon requires 2–3 weeks; volume is cut significantly while intensity is maintained.
 - **Tune-up races serve dual purpose**: fitness assessment and race-specific stimulus; shorter races (5K–10K) need less recovery than longer tune-up races (10-mile–HM).
-- **Warm-up before all quality sessions and races**: 10–20 min easy run + dynamic stretching + drills + 2–6 strides; pre-race warm-up total ~45 minutes, ending 5 minutes before start.
+- **Warm-up before all quality sessions and races**: 10–20 min easy run + dynamic stretching + drills + 4–6 strides; pre-race warm-up total ~45 minutes, ending 5 minutes before start.
 - **Cool-down after all quality sessions**: 10–20 min easy run + static stretching (holds 20–30 seconds); clears lactate and reduces adrenaline; does not prevent DOMS.
 - **Supplementary training (strength, plyometrics, flexibility) is non-optional** for improving running economy, correcting muscle imbalances, and preventing injury; 2–3 strength sessions per week; plyometrics ≤ 2/week.
 - **Running economy improvements** come from strides, power hills, plyometrics, and running drills; improved economy directly lowers energy cost at any given pace.
@@ -39,7 +39,7 @@
 | Formule | Inputs | Output | Notes |
 |---|---|---|---|
 | LT pace | Recent race time for ~60-min effort (typically 15K or HM) | Pace per km/mile at lactate threshold | Equal to current 15K–HM race pace; use most recent all-out effort |
-| VO₂max interval pace | Recent 5K (or 3K) race time | Pace per km/mile for intervals | Current 3K–5K race pace; never faster |
+| VO₂max interval pace | Recent 5K race time | Pace per km/mile for intervals | 5K race pace; effort in 3K-5K range; never faster than 5K pace |
 | Long run pace (fast bound) | Current 10K race pace | long_run_pace_fast = 10K_pace × 1.20 | 20% slower than 10K pace `[ref: §2 Endurance Runs]` |
 | Long run pace (slow bound) | Current 10K race pace | long_run_pace_slow = 10K_pace × 1.33 | 33% slower than 10K pace `[ref: §2 Endurance Runs]` |
 | Long run pace alternate (fast) | Current 15K–HM pace | long_run_pace_fast = HM_pace × 1.17 | 17% slower than 15K–HM pace `[ref: §2 Endurance Runs]` |
@@ -61,7 +61,7 @@
 | LT run HR (MHR) | 82–91 | % MHR | During tempo segment |
 | LT run HR (HRR) | 77–88 | % HRR | During tempo segment |
 | LT interval recovery | 20–40 | % of work interval duration | Jog recovery between LT reps |
-| VO₂max interval pace | 3K–5K race pace | — | Current race pace, never goal pace |
+| VO₂max interval pace | 5K race pace | — | Effort in 3K-5K range; pace anchored at 5K; never goal pace |
 | VO₂max interval duration (per rep) | 2–6 | minutes | Hard constraint; 600 m–1600 m typical |
 | VO₂max interval recovery | 50–90 | % of interval duration | Slow jog effort |
 | Long run pace (10K-based) | 10K pace + 20–33 | % slower | HR 74–84% MHR |
@@ -84,6 +84,9 @@
 | Taper duration — 5K | 1–2 | weeks | Volume cut, intensity maintained |
 | Taper duration — 10K | 2 | weeks | Volume cut, intensity maintained |
 | Taper duration — half marathon | 2–3 | weeks | Volume cut, intensity maintained |
+| Taper week 1 volume reduction | 20–25 | % of peak | All distances; first taper week `[ref: §4 Taper]` |
+| Taper week 2 volume reduction (HM) | 35–40 | % of peak | Half marathon only; second taper week `[ref: §4 Taper]` |
+| Taper final week volume reduction | 50–60 | % of peak | Race week `[ref: §4 Taper]` |
 | Masters taper extension | +several days | days added | E.g., 17-day taper vs standard 14-day for goal race |
 | Strength training frequency | 2–3 | times/week | Not within 24–36 h before a hard run |
 | Plyometrics frequency | ≤ 2 | times/week | Only on recovery or GA days; not fatigued |
@@ -115,15 +118,15 @@
 
 ### 4.3 Taper par distance de course
 
-- IF goal race = 5K, THEN begin taper 1–2 weeks before race; reduce weekly volume significantly while maintaining intensity. [ref: §5 Taper]
-- IF goal race = 10K, THEN begin taper 2 weeks before race; reduce weekly volume significantly while maintaining intensity. [ref: §5 Taper]
-- IF goal race = half marathon, THEN begin taper 2–3 weeks before race; reduce weekly volume significantly while maintaining intensity. [ref: §5 Taper]
+- IF goal race = 5K, THEN begin taper 1–2 weeks before race; IF taper week = 1 THEN reduce weekly volume by 20–25% from peak; IF taper week = final (race week) THEN reduce weekly volume by 50–60% from peak; maintain intensity throughout. `[ref: §4 Taper]`
+- IF goal race = 10K, THEN begin taper 2 weeks before race; IF taper week = 1 THEN reduce weekly volume by 20–25% from peak; IF taper week = final (race week) THEN reduce weekly volume by 50–60% from peak; maintain intensity throughout. `[ref: §4 Taper]`
+- IF goal race = half marathon, THEN begin taper 2–3 weeks before race; IF taper week = 1 THEN reduce weekly volume by 20–25% from peak; IF taper week = 2 THEN reduce weekly volume by 35–40% from peak; IF taper week = final (race week) THEN reduce weekly volume by 50–60% from peak; maintain intensity throughout. `[ref: §4 Taper]`
 - IF tapering, THEN maintain workout intensities at race paces — reduce volume only, not pace. [ref: §5 Taper]
 - IF runner_is_master AND approaching goal race, THEN extend taper by several days beyond the standard duration (e.g., 17-day taper instead of 14-day). [ref: §3 Masters / §5 Taper]
 
 ### 4.4 Exigences warm-up / cool-down
 
-- IF workout_type = VO₂max interval OR Lactate Threshold OR Speed, THEN execute warm-up: 10–20 min easy run + dynamic stretching + drills + 3–6 strides. [ref: §2 Warm-Up]
+- IF workout_type = VO₂max interval OR Lactate Threshold OR Speed, THEN execute warm-up: 10–20 min easy run + dynamic stretching + drills + 4–6 strides. [ref: §2 Warm-Up]
 - IF workout_type = VO₂max interval OR Lactate Threshold OR Speed, THEN execute cool-down: 10–20 min easy run + static stretching (20–30 sec holds). [ref: §2 Cool-Down]
 - IF workout_type = race, THEN execute full ~45-min warm-up ending exactly 5 minutes before the start. [ref: §2 Warm-Up]
 
@@ -163,7 +166,14 @@
 - IF scheduling plyometrics, THEN place session only on recovery or GA days when muscles are not fatigued. [ref: §2 Plyometrics]
 - IF athlete is performing plyometrics, THEN rest ≥ 1 minute between sets. [ref: §2 Plyometrics]
 
-### 4.10 Flags de sécurité (Head Coach)
+### 4.10 Race-Distance Training Emphasis
+
+- IF goal_race = 5K THEN schedule minimum 2 VO₂max sessions per week during race-specific phase AND 1 LT session per week. `[ref: §2 5K Training]`
+- IF goal_race = 10K THEN schedule 1–2 VO₂max sessions AND 1 LT session per week during race-specific phase. `[ref: §2 10K Training]`
+- IF goal_race = half_marathon THEN schedule 1 VO₂max session AND 1–2 LT sessions per week during race-specific phase. `[ref: §2 HM Training]`
+- IF goal_race = half_marathon THEN include at least 1 HM-pace run per week in final 6 weeks before race. `[ref: §2 HM Training]`
+
+### 4.11 Flags de sécurité (Head Coach)
 
 - IF athlete shows persistent fatigue, elevated waking HR > 5 bpm above usual for ≥ 2 consecutive days, disturbed sleep ≥ 3 days, irritability, or unexplained weight loss, THEN flag as overreaching and pause all hard sessions. [ref: §1 Red Flags]
 - IF athlete has fever or symptoms below the chest, THEN suspend all high-intensity and prolonged sessions for the duration of illness. [ref: §1 / §3]
@@ -187,7 +197,6 @@
 - **Taper intensity must never be reduced alongside volume** — cutting both simultaneously leads to detraining and race-day sluggishness.
 - **Masters athletes following standard recovery schedules** designed for younger athletes face elevated injury and overtraining risk; the age-scaled recovery rules in §3 are non-negotiable for athletes 40+.
 - **Gap note**: the source file does not specify the exact total VO₂max session volume (meters) for 5K–HM athletes (contrast Advanced Marathoning's 5,000–10,000 m bounds); apply the 2–6 min per interval rule as the binding constraint.
-- **Gap note**: the source file does not provide a precise taper volume reduction percentage per week for each race distance (5K/10K/HM) beyond the general guidance of "significantly reduced volume"; the available Advanced Marathoning reference (20–25% / 40% / 60%) is for marathon only and should not be applied directly to 5K tapers.
 
 ---
 
