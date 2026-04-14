@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, Date, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import BigInteger, Boolean, Column, Date, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from .database import Base
@@ -150,14 +150,34 @@ class ConnectorCredentialModel(Base):
     id = Column(String, primary_key=True)
     athlete_id = Column(String, ForeignKey("athletes.id"), nullable=False)
     provider = Column(String, nullable=False)          # "strava"|"hevy"|"fatsecret"|"terra"
-    access_token = Column(Text, nullable=True)
-    refresh_token = Column(Text, nullable=True)
+    access_token_enc = Column(Text, nullable=True)     # Fernet ciphertext (Strava only)
+    refresh_token_enc = Column(Text, nullable=True)    # Fernet ciphertext (Strava only)
     expires_at = Column(Integer, nullable=True)        # Unix timestamp
+    last_sync_at = Column(DateTime(timezone=True), nullable=True)  # NULL = never synced
     extra_json = Column(Text, nullable=False, default="{}")
     # Relationships
     athlete = relationship("AthleteModel", back_populates="credentials")
 
     __table_args__ = (UniqueConstraint("athlete_id", "provider"),)
+
+
+class StravaActivityModel(Base):
+    __tablename__ = "strava_activities"
+
+    id = Column(String, primary_key=True)                  # "strava_{strava_id}"
+    athlete_id = Column(String, ForeignKey("athletes.id"), nullable=False)
+    strava_id = Column(BigInteger, nullable=False, unique=True)
+    sport_type = Column(String, nullable=False)            # "running"|"biking"|"swimming"
+    name = Column(String, nullable=False)
+    started_at = Column(DateTime(timezone=True), nullable=False)
+    duration_s = Column(Integer, nullable=False)
+    distance_m = Column(Float, nullable=True)
+    elevation_m = Column(Float, nullable=True)
+    avg_hr = Column(Integer, nullable=True)
+    max_hr = Column(Integer, nullable=True)
+    avg_watts = Column(Float, nullable=True)
+    perceived_exertion = Column(Float, nullable=True)
+    raw_json = Column(Text, nullable=False, default="{}")
 
 
 class SessionLogModel(Base):
