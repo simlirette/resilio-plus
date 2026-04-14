@@ -9,15 +9,15 @@ Schema version: 1.0. Validated by `tests/backend/test_knowledge_jsons.py`.
 
 | File | Agent | Rules | Last Updated | Source Books | Key Formulas |
 |---|---|---|---|---|---|
-| `biking_coach_power_rules.json` | Biking Coach | 15 | 2026-04-13 | Coggan & Allen | FTP×0.95; CTL=EWMA42; ATL=EWMA7; TSB=CTL-ATL; Z1-Z7 %FTP |
-| `head_coach_acwr_rules.json` | Head Coach | 10 | 2026-04-13 | — | ACWR=EWMA7/EWMA28; safe 0.8-1.3; caution 1.3-1.5; danger >1.5 |
-| `head_coach_interference_rules.json` | Head Coach | 10 | 2026-04-13 | — | Strength→Endurance order; 6h gap; AMPK/mTOR window 0-6h |
-| `lifting_coach_volume_rules.json` | Lifting Coach | 12 | 2026-04-13 | Israetel et al. | MEV 8-10 sets/wk; MAV 15-20; MRV 25+; DUP 3/8/15 rep rotation |
-| `nutrition_coach_fueling_rules.json` | Nutrition Coach | 12 | 2026-04-13 | Jeukendrup 2011 | 1.6-2.2g protein/kg; 3-12g carbs/kg by day type; 30-90g carbs/h intra |
-| `recovery_coach_hrv_rules.json` | Recovery Coach | 11 | 2026-04-13 | — | RMSSD: >20ms=OK; 15-20ms=reduce 15%; <15ms×2=rest; <10ms=veto |
-| `recovery_coach_sleep_cns_rules.json` | Recovery Coach | 11 | 2026-04-13 | — | 8-9h target; <6h=modify; CNS window 48-72h post-heavy lift |
-| `running_coach_tid_rules.json` | Running Coach | 20 | 2026-04-13 | All 5 books | VDOT→paces; 80/20 TID; 10% volume cap; long run ≤29% or 22mi |
-| `swimming_coach_biomechanics_rules.json` | Swimming Coach | 10 | 2026-04-13 | Wakayoshi 1992 | CSS=(D400-D200)/(T400-T200); SWOLF=strokes+seconds; Z1-Z4 |
+| `biking_coach_power_rules.json` | Biking Coach | 18 | 2026-04-14 | Coggan & Allen | FTP×0.95; CTL=EWMA42; ATL=EWMA7; TSB=CTL-ATL; Z1-Z7 %FTP; TSS thresholds |
+| `head_coach_acwr_rules.json` | Head Coach | 17 | 2026-04-14 | Daniels; Pfitz-Adv | ACWR=EWMA7/EWMA28; monotony=avg/SD; strain=total×monotony; compound HRV+ACWR flag |
+| `head_coach_interference_rules.json` | Head Coach | 15 | 2026-04-14 | Pfitz-Adv; FIRST | Strength→Endurance order; 6h gap; AMPK/mTOR window 0-6h; taper MEV |
+| `lifting_coach_volume_rules.json` | Lifting Coach | 17 | 2026-04-14 | Israetel et al. | MEV 8-10 sets/wk; MAV 15-20; MRV 25+; DUP 3/8/15; 2×/wk frequency; deload 4-6wk |
+| `nutrition_coach_fueling_rules.json` | Nutrition Coach | 18 | 2026-04-14 | Pfitz-Adv | 1.6-2.2g protein/kg; 3-12g carbs/kg by day type; 30-90g carbs/h intra; 8-12g/kg race-week |
+| `recovery_coach_hrv_rules.json` | Recovery Coach | 17 | 2026-04-14 | — | RMSSD: >20ms=OK; 15-20ms=reduce 15%; <15ms×2=rest; <10ms=veto; HRV-guided VO2max +3.7 |
+| `recovery_coach_sleep_cns_rules.json` | Recovery Coach | 17 | 2026-04-14 | Pfitz-Adv; Daniels | 8-9h target; 5-6h=5-10% reduction; <5h=critical; CNS 48-72h post-lift; post-marathon 9-10h |
+| `running_coach_tid_rules.json` | Running Coach | 29 | 2026-04-14 | All 5 books | VDOT→paces; 80/20 TID; 10% volume cap; Daniels 4-phase; FIRST 3-run; Pfitz GA pace |
+| `swimming_coach_biomechanics_rules.json` | Swimming Coach | 16 | 2026-04-14 | Wakayoshi 1992 | CSS=(D400-D200)/(T400-T200); SWOLF=strokes+seconds; Z1-Z4; 15m dolphin kick |
 
 ---
 
