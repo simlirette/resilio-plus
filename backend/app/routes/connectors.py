@@ -273,6 +273,15 @@ def hevy_connect(athlete_id: str, req: HevyConnectRequest, db: DB) -> ConnectorS
 # ── Terra ─────────────────────────────────────────────────────────────────────
 
 
+ProviderStatus = Literal["ok", "skipped", "error"]
+
+
+class SyncAllResponse(BaseModel):
+    synced_at: datetime
+    results: dict[str, ProviderStatus]
+    errors: dict[str, str]
+
+
 class TerraConnectRequest(BaseModel):
     terra_user_id: str
 
@@ -424,6 +433,36 @@ def list_connectors(athlete_id: str, db: DB) -> ConnectorListResponse:
         )
         for c in creds
     ])
+
+
+@router.post("/{athlete_id}/connectors/sync", response_model=SyncAllResponse)
+def sync_all(
+    athlete_id: str,
+    db: DB,
+    _: Annotated[str, Depends(_require_own)],
+) -> SyncAllResponse:
+    results: dict[str, str] = {}
+    errors: dict[str, str] = {}
+
+    for provider, sync_fn in [
+        ("strava", SyncService.sync_strava),
+        ("hevy", SyncService.sync_hevy),
+        ("terra", SyncService.sync_terra),
+    ]:
+        try:
+            sync_fn(athlete_id, db)
+            results[provider] = "ok"
+        except ConnectorNotFoundError:
+            results[provider] = "skipped"
+        except Exception as exc:  # noqa: BLE001
+            results[provider] = "error"
+            errors[provider] = str(exc)
+
+    return SyncAllResponse(
+        synced_at=datetime.now(timezone.utc),
+        results=results,
+        errors=errors,
+    )
 
 
 @router.delete("/{athlete_id}/connectors/{provider}", status_code=204)
