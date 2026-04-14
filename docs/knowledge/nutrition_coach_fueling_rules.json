@@ -2,8 +2,8 @@
   "schema_version": "1.0",
   "target_agent": "Nutrition Coach",
   "language": "en",
-  "last_updated": "2026-04-13",
-  "source_books": [],
+  "last_updated": "2026-04-14",
+  "source_books": ["pfitzinger-advanced-marathoning"],
   "extracted_rules": [
     {
       "rule_name": "Carbohydrate targets by training day type",
@@ -136,6 +136,72 @@
       "confidence": "moderate",
       "source": "Forensic perspective on nutrition in competitive sports (original nutrition source)",
       "applies_to": ["running", "cycling", "swimming"]
+    },
+    {
+      "rule_name": "Race-week carbohydrate loading — Pfitz protocol",
+      "category": "Pre-Race Nutrition",
+      "condition": "In the 48 hours before a marathon or endurance event lasting >90 minutes",
+      "action": "Load carbohydrates to maximize muscle glycogen; use only familiar foods; do not introduce new foods race week",
+      "formula_or_value": "Carb loading: 8-12 g/kg/day for 48h pre-race; reduce fiber and fat intake; increase simple carbohydrates; familiar foods only; no dietary experiments race week",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Pfitzinger & Douglas, Advanced Marathoning Ch.9; Burke et al. 2011 carbohydrate loading",
+      "applies_to": ["running", "cycling"]
+    },
+    {
+      "rule_name": "Electrolytes and sodium — intra-race protocol",
+      "category": "Intra-Workout Nutrition",
+      "condition": "During endurance efforts lasting more than 90 minutes",
+      "action": "Supplement with sodium to prevent hyponatremia; combine with fluid intake at each aid station",
+      "formula_or_value": "Sodium: 500-700 mg/hour for efforts >90 min; combine with 400-600 ml fluid/hour; high sweat rate (>1L/h): upper bound 700mg/h; sodium sources: salt tabs, electrolyte drinks, pretzels",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "ACSM Position Stand 2007 (Sawka et al.); sodium and hyponatremia prevention research",
+      "applies_to": ["running", "cycling", "swimming"]
+    },
+    {
+      "rule_name": "Pre-long-run fueling — Pfitz protocol",
+      "category": "Pre-Workout Nutrition",
+      "condition": "Before any long run session exceeding 90 minutes",
+      "action": "Consume carbohydrate-rich meal 2-3 hours before; practice this protocol in all long training runs to gut-train for race day",
+      "formula_or_value": "2-3h before long run: 1-4 g/kg carbohydrates + moderate protein; low fat, low fiber; consistent execution in training = race-day gut adaptation; same foods and timing as planned race-day protocol",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Pfitzinger & Douglas, Advanced Marathoning Ch.9; Burke et al. 2011 pre-exercise nutrition",
+      "applies_to": ["running", "cycling"]
+    },
+    {
+      "rule_name": "Caffeine — pre-race ergogenic protocol",
+      "category": "Ergogenic Aids",
+      "condition": "If athlete wants to use caffeine for race performance enhancement",
+      "action": "Use 3-6 mg/kg body weight 30-60 min before event; trial in training first; avoid if caffeine-naive; skip day-before caffeine to amplify race-day effect",
+      "formula_or_value": "Dose: 3-6 mg/kg body weight; timing: 30-60 min pre-event; performance benefit: approximately 3% improvement in endurance time-trial; naive use: higher GI risk; caffeine abstinence 24h before race amplifies effect",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Spriet 2014 caffeine and endurance; IOC consensus statement; Jeukendrup & Gleeson 2019",
+      "applies_to": ["running", "cycling", "swimming"]
+    },
+    {
+      "rule_name": "Post-long-run protein addition for recovery",
+      "category": "Post-Workout Nutrition",
+      "condition": "After a long run exceeding 90 minutes or any high-volume training day",
+      "action": "Add protein to the post-run recovery meal alongside carbohydrates to accelerate both glycogen resynthesis and muscle repair",
+      "formula_or_value": "Post-long-run: 0.3-0.4 g/kg protein + 1.2 g/kg carbohydrate within 30-45 min; protein source: whey, dairy, or plant-based complete protein; synergistic effect vs carbs-only on glycogen synthesis rate",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Ivy et al. 1988; Berardi et al. 2006 protein+carb vs carb-only recovery; Burke et al. 2011",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "Altitude nutrition adjustment",
+      "category": "Environmental Nutrition",
+      "condition": "If athlete trains or races at altitude ≥2000m (6500 ft)",
+      "action": "Increase daily carbohydrate intake by 10-15% above sea-level targets; emphasize iron-rich foods to support hematological adaptation",
+      "formula_or_value": "Altitude ≥2000m: carb intake +10-15% vs sea-level target; iron-rich foods daily (red meat, leafy greens, legumes); vitamin C with iron sources to enhance absorption; monitor ferritin levels every 4 weeks at altitude",
+      "priority": "medium",
+      "confidence": "moderate",
+      "source": "Mazzeo 2008 altitude physiology; Daniels' Running Formula §3 altitude section; altitude nutrition consensus",
+      "applies_to": ["running", "cycling"]
     }
   ]
 }
