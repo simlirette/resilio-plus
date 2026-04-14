@@ -19,7 +19,7 @@
 - **Periodization into 4 mesocycles**: (1) Base/Endurance — mileage build, low intensity; (2) Peak Mileage/LT — highest volume + regular tempo runs; (3) Pre-Taper/Race Prep — mileage decreases, marathon-pace long runs + tune-up races; (4) Taper — 3-week volume reduction, maintained intensity.
 - **Taper duration = 3 weeks**; volume cut by 20–25% / 40% / 60% in weeks 3-out, 2-out, and race week (6 days), respectively; intensity is maintained throughout.
 - **Volume progression cap = 10% per week OR ≤1 mile per training session per week** (whichever is binding); increases are made in steps: increase 1 week → hold 2–3 weeks → increase again.
-- **Cutback / deload structure**: volume holds for 2–3 weeks after each increase before the next step up (no fixed separate cutback week prescribed; recovery is embedded in the step-hold cadence).
+- **Cutback (recovery) week every 3-4 weeks**: reduce weekly volume by 20-25% to allow adaptation before resuming progression. Volume holds for 2–3 weeks after each increase before the next step up; recovery is embedded in the step-hold cadence.
 - **Hard/Easy principle**: every hard day (long run, LT run, VO2max intervals) must be followed by at least one easy day; advanced athletes may use back-to-back hard days followed by 2+ recovery days.
 - **Tune-up races — long (15K–25K)**: require a 10-day block (4–6 day mini-taper + race + recovery days before next quality session).
 - **Tune-up races — short (8K–12K)**: less recovery needed; can be run on tired legs as a training stimulus or with a short mini-taper for fitness assessment.
@@ -35,8 +35,9 @@
 |---|---|---|---|
 | LT pace | Recent 15K or half-marathon race time | Pace per km/mile at lactate threshold | Equal to current 15K–HM race pace; use most recent all-out effort |
 | VO2max interval pace | Recent 5K race time | Pace per km/mile for intervals | Current 5K race pace; never faster (e.g., not 1500 m pace) |
-| Long run pace (slow bound) | Goal MP | MP × 1.10 | 10% slower than goal MP |
-| Long run pace (fast bound) | Goal MP | MP × 1.20 | 20% slower than goal MP; typical daily value sits within this band |
+| Long run pace (fast bound) | MP | long_run_pace_fast | MP × 1.10 (10% slower than MP) `[ref: §3 Long Run]` |
+| Long run pace (slow bound) | MP | long_run_pace_slow | MP × 1.20 (20% slower than MP) `[ref: §3 Long Run]` |
+| Long run distance cap (% mileage) | weekly_mileage | max_long_run_distance | min(weekly_mileage × 0.29, 22 miles); use whichever is lower `[ref: §3 Long Run]` |
 | GA run pace (slow bound) | Goal MP | MP × 1.15 | 15% slower than goal MP |
 | GA run pace (fast bound) | Goal MP | MP × 1.25 | 25% slower than goal MP |
 | Weekly volume increase cap (%) | Current weekly mileage | ≤ current_mileage × 0.10 | Hard ceiling: never exceed 10% week-over-week |
@@ -71,6 +72,8 @@
 | Long run HR (MHR) | 74–84 | % MHR | Entire run |
 | Long run HR (HRR) | 65–78 | % HRR | Entire run |
 | Long run max distance | 22 | miles (35 km) | Hard ceiling — never exceed |
+| Long run % of weekly mileage | 22-29 | % | Cap at 29%; absolute max 22 miles (whichever is lower) `[ref: §3 Long Run]` |
+| Long run max duration | 210 | min | Duration cap (3:30 h) for slow runners; applies when distance cap would exceed this duration `[ref: §3 Long Run]` |
 | MP run HR (MHR) | 79–88 | % MHR | During MP segment |
 | MP run HR (HRR) | 73–84 | % HRR | During MP segment |
 | GA run pace | MP + 15–25 | % slower than MP | Daily runs between quality sessions |
@@ -111,6 +114,7 @@
 - IF a mileage step-up has just been applied, THEN hold at the new level for 2–3 weeks before the next increase. [ref: §3]
 - IF athlete is in a base-building phase (increasing mileage), THEN exclude VO2max interval sessions from the schedule. [ref: §3]
 - IF adding miles to the schedule, THEN add them to GA runs, medium-long runs, or warm-up/cool-down segments first. [ref: §3]
+- IF athlete has trained for 3-4 consecutive weeks without a cutback week THEN schedule a cutback week at 75-80% of previous week's volume `[ref: §2 Recovery]`
 
 ### 4.3 Taper
 
@@ -133,9 +137,12 @@
 - IF total interval volume for session exceeds 10,000 m, THEN reduce number of repetitions to stay ≤ 10,000 m. [ref: §2 / §4]
 - IF individual interval duration is < 2 min or > 6 min, THEN adjust interval distance to fall within 2–6 min range at 5K pace. [ref: §2]
 
-### 4.6 Longue sortie — plafond
+### 4.6 Long Run Rules
 
 - IF prescribed long run distance exceeds 22 miles, THEN cap at 22 miles. [ref: §2]
+- IF long_run_distance > weekly_mileage × 0.29 THEN reduce long_run_distance to weekly_mileage × 0.29 `[ref: §3 Long Run]`
+- IF long_run_distance > 22 miles THEN reduce long_run_distance to 22 miles `[ref: §3 Long Run]`
+- IF long_run_duration_projected > 210 min THEN reduce long_run_distance until projected duration ≤ 210 min `[ref: §3 Long Run]`
 
 ### 4.7 Substitution et entraînement croisé
 
@@ -145,7 +152,7 @@
 
 ### 4.8 Retour après interruption
 
-- IF training break < 10 days, THEN resume the plan at the point the runner would have been on the original schedule. [ref: §3]
+- IF training break < 10 days THEN resume at current calendar position in the schedule, skipping any missed sessions — do NOT attempt to make up missed workouts `[ref: §1 Return to Training]`
 - IF training break = 10–20 days AND marathon is < 8 weeks away, THEN revise the race goal downward. [ref: §3]
 - IF training break > 20 days, THEN revise the race goal downward regardless of time remaining to race. [ref: §3]
 - IF a VO2max session was missed during the break, THEN reduce pace of the next VO2max session to account for lost fitness. [ref: §3]
