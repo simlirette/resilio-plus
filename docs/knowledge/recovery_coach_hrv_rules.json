@@ -1,67 +1,130 @@
 {
-  "search_query": "Extraction de règles de récupération basées sur la variabilité de la fréquence cardiaque et les techniques de récupération post-exercice",
+  "schema_version": "1.0",
   "target_agent": "Recovery Coach",
-  "source_articles_used": [
-    "Continuous heart rate variability monitoring, stress and recovery in doctors: a systematic review and meta-analysis.",
-    "Heart rate variability and overtraining in soccer players: A systematic review.",
-    "Influence of physical post-exercise recovery techniques on vagally-mediated heart rate variability: A systematic review and meta-analysis."
-  ],
+  "language": "en",
+  "last_updated": "2026-04-13",
+  "source_books": [],
   "extracted_rules": [
     {
-      "rule_name": "HRV as Parasympathetic Activity Indicator",
-      "category": "Recovery Monitoring",
-      "condition": "If Heart Rate Variability (HRV) reflects parasympathetic nervous system activity.",
-      "action": "Then it indicates a state of physiological recovery.",
-      "formula_or_value": "N/A (qualitative indicator)"
+      "rule_name": "HRV morning measurement protocol",
+      "category": "Measurement Protocol",
+      "condition": "Always — when collecting HRV data for training readiness assessment",
+      "action": "Measure RMSSD each morning: supine position, 5-minute recording, consistent timing within ±30 minutes",
+      "formula_or_value": "Protocol: supine, 5-min recording, ±30 min consistent timing; use RMSSD (ln-RMSSD or raw ms); avoid measurement after alcohol, illness, or travel on the same morning",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Plews et al. 2013 HRV4Training guidelines; HRV monitoring consensus",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
     },
     {
-      "rule_name": "HRV as Sympathetic Activity Indicator",
-      "category": "Stress Monitoring",
-      "condition": "If Heart Rate Variability (HRV) reflects sympathetic nervous system activity.",
-      "action": "Then it indicates a state of physiological stress.",
-      "formula_or_value": "N/A (qualitative indicator)"
+      "rule_name": "RMSSD — low concern threshold",
+      "category": "Readiness Assessment",
+      "condition": "If morning RMSSD is above 20ms (or within 8% of athlete's baseline)",
+      "action": "Training readiness is normal; proceed with planned session; no modification required",
+      "formula_or_value": "RMSSD >20ms (absolute) OR within ±8% of athlete's 7-day rolling baseline → no modification",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Plews et al. 2013; HRV4Training longitudinal research",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
     },
     {
-      "rule_name": "HRV and Overtraining Symptoms",
-      "category": "Overtraining Monitoring",
-      "condition": "If alterations in linear Heart Rate Variability (HRV) parameters are observed in athletes (e.g., soccer players).",
-      "action": "Then assess for potential overtraining symptoms (OTS) linked to performance, fatigue, or recovery.",
-      "formula_or_value": "N/A (qualitative, 'alterations' is not a specific value)"
+      "rule_name": "RMSSD — caution threshold (single morning)",
+      "category": "Readiness Assessment",
+      "condition": "If morning RMSSD is 15-20ms OR drops >8% below athlete's rolling baseline on a single morning",
+      "action": "Flag reduced readiness; reduce planned session intensity by 15-20%; avoid new intensity PRs; reassess next morning",
+      "formula_or_value": "RMSSD 15-20ms OR >8% below baseline (single day): reduce intensity 15-20%; no new intensity records; reassess day+1",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Plews et al. 2013; Flatt et al. 2017 HRV-guided training",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
     },
     {
-      "rule_name": "General Physical Recovery Techniques for PNS Reactivation",
-      "category": "Recovery",
-      "condition": "After exercise-induced fatigue.",
-      "action": "Apply physical post-exercise recovery techniques.",
-      "formula_or_value": "Accelerates parasympathetic nervous system (PNS) reactivation, indexed by vagally-mediated HRV (vmHRV), specifically RMSSD (Hedges' g = 0.40, small to moderate positive effect)."
+      "rule_name": "RMSSD — red flag threshold (consecutive mornings)",
+      "category": "Readiness Assessment",
+      "condition": "If morning RMSSD is <15ms OR drops >8% below baseline for 2+ consecutive mornings",
+      "action": "Mandatory recovery day; replace planned session with active recovery only (Z1 effort, ≤30 min); do not prescribe intensity work until RMSSD returns to baseline",
+      "formula_or_value": "RMSSD <15ms OR >8% below baseline for ≥2 consecutive days: mandatory rest/recovery day; Z1 only ≤30 min; no threshold or interval work",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Plews et al. 2013; Flatt et al. 2017; overtraining syndrome prevention research",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
     },
     {
-      "rule_name": "Cold Water Immersion for Enhanced PNS Reactivation",
+      "rule_name": "RMSSD — veto threshold (very low)",
+      "category": "Readiness Assessment",
+      "condition": "If morning RMSSD is <10ms",
+      "action": "Apply veto: complete rest day; no training of any kind; assess for illness, overtraining, or acute stressor; escalate if pattern persists >3 days",
+      "formula_or_value": "RMSSD <10ms: complete rest (no training); check for illness/OTS indicators; if <10ms for ≥3 consecutive days: refer for medical assessment",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "HRV thresholds from clinical and sports science research; overtraining syndrome criteria",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "7-day HRV trend — overreaching flag",
+      "category": "Trend Monitoring",
+      "condition": "If athlete's 7-day average HRV drops more than 8% from their longer-term (21-28 day) baseline",
+      "action": "Flag potential overreaching; reduce total training load by 15-20% for the current week; monitor closely",
+      "formula_or_value": "7-day avg HRV drop >8% vs. 21-28 day baseline → overreaching flag; reduce weekly load 15-20%; reassess after 5-7 days of reduced load",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Plews et al. 2013; Flatt & Esco 2016 HRV trending in athletes",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "HRV + sleep interaction — compound flag",
+      "category": "Readiness Assessment",
+      "condition": "If RMSSD is <15ms AND sleep duration was <6h the same night",
+      "action": "Apply compound recovery flag: mandatory rest or active recovery only; both signals together indicate significantly elevated injury and illness risk",
+      "formula_or_value": "RMSSD <15ms + sleep <6h = compound flag: rest day mandatory; no training; prioritize sleep before reassessment",
+      "priority": "high",
+      "confidence": "moderate",
+      "source": "Combined HRV and sleep research; Fullagar et al. 2015 sleep and athletic performance",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "HRV as parasympathetic recovery indicator",
+      "category": "Physiology",
+      "condition": "If explaining the physiological basis of HRV monitoring to an athlete or coach",
+      "action": "Note that elevated vagally-mediated HRV (RMSSD) reflects parasympathetic dominance and indicates physiological recovery readiness",
+      "formula_or_value": "High RMSSD = parasympathetic dominance = recovery; low RMSSD = sympathetic dominance = stress/fatigue; RMSSD is the most robust short-term HRV metric",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Systematic review: HRV monitoring, stress and recovery (original recovery_coach_hrv_rules source)",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
+    },
+    {
+      "rule_name": "Cold water immersion for HRV and PNS reactivation",
       "category": "Recovery Technique",
-      "condition": "After exercise-induced fatigue.",
-      "action": "Apply cold water immersion (CWI) as a physical recovery technique.",
-      "formula_or_value": "Displays a moderate to large positive effect on RMSSD (Hedges' g = 0.75)."
+      "condition": "After a high-intensity or high-volume training session where rapid recovery is prioritized",
+      "action": "Apply cold water immersion (CWI) as the recovery technique; produces a moderate-to-large positive effect on RMSSD recovery speed",
+      "formula_or_value": "CWI: 10-15°C water, 10-15 min immersion; RMSSD effect: Hedges' g = 0.75 (moderate-to-large); most effective after resistance exercise (g = 0.69)",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Meta-analysis: physical recovery techniques and vagally-mediated HRV (original recovery_coach_hrv_rules source)",
+      "applies_to": ["running", "cycling", "lifting"]
     },
     {
-      "rule_name": "Recovery Techniques Effectiveness After Resistance Exercise",
+      "rule_name": "Recovery techniques effectiveness after resistance exercise",
       "category": "Recovery Technique",
-      "condition": "After resistance exercise.",
-      "action": "Apply physical recovery techniques.",
-      "formula_or_value": "Demonstrates a larger positive effect on RMSSD (Hedges' g = 0.69) compared to other exercise types."
+      "condition": "After a resistance training session",
+      "action": "Apply active physical recovery techniques (CWI, massage, compression, active cool-down); these show larger HRV recovery effects after resistance than after continuous cardio",
+      "formula_or_value": "Post-resistance recovery techniques: RMSSD effect g = 0.69; post-cardiovascular intermittent: g = 0.52; post-continuous cardio: no significant effect",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Meta-analysis: physical recovery techniques and vagally-mediated HRV (original recovery_coach_hrv_rules source)",
+      "applies_to": ["lifting", "running", "cycling"]
     },
     {
-      "rule_name": "Recovery Techniques Effectiveness After Cardiovascular Intermittent Exercise",
-      "category": "Recovery Technique",
-      "condition": "After cardiovascular intermittent exercise.",
-      "action": "Apply physical recovery techniques.",
-      "formula_or_value": "Demonstrates a positive effect on RMSSD (Hedges' g = 0.52)."
-    },
-    {
-      "rule_name": "Ineffectiveness of Physical Recovery Techniques After Cardiovascular Continuous Exercise",
-      "category": "Recovery Technique",
-      "condition": "After cardiovascular continuous exercise.",
-      "action": "Applying physical recovery techniques.",
-      "formula_or_value": "Has no significant effect on RMSSD."
+      "rule_name": "HRV and overtraining symptom monitoring",
+      "category": "Overtraining Detection",
+      "condition": "If athlete shows chronic HRV depression (>2 weeks of below-baseline RMSSD) combined with performance decline",
+      "action": "Assess for overtraining syndrome (OTS); systematic HRV alteration + performance decline + fatigue = OTS criteria; prescribe extended recovery block",
+      "formula_or_value": "OTS indicators: chronic RMSSD depression >2 weeks + performance decline >5% + RPE inflation; if ≥2 criteria met: 2-4 week recovery block with ≤MEV training loads",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Systematic review: HRV and overtraining in soccer (original recovery_coach_hrv_rules source); Meeusen et al. 2013",
+      "applies_to": ["running", "cycling", "swimming", "lifting"]
     }
   ]
 }
