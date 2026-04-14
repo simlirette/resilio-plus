@@ -202,11 +202,12 @@ class FoodCacheModel(Base):
     id = Column(String, primary_key=True)         # "usda_789" etc.
     source = Column(String, nullable=False)        # "usda" | "off" | "fcen"
     name = Column(String, nullable=False)
+    name_en = Column(String, nullable=True)
     name_fr = Column(String, nullable=True)
-    calories_per_100g = Column(Float, nullable=True)
-    protein_g = Column(Float, nullable=True)
-    carbs_g = Column(Float, nullable=True)
-    fat_g = Column(Float, nullable=True)
+    calories_per_100g = Column(Float, nullable=False)
+    protein_g = Column(Float, nullable=False)
+    carbs_g = Column(Float, nullable=False)
+    fat_g = Column(Float, nullable=False)
     fiber_g = Column(Float, nullable=True)
     sodium_mg = Column(Float, nullable=True)
     sugar_g = Column(Float, nullable=True)

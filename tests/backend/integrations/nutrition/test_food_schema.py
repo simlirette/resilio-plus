@@ -4,7 +4,7 @@ from app.db.models import FoodCacheModel
 from datetime import datetime, timezone
 
 
-def test_food_item_name_prefers_fr():
+def test_food_item_stores_name_fr():
     item = FoodItem(
         id="fcen_1",
         source="fcen",
