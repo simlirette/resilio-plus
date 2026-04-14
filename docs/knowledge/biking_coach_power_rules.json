@@ -1,82 +1,174 @@
 {
-  "search_query": "Agis comme un physiologiste de l'exercice. Lis ces résumés d'études scientifiques. Extrais les consensus clairs, les protocoles mathématiques et les règles applicables. TÂCHES IMPORTANTES : 1. Assigne ces règles à l'agent : Biking Coach 2. Liste les titres de tous les articles que tu as effectivement utilisés pour formuler tes règles dans 'source_articles_used'.",
+  "schema_version": "1.0",
   "target_agent": "Biking Coach",
-  "source_articles_used": [
-    "One Size Does Not Fit All: A Meta-Analysis of 115 Trials Comparing High-Intensity Interval and Moderate-to-Vigorous-Intensity Continuous Training Across Diverse Participants, Protocols, and Outcomes.",
-    "Effects of Bike-Fitting on Lower Back Pain in Cyclists: A Systematic Review.",
-    "Effect of caffeine ingestion on cycling performance: a systematic review and meta-analysis.",
-    "Effects of Acute Caffeine Ingestion on Repeated Sprint Ability: A Systematic Review and Meta-Analysis."
-  ],
+  "language": "en",
+  "last_updated": "2026-04-13",
+  "source_books": [],
   "extracted_rules": [
     {
-      "rule_name": "Supériorité du HIIT pour la VO2max et la puissance anaérobie",
-      "category": "Entraînement",
-      "condition": "Si l'objectif est d'améliorer la consommation maximale d'oxygène (VO2max) ou la puissance anaérobie moyenne",
-      "action": "Alors l'entraînement par intervalles de haute intensité (HIIT) est supérieur à l'entraînement continu d'intensité modérée à vigoureuse (MVICT).",
-      "formula_or_value": "VO2max relative (g=0.39), VO2max absolue (g=0.29), puissance aérobie maximale/vitesse (g=0.31), puissance anaérobie moyenne (g=0.47)"
+      "rule_name": "FTP test protocol — 20-minute field test",
+      "category": "Fitness Assessment",
+      "condition": "When establishing FTP for a new athlete or after a training block of 6+ weeks",
+      "action": "Perform a 20-minute all-out time trial; multiply average power by 0.95 to estimate FTP",
+      "formula_or_value": "FTP = 20min_avg_power × 0.95; alternatively ramp test: last completed 1-min stage × 0.75; retest every 6-8 weeks",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Coggan & Allen, Training and Racing with a Power Meter; ramp test Borszcz et al. 2020",
+      "applies_to": ["cycling"]
     },
     {
-      "rule_name": "Efficacité du HIIT en cyclisme pour la VO2max",
-      "category": "Entraînement",
-      "condition": "Si le mode d'entraînement est le cyclisme et que l'objectif est d'améliorer la consommation maximale d'oxygène (VO2max)",
-      "action": "Alors l'entraînement par intervalles de haute intensité (HIIT) est efficace.",
-      "formula_or_value": "g=0.29 (amélioration de la VO2max)"
+      "rule_name": "Coggan Zone 1 — Active Recovery",
+      "category": "Training Zones",
+      "condition": "If scheduling an active recovery ride",
+      "action": "Ride at <55% FTP; minimal physiological stress; used for recovery between hard sessions",
+      "formula_or_value": "<55% FTP; HR typically <68% HRmax; RPE 1-2; no training adaptation targeted",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Coggan & Allen, Training and Racing with a Power Meter (Coggan power zones)",
+      "applies_to": ["cycling"]
     },
     {
-      "rule_name": "Comparabilité HIIT/MVICT pour certains seuils et économie",
-      "category": "Entraînement",
-      "condition": "Si l'objectif est d'améliorer les seuils d'intensité, l'économie d'exercice ou la performance physique générale",
-      "action": "Alors l'entraînement par intervalles de haute intensité (HIIT) et l'entraînement continu d'intensité modérée à vigoureuse (MVICT) montrent des résultats comparables.",
-      "formula_or_value": "Pas de différence significative (g entre -0.06 et 0.54)"
+      "rule_name": "Coggan Zone 2 — Endurance",
+      "category": "Training Zones",
+      "condition": "If scheduling an aerobic endurance ride",
+      "action": "Ride at 55-74% FTP; primary zone for aerobic base building; forms 60-70% of total cycling volume in base phase",
+      "formula_or_value": "55-74% FTP; HR ~69-83% HRmax; RPE 2-3; lactate <2 mmol/L",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Coggan & Allen, Training and Racing with a Power Meter",
+      "applies_to": ["cycling"]
     },
     {
-      "rule_name": "Réduction de la douleur lombaire par l'ajustement du vélo",
-      "category": "Prévention des blessures / Ergonomie",
-      "condition": "Si un cycliste souffre de douleurs lombaires (LBP) ou d'inconfort",
-      "action": "Alors un ajustement personnalisé et dynamique du vélo, adapté aux exigences de la charge de travail, doit être effectué.",
-      "formula_or_value": "Réductions significatives de la LBP ou de l'inconfort"
+      "rule_name": "Coggan Zone 3 — Tempo",
+      "category": "Training Zones",
+      "condition": "If scheduling a tempo ride for aerobic threshold development",
+      "action": "Ride at 75-89% FTP; sustainable for 60-120 minutes in trained cyclists; limit to ≤20% of weekly volume",
+      "formula_or_value": "75-89% FTP; HR ~84-94% HRmax; RPE 4-5; lactate 2-4 mmol/L; volume cap ≤20% weekly",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Coggan & Allen, Training and Racing with a Power Meter",
+      "applies_to": ["cycling"]
     },
     {
-      "rule_name": "Amélioration de la performance cycliste par la caféine",
-      "category": "Nutrition / Performance",
-      "condition": "Si un cycliste vise à améliorer la performance cycliste (réduire le temps d'achèvement, augmenter la puissance moyenne)",
-      "action": "Alors l'ingestion aiguë de caféine est efficace.",
-      "formula_or_value": "Réduction du temps d'achèvement (SMD=-0.36), augmentation de la puissance moyenne (SMD=0.29)"
+      "rule_name": "Coggan Zone 4 — Lactate Threshold",
+      "category": "Training Zones",
+      "condition": "If scheduling FTP/threshold intervals",
+      "action": "Ride at 90-104% FTP; typical interval duration 8-20 minutes; total Z4 volume ≤10% of weekly volume",
+      "formula_or_value": "90-104% FTP; HR ~94-100% LTHR; RPE 6-7; sustainable for 60 min at FTP; interval duration 8-20 min",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Coggan & Allen, Training and Racing with a Power Meter",
+      "applies_to": ["cycling"]
     },
     {
-      "rule_name": "Dosage de caféine pour la performance cycliste générale",
-      "category": "Nutrition / Performance",
-      "condition": "Si un cycliste ingère de la caféine pour améliorer la performance cycliste générale (réduction du temps d'achèvement)",
-      "action": "Alors une faible dose de caféine est recommandée.",
-      "formula_or_value": "≤3 mg/kg de poids corporel (plus efficace que 4-6 mg/kg)"
+      "rule_name": "Coggan Zone 5 — VO2max",
+      "category": "Training Zones",
+      "condition": "If scheduling VO2max intervals on the bike",
+      "action": "Ride at 105-120% FTP; intervals of 3-8 minutes; rest:work ratio 1:1; limit to ≤8% of weekly volume",
+      "formula_or_value": "105-120% FTP; HR >100% LTHR; RPE 8; interval duration 3-8 min; rest = work duration; volume ≤8% weekly",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Coggan & Allen, Training and Racing with a Power Meter",
+      "applies_to": ["cycling"]
     },
     {
-      "rule_name": "Moment d'ingestion de caféine pour la performance cycliste générale",
-      "category": "Nutrition / Performance",
-      "condition": "Si un cycliste ingère de la caféine pour améliorer la performance cycliste",
-      "action": "Alors elle doit être ingérée environ une heure avant l'exercice.",
-      "formula_or_value": "Environ 1 heure avant l'exercice"
+      "rule_name": "Coggan Zone 6 — Anaerobic Capacity",
+      "category": "Training Zones",
+      "condition": "If scheduling anaerobic capacity or sprint preparation intervals",
+      "action": "Ride at 121-150% FTP; very short intervals (30 sec to 2 min); long recovery (1:4 to 1:6 work:rest); limit to ≤5% of weekly volume",
+      "formula_or_value": "121-150% FTP; RPE 9-10; interval duration 30s-2min; work:rest 1:4 to 1:6; volume ≤5% weekly",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Coggan & Allen, Training and Racing with a Power Meter",
+      "applies_to": ["cycling"]
     },
     {
-      "rule_name": "Amélioration de la puissance de pointe en sprint répété par la caféine",
-      "category": "Nutrition / Performance",
-      "condition": "Si un cycliste vise à améliorer la puissance de pointe en sprint répété (RSA PPO)",
-      "action": "Alors l'ingestion aiguë de caféine est efficace.",
-      "formula_or_value": "Augmentation significative de la RSA PPO (WMD, 5.28)"
+      "rule_name": "CTL — Chronic Training Load formula",
+      "category": "Load Monitoring",
+      "condition": "When tracking long-term aerobic fitness and training load for a cyclist",
+      "action": "Calculate CTL as 42-day EWMA of daily TSS; this represents aerobic fitness baseline",
+      "formula_or_value": "CTL = 42-day EWMA of daily TSS; λ = 2/(42+1) ≈ 0.046; typical competitive cyclist CTL: 60-100 TSS/day",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Coggan & Allen, Training and Racing with a Power Meter; Banister 1991 impulse-response model",
+      "applies_to": ["cycling"]
     },
     {
-      "rule_name": "Dosage de caféine pour la puissance de pointe en sprint répété",
-      "category": "Nutrition / Performance",
-      "condition": "Si un cycliste ingère de la caféine pour améliorer la puissance de pointe en sprint répété (RSA PPO)",
-      "action": "Alors une dose plus élevée de caféine est recommandée pour de meilleurs bénéfices ergogéniques.",
-      "formula_or_value": "≥6 mg/kg de poids corporel (WMD, 6.67)"
+      "rule_name": "ATL — Acute Training Load formula",
+      "category": "Load Monitoring",
+      "condition": "When tracking short-term fatigue accumulation for a cyclist",
+      "action": "Calculate ATL as 7-day EWMA of daily TSS; represents current fatigue state",
+      "formula_or_value": "ATL = 7-day EWMA of daily TSS; λ = 2/(7+1) = 0.25; ATL > CTL indicates accumulated fatigue",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Coggan & Allen, Training and Racing with a Power Meter; Banister 1991",
+      "applies_to": ["cycling"]
     },
     {
-      "rule_name": "Efficacité accrue de la caféine pour le RSA en cyclisme",
-      "category": "Nutrition / Performance",
-      "condition": "Si l'objectif est d'améliorer la capacité de sprint répété (RSA) avec l'ingestion de caféine",
-      "action": "Alors l'amélioration est plus prononcée dans les protocoles de RSA basés sur le cyclisme par rapport à la course à pied.",
-      "formula_or_value": "WMD, 8.77 (cyclisme) vs WMD, 4.56 (course)"
+      "rule_name": "TSB — Training Stress Balance (Form)",
+      "category": "Load Monitoring",
+      "condition": "When assessing athlete readiness for racing or peak performance",
+      "action": "Compute TSB = CTL − ATL; positive TSB indicates freshness; target +5 to +25 for A-race day",
+      "formula_or_value": "TSB = CTL − ATL; target for A-race: +5 to +25; <−20: significant fatigue; >+25: risk of detraining",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Coggan & Allen, Training and Racing with a Power Meter",
+      "applies_to": ["cycling"]
+    },
+    {
+      "rule_name": "HIIT superiority for VO2max in cycling",
+      "category": "Training",
+      "condition": "If the goal is to improve VO2max or maximal aerobic power in cyclists",
+      "action": "Prioritize HIIT over moderate-to-vigorous continuous training (MVICT); HIIT produces larger gains in relative VO2max and maximal aerobic power",
+      "formula_or_value": "HIIT vs MVICT: VO2max relative g=0.39; VO2max absolute g=0.29; maximal aerobic power g=0.31; anaerobic power g=0.47",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Meta-analysis: HIIT vs MVICT across 115 trials (original biking_coach_power_rules source)",
+      "applies_to": ["cycling"]
+    },
+    {
+      "rule_name": "Caffeine dose for general cycling performance",
+      "category": "Ergogenic Aids",
+      "condition": "If a cyclist uses caffeine to improve general cycling performance (time-to-completion reduction)",
+      "action": "Use a low dose of caffeine (~1h before effort); low dose more effective than high dose for completion-time performance",
+      "formula_or_value": "Dose: ≤3 mg/kg body weight; timing: ~60 min pre-exercise; effect: SMD=-0.36 on time-to-completion, SMD=+0.29 on mean power",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Meta-analysis: caffeine and cycling performance (original biking_coach_power_rules source)",
+      "applies_to": ["cycling"]
+    },
+    {
+      "rule_name": "Caffeine dose for sprint repeat performance (RSA)",
+      "category": "Ergogenic Aids",
+      "condition": "If a cyclist targets repeated sprint ability (RSA) improvement with caffeine",
+      "action": "Use a higher caffeine dose for RSA; effect is larger in cycling than running RSA protocols",
+      "formula_or_value": "Dose: ≥6 mg/kg body weight; RSA peak power improvement: WMD +6.67 (cycling) vs +4.56 (running); timing: 60 min pre-effort",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Meta-analysis: caffeine and repeated sprint ability (original biking_coach_power_rules source)",
+      "applies_to": ["cycling"]
+    },
+    {
+      "rule_name": "Optimal cadence by session type",
+      "category": "Technique",
+      "condition": "When prescribing cadence targets for cycling sessions",
+      "action": "Vary target cadence by session type; higher cadence for endurance, lower for strength intervals",
+      "formula_or_value": "Endurance/Z2-Z3: 85-100 rpm; threshold/Z4: 85-95 rpm; strength intervals/Z6: 60-80 rpm; sprint: 100-120 rpm",
+      "priority": "medium",
+      "confidence": "moderate",
+      "source": "Cycling biomechanics research; Abbiss et al. 2009 cadence optimization",
+      "applies_to": ["cycling"]
+    },
+    {
+      "rule_name": "Bike fit — lower back pain prevention",
+      "category": "Injury Prevention",
+      "condition": "If a cyclist reports lower back pain or discomfort",
+      "action": "Perform a personalized dynamic bike fit adjusted to workload demands; static fits are insufficient for preventing LBP under varied training loads",
+      "formula_or_value": "Dynamic bike fit (workload-adapted): significant LBP reduction vs. no fit; saddle height, fore-aft position, and handlebar drop are primary adjustment vectors",
+      "priority": "medium",
+      "confidence": "moderate",
+      "source": "Systematic review: bike fitting and lower back pain in cyclists (original biking_coach_power_rules source)",
+      "applies_to": ["cycling"]
     }
   ]
 }
