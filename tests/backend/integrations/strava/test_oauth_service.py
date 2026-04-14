@@ -183,3 +183,10 @@ def test_get_valid_credential_auto_refreshes_expired_token(db_session):
 
     cred = get_valid_credential(_ATHLETE_ID, db_session)
     assert cred.access_token == "new_access"
+
+
+def test_get_valid_credential_raises_if_no_tokens(db_session):
+    """Row exists (state-only, before callback) but access_token_enc is NULL → ValueError."""
+    connect(_ATHLETE_ID, db_session)  # Creates row with state but no tokens
+    with pytest.raises(ValueError, match="Strava not connected"):
+        get_valid_credential(_ATHLETE_ID, db_session)
