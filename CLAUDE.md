@@ -114,8 +114,9 @@ class FatigueScore:
 | V3-J | Muscle Strain Index — `MuscleStrainScore`, `compute_muscle_strain()`, 20 tests | ✅ Complete (2026-04-13) |
 | V3-K | DB Migrations + Seed Data (Docker db-test, 4 CLI commands, Alice + Marc personas, db_session fixture) | ✅ Complete (2026-04-13) |
 | V3-L | Security Audit — CORS whitelist (env-driven), auth on `GET /athletes/`, `.gitignore` hardening, security docs (`docs/security/`) | ✅ Complete (2026-04-13) |
+| V3-M | Book Extractions — 5 running books → structured agent-actionable extracts + INDEX.md (`docs/backend/books/`) | ✅ Complete (2026-04-13) |
 
-**Dernières phases complétées (2026-04-13) :** Agent system prompts centralisés + Muscle Strain Index + DB Migrations & Seed Data + Security Audit livrés. 2024 tests passing.
+**Dernières phases complétées (2026-04-13) :** Agent system prompts centralisés + Muscle Strain Index + DB Migrations & Seed Data + Security Audit + Book Extractions livrés. 2024 tests passing.
 
 **Dernières phases complétées (2026-04-12) :** Backend V3 finalisé — architecture 2-volets opérationnelle, 35 tests E2E, mode switch validé, invariants modularité prouvés. Voir `BACKEND_V3_COMPLETE.md` pour l'état consolidé.
 
@@ -195,6 +196,8 @@ Never increase total weekly load >10% in one step (applies across ALL sports com
 - **Security Audit (2026-04-13)**: `docs/security/AUDIT-2026-04-13.md` — findings + status
 - **Manual Security Actions**: `docs/security/MANUAL-ACTIONS.md` — credential rotation (Strava + Hevy) + BFG plan
 - **Security Checklist**: `docs/security/SECURITY-CHECKLIST.md` — pre-PR security gates
+- **Book Extractions Index**: `docs/backend/books/INDEX.md` — coverage matrix, conflicts, JSON + prompt candidates
+- **Book Extraction Spec**: `docs/superpowers/specs/2026-04-13-book-extraction-design.md`
 - **Master V2 (archivé)**: `docs/archive/resilio-master-v2_archived_2026-04-12.md`
 
 ---
