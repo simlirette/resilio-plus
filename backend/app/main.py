@@ -20,6 +20,7 @@ from .routes.workflow import router as workflow_router
 from .routes.mode import router as mode_router
 from .routes.checkin import router as checkin_router
 from .routes.external_plan import router as external_plan_router
+from .routes.strain import router as strain_router
 
 
 @asynccontextmanager
@@ -62,3 +63,4 @@ app.include_router(workflow_router)
 app.include_router(mode_router)
 app.include_router(checkin_router)
 app.include_router(external_plan_router)
+app.include_router(strain_router)
