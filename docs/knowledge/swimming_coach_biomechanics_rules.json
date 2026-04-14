@@ -1,1 +1,119 @@
-{"search_query": "règles d'entraînement et de performance en natation basées sur des études scientifiques", "target_agent": "Swimming Coach", "source_articles_used": ["Aerodynamic drafting in mass-start non-motorized sports: A systematic review.", "Variability of energy cost in breaststroke technique: a systematic review."], "extracted_rules": [{"rule_name": "Principe de l'aspiration (Drafting)", "category": "Tactique de course", "condition": "Si un nageur souhaite réduire la résistance à l'eau et les demandes énergétiques", "action": "Il doit se positionner derrière un concurrent", "formula_or_value": "Réduction significative de la résistance à l'eau"}, {"rule_name": "Optimisation du coût énergétique en brasse", "category": "Technique de nage", "condition": "Pour optimiser le coût énergétique et la performance en brasse", "action": "Ajuster la cinématique de la nage (fréquence de bras, longueur de bras, indice de nage, variations intra-cycliques de vitesse), les phases propulsives/non-propulsives, le timing bras-jambes et la flottabilité", "formula_or_value": "La brasse présente une résistance active, une surface frontale et un coût énergétique plus élevés, avec une vitesse inférieure, comparée aux autres techniques de nage"}]}
+{
+  "schema_version": "1.0",
+  "target_agent": "Swimming Coach",
+  "language": "en",
+  "last_updated": "2026-04-13",
+  "source_books": [],
+  "extracted_rules": [
+    {
+      "rule_name": "CSS derivation — 400m and 200m time trial",
+      "category": "Pace Prescription",
+      "condition": "When establishing swim training zones for any athlete without prior CSS data",
+      "action": "Derive CSS from 400m and 200m all-out time trials on the same day; this pace is the aerobic threshold for swimming",
+      "formula_or_value": "CSS (m/s) = (D400 - D200) / (T400 - T200) where D=distance in meters, T=time in seconds; CSS pace = 100m split at that speed",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Wakayoshi et al. 1992 (original CSS derivation); swimming physiology consensus",
+      "applies_to": ["swimming"]
+    },
+    {
+      "rule_name": "CSS Zone 1 — Recovery",
+      "category": "Training Zones",
+      "condition": "If scheduling a recovery or warm-up swim",
+      "action": "Swim at below 80% of CSS pace; fully aerobic, minimal lactate accumulation",
+      "formula_or_value": "<80% CSS pace; RPE ≤ 3; conversational breathing pattern; used for warm-up, cool-down, and active recovery",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "CSS zone framework derived from Wakayoshi 1992 + swimming physiology standards",
+      "applies_to": ["swimming"]
+    },
+    {
+      "rule_name": "CSS Zone 2 — Aerobic Development",
+      "category": "Training Zones",
+      "condition": "If scheduling an aerobic base or endurance swim",
+      "action": "Swim at 80-94% of CSS pace; primary zone for aerobic base building; forms 70-80% of total swim volume",
+      "formula_or_value": "80-94% CSS pace; RPE 4-6; sustainable for long sets; main aerobic development zone",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "CSS zone framework derived from Wakayoshi 1992 + swimming physiology standards",
+      "applies_to": ["swimming"]
+    },
+    {
+      "rule_name": "CSS Zone 3 — Threshold (at CSS)",
+      "category": "Training Zones",
+      "condition": "If scheduling threshold or CSS-pace sets",
+      "action": "Swim at 95-100% of CSS pace; this is the maximal lactate steady-state; limit to ≤15% of weekly swim volume",
+      "formula_or_value": "95-100% CSS pace; RPE 7-8; maximal lactate steady state; volume cap ≤15% of weekly swim time",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "CSS zone framework; analogous to Daniels T-pace principle applied to swimming",
+      "applies_to": ["swimming"]
+    },
+    {
+      "rule_name": "CSS Zone 4 — Speed/VO2swim",
+      "category": "Training Zones",
+      "condition": "If scheduling high-intensity interval swim sets targeting VO2max",
+      "action": "Swim at >100% CSS pace (race pace or faster); use short intervals with adequate rest; limit to ≤10% of weekly swim volume",
+      "formula_or_value": ">100% CSS pace (105-115% for VO2 sets); work:rest ratio 1:3 to 1:4; volume ≤10% weekly swim time",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "CSS zone framework; VO2swim interval research",
+      "applies_to": ["swimming"]
+    },
+    {
+      "rule_name": "SWOLF — efficiency metric",
+      "category": "Technique Monitoring",
+      "condition": "When monitoring swimming technique efficiency",
+      "action": "Calculate SWOLF for each set; lower SWOLF indicates better efficiency; track trends over weeks",
+      "formula_or_value": "SWOLF = stroke_count_per_length + split_seconds_per_length; lower = more efficient; elite freestyle 25m: SWOLF ~30-35; recreational: 40-50",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Swimming efficiency research; SWOLF standardized metric",
+      "applies_to": ["swimming"]
+    },
+    {
+      "rule_name": "Freestyle stroke rate by distance",
+      "category": "Technique Prescription",
+      "condition": "When prescribing stroke rate targets for freestyle training",
+      "action": "Set stroke rate targets based on distance; lower stroke rate with longer stroke for distance events, higher rate for sprint",
+      "formula_or_value": "Distance freestyle (1500m+): 50-60 strokes/min; middle distance (200-400m): 65-75 strokes/min; sprint (50-100m): 80-100 strokes/min",
+      "priority": "medium",
+      "confidence": "moderate",
+      "source": "Toussaint & Hollander 1994; competitive swimming stroke rate research",
+      "applies_to": ["swimming"]
+    },
+    {
+      "rule_name": "Open-water drafting — position and energy savings",
+      "category": "Race Tactics",
+      "condition": "If athlete races in open-water or triathlon swim",
+      "action": "Position 0-50cm directly behind the lead swimmer's feet; hip-draft position (beside lead swimmer's hips) offers partial benefit",
+      "formula_or_value": "Feet-draft (0-50cm behind): energy cost reduction ~11-38%; hip-draft (beside hips): ~5-15% reduction; position must be maintained actively",
+      "priority": "high",
+      "confidence": "strong",
+      "source": "Systematic review: aerodynamic drafting in mass-start non-motorized sports (original swimming_coach_biomechanics source)",
+      "applies_to": ["swimming"]
+    },
+    {
+      "rule_name": "Triathlon swim exit — reduce intensity pre-T1",
+      "category": "Race Tactics",
+      "condition": "If athlete is approaching the swim exit in a triathlon",
+      "action": "Reduce swim intensity in the final 150-200m to allow HR and breathing to stabilize before T1; prioritize a strong exit kick and breathing control",
+      "formula_or_value": "Final 150-200m: reduce effort to CSS Zone 2 (~85% CSS); allows HR to drop 5-10 bpm before transition; improves early bike output",
+      "priority": "medium",
+      "confidence": "moderate",
+      "source": "Triathlon physiology research; transition optimization consensus",
+      "applies_to": ["swimming"]
+    },
+    {
+      "rule_name": "Breaststroke energy cost — use for recovery only",
+      "category": "Technique Economics",
+      "condition": "If scheduling a breaststroke set for a swimmer who primarily uses freestyle",
+      "action": "Treat breaststroke as a recovery stroke only; its energy cost is 40% higher than freestyle at the same speed",
+      "formula_or_value": "Breaststroke energy cost: ~40% higher than freestyle at matched speed; active frontal drag: highest of all 4 strokes; prescribe at Zone 1 effort only",
+      "priority": "medium",
+      "confidence": "strong",
+      "source": "Systematic review: variability of energy cost in breaststroke (original swimming_coach_biomechanics source)",
+      "applies_to": ["swimming"]
+    }
+  ]
+}
