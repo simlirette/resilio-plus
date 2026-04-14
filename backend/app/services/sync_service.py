@@ -108,8 +108,8 @@ class SyncService:
         cred = ConnectorCredential(
             athlete_id=athlete_id,  # type: ignore[arg-type]
             provider="strava",
-            access_token=cred_model.access_token,
-            refresh_token=cred_model.refresh_token,
+            access_token=cred_model.access_token_enc,
+            refresh_token=cred_model.refresh_token_enc,
             expires_at=cred_model.expires_at,
         )
         client_id = os.getenv("STRAVA_CLIENT_ID", "")
@@ -120,9 +120,9 @@ class SyncService:
 
         with StravaConnector(cred, client_id=client_id, client_secret=client_secret) as connector:
             activities = connector.fetch_activities(since, until)
-            if connector.credential.access_token != cred_model.access_token:
-                cred_model.access_token = connector.credential.access_token
-                cred_model.refresh_token = connector.credential.refresh_token
+            if connector.credential.access_token != cred_model.access_token_enc:
+                cred_model.access_token_enc = connector.credential.access_token
+                cred_model.refresh_token_enc = connector.credential.refresh_token
                 cred_model.expires_at = connector.credential.expires_at
                 db.commit()
 

@@ -234,15 +234,15 @@ def test_connector_credential_crud_round_trip():
             id=cred_id,
             athlete_id=athlete_id,
             provider="strava",
-            access_token="tok",
-            refresh_token="ref",
+            access_token_enc="tok",
+            refresh_token_enc="ref",
             expires_at=9999999999,
             extra_json="{}",
         ))
         session.commit()
         fetched = session.get(ConnectorCredentialModel, cred_id)
         assert fetched.provider == "strava"
-        assert fetched.access_token == "tok"
+        assert fetched.access_token_enc == "tok"
         assert fetched.athlete_id == athlete_id
     teardown_db(engine)
 

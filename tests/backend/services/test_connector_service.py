@@ -29,7 +29,7 @@ def _make_athlete(db_session):
 def _add_strava_cred(db_session, athlete_id, expires_at=9999999999):
     db_session.add(ConnectorCredentialModel(
         id=str(uuid.uuid4()), athlete_id=athlete_id, provider="strava",
-        access_token="test_access", refresh_token="test_refresh",
+        access_token_enc="test_access", refresh_token_enc="test_refresh",
         expires_at=expires_at, extra_json="{}",
     ))
     db_session.commit()
@@ -38,7 +38,7 @@ def _add_strava_cred(db_session, athlete_id, expires_at=9999999999):
 def _add_hevy_cred(db_session, athlete_id):
     db_session.add(ConnectorCredentialModel(
         id=str(uuid.uuid4()), athlete_id=athlete_id, provider="hevy",
-        access_token=None, refresh_token=None, expires_at=None,
+        access_token_enc=None, refresh_token_enc=None, expires_at=None,
         extra_json=json.dumps({"api_key": "hevy_test_key"}),
     ))
     db_session.commit()

@@ -86,7 +86,7 @@ def test_strava_callback_stores_credential(client_and_db):
         athlete_id=athlete_id, provider="strava"
     ).first()
     assert cred is not None
-    assert cred.access_token == "tok"
+    assert cred.access_token_enc == "tok"
 
 
 @respx.mock
@@ -115,7 +115,7 @@ def test_strava_callback_upsert_updates_existing(client_and_db):
         athlete_id=athlete_id, provider="strava"
     ).all()
     assert len(creds) == 1
-    assert creds[0].access_token == "tok_v2"
+    assert creds[0].access_token_enc == "tok_v2"
 
 
 # ─── hevy ──────────────────────────────────────────────────────────────────────

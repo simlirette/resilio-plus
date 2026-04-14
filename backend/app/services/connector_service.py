@@ -21,8 +21,8 @@ def _model_to_credential(m: ConnectorCredentialModel) -> ConnectorCredential:
         id=UUID(m.id),
         athlete_id=UUID(m.athlete_id),
         provider=m.provider,
-        access_token=m.access_token,
-        refresh_token=m.refresh_token,
+        access_token=m.access_token_enc,
+        refresh_token=m.refresh_token_enc,
         expires_at=m.expires_at,
         extra=json.loads(m.extra_json),
     )
@@ -31,8 +31,8 @@ def _model_to_credential(m: ConnectorCredentialModel) -> ConnectorCredential:
 def _persist_token_update(
     m: ConnectorCredentialModel, cred: ConnectorCredential, db: Session
 ) -> None:
-    m.access_token = cred.access_token
-    m.refresh_token = cred.refresh_token
+    m.access_token_enc = cred.access_token
+    m.refresh_token_enc = cred.refresh_token
     m.expires_at = cred.expires_at
     db.commit()
 
@@ -63,7 +63,7 @@ def fetch_connector_data(athlete_id: str, db: Session) -> dict:
         .first()
     )
     if strava_model:
-        original_token = strava_model.access_token
+        original_token = strava_model.access_token_enc
         cred = _model_to_credential(strava_model)
         client_id = os.getenv("STRAVA_CLIENT_ID", "")
         client_secret = os.getenv("STRAVA_CLIENT_SECRET", "")

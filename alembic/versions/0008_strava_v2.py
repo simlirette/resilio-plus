@@ -16,12 +16,10 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # --- connector_credentials: drop plaintext, add encrypted + last_sync_at ---
+    # --- connector_credentials: rename plaintext → encrypted + add last_sync_at ---
     with op.batch_alter_table("connector_credentials") as batch_op:
-        batch_op.drop_column("access_token")
-        batch_op.drop_column("refresh_token")
-        batch_op.add_column(sa.Column("access_token_enc", sa.Text(), nullable=True))
-        batch_op.add_column(sa.Column("refresh_token_enc", sa.Text(), nullable=True))
+        batch_op.alter_column("access_token", new_column_name="access_token_enc")
+        batch_op.alter_column("refresh_token", new_column_name="refresh_token_enc")
         batch_op.add_column(
             sa.Column("last_sync_at", sa.DateTime(timezone=True), nullable=True)
         )
@@ -50,7 +48,5 @@ def downgrade() -> None:
     op.drop_table("strava_activities")
     with op.batch_alter_table("connector_credentials") as batch_op:
         batch_op.drop_column("last_sync_at")
-        batch_op.drop_column("refresh_token_enc")
-        batch_op.drop_column("access_token_enc")
-        batch_op.add_column(sa.Column("access_token", sa.Text(), nullable=True))
-        batch_op.add_column(sa.Column("refresh_token", sa.Text(), nullable=True))
+        batch_op.alter_column("access_token_enc", new_column_name="access_token")
+        batch_op.alter_column("refresh_token_enc", new_column_name="refresh_token")

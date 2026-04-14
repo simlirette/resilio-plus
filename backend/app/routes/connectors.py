@@ -34,8 +34,8 @@ def _upsert_credential(
     *,
     athlete_id: str,
     provider: str,
-    access_token: str | None,
-    refresh_token: str | None,
+    access_token_enc: str | None,
+    refresh_token_enc: str | None,
     expires_at: int | None,
     extra_json: str = "{}",
     db: Session,
@@ -46,8 +46,8 @@ def _upsert_credential(
         .first()
     )
     if existing:
-        existing.access_token = access_token
-        existing.refresh_token = refresh_token
+        existing.access_token_enc = access_token_enc
+        existing.refresh_token_enc = refresh_token_enc
         existing.expires_at = expires_at
         existing.extra_json = extra_json
         db.commit()
@@ -56,8 +56,8 @@ def _upsert_credential(
             id=str(uuid.uuid4()),
             athlete_id=athlete_id,
             provider=provider,
-            access_token=access_token,
-            refresh_token=refresh_token,
+            access_token_enc=access_token_enc,
+            refresh_token_enc=refresh_token_enc,
             expires_at=expires_at,
             extra_json=extra_json,
         ))
@@ -242,8 +242,8 @@ def strava_callback(athlete_id: str, code: str, db: DB) -> dict:
     _upsert_credential(
         athlete_id=athlete_id,
         provider="strava",
-        access_token=updated.access_token,
-        refresh_token=updated.refresh_token,
+        access_token_enc=updated.access_token,
+        refresh_token_enc=updated.refresh_token,
         expires_at=updated.expires_at,
         db=db,
     )
@@ -261,8 +261,8 @@ def hevy_connect(athlete_id: str, req: HevyConnectRequest, db: DB) -> ConnectorS
     _upsert_credential(
         athlete_id=athlete_id,
         provider="hevy",
-        access_token=None,
-        refresh_token=None,
+        access_token_enc=None,
+        refresh_token_enc=None,
         expires_at=None,
         extra_json=json.dumps({"api_key": req.api_key}),
         db=db,
@@ -299,8 +299,8 @@ def terra_connect(
     _upsert_credential(
         athlete_id=athlete_id,
         provider="terra",
-        access_token=None,
-        refresh_token=None,
+        access_token_enc=None,
+        refresh_token_enc=None,
         expires_at=None,
         extra_json=json.dumps({"terra_user_id": req.terra_user_id}),
         db=db,
