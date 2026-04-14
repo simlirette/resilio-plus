@@ -13,6 +13,8 @@ from ..db.models import AthleteModel, SessionLogModel, TrainingPlanModel
 from ..dependencies import get_db, get_current_athlete_id
 from ..schemas.plan import WorkoutSlot
 from ..schemas.session_log import (
+    ManualWorkoutRequest,
+    ManualWorkoutResponse,
     SessionDetailResponse,
     SessionLogRequest,
     SessionLogResponse,
@@ -280,4 +282,47 @@ def get_today(
         is_rest_day=len(sessions) == 0,
         plan_id=plan.id,
         sessions=sessions,
+    )
+
+
+@router.post("/{athlete_id}/workouts", response_model=ManualWorkoutResponse, status_code=201)
+def log_manual_workout(
+    athlete_id: str,
+    req: ManualWorkoutRequest,
+    db: DB,
+    _: Annotated[str, Depends(_require_own)],
+) -> ManualWorkoutResponse:
+    if db.get(AthleteModel, athlete_id) is None:
+        raise HTTPException(status_code=404, detail="Athlete not found")
+
+    session_id = f"manual-{uuid.uuid4()}"
+    actual_data = {"sport": req.sport.value, "workout_type": req.workout_type, **req.actual_data}
+
+    log = SessionLogModel(
+        id=str(uuid.uuid4()),
+        athlete_id=athlete_id,
+        plan_id=None,
+        session_id=session_id,
+        actual_duration_min=req.actual_duration_min,
+        skipped=False,
+        rpe=req.rpe,
+        notes=req.notes,
+        actual_data_json=json.dumps(actual_data),
+        logged_at=datetime.now(timezone.utc),
+    )
+    db.add(log)
+    db.commit()
+    db.refresh(log)
+
+    return ManualWorkoutResponse(
+        id=log.id,
+        session_id=log.session_id,
+        sport=req.sport,
+        workout_type=req.workout_type,
+        date=req.date,
+        actual_duration_min=log.actual_duration_min,
+        rpe=log.rpe,
+        notes=log.notes or "",
+        actual_data=json.loads(log.actual_data_json),
+        logged_at=log.logged_at,
     )

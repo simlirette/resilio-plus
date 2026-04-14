@@ -57,3 +57,26 @@ class TodayResponse(BaseModel):
     is_rest_day: bool
     plan_id: str | None
     sessions: list[SessionDetailResponse]
+
+
+class ManualWorkoutRequest(BaseModel):
+    sport: Sport
+    workout_type: str
+    date: date
+    actual_duration_min: int = Field(..., ge=1, le=600)
+    rpe: int | None = Field(default=None, ge=1, le=10)
+    notes: str = ""
+    actual_data: dict[str, Any] = Field(default_factory=dict)
+
+
+class ManualWorkoutResponse(BaseModel):
+    id: str
+    session_id: str
+    sport: Sport
+    workout_type: str
+    date: date
+    actual_duration_min: int
+    rpe: int | None
+    notes: str
+    actual_data: dict[str, Any]
+    logged_at: datetime
