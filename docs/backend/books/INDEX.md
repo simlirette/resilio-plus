@@ -70,7 +70,7 @@
 | Pfitz-FRR | 1 easy day between all hard sessions; race-distance-specific session counts |
 | 80/20 | ≤ 2 Z4-5 sessions for ALL athletes; up to 3 any-Z3+ sessions for advanced only |
 
-**Resolution recommendation:** FIRST's "3 hard sessions" and 80/20's "≤ 2 Z4-5 hard sessions" are not directly contradictory — FIRST's Tempo Run occupies 80/20's Zone 3, not Zone 4-5. For a FIRST athlete, the 80/20 rule is technically satisfied (2 Z4-5 runs = TR + LR; TMP ≈ Zone 3). When integrating, apply 80/20's 2 Z4-5 cap as the universal floor and let race-distance logic from Pfitz-FRR govern session type allocation.
+**Resolution recommendation:** FIRST's "3 hard sessions" and 80/20's "≤ 2 Z4-5 hard sessions" are not directly contradictory. FIRST zone mapping: Track Repeats (TR) = Zone 4-5 (5K pace or faster — 1 session, high intensity); Tempo Run (TMP) = Zone 3 / low Zone 4 (10K–HM pace — 1 session, moderate-high); Long Run (LR) = Zone 1-2 (MP + 45–90 sec/mile — 1 session, easy/endurance). A FIRST athlete therefore has only 1 Zone 4-5 session per week (TR), which is BELOW 80/20's cap of 2 Z4-5 sessions. The Tempo Run occupies Zone 3 (moderate-high, not Z4-5) and the Long Run is Zone 1-2 easy effort. FIRST is therefore compatible with 80/20 intensity distribution — it does not violate the Z4-5 session limit. When integrating, apply 80/20's 2 Z4-5 cap as the universal floor and let race-distance logic from Pfitz-FRR govern session type allocation.
 
 ---
 
@@ -238,7 +238,7 @@
 - **Value**: 6 sec per 400m between R / I / T paces
 - **Source**: Daniels `[§2]`
 - **Target file**: `.bmad-core/data/running-zones.json`
-- **Notes**: VDOT 40-50: use 7–8 sec instead; R → I: −6 s/400m; I → T: −6 s/400m
+- **Notes**: VDOT 40-50: use 7–8 sec instead; `I_pace = R_pace + 6 s/400m; T_pace = I_pace + 6 s/400m` (each zone 6 sec/400m SLOWER; R is fastest, T is slowest of the three)
 
 ### Volume Caps (%)
 

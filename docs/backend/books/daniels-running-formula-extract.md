@@ -25,7 +25,7 @@
 |---|---|---|---|
 | VDOT lookup | race_distance, race_time | VDOT (integer) | `[ref: Table 5.1]` |
 | Training paces | VDOT | E_pace, M_pace, T_pace, I_pace, R_pace | `[ref: Table 5.2]` |
-| 6-Second Rule | R_pace | I_pace = R_pace − 6 s/400m; T_pace = I_pace − 6 s/400m | For VDOT > 50; use 7-8 s for VDOT 40-50 `[ref: §2]` |
+| 6-Second Rule | R_pace | I_pace = R_pace + 6 s/400m; T_pace = I_pace + 6 s/400m (each zone 6 sec/400m slower; R fastest, T slowest) | For VDOT > 50; use 7-8 s for VDOT 40-50 `[ref: §2]` |
 | T-pace volume cap | weekly_mileage | max_T_volume = weekly_mileage × 10% | Single continuous T run also capped `[ref: §2 T-Pace]` |
 | I-pace volume cap | weekly_mileage | max_I_volume = min(10 km, weekly_mileage × 8%) | Per session `[ref: §2 I-Pace]` |
 | R-pace volume cap | weekly_mileage | max_R_volume = min(8 km, weekly_mileage × 5%) | Per session `[ref: §2 R-Pace]` |
@@ -62,7 +62,7 @@
 - IF runner provides a recent race time THEN look up race distance and time in Table 5.1 to determine current VDOT `[ref: §3 Pace Selection Logic]`
 - IF VDOT is determined from Table 5.1 THEN use that VDOT in Table 5.2 to set all training paces (E, M, T, I, R) `[ref: §3 Pace Selection Logic]`
 - IF runner has no recent race time AND has a recent mile time THEN use mile race pace as R-pace for 400m repetitions `[ref: §3 Pace Selection Logic]`
-- IF runner has no recent race time AND has a recent mile time THEN calculate I-pace as R-pace − 6 s/400m AND T-pace as I-pace − 6 s/400m (6-Second Rule) `[ref: §3 Pace Selection Logic]`
+- IF runner has no recent race time AND has a recent mile time THEN calculate I-pace as R-pace + 6 s/400m AND T-pace as I-pace + 6 s/400m (6-Second Rule; each zone 6 sec/400m SLOWER; R is fastest) `[ref: §3 Pace Selection Logic]`
 - IF VDOT is in the 40-50 range AND using 6-Second Rule THEN use 7-8 seconds per 400m instead of 6 seconds `[ref: §3 Pace Selection Logic]`
 - IF VDOT > 50 AND using 6-Second Rule THEN use exactly 6 seconds per 400m `[ref: §3 Pace Selection Logic]`
 - IF runner is a novice with very slow performance THEN use Table 5.3 to determine R, I, T, and M paces based on their Mile or 5K time `[ref: §3 Pace Selection Logic]`
