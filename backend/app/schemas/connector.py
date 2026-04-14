@@ -32,6 +32,7 @@ class StravaActivity(BaseModel):
     elevation_gain_meters: float | None = None
     average_hr: float | None = None
     max_hr: float | None = None
+    avg_watts: float | None = None
     perceived_exertion: int | None = Field(default=None, ge=1, le=10)  # RPE 1-10
     laps: list[StravaLap] = Field(default_factory=list)
 
