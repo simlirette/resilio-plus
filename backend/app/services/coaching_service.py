@@ -1,17 +1,18 @@
 """CoachingService — wraps the LangGraph coaching graph.
 
 Public API:
-    service = CoachingService()
-    thread_id, proposed_dict = service.create_plan(athlete_id, athlete_dict, load_history, db)
-    final_dict = service.resume_plan(thread_id, approved, feedback, db)
-    thread_id = service.weekly_review(athlete_id, db)
-    service.resume_review(thread_id, approved, db)
+    from app.services.coaching_service import coaching_service  # singleton
+    thread_id, proposed_dict = coaching_service.create_plan(athlete_id, athlete_dict, load_history, db)
+    final_dict = coaching_service.resume_plan(thread_id, approved, feedback, db)
 """
 from __future__ import annotations
 
+import os
+import sqlite3
 import uuid
 from typing import Any
 
+from langgraph.checkpoint.memory import MemorySaver
 from sqlalchemy.orm import Session
 
 from ..graphs.coaching_graph import build_coaching_graph
@@ -19,11 +20,30 @@ from ..graphs.state import AthleteCoachingState
 from ..graphs.weekly_review_graph import WeeklyReviewState, build_weekly_review_graph
 
 
+def _create_sqlite_checkpointer():
+    """Create a SqliteSaver backed by a file on disk.
+
+    Path from LANGGRAPH_CHECKPOINT_DB env var, default 'data/checkpoints.sqlite'.
+    """
+    from langgraph.checkpoint.sqlite import SqliteSaver
+
+    db_path = os.environ.get("LANGGRAPH_CHECKPOINT_DB", "data/checkpoints.sqlite")
+    os.makedirs(os.path.dirname(db_path) or ".", exist_ok=True)
+    conn = sqlite3.connect(db_path, check_same_thread=False)
+    saver = SqliteSaver(conn)
+    saver.setup()
+    return saver
+
+
 class CoachingService:
     """Wraps the coaching LangGraph graph."""
 
-    def __init__(self) -> None:
-        self._graph = build_coaching_graph(interrupt=True)
+    def __init__(self, *, checkpointer=None) -> None:
+        self._checkpointer = checkpointer if checkpointer is not None else _create_sqlite_checkpointer()
+        self._graph = build_coaching_graph(
+            checkpointer=self._checkpointer,
+            interrupt=True,
+        )
         # Stores compiled review graph instances keyed by thread_id for resume_review()
         self._review_graphs: dict[str, Any] = {}
 
@@ -210,3 +230,10 @@ class CoachingService:
         review_graph.invoke(None, config=config)
         # Clean up stored reference
         self._review_graphs.pop(thread_id, None)
+
+
+# ---------------------------------------------------------------------------
+# Module-level singleton — used by workflow.py and other route modules.
+# Tests should create their own CoachingService(checkpointer=MemorySaver()).
+# ---------------------------------------------------------------------------
+coaching_service = CoachingService()
