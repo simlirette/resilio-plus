@@ -14,7 +14,7 @@ logger = logging.getLogger("app.observability.sentry")
 def _sentry_pii_scrubber(event: dict[str, Any], hint: dict[str, Any]) -> dict[str, Any] | None:
     """Scrub PII from Sentry event payloads before send."""
     # Top-level scrubbing of sensitive keys
-    event = scrub_value(event)  # type: ignore[assignment]
+    event = scrub_value(event)
     # Tag with correlation ID
     event.setdefault("tags", {})
     if isinstance(event["tags"], dict):

@@ -5,9 +5,10 @@ import hmac
 import os
 import secrets
 from datetime import datetime, timedelta, timezone
+from typing import Any
 
-from jose import JWTError, jwt
-from passlib.context import CryptContext
+from jose import JWTError, jwt  # type: ignore[import-untyped]
+from passlib.context import CryptContext  # type: ignore[import-untyped]
 
 _SECRET = os.getenv("JWT_SECRET", "resilio-dev-secret")
 _ALGORITHM = "HS256"
@@ -18,22 +19,23 @@ _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def hash_password(plain: str) -> str:
-    return _pwd_context.hash(plain)
+    return str(_pwd_context.hash(plain))
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return _pwd_context.verify(plain, hashed)
+    return bool(_pwd_context.verify(plain, hashed))
 
 
 def create_access_token(athlete_id: str) -> str:
     expire = datetime.now(timezone.utc) + timedelta(minutes=_ACCESS_TTL_MINUTES)
     payload = {"sub": athlete_id, "exp": expire, "jti": secrets.token_hex(8)}
-    return jwt.encode(payload, _SECRET, algorithm=_ALGORITHM)
+    return str(jwt.encode(payload, _SECRET, algorithm=_ALGORITHM))
 
 
-def decode_access_token(token: str) -> dict | None:
+def decode_access_token(token: str) -> dict[str, Any] | None:
     try:
-        return jwt.decode(token, _SECRET, algorithms=[_ALGORITHM])
+        result: dict[str, Any] = jwt.decode(token, _SECRET, algorithms=[_ALGORITHM])
+        return result
     except JWTError:
         return None
 
