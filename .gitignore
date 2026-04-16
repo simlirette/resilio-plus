@@ -256,6 +256,7 @@ scripts/*
 !scripts/smoke_test_runtime.py
 !scripts/start_dev.ps1
 !scripts/start_prod.sh
+!scripts/gen_apple_health_fixture.py
 .worktrees/
 
 # AI assistant artifacts

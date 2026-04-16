@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HealthData locale="en_US">
+ <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch" unit="" creationDate="2026-04-15 07:00:00 +0000" startDate="2026-04-14 23:00:00 +0000" endDate="2026-04-15 06:30:00 +0000" value="HKCategoryValueSleepAnalysisAsleep"/>
+ <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch" unit="" creationDate="2026-04-15 07:00:00 +0000" startDate="2026-04-14 22:00:00 +0000" endDate="2026-04-15 07:00:00 +0000" value="HKCategoryValueSleepAnalysisInBed"/>
+</HealthData>

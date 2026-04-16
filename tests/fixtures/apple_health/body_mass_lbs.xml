@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HealthData locale="en_US">
+ <Record type="HKQuantityTypeIdentifierBodyMass" sourceName="Health" unit="lb" creationDate="2026-04-15 07:00:00 +0000" startDate="2026-04-15 07:00:00 +0000" endDate="2026-04-15 07:00:00 +0000" value="159.83"/>
+</HealthData>
