@@ -86,7 +86,8 @@ class FatigueScore:
 | `backend/app/integrations/hevy/` | Hevy CSV parser + importer (`POST /integrations/hevy/import`) | V3-P |
 | `backend/app/integrations/strava/` | Strava OAuth V2: `oauth_service.py` (Fernet encryption), `activity_mapper.py`, `sync_service.py` (incremental) | V3-R |
 | `backend/app/integrations/nutrition/` | USDA + OFF + FCÉN clients + unified cache-first search service | V3-P |
-| `backend/app/jobs/` | APScheduler background jobs: `runner.py` (timeout wrapper), `registry.py` (per-athlete), `sync_jobs.py`, `compute_jobs.py`, `cleanup_jobs.py`, `scheduler.py` (global cron), `models.py` (`JobRunModel` + `AthleteStateSnapshotModel`) | V3-S |
+| `backend/app/jobs/` | APScheduler background jobs: `runner.py` (timeout wrapper + correlation_id + metrics), `registry.py` (per-athlete), `sync_jobs.py`, `compute_jobs.py`, `cleanup_jobs.py`, `scheduler.py` (global cron), `models.py` (`JobRunModel` + `AthleteStateSnapshotModel`) | V3-S |
+| `backend/app/observability/` | JSON logging + PII filter + correlation ContextVars + in-memory metrics + conditional Sentry: `pii_filter.py`, `correlation.py` (ContextVar + middleware), `logging_config.py` (dictConfig), `metrics.py` (`Metrics` singleton + `MetricsMiddleware` + `track_agent_call`), `sentry.py` (conditional init) | V3-U |
 | `backend/app/core/energy_patterns.py` | Pure functions: `detect_heavy_legs`, `detect_chronic_stress`, `detect_persistent_divergence`, `detect_reds_signal`, `detect_energy_patterns(db)` | V3-S (extracted from deleted `sync_scheduler.py`) |
 | `frontend/src/app/` | Next.js pages: login, onboarding, dashboard, plan, review, session/[id], history | Phase 4-8 |
 | `frontend/src/components/` | TopNav, ProtectedRoute, shadcn/ui components | Phase 4+ |
@@ -129,6 +130,9 @@ class FatigueScore:
 | V3-R | Strava OAuth V2 — Fernet-encrypted tokens, incremental sync (`last_sync_at`), `strava_activities` table, `/integrations/strava/{connect,callback,sync}`, Alembic 0008, old Strava routes removed | ✅ Complete (2026-04-14) |
 | V3-S | Background Jobs — APScheduler 3.x, `backend/app/jobs/` (runner, registry, sync/compute/cleanup jobs, scheduler), `job_runs` + `athlete_state_snapshots` tables, Alembic 0009, `GET /admin/jobs` endpoint, `energy_patterns.py` extracted, old `sync_scheduler.py` deleted | ✅ Complete (2026-04-16) |
 | V3-T | LangGraph Runtime Validation — SQLite checkpointer (replaces MemorySaver), `CoachingService` module-level singleton, `log_node` decorator + structured JSON logs, runtime test suite (`tests/runtime/`, 26 tests), debug endpoint `GET /athletes/{id}/coach/session/{thread_id}/state`, smoke script `scripts/smoke_test_runtime.py`, `docs/backend/LANGGRAPH-FLOW.md` | ✅ Complete (2026-04-14) |
+| V3-U | Observability stack — `backend/app/observability/` (6 modules, 57 tests), JSON structured logging via dictConfig, PII filter (field-name blocklist + JWT/Bearer/email/hex regex scrubbers) attached at root logger, `CorrelationIdMiddleware` (reads/echoes `X-Request-ID`), `MetricsMiddleware` + `track_agent_call` context manager, `Metrics` singleton (HTTP/agent/job counters + bounded LatencySummary with p50/p95/p99), `GET /admin/metrics` (gated by `ADMIN_ATHLETE_ID`), conditional Sentry init (no-op without `SENTRY_DSN` or sentry-sdk), `run_job()` instrumented with `job-<uuid>` correlation + `contextvars.copy_context()` for worker thread, `HeadCoach.build_week` + specialist calls wrapped with `track_agent_call`, `docs/backend/OBSERVABILITY.md` | ✅ Complete (2026-04-16) |
+
+**Dernières phases complétées (2026-04-16) :** V3-U livré — Observability stack. Structured JSON logs via `configure_logging()` (dictConfig, PII filter at ROOT logger level so it runs before pytest caplog / Sentry). Every HTTP request carries `X-Request-ID` echoed back; `correlation_id` + `athlete_id` ContextVars merged into every log line. In-memory metrics (reset on restart) at `GET /admin/metrics`: HTTP requests_total + latency_ms per `(method, path_template)`, agent calls_total + latency_ms per `(agent, ok/error)`, jobs runs_total per `(job_type, ok/error/timeout)`. `track_agent_call("head_coach")` wraps `build_week` body; specialist loop switches from list-comp to `for a in self.agents: with track_agent_call(f"{a.name}_coach"):`. `run_job()` uses `contextvars.copy_context()` so the worker thread inherits the correlation id. Sentry conditional: no-op when `SENTRY_DSN` empty or `sentry-sdk` missing (`sentry-sdk[fastapi]>=2.0` added to pyproject). `.env.example` adds `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`, `SENTRY_TRACES_SAMPLE_RATE`. 2378 tests passing (+57 new); 2 pre-existing unrelated failures unchanged.
 
 **Dernières phases complétées (2026-04-14) :** V3-T livré — LangGraph runtime fix. `build_coaching_graph(checkpointer, ...)` requires explicit checkpointer (no more per-request `MemorySaver` losing state between create/approve). Production wires `SqliteSaver` at `LANGGRAPH_CHECKPOINT_DB` (default `data/checkpoints.sqlite`). `coaching_service` singleton in `app.services.coaching_service` shared across `workflow.py` endpoints. Every node wrapped with `log_node` (JSON enter/exit logs to `resilio.graph`). 26 runtime tests cover topology, checkpoint persistence, interrupt/resume, state transitions, revision loop. Found + fixed `_after_revise` routing bug (revision_count > 1 routes to `build_proposed_plan` not `present_to_athlete` because `revise_plan` clears `proposed_plan_dict`). 2310 tests passing (2 pre-existing unrelated failures: `test_history_shows_logged_count` flake, `test_high_continuity_no_breaks` date drift).
 
@@ -191,7 +195,7 @@ The Running Coach has the richest existing knowledge base.
 4. **Frequent atomic commits** — one commit per logical task
 5. **Verify invariants after every task**:
    - `poetry install` must succeed
-   - `pytest tests/` must pass (≥2310 passing — état V3-T; 2 pre-existing unrelated failures: `test_history_shows_logged_count` flake, `test_high_continuity_no_breaks` date drift)
+   - `pytest tests/` must pass (≥2378 passing — état V3-U; 2 pre-existing unrelated failures: `test_history_shows_logged_count` flake, `test_high_continuity_no_breaks` date drift)
    - `npx tsc --noEmit` (frontend) must have no errors
 
 **pytest path (Windows):** `C:\Users\simon\AppData\Local\pypoetry\Cache\virtualenvs\resilio-8kDCl3fk-py3.13\Scripts\pytest.exe`
@@ -241,6 +245,9 @@ Never increase total weekly load >10% in one step (applies across ALL sports com
 - **LangGraph Flow Reference**: `docs/backend/LANGGRAPH-FLOW.md` — graph topology, node table, conditional edges, interrupt + checkpoint lifecycle, debug endpoint
 - **LangGraph Runtime Spec**: `docs/superpowers/specs/2026-04-14-langgraph-runtime-design.md`
 - **LangGraph Runtime Plan**: `docs/superpowers/plans/2026-04-14-langgraph-runtime.md`
+- **Observability Reference**: `docs/backend/OBSERVABILITY.md` — log format, correlation IDs, `/admin/metrics`, PII filter, Sentry env vars, cheat sheet
+- **Observability Spec**: `docs/superpowers/specs/2026-04-16-observability-design.md`
+- **Observability Plan**: `docs/superpowers/plans/2026-04-16-observability.md`
 - **Master V2 (archivé)**: `docs/archive/resilio-master-v2_archived_2026-04-12.md`
 
 ---
