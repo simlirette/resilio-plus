@@ -4,14 +4,14 @@ import dataclasses
 from dataclasses import dataclass, field
 
 from ..agents.base import AgentContext, AgentRecommendation, BaseAgent
-from ..core.goal_analysis import analyze_goals
 from ..core.acwr import ACWRResult, ACWRStatus, compute_acwr
 from ..core.conflict import Conflict, ConflictSeverity, detect_conflicts
 from ..core.fatigue import GlobalFatigue, aggregate_fatigue
+from ..core.goal_analysis import analyze_goals
 from ..core.periodization import PeriodizationPhase, get_current_phase
+from ..observability.metrics import track_agent_call
 from ..schemas.plan import WorkoutSlot
 from .prompts import HEAD_COACH_PROMPT
-from ..observability.metrics import track_agent_call
 
 _SYSTEM_PROMPT = HEAD_COACH_PROMPT
 
@@ -23,7 +23,7 @@ class WeeklyPlan:
     global_fatigue: GlobalFatigue
     conflicts: list[Conflict]
     sessions: list[WorkoutSlot]
-    readiness_level: str            # "green" | "yellow" | "red"
+    readiness_level: str  # "green" | "yellow" | "red"
     notes: list[str] = field(default_factory=list)
 
 
@@ -77,9 +77,7 @@ class HeadCoach:
 
             # 6. Compute global readiness (minimum modifier drives decisions)
             readiness_modifier = (
-                min(r.readiness_modifier for r in recommendations)
-                if recommendations
-                else 1.0
+                min(r.readiness_modifier for r in recommendations) if recommendations else 1.0
             )
             readiness_level = self._modifier_to_level(readiness_modifier)
 
@@ -119,9 +117,7 @@ class HeadCoach:
 
         # Rule 1: RED readiness → convert all sessions to Z1
         if readiness_modifier < 0.6:
-            result = [
-                s.model_copy(update={"workout_type": "easy_z1"}) for s in result
-            ]
+            result = [s.model_copy(update={"workout_type": "easy_z1"}) for s in result]
             return result  # No further arbitration needed on Z1 sessions
 
         # Rule 2: DANGER ACWR → scale all session durations by 0.75 (25% reduction)
@@ -137,12 +133,18 @@ class HeadCoach:
                 continue
             # Find sessions belonging to the conflicting agents on the same date
             agents_in_conflict = set(conflict.agents)
-            candidate_sessions = [s for s in result if s.sport.value in agents_in_conflict
-                                   or any(a in s.workout_type for a in agents_in_conflict)]
+            candidate_sessions = [
+                s
+                for s in result
+                if s.sport.value in agents_in_conflict
+                or any(a in s.workout_type for a in agents_in_conflict)
+            ]
             if len(candidate_sessions) >= 2:
                 # Drop shorter session (tiebreaker: alphabetically later sport name)
                 shortest_duration = min(s.duration_min for s in candidate_sessions)
-                candidates_shortest = [s for s in candidate_sessions if s.duration_min == shortest_duration]
+                candidates_shortest = [
+                    s for s in candidate_sessions if s.duration_min == shortest_duration
+                ]
                 if len(candidates_shortest) == 1:
                     to_drop = candidates_shortest[0]
                 else:

@@ -86,22 +86,24 @@ def load_fcen(
             existing.sugar_g = nd.get("sugars")
             existing.cached_at = now
         else:
-            db.add(FoodCacheModel(
-                id=f"fcen_{food_id}",
-                source="fcen",
-                name=names["name_en"],
-                name_en=names["name_en"],
-                name_fr=names["name_fr"],
-                calories_per_100g=energy,
-                protein_g=nd.get("protein", 0.0),
-                carbs_g=nd.get("carbohydrate", 0.0),
-                fat_g=nd.get("fat", 0.0),
-                fiber_g=nd.get("fibre"),
-                sodium_mg=nd.get("sodium"),
-                sugar_g=nd.get("sugars"),
-                cached_at=now,
-                ttl_hours=None,
-            ))
+            db.add(
+                FoodCacheModel(
+                    id=f"fcen_{food_id}",
+                    source="fcen",
+                    name=names["name_en"],
+                    name_en=names["name_en"],
+                    name_fr=names["name_fr"],
+                    calories_per_100g=energy,
+                    protein_g=nd.get("protein", 0.0),
+                    carbs_g=nd.get("carbohydrate", 0.0),
+                    fat_g=nd.get("fat", 0.0),
+                    fiber_g=nd.get("fibre"),
+                    sodium_mg=nd.get("sodium"),
+                    sugar_g=nd.get("sugars"),
+                    cached_at=now,
+                    ttl_hours=None,
+                )
+            )
             inserted += 1
 
     db.commit()

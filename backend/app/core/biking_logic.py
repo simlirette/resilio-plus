@@ -19,8 +19,11 @@ def compute_biking_fatigue(rides: list[StravaActivity]) -> FatigueScore:
     """Compute FatigueScore from a pre-filtered list of Ride activities."""
     if not rides:
         return FatigueScore(
-            local_muscular=0.0, cns_load=0.0, metabolic_cost=0.0,
-            recovery_hours=0.0, affected_muscles=[],
+            local_muscular=0.0,
+            cns_load=0.0,
+            metabolic_cost=0.0,
+            recovery_hours=0.0,
+            affected_muscles=[],
         )
 
     total_duration_h = sum(r.duration_seconds for r in rides) / 3600
@@ -43,17 +46,17 @@ def compute_biking_fatigue(rides: list[StravaActivity]) -> FatigueScore:
 
 # Phase → session type preference
 _PHASE_SESSION_MAP: dict[str, list[str]] = {
-    "general_prep":    ["Z2_endurance_ride", "Z2_endurance_ride", "Z3_tempo_ride"],
-    "specific_prep":   ["Z2_endurance_ride", "Z3_tempo_ride", "Z4_threshold_intervals"],
+    "general_prep": ["Z2_endurance_ride", "Z2_endurance_ride", "Z3_tempo_ride"],
+    "specific_prep": ["Z2_endurance_ride", "Z3_tempo_ride", "Z4_threshold_intervals"],
     "pre_competition": ["Z3_tempo_ride", "Z4_threshold_intervals", "Z4_threshold_intervals"],
-    "competition":     ["Z2_endurance_ride", "Z3_tempo_ride"],
-    "transition":      ["Z2_endurance_ride"],
+    "competition": ["Z2_endurance_ride", "Z3_tempo_ride"],
+    "transition": ["Z2_endurance_ride"],
 }
 
 # Session type → (base_duration_min, min_hours_budget_to_add)
 _SESSION_DURATIONS: dict[str, tuple[int, float]] = {
-    "Z2_endurance_ride":      (75, 1.0),
-    "Z3_tempo_ride":          (60, 0.8),
+    "Z2_endurance_ride": (75, 1.0),
+    "Z3_tempo_ride": (60, 0.8),
     "Z4_threshold_intervals": (50, 0.7),
 }
 
@@ -79,8 +82,11 @@ def generate_biking_sessions(
     budget_remaining = effective_budget
 
     fatigue_stub = FatigueScore(
-        local_muscular=15.0, cns_load=5.0, metabolic_cost=20.0,
-        recovery_hours=12.0, affected_muscles=["quads", "glutes"],
+        local_muscular=15.0,
+        cns_load=5.0,
+        metabolic_cost=20.0,
+        recovery_hours=12.0,
+        affected_muscles=["quads", "glutes"],
     )
 
     for session_type in session_types:
@@ -102,14 +108,16 @@ def generate_biking_sessions(
         duration_min = max(20, duration_min)  # floor 20min
 
         session_date = week_start + timedelta(days=day_offset)
-        sessions.append(WorkoutSlot(
-            date=session_date,
-            sport=Sport.BIKING,
-            workout_type=session_type,
-            duration_min=int(duration_min * volume_modifier),
-            fatigue_score=fatigue_stub,
-            notes=f"FTP: {ftp}W | {session_type.replace('_', ' ')}",
-        ))
+        sessions.append(
+            WorkoutSlot(
+                date=session_date,
+                sport=Sport.BIKING,
+                workout_type=session_type,
+                duration_min=int(duration_min * volume_modifier),
+                fatigue_score=fatigue_stub,
+                notes=f"FTP: {ftp}W | {session_type.replace('_', ' ')}",
+            )
+        )
         used_days.add(day_offset)
         budget_remaining -= duration_min / 60
 

@@ -1,27 +1,25 @@
 import json
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from ..connectors.apple_health import AppleHealthConnector
 from ..connectors.fit import FitConnector
 from ..connectors.gpx import GpxConnector
-from ..connectors.hevy import HevyConnector
-from ..connectors.terra import TerraConnector
 from ..db.models import AthleteModel, ConnectorCredentialModel, SessionLogModel, TrainingPlanModel
-from ..dependencies import get_db, get_current_athlete_id
+from ..dependencies import get_current_athlete_id, get_db
+from ..jobs.registry import register_athlete_jobs, unregister_athlete_jobs
+from ..jobs.scheduler import get_scheduler
 from ..schemas.connector_api import (
     ConnectorListResponse,
     ConnectorStatus,
     HevyConnectRequest,
 )
 from ..services.sync_service import ConnectorNotFoundError, SyncService
-from ..jobs.registry import register_athlete_jobs, unregister_athlete_jobs
-from ..jobs.scheduler import get_scheduler
 
 router = APIRouter(prefix="/athletes", tags=["connectors"])
 
@@ -50,15 +48,17 @@ def _upsert_credential(
         existing.extra_json = extra_json
         db.commit()
     else:
-        db.add(ConnectorCredentialModel(
-            id=str(uuid.uuid4()),
-            athlete_id=athlete_id,
-            provider=provider,
-            access_token_enc=access_token_enc,
-            refresh_token_enc=refresh_token_enc,
-            expires_at=expires_at,
-            extra_json=extra_json,
-        ))
+        db.add(
+            ConnectorCredentialModel(
+                id=str(uuid.uuid4()),
+                athlete_id=athlete_id,
+                provider=provider,
+                access_token_enc=access_token_enc,
+                refresh_token_enc=refresh_token_enc,
+                expires_at=expires_at,
+                extra_json=extra_json,
+            )
+        )
         db.commit()
 
 
@@ -76,6 +76,7 @@ def _require_own(
 
 def _get_latest_plan(athlete_id: str, db: Session) -> TrainingPlanModel | None:
     from sqlalchemy import desc
+
     return (
         db.query(TrainingPlanModel)
         .filter(TrainingPlanModel.athlete_id == athlete_id)
@@ -94,9 +95,7 @@ def _upsert_session_log(
     db: Session,
 ) -> None:
     existing = (
-        db.query(SessionLogModel)
-        .filter_by(athlete_id=athlete_id, session_id=session_id)
-        .first()
+        db.query(SessionLogModel).filter_by(athlete_id=athlete_id, session_id=session_id).first()
     )
     if existing:
         existing.actual_duration_min = actual_duration_min
@@ -104,16 +103,18 @@ def _upsert_session_log(
         existing.logged_at = datetime.now(timezone.utc)
         db.commit()
     else:
-        db.add(SessionLogModel(
-            id=str(uuid.uuid4()),
-            athlete_id=athlete_id,
-            plan_id=plan_id,
-            session_id=session_id,
-            actual_duration_min=actual_duration_min,
-            skipped=False,
-            actual_data_json=json.dumps(actual_data),
-            logged_at=datetime.now(timezone.utc),
-        ))
+        db.add(
+            SessionLogModel(
+                id=str(uuid.uuid4()),
+                athlete_id=athlete_id,
+                plan_id=plan_id,
+                session_id=session_id,
+                actual_duration_min=actual_duration_min,
+                skipped=False,
+                actual_data_json=json.dumps(actual_data),
+                logged_at=datetime.now(timezone.utc),
+            )
+        )
         db.commit()
 
 
@@ -149,7 +150,9 @@ def _file_import_to_session_log(
             athlete_id=athlete_id,
             plan_id=plan.id,
             session_id=session_id,
-            actual_duration_min=parsed["duration_seconds"] // 60 if parsed.get("duration_seconds") else None,
+            actual_duration_min=parsed["duration_seconds"] // 60
+            if parsed.get("duration_seconds")
+            else None,
             actual_data=actual_data,
             db=db,
         )
@@ -302,12 +305,14 @@ def apple_health_upload(
         existing.update(extra_update)
         cred_model.extra_json = json.dumps(existing)
     else:
-        db.add(ConnectorCredentialModel(
-            id=str(uuid.uuid4()),
-            athlete_id=athlete_id,
-            provider="apple_health",
-            extra_json=json.dumps(extra_update),
-        ))
+        db.add(
+            ConnectorCredentialModel(
+                id=str(uuid.uuid4()),
+                athlete_id=athlete_id,
+                provider="apple_health",
+                extra_json=json.dumps(extra_update),
+            )
+        )
     db.commit()
 
     return {
@@ -358,20 +363,18 @@ def list_connectors(athlete_id: str, db: DB) -> ConnectorListResponse:
     if db.get(AthleteModel, athlete_id) is None:
         raise HTTPException(status_code=404)
 
-    creds = (
-        db.query(ConnectorCredentialModel)
-        .filter_by(athlete_id=athlete_id)
-        .all()
+    creds = db.query(ConnectorCredentialModel).filter_by(athlete_id=athlete_id).all()
+    return ConnectorListResponse(
+        connectors=[
+            ConnectorStatus(
+                provider=c.provider,
+                connected=True,
+                expires_at=c.expires_at,
+                last_sync=json.loads(c.extra_json or "{}").get("last_sync"),
+            )
+            for c in creds
+        ]
     )
-    return ConnectorListResponse(connectors=[
-        ConnectorStatus(
-            provider=c.provider,
-            connected=True,
-            expires_at=c.expires_at,
-            last_sync=json.loads(c.extra_json or "{}").get("last_sync"),
-        )
-        for c in creds
-    ])
 
 
 @router.post("/{athlete_id}/connectors/sync", response_model=SyncAllResponse)

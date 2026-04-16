@@ -26,9 +26,7 @@ def ready() -> dict[str, Any]:
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
     except Exception as exc:
-        raise HTTPException(
-            status_code=503, detail=f"db unreachable: {type(exc).__name__}"
-        )
+        raise HTTPException(status_code=503, detail=f"db unreachable: {type(exc).__name__}")
     return {"status": "ready", "db": "ok"}
 
 
@@ -59,9 +57,7 @@ def ready_deep() -> dict[str, Any]:
                         "anthropic-version": "2023-06-01",
                     },
                 )
-            result["anthropic"] = (
-                "ok" if resp.status_code < 500 else f"http_{resp.status_code}"
-            )
+            result["anthropic"] = "ok" if resp.status_code < 500 else f"http_{resp.status_code}"
             if resp.status_code >= 500:
                 result["status"] = "degraded"
         except Exception as exc:

@@ -7,17 +7,17 @@ from enum import Enum
 
 class MacroPhase(str, Enum):
     # week-count thresholds = weeks_remaining until race date
-    GENERAL_PREP    = "general_prep"       # > 22 weeks
-    SPECIFIC_PREP   = "specific_prep"      # 14–22 weeks
-    PRE_COMPETITION = "pre_competition"    # 7–13 weeks
-    COMPETITION     = "competition"        # 1–6 weeks
-    TRANSITION      = "transition"         # post-race (≤ 0 weeks)
+    GENERAL_PREP = "general_prep"  # > 22 weeks
+    SPECIFIC_PREP = "specific_prep"  # 14–22 weeks
+    PRE_COMPETITION = "pre_competition"  # 7–13 weeks
+    COMPETITION = "competition"  # 1–6 weeks
+    TRANSITION = "transition"  # post-race (≤ 0 weeks)
 
 
 class TIDStrategy(str, Enum):
     PYRAMIDAL = "pyramidal"
     POLARIZED = "polarized"
-    MIXED     = "mixed"
+    MIXED = "mixed"
 
 
 @dataclass
@@ -30,11 +30,11 @@ class PeriodizationPhase:
 
 _PHASE_TABLE: list[tuple[int, MacroPhase, TIDStrategy, float]] = [
     # (min_weeks_remaining, phase, tid, volume_modifier) — evaluated top-down
-    (23, MacroPhase.GENERAL_PREP,    TIDStrategy.PYRAMIDAL, 1.0),
-    (14, MacroPhase.SPECIFIC_PREP,   TIDStrategy.MIXED,     0.9),
-    (7,  MacroPhase.PRE_COMPETITION, TIDStrategy.POLARIZED, 0.8),
-    (1,  MacroPhase.COMPETITION,     TIDStrategy.POLARIZED, 0.5),
-    (0,  MacroPhase.TRANSITION,      TIDStrategy.MIXED,     0.6),
+    (23, MacroPhase.GENERAL_PREP, TIDStrategy.PYRAMIDAL, 1.0),
+    (14, MacroPhase.SPECIFIC_PREP, TIDStrategy.MIXED, 0.9),
+    (7, MacroPhase.PRE_COMPETITION, TIDStrategy.POLARIZED, 0.8),
+    (1, MacroPhase.COMPETITION, TIDStrategy.POLARIZED, 0.5),
+    (0, MacroPhase.TRANSITION, TIDStrategy.MIXED, 0.6),
 ]
 
 

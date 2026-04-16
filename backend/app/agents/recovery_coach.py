@@ -40,23 +40,31 @@ class RecoveryCoach(BaseAgent):
                 recovery_day = context.date_range[0] + timedelta(
                     days=context.athlete.available_days[0]
                 )
-                sessions.append(WorkoutSlot(
-                    date=recovery_day,
-                    sport=Sport.RUNNING,
-                    workout_type="active_recovery",
-                    duration_min=30,
-                    fatigue_score=FatigueScore(
-                        local_muscular=5.0, cns_load=2.0, metabolic_cost=5.0,
-                        recovery_hours=4.0, affected_muscles=[],
-                    ),
-                    notes="Active recovery: light walk or yoga. No intensity.",
-                ))
+                sessions.append(
+                    WorkoutSlot(
+                        date=recovery_day,
+                        sport=Sport.RUNNING,
+                        workout_type="active_recovery",
+                        duration_min=30,
+                        fatigue_score=FatigueScore(
+                            local_muscular=5.0,
+                            cns_load=2.0,
+                            metabolic_cost=5.0,
+                            recovery_hours=4.0,
+                            affected_muscles=[],
+                        ),
+                        notes="Active recovery: light walk or yoga. No intensity.",
+                    )
+                )
 
         return AgentRecommendation(
             agent_name=self.name,
             fatigue_score=FatigueScore(
-                local_muscular=0.0, cns_load=0.0, metabolic_cost=0.0,
-                recovery_hours=0.0, affected_muscles=[],
+                local_muscular=0.0,
+                cns_load=0.0,
+                metabolic_cost=0.0,
+                recovery_hours=0.0,
+                affected_muscles=[],
             ),
             weekly_load=0.0,
             suggested_sessions=sessions,

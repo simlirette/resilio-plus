@@ -22,10 +22,10 @@ from typing_extensions import TypedDict
 
 from ..core.acwr import compute_acwr as _compute_acwr
 
-
 # ---------------------------------------------------------------------------
 # State
 # ---------------------------------------------------------------------------
+
 
 class WeeklyReviewState(TypedDict):
     """Shared state for the weekly review graph.
@@ -36,7 +36,7 @@ class WeeklyReviewState(TypedDict):
 
     athlete_id: str
     plan_id: str | None
-    week_start: str            # ISO date string, e.g. "2026-04-07"
+    week_start: str  # ISO date string, e.g. "2026-04-07"
     week_number: int
 
     # Populated by analyze_actual_vs_planned
@@ -66,6 +66,7 @@ class WeeklyReviewState(TypedDict):
 # ---------------------------------------------------------------------------
 # Node helpers
 # ---------------------------------------------------------------------------
+
 
 def _readiness_from_acwr(acwr: float | None) -> Literal["green", "yellow", "red"] | None:
     if acwr is None:
@@ -109,6 +110,7 @@ def _build_recommendations(
 # Nodes
 # ---------------------------------------------------------------------------
 
+
 def analyze_actual_vs_planned(
     state: WeeklyReviewState,
     config: RunnableConfig,
@@ -126,6 +128,7 @@ def analyze_actual_vs_planned(
 
     # Lazy import via app. path to avoid SQLAlchemy double-table-registration.
     import importlib
+
     importlib.import_module("app.models.schemas")  # registers V3 SA models first
     _db_models = importlib.import_module("app.db.models")
     SessionLogModel = _db_models.SessionLogModel
@@ -161,9 +164,7 @@ def analyze_actual_vs_planned(
         .count()
     )
 
-    completion_rate = (
-        sessions_completed / sessions_planned if sessions_planned > 0 else 0.0
-    )
+    completion_rate = sessions_completed / sessions_planned if sessions_planned > 0 else 0.0
 
     # Estimate actual hours from logged session durations
     try:
@@ -299,6 +300,7 @@ def apply_adjustments(
     acwr_dict = state.get("acwr_dict")
 
     import importlib
+
     importlib.import_module("app.models.schemas")  # registers V3 SA models first
     _db_models = importlib.import_module("app.db.models")
     WeeklyReviewModel = _db_models.WeeklyReviewModel
@@ -343,6 +345,7 @@ def apply_adjustments(
 # ---------------------------------------------------------------------------
 # Graph factory
 # ---------------------------------------------------------------------------
+
 
 def build_weekly_review_graph(interrupt: bool = True):
     """Build and compile the weekly review StateGraph with MemorySaver.

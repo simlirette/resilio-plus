@@ -32,8 +32,8 @@ def init_sentry() -> None:
     try:
         import sentry_sdk
         from sentry_sdk.integrations.fastapi import FastApiIntegration
-        from sentry_sdk.integrations.starlette import StarletteIntegration
         from sentry_sdk.integrations.logging import LoggingIntegration
+        from sentry_sdk.integrations.starlette import StarletteIntegration
     except (ImportError, TypeError):
         # TypeError covers the case where sys.modules["sentry_sdk"] = None
         logger.warning("sentry_sdk_not_installed")

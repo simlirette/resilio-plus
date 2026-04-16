@@ -39,13 +39,15 @@ _REFRESH_TTL_DAYS = int(os.getenv("JWT_REFRESH_TTL_DAYS", "30"))
 def _issue_refresh_token(user_id: str, db: Session) -> str:
     """Generate a refresh token, store its hash in DB, return raw token."""
     raw = generate_token()
-    db.add(RefreshTokenModel(
-        id=str(uuid.uuid4()),
-        user_id=user_id,
-        token_hash=hash_token(raw),
-        expires_at=datetime.now(timezone.utc) + timedelta(days=_REFRESH_TTL_DAYS),
-        created_at=datetime.now(timezone.utc),
-    ))
+    db.add(
+        RefreshTokenModel(
+            id=str(uuid.uuid4()),
+            user_id=user_id,
+            token_hash=hash_token(raw),
+            expires_at=datetime.now(timezone.utc) + timedelta(days=_REFRESH_TTL_DAYS),
+            created_at=datetime.now(timezone.utc),
+        )
+    )
     return raw
 
 
@@ -71,15 +73,20 @@ def login(req: LoginRequest, db: DB) -> TokenResponse:
 @router.post("/refresh", response_model=TokenResponse)
 def refresh(req: RefreshRequest, db: DB) -> TokenResponse:
     token_hash = hash_token(req.refresh_token)
-    record = db.query(RefreshTokenModel).filter(
-        RefreshTokenModel.token_hash == token_hash,
-        RefreshTokenModel.revoked.is_(False),
-        RefreshTokenModel.expires_at > datetime.now(timezone.utc),
-    ).first()
+    record = (
+        db.query(RefreshTokenModel)
+        .filter(
+            RefreshTokenModel.token_hash == token_hash,
+            RefreshTokenModel.revoked.is_(False),
+            RefreshTokenModel.expires_at > datetime.now(timezone.utc),
+        )
+        .first()
+    )
 
     if record is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail="Invalid or expired refresh token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired refresh token"
+        )
 
     user = db.query(UserModel).filter(UserModel.id == record.user_id).first()
     if user is None or not user.is_active:
@@ -100,10 +107,14 @@ def refresh(req: RefreshRequest, db: DB) -> TokenResponse:
 @router.post("/logout")
 def logout(req: LogoutRequest, current_id: AuthedId, db: DB) -> dict:
     token_hash = hash_token(req.refresh_token)
-    record = db.query(RefreshTokenModel).filter(
-        RefreshTokenModel.token_hash == token_hash,
-        RefreshTokenModel.revoked.is_(False),
-    ).first()
+    record = (
+        db.query(RefreshTokenModel)
+        .filter(
+            RefreshTokenModel.token_hash == token_hash,
+            RefreshTokenModel.revoked.is_(False),
+        )
+        .first()
+    )
     if record is not None:
         record.revoked = True
         db.commit()
@@ -138,12 +149,14 @@ def forgot_password(req: ForgotPasswordRequest, db: DB) -> dict:
     ).update({"used": True})
 
     raw = generate_token()
-    db.add(PasswordResetTokenModel(
-        id=str(uuid.uuid4()),
-        user_id=user.id,
-        token_hash=hash_token(raw),
-        expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
-    ))
+    db.add(
+        PasswordResetTokenModel(
+            id=str(uuid.uuid4()),
+            user_id=user.id,
+            token_hash=hash_token(raw),
+            expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
+        )
+    )
     db.commit()
 
     base_url = os.getenv("APP_BASE_URL", "http://localhost:3000")
@@ -156,15 +169,20 @@ def forgot_password(req: ForgotPasswordRequest, db: DB) -> dict:
 @router.post("/reset-password")
 def reset_password(req: ResetPasswordRequest, db: DB) -> dict:
     token_hash = hash_token(req.token)
-    record = db.query(PasswordResetTokenModel).filter(
-        PasswordResetTokenModel.token_hash == token_hash,
-        PasswordResetTokenModel.used.is_(False),
-        PasswordResetTokenModel.expires_at > datetime.now(timezone.utc),
-    ).first()
+    record = (
+        db.query(PasswordResetTokenModel)
+        .filter(
+            PasswordResetTokenModel.token_hash == token_hash,
+            PasswordResetTokenModel.used.is_(False),
+            PasswordResetTokenModel.expires_at > datetime.now(timezone.utc),
+        )
+        .first()
+    )
 
     if record is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Invalid or expired reset token")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset token"
+        )
 
     record.used = True
     user = db.query(UserModel).filter(UserModel.id == record.user_id).first()

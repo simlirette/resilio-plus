@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from ..db.models import AthleteModel
-from ..dependencies import get_db, get_current_athlete_id
+from ..dependencies import get_current_athlete_id, get_db
 from ..schemas.athlete import AthleteCreate, AthleteResponse, AthleteUpdate, Sport
 
 router = APIRouter(prefix="/athletes", tags=["athletes"])

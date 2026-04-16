@@ -11,11 +11,11 @@ _SLEEP_BANKING_WEEKS = 2  # activate sleep banking if race within this many week
 
 @dataclass
 class RecoveryStatus:
-    readiness_modifier: float       # [0.5, 1.5]
-    hrv_trend: str                  # "improving" | "stable" | "declining"
-    sleep_avg_hours: float | None   # average sleep over last 7 days
-    sleep_banking_active: bool      # True if race within _SLEEP_BANKING_WEEKS
-    recommendation: str             # human-readable coaching note
+    readiness_modifier: float  # [0.5, 1.5]
+    hrv_trend: str  # "improving" | "stable" | "declining"
+    sleep_avg_hours: float | None  # average sleep over last 7 days
+    sleep_banking_active: bool  # True if race within _SLEEP_BANKING_WEEKS
+    recommendation: str  # human-readable coaching note
 
 
 def compute_recovery_status(
@@ -32,9 +32,7 @@ def compute_recovery_status(
 
     # HRV trend: compare first 3 vs last 3 entries (oldest-first after sort)
     hrv_values = [
-        e.hrv_rmssd
-        for e in sorted(terra_data, key=lambda e: e.date)
-        if e.hrv_rmssd is not None
+        e.hrv_rmssd for e in sorted(terra_data, key=lambda e: e.date) if e.hrv_rmssd is not None
     ]
     hrv_trend = _compute_hrv_trend(hrv_values)
 

@@ -52,8 +52,11 @@ class NutritionCoach(BaseAgent):
         return AgentRecommendation(
             agent_name=self.name,
             fatigue_score=FatigueScore(
-                local_muscular=0.0, cns_load=0.0, metabolic_cost=0.0,
-                recovery_hours=0.0, affected_muscles=[],
+                local_muscular=0.0,
+                cns_load=0.0,
+                metabolic_cost=0.0,
+                recovery_hours=0.0,
+                affected_muscles=[],
             ),
             weekly_load=0.0,
             suggested_sessions=[],

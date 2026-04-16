@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 
 from ...connectors.strava import StravaConnector
-from ...db.models import ConnectorCredentialModel, StravaActivityModel
+from ...db.models import ConnectorCredentialModel
 from ...schemas.strava import SyncSummary
 from .activity_mapper import SPORT_MAP, to_model
 from .oauth_service import get_valid_credential
@@ -60,9 +60,9 @@ def sync(athlete_id: str, db: Session) -> SyncSummary:
         sport_breakdown[sport] = sport_breakdown.get(sport, 0) + 1
         synced += 1
 
-    db.query(ConnectorCredentialModel).filter_by(
-        athlete_id=athlete_id, provider="strava"
-    ).update({"last_sync_at": now})
+    db.query(ConnectorCredentialModel).filter_by(athlete_id=athlete_id, provider="strava").update(
+        {"last_sync_at": now}
+    )
     db.commit()
 
     return SyncSummary(synced=synced, skipped=skipped, sport_breakdown=sport_breakdown)

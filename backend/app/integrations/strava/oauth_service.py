@@ -109,11 +109,7 @@ def callback(code: str, state: str, db: Session) -> dict:
     key = _get_encryption_key()
 
     # Validate state (CSRF protection)
-    cred_rows = (
-        db.query(ConnectorCredentialModel)
-        .filter_by(provider="strava")
-        .all()
-    )
+    cred_rows = db.query(ConnectorCredentialModel).filter_by(provider="strava").all()
     matching = next(
         (r for r in cred_rows if json.loads(r.extra_json or "{}").get("state") == state),
         None,

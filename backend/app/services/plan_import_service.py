@@ -36,7 +36,6 @@ _MAX_CONTENT_CHARS = 40_000  # ~10k tokens — stay within Haiku context
 
 
 class PlanImportService:
-
     @staticmethod
     def parse_file(content: str, filename: str) -> ExternalPlanDraft:
         """Call Claude Haiku to parse file text into an ExternalPlanDraft.

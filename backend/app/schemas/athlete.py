@@ -1,5 +1,5 @@
-from enum import Enum
 from datetime import date
+from enum import Enum
 from typing import Literal
 from uuid import UUID, uuid4
 

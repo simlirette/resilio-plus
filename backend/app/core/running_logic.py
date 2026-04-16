@@ -59,10 +59,10 @@ def get_vdot_paces(vdot: float) -> dict:
 
 # HR zone descriptions (Daniels/Seiler hybrid — running_zones.json)
 _HR_ZONES: dict[str, str] = {
-    "easy_z1":       "Z1 easy (60-74% HRmax)",
-    "long_run_z1":   "Z1 long run (60-74% HRmax)",
-    "tempo_z2":      "Z2 tempo (80-88% HRmax)",
-    "vo2max_z3":     "Z3 VO2max (95-100% HRmax)",
+    "easy_z1": "Z1 easy (60-74% HRmax)",
+    "long_run_z1": "Z1 long run (60-74% HRmax)",
+    "tempo_z2": "Z2 tempo (80-88% HRmax)",
+    "vo2max_z3": "Z3 VO2max (95-100% HRmax)",
     "activation_z3": "Z3 activation (95-100% HRmax)",
 }
 
@@ -96,10 +96,21 @@ def _build_pace_note(workout_type: str, paces: dict) -> str:
 # VDOT lookup table (Jack Daniels, simplified) — used by estimate_vdot
 # (vdot, easy_pace_s_per_km, threshold_pace_s_per_km)
 _VDOT_TABLE: list[tuple[int, int, int]] = [
-    (30, 450, 390), (33, 425, 368), (35, 405, 350), (38, 383, 332),
-    (40, 370, 315), (43, 350, 300), (45, 340, 290), (48, 322, 275),
-    (50, 315, 270), (53, 300, 258), (55, 295, 250), (58, 280, 238),
-    (60, 275, 235), (65, 258, 220), (70, 242, 207),
+    (30, 450, 390),
+    (33, 425, 368),
+    (35, 405, 350),
+    (38, 383, 332),
+    (40, 370, 315),
+    (43, 350, 300),
+    (45, 340, 290),
+    (48, 322, 275),
+    (50, 315, 270),
+    (53, 300, 258),
+    (55, 295, 250),
+    (58, 280, 238),
+    (60, 275, 235),
+    (65, 258, 220),
+    (70, 242, 207),
 ]
 
 
@@ -114,10 +125,12 @@ def estimate_vdot(
     Returns the maximum VDOT found across all valid activities.
     """
     from datetime import date as _date
+
     ref = reference_date or _date.today()
     cutoff = ref - timedelta(days=30)
     runs = [
-        a for a in activities
+        a
+        for a in activities
         if a.sport_type == "Run"
         and a.date >= cutoff
         and a.distance_meters is not None
@@ -144,23 +157,25 @@ def compute_running_fatigue(activities: list[StravaActivity]) -> FatigueScore:
     """
     if not activities:
         return FatigueScore(
-            local_muscular=0.0, cns_load=0.0, metabolic_cost=0.0,
-            recovery_hours=0.0, affected_muscles=[],
+            local_muscular=0.0,
+            cns_load=0.0,
+            metabolic_cost=0.0,
+            recovery_hours=0.0,
+            affected_muscles=[],
         )
 
     total_km = sum((a.distance_meters or 0.0) / 1000.0 for a in activities)
     hiit_count = sum(1 for a in activities if _is_hiit(a))
 
-    metabolic = sum(
-        (a.duration_seconds / 60.0) * ((a.perceived_exertion or 5) / 10.0)
-        for a in activities
-    ) / 10.0
+    metabolic = (
+        sum((a.duration_seconds / 60.0) * ((a.perceived_exertion or 5) / 10.0) for a in activities)
+        / 10.0
+    )
 
     if any(_is_hiit(a) for a in activities):
         recovery = 24.0
     elif any(
-        a.perceived_exertion is not None and 6 <= a.perceived_exertion <= 7
-        for a in activities
+        a.perceived_exertion is not None and 6 <= a.perceived_exertion <= 7 for a in activities
     ):
         recovery = 12.0
     else:
@@ -188,11 +203,11 @@ def generate_running_sessions(
     vdot: float,
     week_number: int,
     weeks_remaining: int,
-    available_days: list[int],   # 0=Mon ... 6=Sun
+    available_days: list[int],  # 0=Mon ... 6=Sun
     hours_budget: float,
     volume_modifier: float,
     tid_strategy: TIDStrategy,
-    week_start: date,            # Monday of the planning week
+    week_start: date,  # Monday of the planning week
     _paces: dict | None = None,  # injected in tests to avoid file I/O
 ) -> list[WorkoutSlot]:
     """Generate weekly running sessions as WorkoutSlots.
@@ -265,11 +280,14 @@ def generate_running_sessions(
     else:
         day_pool = weekend + weekday
 
-    sessions_to_place = raw_sorted[:len(day_pool)]
+    sessions_to_place = raw_sorted[: len(day_pool)]
 
     _Z = FatigueScore(
-        local_muscular=0.0, cns_load=0.0, metabolic_cost=0.0,
-        recovery_hours=0.0, affected_muscles=[],
+        local_muscular=0.0,
+        cns_load=0.0,
+        metabolic_cost=0.0,
+        recovery_hours=0.0,
+        affected_muscles=[],
     )
 
     return [

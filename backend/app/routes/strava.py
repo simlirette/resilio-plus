@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from ..connectors.base import ConnectorRateLimitError
 from ..db.models import AthleteModel
-from ..dependencies import get_db, get_current_athlete_id
+from ..dependencies import get_current_athlete_id, get_db
 from ..integrations.strava.oauth_service import callback as oauth_callback
 from ..integrations.strava.oauth_service import connect as oauth_connect
 from ..integrations.strava.sync_service import sync as strava_sync

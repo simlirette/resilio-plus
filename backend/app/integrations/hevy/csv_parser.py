@@ -86,25 +86,27 @@ def parse_hevy_csv(content: bytes, unit: str = "kg") -> list[HevyWorkout]:
                     reps = int(reps_raw) if reps_raw else None
                     rpe = (float(rpe_raw) or None) if rpe_raw else None  # 0.0 treated as unset
 
-                    sets.append(HevySet(
-                        reps=reps,
-                        weight_kg=weight_kg,
-                        rpe=rpe,
-                        set_type="normal",
-                    ))
+                    sets.append(
+                        HevySet(
+                            reps=reps,
+                            weight_kg=weight_kg,
+                            rpe=rpe,
+                            set_type="normal",
+                        )
+                    )
                 except (ValueError, Exception) as e:
-                    raise ValueError(
-                        f"Invalid data in row for exercise '{ex_name}': {e}"
-                    ) from e
+                    raise ValueError(f"Invalid data in row for exercise '{ex_name}': {e}") from e
             exercises.append(HevyExercise(name=ex_name, sets=sets))
 
         workout_id = f"{workout_date.isoformat()}-{_slugify(workout_name)}"
-        workouts.append(HevyWorkout(
-            id=workout_id,
-            title=workout_name,
-            date=workout_date,
-            duration_seconds=0,
-            exercises=exercises,
-        ))
+        workouts.append(
+            HevyWorkout(
+                id=workout_id,
+                title=workout_name,
+                date=workout_date,
+                duration_seconds=0,
+                exercises=exercises,
+            )
+        )
 
     return workouts

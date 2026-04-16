@@ -5,8 +5,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from .fatigue import FatigueScore
 from .athlete import Sport
+from .fatigue import FatigueScore
 
 
 class SessionLogRequest(BaseModel):

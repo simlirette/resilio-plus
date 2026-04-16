@@ -15,6 +15,7 @@ CyclePhase = Literal["menstrual", "follicular", "ovulation", "luteal"]
 # Phase detection
 # ---------------------------------------------------------------------------
 
+
 def compute_cycle_day(
     last_period_start: date,
     today: date,
@@ -195,8 +196,7 @@ _NUTRITION: dict[str, dict] = {
         "calories_extra": 0,
         "supplements": [],
         "notes": (
-            "Phase ovulatoire — Maintenir hydratation optimale "
-            "(retention d'eau possible)."
+            "Phase ovulatoire — Maintenir hydratation optimale " "(retention d'eau possible)."
         ),
     },
     "luteal": {

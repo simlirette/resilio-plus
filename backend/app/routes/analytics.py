@@ -4,14 +4,14 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from ..db.models import AthleteModel, SessionLogModel
-from ..dependencies import get_db, get_current_athlete_id
 from ..core.analytics_logic import (
     compute_acwr_series,
     compute_ctl_atl_tsb,
-    compute_sport_breakdown,
     compute_performance_trends,
+    compute_sport_breakdown,
 )
+from ..db.models import SessionLogModel
+from ..dependencies import get_current_athlete_id, get_db
 
 router = APIRouter(prefix="/athletes", tags=["analytics"])
 
@@ -26,11 +26,7 @@ def _require_own(
 
 
 def _session_rows(athlete_id: str, db: Session) -> list[dict[str, Any]]:
-    rows = (
-        db.query(SessionLogModel)
-        .filter(SessionLogModel.athlete_id == athlete_id)
-        .all()
-    )
+    rows = db.query(SessionLogModel).filter(SessionLogModel.athlete_id == athlete_id).all()
     result = []
     for r in rows:
         session_date = r.logged_at.date().isoformat() if r.logged_at else None
@@ -41,13 +37,15 @@ def _session_rows(athlete_id: str, db: Session) -> list[dict[str, Any]]:
         except (json.JSONDecodeError, TypeError):
             actual_data = {}
         sport = actual_data.get("sport") if actual_data else None
-        result.append({
-            "session_date": session_date,
-            "total_load": total_load,
-            "sport": sport,
-            "duration_minutes": duration_minutes,
-            "actual_data_json": r.actual_data_json,
-        })
+        result.append(
+            {
+                "session_date": session_date,
+                "total_load": total_load,
+                "sport": sport,
+                "duration_minutes": duration_minutes,
+                "actual_data_json": r.actual_data_json,
+            }
+        )
     return result
 
 

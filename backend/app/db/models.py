@@ -1,6 +1,18 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import BigInteger, Boolean, Column, Date, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import relationship
 
 from .database import Base
@@ -15,14 +27,17 @@ class UserModel(Base):
     athlete_id = Column(String, ForeignKey("athletes.id"), nullable=False)
     is_active = Column(Boolean, nullable=False, default=True)
     last_login_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime(timezone=True), nullable=False,
-                        default=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
 
     athlete = relationship("AthleteModel", back_populates="user")
-    refresh_tokens = relationship("RefreshTokenModel", back_populates="user",
-                                  cascade="all, delete-orphan")
-    reset_tokens = relationship("PasswordResetTokenModel", back_populates="user",
-                                cascade="all, delete-orphan")
+    refresh_tokens = relationship(
+        "RefreshTokenModel", back_populates="user", cascade="all, delete-orphan"
+    )
+    reset_tokens = relationship(
+        "PasswordResetTokenModel", back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class RefreshTokenModel(Base):
@@ -32,8 +47,9 @@ class RefreshTokenModel(Base):
     user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     token_hash = Column(String, unique=True, nullable=False)
     expires_at = Column(DateTime(timezone=True), nullable=False)
-    created_at = Column(DateTime(timezone=True), nullable=False,
-                        default=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
     revoked = Column(Boolean, nullable=False, default=False)
 
     user = relationship("UserModel", back_populates="refresh_tokens")
@@ -78,18 +94,43 @@ class AthleteModel(Base):
     available_days_json = Column(Text, nullable=False)
     equipment_json = Column(Text, nullable=False, default="[]")
     # Relationships
-    user = relationship("UserModel", back_populates="athlete", uselist=False, cascade="all, delete-orphan")
-    plans = relationship("TrainingPlanModel", back_populates="athlete", cascade="all, delete-orphan")
-    nutrition_plans = relationship("NutritionPlanModel", back_populates="athlete", cascade="all, delete-orphan")
-    reviews = relationship("WeeklyReviewModel", back_populates="athlete", cascade="all, delete-orphan")
-    credentials = relationship("ConnectorCredentialModel", back_populates="athlete", cascade="all, delete-orphan")
-    session_logs = relationship("SessionLogModel", back_populates="athlete", cascade="all, delete-orphan")
+    user = relationship(
+        "UserModel", back_populates="athlete", uselist=False, cascade="all, delete-orphan"
+    )
+    plans = relationship(
+        "TrainingPlanModel", back_populates="athlete", cascade="all, delete-orphan"
+    )
+    nutrition_plans = relationship(
+        "NutritionPlanModel", back_populates="athlete", cascade="all, delete-orphan"
+    )
+    reviews = relationship(
+        "WeeklyReviewModel", back_populates="athlete", cascade="all, delete-orphan"
+    )
+    credentials = relationship(
+        "ConnectorCredentialModel", back_populates="athlete", cascade="all, delete-orphan"
+    )
+    session_logs = relationship(
+        "SessionLogModel", back_populates="athlete", cascade="all, delete-orphan"
+    )
     # V3 relationships
-    energy_snapshots = relationship("EnergySnapshotModel", back_populates="athlete", cascade="all, delete-orphan")
-    hormonal_profile = relationship("HormonalProfileModel", back_populates="athlete", uselist=False, cascade="all, delete-orphan")
-    allostatic_entries = relationship("AllostaticEntryModel", back_populates="athlete", cascade="all, delete-orphan")
-    external_plans = relationship("ExternalPlanModel", back_populates="athlete", cascade="all, delete-orphan")
-    head_coach_messages = relationship("HeadCoachMessageModel", back_populates="athlete", cascade="all, delete-orphan")
+    energy_snapshots = relationship(
+        "EnergySnapshotModel", back_populates="athlete", cascade="all, delete-orphan"
+    )
+    hormonal_profile = relationship(
+        "HormonalProfileModel",
+        back_populates="athlete",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    allostatic_entries = relationship(
+        "AllostaticEntryModel", back_populates="athlete", cascade="all, delete-orphan"
+    )
+    external_plans = relationship(
+        "ExternalPlanModel", back_populates="athlete", cascade="all, delete-orphan"
+    )
+    head_coach_messages = relationship(
+        "HeadCoachMessageModel", back_populates="athlete", cascade="all, delete-orphan"
+    )
 
 
 class TrainingPlanModel(Base):
@@ -104,8 +145,9 @@ class TrainingPlanModel(Base):
     acwr = Column(Float, nullable=False)
     weekly_slots_json = Column(Text, nullable=False)
     status = Column(String, nullable=False, default="active")
-    created_at = Column(DateTime(timezone=True), nullable=False,
-                        default=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
     # Relationships
     athlete = relationship("AthleteModel", back_populates="plans")
     reviews = relationship("WeeklyReviewModel", back_populates="plan")
@@ -149,10 +191,10 @@ class ConnectorCredentialModel(Base):
 
     id = Column(String, primary_key=True)
     athlete_id = Column(String, ForeignKey("athletes.id"), nullable=False)
-    provider = Column(String, nullable=False)          # "strava"|"hevy"|"fatsecret"|"terra"
-    access_token_enc = Column(Text, nullable=True)     # Fernet ciphertext (Strava only)
-    refresh_token_enc = Column(Text, nullable=True)    # Fernet ciphertext (Strava only)
-    expires_at = Column(Integer, nullable=True)        # Unix timestamp
+    provider = Column(String, nullable=False)  # "strava"|"hevy"|"fatsecret"|"terra"
+    access_token_enc = Column(Text, nullable=True)  # Fernet ciphertext (Strava only)
+    refresh_token_enc = Column(Text, nullable=True)  # Fernet ciphertext (Strava only)
+    expires_at = Column(Integer, nullable=True)  # Unix timestamp
     last_sync_at = Column(DateTime(timezone=True), nullable=True)  # NULL = never synced
     extra_json = Column(Text, nullable=False, default="{}")
     # Relationships
@@ -164,10 +206,10 @@ class ConnectorCredentialModel(Base):
 class StravaActivityModel(Base):
     __tablename__ = "strava_activities"
 
-    id = Column(String, primary_key=True)                  # "strava_{strava_id}"
+    id = Column(String, primary_key=True)  # "strava_{strava_id}"
     athlete_id = Column(String, ForeignKey("athletes.id", ondelete="CASCADE"), nullable=False)
     strava_id = Column(BigInteger, nullable=False, unique=True)
-    sport_type = Column(String, nullable=False)            # "running"|"biking"|"swimming"
+    sport_type = Column(String, nullable=False)  # "running"|"biking"|"swimming"
     name = Column(String, nullable=False)
     started_at = Column(DateTime(timezone=True), nullable=False)
     duration_s = Column(Integer, nullable=False)
@@ -192,9 +234,12 @@ class SessionLogModel(Base):
     rpe = Column(Integer, nullable=True)
     notes = Column(Text, nullable=False, default="")
     actual_data_json = Column(Text, nullable=False, default="{}")
-    logged_at = Column(DateTime(timezone=True), nullable=False,
-                       default=lambda: datetime.now(timezone.utc))
-    external_session_id = Column(String, ForeignKey("external_sessions.id", ondelete="SET NULL"), nullable=True)
+    logged_at = Column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
+    external_session_id = Column(
+        String, ForeignKey("external_sessions.id", ondelete="SET NULL"), nullable=True
+    )
 
     # Relationships
     athlete = relationship("AthleteModel", back_populates="session_logs")
@@ -209,18 +254,18 @@ class SessionLogModel(Base):
 from app.models.schemas import (  # noqa: E402, F401
     AllostaticEntryModel,
     EnergySnapshotModel,
-    HormonalProfileModel,
     ExternalPlanModel,
     ExternalSessionModel,
     HeadCoachMessageModel,
+    HormonalProfileModel,
 )
 
 
 class FoodCacheModel(Base):
     __tablename__ = "food_cache"
 
-    id = Column(String, primary_key=True)         # "usda_789" etc.
-    source = Column(String, nullable=False)        # "usda" | "off" | "fcen"
+    id = Column(String, primary_key=True)  # "usda_789" etc.
+    source = Column(String, nullable=False)  # "usda" | "off" | "fcen"
     name = Column(String, nullable=False)
     name_en = Column(String, nullable=True)
     name_fr = Column(String, nullable=True)
@@ -232,4 +277,4 @@ class FoodCacheModel(Base):
     sodium_mg = Column(Float, nullable=True)
     sugar_g = Column(Float, nullable=True)
     cached_at = Column(DateTime(timezone=True), nullable=False)
-    ttl_hours = Column(Integer, nullable=True)     # NULL = permanent (FCÉN)
+    ttl_hours = Column(Integer, nullable=True)  # NULL = permanent (FCÉN)

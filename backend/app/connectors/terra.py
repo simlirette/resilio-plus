@@ -55,8 +55,8 @@ class TerraConnector(BaseConnector):
 
     def _headers(self) -> dict:
         return {
-            "x-api-key": self.client_id,    # TERRA_API_KEY
-            "dev-id": self.client_secret,    # TERRA_DEV_ID
+            "x-api-key": self.client_id,  # TERRA_API_KEY
+            "dev-id": self.client_secret,  # TERRA_DEV_ID
         }
 
     def fetch_daily(self, query_date: date) -> TerraHealthData:

@@ -1,9 +1,9 @@
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy.orm import Session
 
-from ..dependencies import get_db, get_current_athlete_id
+from ..dependencies import get_current_athlete_id, get_db
 from ..integrations.hevy.csv_parser import parse_hevy_csv
 from ..integrations.hevy.importer import import_hevy_workouts
 

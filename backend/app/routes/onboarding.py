@@ -67,6 +67,7 @@ def onboard_athlete(req: OnboardingRequest, db: DB) -> OnboardingResponse:
     plan_model = _create_plan_for_athlete(athlete_id, athlete, req.plan_start_date, end_date, db)
 
     from ..routes.auth import _issue_refresh_token
+
     access_token = create_access_token(athlete_id=athlete_id)
     refresh_token = _issue_refresh_token(user.id, db)
     db.commit()

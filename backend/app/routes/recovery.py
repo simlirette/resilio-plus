@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from ..core.recovery_logic import compute_recovery_status
 from ..db.models import AthleteModel
-from ..dependencies import get_db, get_current_athlete_id
+from ..dependencies import get_current_athlete_id, get_db
 from ..routes.athletes import athlete_model_to_response
 
 router = APIRouter(prefix="/athletes", tags=["recovery"])
@@ -41,6 +41,7 @@ def get_recovery_status(
 ) -> RecoveryStatusResponse:
     """Return current recovery status based on Terra/HRV data."""
     from datetime import date
+
     from ..services.connector_service import fetch_connector_data
 
     athlete_model = db.get(AthleteModel, athlete_id)

@@ -15,7 +15,7 @@ from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from ..db.models import AthleteModel
-from . import get_db, get_current_athlete_id
+from . import get_current_athlete_id, get_db
 
 
 def require_full_mode(

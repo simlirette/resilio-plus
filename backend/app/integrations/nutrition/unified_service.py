@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from ...db.models import FoodCacheModel
 from ...schemas.food import FoodItem
-from . import usda_client, off_client
+from . import off_client, usda_client
 
 
 def _is_expired(row: FoodCacheModel) -> bool:
@@ -54,22 +54,24 @@ def _upsert_items(items: list[FoodItem], ttl_hours: int, db: Session) -> None:
             existing.cached_at = now
             existing.ttl_hours = ttl_hours
         else:
-            db.add(FoodCacheModel(
-                id=item.id,
-                source=item.source,
-                name=item.name_en,
-                name_en=item.name_en,
-                name_fr=item.name_fr,
-                calories_per_100g=item.calories_per_100g,
-                protein_g=item.protein_g,
-                carbs_g=item.carbs_g,
-                fat_g=item.fat_g,
-                fiber_g=item.fiber_g,
-                sodium_mg=item.sodium_mg,
-                sugar_g=item.sugar_g,
-                cached_at=now,
-                ttl_hours=ttl_hours,
-            ))
+            db.add(
+                FoodCacheModel(
+                    id=item.id,
+                    source=item.source,
+                    name=item.name_en,
+                    name_en=item.name_en,
+                    name_fr=item.name_fr,
+                    calories_per_100g=item.calories_per_100g,
+                    protein_g=item.protein_g,
+                    carbs_g=item.carbs_g,
+                    fat_g=item.fat_g,
+                    fiber_g=item.fiber_g,
+                    sodium_mg=item.sodium_mg,
+                    sugar_g=item.sugar_g,
+                    cached_at=now,
+                    ttl_hours=ttl_hours,
+                )
+            )
     db.commit()
 
 

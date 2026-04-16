@@ -64,10 +64,12 @@ class FatSecretConnector(BaseConnector):
         )
         response.raise_for_status()
         data = response.json()
-        return self.credential.model_copy(update={
-            "access_token": data["access_token"],
-            "expires_at": int(time.time()) + data.get("expires_in", 86400),
-        })
+        return self.credential.model_copy(
+            update={
+                "access_token": data["access_token"],
+                "expires_at": int(time.time()) + data.get("expires_in", 86400),
+            }
+        )
 
     def fetch_food_entries(self, query_date: date) -> FatSecretDay:
         token = self.get_valid_token()

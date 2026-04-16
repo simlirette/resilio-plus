@@ -4,7 +4,9 @@ from datetime import timedelta
 
 from ..agents.base import AgentContext, AgentRecommendation, BaseAgent
 from ..core.biking_logic import (
-    compute_biking_fatigue, estimate_ftp, generate_biking_sessions,
+    compute_biking_fatigue,
+    estimate_ftp,
+    generate_biking_sessions,
 )
 from ..core.periodization import get_current_phase
 from ..core.readiness import compute_readiness
@@ -20,7 +22,8 @@ class BikingCoach(BaseAgent):
     def analyze(self, context: AgentContext) -> AgentRecommendation:
         # 1. Filter Strava rides to 7 days before this week
         prior_rides = [
-            a for a in context.strava_activities
+            a
+            for a in context.strava_activities
             if a.sport_type in ("Ride", "VirtualRide")
             and context.date_range[0] - timedelta(days=7) <= a.date < context.date_range[0]
         ]
@@ -57,10 +60,7 @@ class BikingCoach(BaseAgent):
             "Z3_tempo_ride": 1.4,
             "Z4_threshold_intervals": 1.8,
         }
-        weekly_load = sum(
-            s.duration_min * _INTENSITY.get(s.workout_type, 1.0)
-            for s in sessions
-        )
+        weekly_load = sum(s.duration_min * _INTENSITY.get(s.workout_type, 1.0) for s in sessions)
 
         return AgentRecommendation(
             agent_name=self.name,

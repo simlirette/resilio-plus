@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from ..core.strain import MUSCLES, compute_muscle_strain
 from ..db.models import AthleteModel
-from ..dependencies import get_db, get_current_athlete_id
+from ..dependencies import get_current_athlete_id, get_db
 from ..services.connector_service import fetch_connector_data
 
 router = APIRouter(prefix="/athletes", tags=["strain"])

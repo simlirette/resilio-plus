@@ -21,25 +21,35 @@ logger = logging.getLogger("resilio.graph")
 
 def log_node(func):
     """Decorator that logs entry/exit for a LangGraph node function."""
+
     @wraps(func)
     def wrapper(state: dict[str, Any], config=None) -> dict[str, Any]:
         node = func.__name__
         athlete = state.get("athlete_id", "?")
-        logger.info(json.dumps({
-            "event": "node_enter",
-            "node": node,
-            "athlete_id": athlete,
-        }))
+        logger.info(
+            json.dumps(
+                {
+                    "event": "node_enter",
+                    "node": node,
+                    "athlete_id": athlete,
+                }
+            )
+        )
         t0 = time.perf_counter()
         result = func(state, config) if config is not None else func(state)
         ms = round((time.perf_counter() - t0) * 1000)
         changed = list(result.keys()) if isinstance(result, dict) else []
-        logger.info(json.dumps({
-            "event": "node_exit",
-            "node": node,
-            "athlete_id": athlete,
-            "duration_ms": ms,
-            "keys_changed": changed,
-        }))
+        logger.info(
+            json.dumps(
+                {
+                    "event": "node_exit",
+                    "node": node,
+                    "athlete_id": athlete,
+                    "duration_ms": ms,
+                    "keys_changed": changed,
+                }
+            )
+        )
         return result
+
     return wrapper

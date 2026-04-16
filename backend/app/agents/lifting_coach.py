@@ -5,11 +5,12 @@ from datetime import timedelta
 from ..agents.base import AgentContext, AgentRecommendation, BaseAgent
 from ..core.hormonal import get_lifting_adjustments
 from ..core.lifting_logic import (
-    compute_lifting_fatigue, estimate_strength_level, generate_lifting_sessions,
+    compute_lifting_fatigue,
+    estimate_strength_level,
+    generate_lifting_sessions,
 )
 from ..core.periodization import get_current_phase
 from ..core.readiness import compute_readiness
-from ..schemas.athlete import Sport
 from .prompts import LIFTING_COACH_PROMPT
 
 _SYSTEM_PROMPT = LIFTING_COACH_PROMPT
@@ -25,7 +26,8 @@ class LiftingCoach(BaseAgent):
     def analyze(self, context: AgentContext) -> AgentRecommendation:
         # 1. Filter Hevy workouts to 7 days before this week
         prior_workouts = [
-            w for w in context.hevy_workouts
+            w
+            for w in context.hevy_workouts
             if context.date_range[0] - timedelta(days=7) <= w.date < context.date_range[0]
         ]
 
@@ -66,13 +68,14 @@ class LiftingCoach(BaseAgent):
 
         # 9. Weekly load: sum(duration_min * intensity_weight)
         _LIFT_INTENSITY = {
-            "upper_strength": 2.0, "lower_strength": 2.0,
-            "upper_hypertrophy": 1.5, "arms_hypertrophy": 1.0,
+            "upper_strength": 2.0,
+            "lower_strength": 2.0,
+            "upper_hypertrophy": 1.5,
+            "arms_hypertrophy": 1.0,
             "full_body_endurance": 1.0,
         }
         weekly_load = sum(
-            s.duration_min * _LIFT_INTENSITY.get(s.workout_type, 1.0)
-            for s in sessions
+            s.duration_min * _LIFT_INTENSITY.get(s.workout_type, 1.0) for s in sessions
         )
 
         # V3: apply cycle phase adjustments if hormonal profile is enabled

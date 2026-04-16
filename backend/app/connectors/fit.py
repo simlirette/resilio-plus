@@ -52,9 +52,7 @@ class FitConnector:
         duration_seconds = int(total_elapsed_time)
         activity_date: date = start_time.date()
 
-        avg_pace = (
-            (duration_seconds / distance_km) if (distance_km and distance_km > 0) else None
-        )
+        avg_pace = (duration_seconds / distance_km) if (distance_km and distance_km > 0) else None
 
         return {
             "activity_date": activity_date,

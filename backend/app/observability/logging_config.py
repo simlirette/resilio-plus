@@ -9,14 +9,33 @@ from logging.config import dictConfig
 from typing import Any
 
 from .correlation import get_athlete_id, get_correlation_id
-from .pii_filter import PIIFilter
 
-_STD_LOGRECORD_ATTRS = frozenset({
-    "name", "msg", "args", "levelname", "levelno", "pathname", "filename",
-    "module", "exc_info", "exc_text", "stack_info", "lineno", "funcName",
-    "created", "msecs", "relativeCreated", "thread", "threadName",
-    "processName", "process", "message", "asctime",
-})
+_STD_LOGRECORD_ATTRS = frozenset(
+    {
+        "name",
+        "msg",
+        "args",
+        "levelname",
+        "levelno",
+        "pathname",
+        "filename",
+        "module",
+        "exc_info",
+        "exc_text",
+        "stack_info",
+        "lineno",
+        "funcName",
+        "created",
+        "msecs",
+        "relativeCreated",
+        "thread",
+        "threadName",
+        "processName",
+        "process",
+        "message",
+        "asctime",
+    }
+)
 
 _STACK_MAX = 4096
 
@@ -26,7 +45,9 @@ class JSONFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         out: dict[str, Any] = {
-            "ts": datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat().replace("+00:00", "Z"),
+            "ts": datetime.fromtimestamp(record.created, tz=timezone.utc)
+            .isoformat()
+            .replace("+00:00", "Z"),
             "level": record.levelname.lower(),
             "logger": record.name,
             "msg": record.getMessage(),
@@ -72,32 +93,34 @@ def configure_logging(level: str = "INFO") -> None:
     if _CONFIGURED:
         return
 
-    dictConfig({
-        "version": 1,
-        "disable_existing_loggers": False,
-        "filters": {
-            "pii": {"()": "app.observability.pii_filter.PIIFilter"},
-        },
-        "formatters": {
-            "json": {"()": "app.observability.logging_config.JSONFormatter"},
-        },
-        "handlers": {
-            "default": {
-                "class": "logging.StreamHandler",
-                "formatter": "json",
+    dictConfig(
+        {
+            "version": 1,
+            "disable_existing_loggers": False,
+            "filters": {
+                "pii": {"()": "app.observability.pii_filter.PIIFilter"},
             },
-        },
-        # Attach PII filter at ROOT LOGGER level (not handler) so it runs before
-        # any handler processes the record — including pytest's caplog handler
-        # and Sentry's logging integration.
-        "root": {
-            "level": level,
-            "handlers": ["default"],
-            "filters": ["pii"],
-        },
-        "loggers": {
-            "uvicorn.access": {"level": "INFO", "handlers": ["default"], "propagate": False},
-            "uvicorn.error":  {"level": "INFO", "handlers": ["default"], "propagate": False},
-        },
-    })
+            "formatters": {
+                "json": {"()": "app.observability.logging_config.JSONFormatter"},
+            },
+            "handlers": {
+                "default": {
+                    "class": "logging.StreamHandler",
+                    "formatter": "json",
+                },
+            },
+            # Attach PII filter at ROOT LOGGER level (not handler) so it runs before
+            # any handler processes the record — including pytest's caplog handler
+            # and Sentry's logging integration.
+            "root": {
+                "level": level,
+                "handlers": ["default"],
+                "filters": ["pii"],
+            },
+            "loggers": {
+                "uvicorn.access": {"level": "INFO", "handlers": ["default"], "propagate": False},
+                "uvicorn.error": {"level": "INFO", "handlers": ["default"], "propagate": False},
+            },
+        }
+    )
     _CONFIGURED = True

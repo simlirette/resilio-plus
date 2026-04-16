@@ -32,6 +32,7 @@ class ConnectorNotFoundError(Exception):
 # Private helpers
 # ---------------------------------------------------------------------------
 
+
 def _get_latest_plan(athlete_id: str, db: Session) -> TrainingPlanModel | None:
     return (
         db.query(TrainingPlanModel)
@@ -51,9 +52,7 @@ def _upsert_session_log(
     db: Session,
 ) -> None:
     existing = (
-        db.query(SessionLogModel)
-        .filter_by(athlete_id=athlete_id, session_id=session_id)
-        .first()
+        db.query(SessionLogModel).filter_by(athlete_id=athlete_id, session_id=session_id).first()
     )
     if existing:
         existing.actual_duration_min = actual_duration_min
@@ -61,16 +60,18 @@ def _upsert_session_log(
         existing.logged_at = datetime.now(timezone.utc)
         db.commit()
     else:
-        db.add(SessionLogModel(
-            id=str(uuid.uuid4()),
-            athlete_id=athlete_id,
-            plan_id=plan_id,
-            session_id=session_id,
-            actual_duration_min=actual_duration_min,
-            skipped=False,
-            actual_data_json=json.dumps(actual_data),
-            logged_at=datetime.now(timezone.utc),
-        ))
+        db.add(
+            SessionLogModel(
+                id=str(uuid.uuid4()),
+                athlete_id=athlete_id,
+                plan_id=plan_id,
+                session_id=session_id,
+                actual_duration_min=actual_duration_min,
+                skipped=False,
+                actual_data_json=json.dumps(actual_data),
+                logged_at=datetime.now(timezone.utc),
+            )
+        )
         db.commit()
 
 
@@ -85,8 +86,8 @@ def _set_last_sync(cred_model: ConnectorCredentialModel, db: Session) -> None:
 # SyncService
 # ---------------------------------------------------------------------------
 
-class SyncService:
 
+class SyncService:
     @staticmethod
     def sync_hevy(athlete_id: str, db: Session) -> dict[str, Any]:
         """Fetch Hevy workouts (last 7 days) → map to SessionLogModel.

@@ -44,9 +44,7 @@ class HevyConnector(BaseConnector):
     def _api_key(self) -> str:
         return self.credential.extra.get("api_key") or self.client_id
 
-    def fetch_workouts(
-        self, since: datetime, until: datetime
-    ) -> list[HevyWorkout]:
+    def fetch_workouts(self, since: datetime, until: datetime) -> list[HevyWorkout]:
         headers = {"api-key": self._api_key()}
         workouts: list[HevyWorkout] = []
         page = 1
@@ -58,9 +56,7 @@ class HevyConnector(BaseConnector):
                 params={"page": page, "pageCount": PAGE_SIZE},
             )
             for item in data.get("workouts", []):
-                start = datetime.fromisoformat(
-                    item["start_time"].replace("Z", "+00:00")
-                )
+                start = datetime.fromisoformat(item["start_time"].replace("Z", "+00:00"))
                 # Hevy returns workouts newest-first; once we go past since, we're done
                 if start < since:
                     return workouts

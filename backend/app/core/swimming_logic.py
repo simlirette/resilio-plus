@@ -19,8 +19,11 @@ def compute_swimming_fatigue(swims: list[StravaActivity]) -> FatigueScore:
     """Compute FatigueScore from a pre-filtered list of Swim activities."""
     if not swims:
         return FatigueScore(
-            local_muscular=0.0, cns_load=0.0, metabolic_cost=0.0,
-            recovery_hours=0.0, affected_muscles=[],
+            local_muscular=0.0,
+            cns_load=0.0,
+            metabolic_cost=0.0,
+            recovery_hours=0.0,
+            affected_muscles=[],
         )
 
     total_duration_h = sum(s.duration_seconds for s in swims) / 3600
@@ -42,17 +45,17 @@ def compute_swimming_fatigue(swims: list[StravaActivity]) -> FatigueScore:
 
 
 _PHASE_SESSION_MAP: dict[str, list[str]] = {
-    "general_prep":    ["Z1_technique", "Z2_endurance_swim"],
-    "specific_prep":   ["Z2_endurance_swim", "Z3_threshold_set"],
+    "general_prep": ["Z1_technique", "Z2_endurance_swim"],
+    "specific_prep": ["Z2_endurance_swim", "Z3_threshold_set"],
     "pre_competition": ["Z3_threshold_set", "Z2_endurance_swim"],
-    "competition":     ["Z2_endurance_swim"],
-    "transition":      ["Z1_technique"],
+    "competition": ["Z2_endurance_swim"],
+    "transition": ["Z1_technique"],
 }
 
 _SESSION_DURATIONS: dict[str, tuple[int, float]] = {
-    "Z1_technique":      (45, 0.6),
+    "Z1_technique": (45, 0.6),
     "Z2_endurance_swim": (60, 0.8),
-    "Z3_threshold_set":  (50, 0.7),
+    "Z3_threshold_set": (50, 0.7),
 }
 
 _INTENSITY: dict[str, float] = {
@@ -83,8 +86,11 @@ def generate_swimming_sessions(
     budget_remaining = effective_budget
 
     fatigue_stub = FatigueScore(
-        local_muscular=12.0, cns_load=4.0, metabolic_cost=18.0,
-        recovery_hours=10.0, affected_muscles=["shoulders", "lats"],
+        local_muscular=12.0,
+        cns_load=4.0,
+        metabolic_cost=18.0,
+        recovery_hours=10.0,
+        affected_muscles=["shoulders", "lats"],
     )
 
     css_pace_str = f"{int(css_per_100m // 60)}:{int(css_per_100m % 60):02d}/100m"
@@ -105,14 +111,16 @@ def generate_swimming_sessions(
         duration_min = min(base_min, int(budget_remaining * 60))
         duration_min = max(20, duration_min)
 
-        sessions.append(WorkoutSlot(
-            date=week_start + timedelta(days=day_offset),
-            sport=Sport.SWIMMING,
-            workout_type=session_type,
-            duration_min=int(duration_min * volume_modifier),
-            fatigue_score=fatigue_stub,
-            notes=f"CSS: {css_pace_str} | {session_type.replace('_', ' ')}",
-        ))
+        sessions.append(
+            WorkoutSlot(
+                date=week_start + timedelta(days=day_offset),
+                sport=Sport.SWIMMING,
+                workout_type=session_type,
+                duration_min=int(duration_min * volume_modifier),
+                fatigue_score=fatigue_stub,
+                notes=f"CSS: {css_pace_str} | {session_type.replace('_', ' ')}",
+            )
+        )
         used_days.add(day_offset)
         budget_remaining -= duration_min / 60
 

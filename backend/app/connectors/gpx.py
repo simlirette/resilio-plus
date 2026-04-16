@@ -53,14 +53,15 @@ class GpxConnector:
                 times.append(datetime.fromisoformat(time_el.text.replace("Z", "+00:00")))
 
         if len(times) < 2:
-            raise ValueError("GPX file contains no trackpoint timestamps — cannot determine duration")
+            raise ValueError(
+                "GPX file contains no trackpoint timestamps — cannot determine duration"
+            )
 
         activity_date: date = times[0].date()
         duration_seconds = int((times[-1] - times[0]).total_seconds())
 
         distance_km = sum(
-            _haversine_km(lats[i], lons[i], lats[i + 1], lons[i + 1])
-            for i in range(len(lats) - 1)
+            _haversine_km(lats[i], lons[i], lats[i + 1], lons[i + 1]) for i in range(len(lats) - 1)
         )
 
         avg_pace = (duration_seconds / distance_km) if distance_km > 0 else None
@@ -69,8 +70,7 @@ class GpxConnector:
         elevation_gain_m: float | None = None
         if len(valid_eles) >= 2:
             elevation_gain_m = sum(
-                max(0.0, valid_eles[i + 1] - valid_eles[i])
-                for i in range(len(valid_eles) - 1)
+                max(0.0, valid_eles[i + 1] - valid_eles[i]) for i in range(len(valid_eles) - 1)
             )
 
         return {

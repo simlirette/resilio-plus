@@ -25,30 +25,38 @@ _TIER3_EXERCISES: set[str] = {
 
 # Keyword -> muscle group lookup (hand-authored)
 _EXERCISE_MUSCLE_MAP: dict[str, list[str]] = {
-    "squat":     ["quads", "glutes"],
-    "deadlift":  ["hamstrings", "glutes", "back"],
-    "bench":     ["chest", "triceps"],
-    "press":     ["chest", "triceps", "shoulders"],
-    "row":       ["back", "biceps"],
-    "pull":      ["back", "biceps"],
-    "curl":      ["biceps"],
+    "squat": ["quads", "glutes"],
+    "deadlift": ["hamstrings", "glutes", "back"],
+    "bench": ["chest", "triceps"],
+    "press": ["chest", "triceps", "shoulders"],
+    "row": ["back", "biceps"],
+    "pull": ["back", "biceps"],
+    "curl": ["biceps"],
     "extension": ["triceps", "quads"],
-    "lunge":     ["quads", "glutes"],
-    "calf":      ["calves"],
-    "lateral":   ["shoulders"],
-    "fly":       ["chest"],
-    "dip":       ["triceps", "chest"],
+    "lunge": ["quads", "glutes"],
+    "calf": ["calves"],
+    "lateral": ["shoulders"],
+    "fly": ["chest"],
+    "dip": ["triceps", "chest"],
 }
 
 # Lower body keywords for recovery classification
-_LOWER_KEYWORDS = ("squat", "deadlift", "lunge", "leg press", "hack squat",
-                   "split squat", "romanian", "rdl")
+_LOWER_KEYWORDS = (
+    "squat",
+    "deadlift",
+    "lunge",
+    "leg press",
+    "hack squat",
+    "split squat",
+    "romanian",
+    "rdl",
+)
 
 
 class StrengthLevel(str, Enum):
-    BEGINNER     = "beginner"
+    BEGINNER = "beginner"
     INTERMEDIATE = "intermediate"
-    ADVANCED     = "advanced"
+    ADVANCED = "advanced"
 
 
 def estimate_strength_level(workouts: list[HevyWorkout]) -> StrengthLevel:
@@ -63,13 +71,7 @@ def estimate_strength_level(workouts: list[HevyWorkout]) -> StrengthLevel:
 
     sessions_per_week = len(workouts) / 4.3
 
-    all_rpes = [
-        s.rpe
-        for w in workouts
-        for ex in w.exercises
-        for s in ex.sets
-        if s.rpe is not None
-    ]
+    all_rpes = [s.rpe for w in workouts for ex in w.exercises for s in ex.sets if s.rpe is not None]
     mean_rpe = sum(all_rpes) / len(all_rpes) if all_rpes else 0.0
 
     if sessions_per_week >= 3 and mean_rpe > 8:
@@ -86,21 +88,22 @@ def compute_lifting_fatigue(workouts: list[HevyWorkout]) -> FatigueScore:
     """
     if not workouts:
         return FatigueScore(
-            local_muscular=0.0, cns_load=0.0, metabolic_cost=0.0,
-            recovery_hours=0.0, affected_muscles=[],
+            local_muscular=0.0,
+            cns_load=0.0,
+            metabolic_cost=0.0,
+            recovery_hours=0.0,
+            affected_muscles=[],
         )
 
     total_sets = sum(len(ex.sets) for w in workouts for ex in w.exercises)
 
     # Count workouts containing any Tier 3 exercise
     tier3_sessions = sum(
-        1 for w in workouts
-        if any(ex.name.lower() in _TIER3_EXERCISES for ex in w.exercises)
+        1 for w in workouts if any(ex.name.lower() in _TIER3_EXERCISES for ex in w.exercises)
     )
 
     all_reps = [
-        s.reps for w in workouts for ex in w.exercises
-        for s in ex.sets if s.reps is not None
+        s.reps for w in workouts for ex in w.exercises for s in ex.sets if s.reps is not None
     ]
     total_reps_mean = sum(all_reps) / len(all_reps) if all_reps else 0.0
 
@@ -136,14 +139,14 @@ def compute_lifting_fatigue(workouts: list[HevyWorkout]) -> FatigueScore:
 
 def generate_lifting_sessions(
     strength_level: StrengthLevel,
-    phase: str,                    # MacroPhase value string e.g. "general_prep"
+    phase: str,  # MacroPhase value string e.g. "general_prep"
     week_number: int,
     weeks_remaining: int,
-    available_days: list[int],     # 0=Mon ... 6=Sun
+    available_days: list[int],  # 0=Mon ... 6=Sun
     hours_budget: float,
     volume_modifier: float,
     running_load_ratio: float,
-    week_start: date,              # Monday of the planning week
+    week_start: date,  # Monday of the planning week
 ) -> list[WorkoutSlot]:
     """Generate weekly lifting sessions as WorkoutSlots.
 
@@ -157,11 +160,11 @@ def generate_lifting_sessions(
 
     # Exercise tier note based on phase
     _TIER_NOTE: dict[str, str] = {
-        "general_prep":    "Tier 1",
-        "specific_prep":   "Tier 1-2",
+        "general_prep": "Tier 1",
+        "specific_prep": "Tier 1-2",
         "pre_competition": "Tier 1-2",
-        "competition":     "Tier 1-2",
-        "transition":      "Tier 2-3",
+        "competition": "Tier 1-2",
+        "transition": "Tier 2-3",
     }
     tier_note = _TIER_NOTE.get(phase, "Tier 1")
 
@@ -186,21 +189,26 @@ def generate_lifting_sessions(
         if len(available_days) >= 4:
             raw.append(("arms_hypertrophy", max(20, int(60 * dur_mult)), "biceps, triceps"))
     elif dup == 1:  # Strength priority
-        raw.append((
-            "upper_strength",
-            max(20, int(75 * dur_mult)),
-            f"{tier_note} | chest, back, shoulders, triceps, biceps",
-        ))
+        raw.append(
+            (
+                "upper_strength",
+                max(20, int(75 * dur_mult)),
+                f"{tier_note} | chest, back, shoulders, triceps, biceps",
+            )
+        )
         raw.append(("lower_strength", lower_dur, "quads, hamstrings"))
     else:  # Endurance priority (dup == 2)
         raw.append(("full_body_endurance", max(20, int(45 * dur_mult)), "core, quads, back"))
 
     # Cap to available days
-    slots = raw[:len(available_days)]
+    slots = raw[: len(available_days)]
 
     _Z = FatigueScore(
-        local_muscular=0.0, cns_load=0.0, metabolic_cost=0.0,
-        recovery_hours=0.0, affected_muscles=[],
+        local_muscular=0.0,
+        cns_load=0.0,
+        metabolic_cost=0.0,
+        recovery_hours=0.0,
+        affected_muscles=[],
     )
 
     return [

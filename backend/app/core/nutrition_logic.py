@@ -13,11 +13,11 @@ _NUTRITION_DATA: dict = json.loads(
 
 # carbs_g_per_kg by day type (from nutrition-targets.json midpoints)
 _CARBS_BY_DAY_TYPE: dict[DayType, float] = {
-    DayType.STRENGTH:         4.5,
-    DayType.ENDURANCE_SHORT:  5.5,
-    DayType.ENDURANCE_LONG:   6.5,
-    DayType.REST:             3.5,
-    DayType.RACE:             7.0,
+    DayType.STRENGTH: 4.5,
+    DayType.ENDURANCE_SHORT: 5.5,
+    DayType.ENDURANCE_LONG: 6.5,
+    DayType.REST: 3.5,
+    DayType.RACE: 7.0,
 }
 
 _PROTEIN_G_PER_KG = 1.8
@@ -25,11 +25,11 @@ _FAT_G_PER_KG = 1.2
 
 # Intra-effort carbs: only for sessions > 60 min
 _INTRA_EFFORT_G_PER_H: dict[DayType, float | None] = {
-    DayType.STRENGTH:         None,
-    DayType.ENDURANCE_SHORT:  None,
-    DayType.ENDURANCE_LONG:   45.0,
-    DayType.REST:             None,
-    DayType.RACE:             75.0,
+    DayType.STRENGTH: None,
+    DayType.ENDURANCE_SHORT: None,
+    DayType.ENDURANCE_LONG: 45.0,
+    DayType.REST: None,
+    DayType.RACE: 75.0,
 }
 
 
@@ -41,8 +41,13 @@ def compute_nutrition_directives(athlete: AthleteProfile) -> NutritionPlan:
     """
     targets: dict[DayType, DayNutrition] = {}
 
-    for day_type in [DayType.REST, DayType.STRENGTH, DayType.ENDURANCE_SHORT,
-                     DayType.ENDURANCE_LONG, DayType.RACE]:
+    for day_type in [
+        DayType.REST,
+        DayType.STRENGTH,
+        DayType.ENDURANCE_SHORT,
+        DayType.ENDURANCE_LONG,
+        DayType.RACE,
+    ]:
         carbs = _CARBS_BY_DAY_TYPE[day_type]
         protein = _PROTEIN_G_PER_KG
         fat = _FAT_G_PER_KG

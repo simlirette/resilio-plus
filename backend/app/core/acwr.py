@@ -20,8 +20,8 @@ class ACWRResult:
     max_safe_weekly_load: float
 
 
-_LAMBDA_ACUTE = 2 / (7 + 1)      # 0.25
-_LAMBDA_CHRONIC = 2 / (28 + 1)   # ≈ 0.0690
+_LAMBDA_ACUTE = 2 / (7 + 1)  # 0.25
+_LAMBDA_CHRONIC = 2 / (28 + 1)  # ≈ 0.0690
 
 
 def _ewma(loads: list[float], lam: float) -> float:

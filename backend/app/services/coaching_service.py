@@ -12,7 +12,6 @@ import sqlite3
 import uuid
 from typing import Any
 
-from langgraph.checkpoint.memory import MemorySaver
 from sqlalchemy.orm import Session
 
 from ..graphs.coaching_graph import build_coaching_graph
@@ -43,7 +42,9 @@ class CoachingService:
     """Wraps the coaching LangGraph graph."""
 
     def __init__(self, *, checkpointer=None) -> None:
-        self._checkpointer = checkpointer if checkpointer is not None else _create_sqlite_checkpointer()
+        self._checkpointer = (
+            checkpointer if checkpointer is not None else _create_sqlite_checkpointer()
+        )
         self._graph = build_coaching_graph(
             checkpointer=self._checkpointer,
             interrupt=True,
@@ -147,7 +148,9 @@ class CoachingService:
         """
         import importlib
         from datetime import date, timedelta
+
         from sqlalchemy import desc
+
         importlib.import_module("app.models.schemas")  # registers V3 SA models first
         _db_models = importlib.import_module("app.db.models")
         TrainingPlanModel = _db_models.TrainingPlanModel
@@ -177,6 +180,7 @@ class CoachingService:
             .all()
         )
         import json as _json
+
         load_history: list[float] = []
         for rev in reversed(recent_reviews):
             try:

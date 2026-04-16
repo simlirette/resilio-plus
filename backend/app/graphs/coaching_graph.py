@@ -40,7 +40,8 @@ def _after_present(state: AthleteCoachingState) -> str:
 def _after_revise(state: AthleteCoachingState) -> str:
     # Count revision messages to enforce max 1 full re-delegation cycle
     revision_count = sum(
-        1 for m in state.get("messages", [])
+        1
+        for m in state.get("messages", [])
         if hasattr(m, "content") and "Replanification en cours" in m.content
     )
     if revision_count <= 1:

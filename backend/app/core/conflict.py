@@ -9,7 +9,7 @@ from ..schemas.plan import WorkoutSlot
 
 
 class ConflictSeverity(str, Enum):
-    WARNING  = "warning"
+    WARNING = "warning"
     CRITICAL = "critical"
 
 
@@ -37,7 +37,9 @@ def _is_z2(workout_type: str) -> bool:
     return any(k in wt for k in _Z2_KEYWORDS)
 
 
-def _sessions_by_date(recommendations: list[AgentRecommendation]) -> dict[date, list[tuple[str, WorkoutSlot]]]:
+def _sessions_by_date(
+    recommendations: list[AgentRecommendation],
+) -> dict[date, list[tuple[str, WorkoutSlot]]]:
     """Group (agent_name, session) pairs by date."""
     by_date: dict[date, list[tuple[str, WorkoutSlot]]] = {}
     for rec in recommendations:
@@ -62,8 +64,7 @@ def detect_conflicts(recommendations: list[AgentRecommendation]) -> list[Conflic
     for day, day_sessions in by_date.items():
         lifting_sessions = [(a, s) for a, s in day_sessions if a == "lifting"]
         endurance_sessions = [
-            (a, s) for a, s in day_sessions
-            if a in ("running", "biking", "swimming")
+            (a, s) for a, s in day_sessions if a in ("running", "biking", "swimming")
         ]
 
         if not lifting_sessions or not endurance_sessions:
@@ -75,16 +76,18 @@ def detect_conflicts(recommendations: list[AgentRecommendation]) -> list[Conflic
 
                 # Rule 1: HIIT + strength → CRITICAL
                 if _is_hiit(wt):
-                    conflicts.append(Conflict(
-                        severity=ConflictSeverity.CRITICAL,
-                        rule="hiit_strength_same_session",
-                        agents=[end_agent, lift_agent],
-                        message=(
-                            f"{end_agent} has HIIT session and {lift_agent} is on the same day. "
-                            "HIIT + strength training causes maximal interference. "
-                            "Separate by at least 24h."
-                        ),
-                    ))
+                    conflicts.append(
+                        Conflict(
+                            severity=ConflictSeverity.CRITICAL,
+                            rule="hiit_strength_same_session",
+                            agents=[end_agent, lift_agent],
+                            message=(
+                                f"{end_agent} has HIIT session and {lift_agent} is on the same day. "
+                                "HIIT + strength training causes maximal interference. "
+                                "Separate by at least 24h."
+                            ),
+                        )
+                    )
                     continue
 
                 # Rule 3: Z2/MICT → explicitly no conflict
@@ -93,26 +96,30 @@ def detect_conflicts(recommendations: list[AgentRecommendation]) -> list[Conflic
 
                 # Rule 4: Swimming (non-HIIT, non-Z2) → reduced WARNING
                 if end_agent == "swimming":
-                    conflicts.append(Conflict(
-                        severity=ConflictSeverity.WARNING,
-                        rule="swimming_before_strength_reduced",
-                        agents=[end_agent, lift_agent],
-                        message=(
-                            f"Swimming and {lift_agent} on the same day. "
-                            "Swimming is less inflammatory than running — minor interference risk."
-                        ),
-                    ))
+                    conflicts.append(
+                        Conflict(
+                            severity=ConflictSeverity.WARNING,
+                            rule="swimming_before_strength_reduced",
+                            agents=[end_agent, lift_agent],
+                            message=(
+                                f"Swimming and {lift_agent} on the same day. "
+                                "Swimming is less inflammatory than running — minor interference risk."
+                            ),
+                        )
+                    )
                     continue
 
                 # Rule 2: Other endurance (tempo, progression, etc.) + strength → WARNING
-                conflicts.append(Conflict(
-                    severity=ConflictSeverity.WARNING,
-                    rule="endurance_before_strength_gap",
-                    agents=[end_agent, lift_agent],
-                    message=(
-                        f"{end_agent} ({wt}) and {lift_agent} on the same day. "
-                        "Endurance before strength requires 3h gap to avoid mTOR/AMPK interference."
-                    ),
-                ))
+                conflicts.append(
+                    Conflict(
+                        severity=ConflictSeverity.WARNING,
+                        rule="endurance_before_strength_gap",
+                        agents=[end_agent, lift_agent],
+                        message=(
+                            f"{end_agent} ({wt}) and {lift_agent} on the same day. "
+                            "Endurance before strength requires 3h gap to avoid mTOR/AMPK interference."
+                        ),
+                    )
+                )
 
     return conflicts

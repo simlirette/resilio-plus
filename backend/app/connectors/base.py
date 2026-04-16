@@ -83,6 +83,7 @@ class BaseConnector(ABC):
         401 raises ConnectorAuthError immediately (not retried).
         Other HTTP errors become ConnectorAPIError and ARE retried up to 3 times.
         """
+
         @retry(
             stop=stop_after_attempt(3),
             wait=self._retry_wait,

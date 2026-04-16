@@ -17,15 +17,16 @@ if TYPE_CHECKING:
 @dataclass
 class AgentContext:
     """All data available to specialist agents for a given planning week."""
+
     athlete: AthleteProfile
     date_range: tuple[date, date]
-    phase: str                              # MacroPhase value (string)
+    phase: str  # MacroPhase value (string)
     strava_activities: list[StravaActivity] = field(default_factory=list)
     hevy_workouts: list[HevyWorkout] = field(default_factory=list)
     terra_health: list[TerraHealthData] = field(default_factory=list)
     fatsecret_days: list[FatSecretDay] = field(default_factory=list)
-    week_number: int = 1                    # 1-based week in multi-week plan
-    weeks_remaining: int = 0               # weeks until target_race_date
+    week_number: int = 1  # 1-based week in multi-week plan
+    weeks_remaining: int = 0  # weeks until target_race_date
     sport_budgets: dict[str, float] = field(default_factory=dict)  # sport name → hours
     # V3: optional hormonal profile — used by lifting/running/nutrition agents
     hormonal_profile: Optional["HormonalProfile"] = field(default=None)
@@ -34,6 +35,7 @@ class AgentContext:
 @dataclass
 class AgentRecommendation:
     """Output of a specialist agent's analysis for a planning week."""
+
     agent_name: str
     fatigue_score: FatigueScore
     weekly_load: float

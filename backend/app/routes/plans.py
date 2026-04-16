@@ -10,14 +10,14 @@ from sqlalchemy.orm import Session
 
 from ..agents.base import AgentContext
 from ..agents.head_coach import HeadCoach
-from ..routes._agent_factory import build_agents
 from ..core.periodization import get_current_phase
-from ..services.connector_service import fetch_connector_data
 from ..db.models import AthleteModel, TrainingPlanModel
-from ..dependencies import get_db, get_current_athlete_id
+from ..dependencies import get_current_athlete_id, get_db
+from ..routes._agent_factory import build_agents
 from ..routes.athletes import athlete_model_to_response
 from ..schemas.athlete import AthleteProfile
 from ..schemas.plan import TrainingPlanResponse
+from ..services.connector_service import fetch_connector_data
 
 router = APIRouter(prefix="/athletes", tags=["plans"])
 
@@ -55,10 +55,7 @@ def _create_plan_for_athlete(
         weeks_remaining = 0
 
     week_number = (
-        db.query(TrainingPlanModel)
-        .filter(TrainingPlanModel.athlete_id == athlete_id)
-        .count()
-        + 1
+        db.query(TrainingPlanModel).filter(TrainingPlanModel.athlete_id == athlete_id).count() + 1
     )
 
     connector_data = fetch_connector_data(athlete_id, db)
@@ -86,9 +83,7 @@ def _create_plan_for_athlete(
         phase=weekly_plan.phase.phase.value,
         total_weekly_hours=sum(s.duration_min for s in weekly_plan.sessions) / 60,
         acwr=weekly_plan.acwr.ratio,
-        weekly_slots_json=json.dumps(
-            [s.model_dump(mode="json") for s in weekly_plan.sessions]
-        ),
+        weekly_slots_json=json.dumps([s.model_dump(mode="json") for s in weekly_plan.sessions]),
         created_at=datetime.now(timezone.utc),
     )
     db.add(plan_model)

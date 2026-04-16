@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from ..dependencies import get_db, get_current_athlete_id
+from ..dependencies import get_current_athlete_id, get_db
 from ..jobs.models import JobRunModel
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -63,13 +63,15 @@ def list_jobs(
         athlete_id = parts[-1] if len(parts) > 1 and "_sync_" in job.id else None
         job_type = job.id.rsplit("_" + parts[-1], 1)[0] if athlete_id else job.id
 
-        jobs.append({
-            "job_id": job.id,
-            "job_type": job_type,
-            "athlete_id": athlete_id,
-            "next_run": job.next_run_time.isoformat() if job.next_run_time else None,
-            "last_run": last_run,
-        })
+        jobs.append(
+            {
+                "job_id": job.id,
+                "job_type": job_type,
+                "athlete_id": athlete_id,
+                "next_run": job.next_run_time.isoformat() if job.next_run_time else None,
+                "last_run": last_run,
+            }
+        )
 
     errors_24h = (
         db.query(func.count(JobRunModel.id))

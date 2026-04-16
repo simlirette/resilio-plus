@@ -3,11 +3,13 @@ from __future__ import annotations
 from datetime import timedelta
 
 from ..agents.base import AgentContext, AgentRecommendation, BaseAgent
-from ..core.swimming_logic import (
-    compute_swimming_fatigue, estimate_css, generate_swimming_sessions,
-)
 from ..core.periodization import get_current_phase
 from ..core.readiness import compute_readiness
+from ..core.swimming_logic import (
+    compute_swimming_fatigue,
+    estimate_css,
+    generate_swimming_sessions,
+)
 
 
 class SwimmingCoach(BaseAgent):
@@ -19,7 +21,8 @@ class SwimmingCoach(BaseAgent):
 
     def analyze(self, context: AgentContext) -> AgentRecommendation:
         prior_swims = [
-            a for a in context.strava_activities
+            a
+            for a in context.strava_activities
             if a.sport_type == "Swim"
             and context.date_range[0] - timedelta(days=7) <= a.date < context.date_range[0]
         ]
@@ -41,11 +44,11 @@ class SwimmingCoach(BaseAgent):
         )
 
         _INTENSITY = {
-            "Z1_technique": 0.8, "Z2_endurance_swim": 1.0, "Z3_threshold_set": 1.5,
+            "Z1_technique": 0.8,
+            "Z2_endurance_swim": 1.0,
+            "Z3_threshold_set": 1.5,
         }
-        weekly_load = sum(
-            s.duration_min * _INTENSITY.get(s.workout_type, 1.0) for s in sessions
-        )
+        weekly_load = sum(s.duration_min * _INTENSITY.get(s.workout_type, 1.0) for s in sessions)
 
         return AgentRecommendation(
             agent_name=self.name,

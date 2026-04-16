@@ -44,8 +44,8 @@ def compute_acwr_series(sessions: list[dict]) -> list[dict[str, Any]]:
     end = date.fromisoformat(dates[-1])
     all_dates = _date_range(start, end)
 
-    lambda_acute = 2 / (7 + 1)      # 0.25
-    lambda_chronic = 2 / (28 + 1)   # ≈ 0.069
+    lambda_acute = 2 / (7 + 1)  # 0.25
+    lambda_chronic = 2 / (28 + 1)  # ≈ 0.069
 
     # Warm-start both EWMAs at the first day's load so ACWR = 1.0 on day 1
     first_load = by_date.get(all_dates[0].isoformat(), 0.0)
@@ -58,12 +58,14 @@ def compute_acwr_series(sessions: list[dict]) -> list[dict[str, Any]]:
         ewma_acute = lambda_acute * load + (1 - lambda_acute) * ewma_acute
         ewma_chronic = lambda_chronic * load + (1 - lambda_chronic) * ewma_chronic
         acwr = (ewma_acute / ewma_chronic) if ewma_chronic > 0 else 1.0
-        result.append({
-            "date": d.isoformat(),
-            "acwr": round(acwr, 3),
-            "acute": round(ewma_acute, 1),
-            "chronic": round(ewma_chronic, 1),
-        })
+        result.append(
+            {
+                "date": d.isoformat(),
+                "acwr": round(acwr, 3),
+                "acute": round(ewma_acute, 1),
+                "chronic": round(ewma_chronic, 1),
+            }
+        )
 
     return result
 
@@ -97,12 +99,14 @@ def compute_ctl_atl_tsb(sessions: list[dict]) -> list[dict[str, Any]]:
         ctl = lambda_ctl * load + (1 - lambda_ctl) * ctl
         atl = lambda_atl * load + (1 - lambda_atl) * atl
         tsb = ctl - atl
-        result.append({
-            "date": d.isoformat(),
-            "ctl": round(ctl, 1),
-            "atl": round(atl, 1),
-            "tsb": round(tsb, 1),
-        })
+        result.append(
+            {
+                "date": d.isoformat(),
+                "ctl": round(ctl, 1),
+                "atl": round(atl, 1),
+                "tsb": round(tsb, 1),
+            }
+        )
 
     return result
 

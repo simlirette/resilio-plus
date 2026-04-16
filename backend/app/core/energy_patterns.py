@@ -134,9 +134,7 @@ def detect_energy_patterns(db: Session) -> dict:
     for athlete in athletes:
         athletes_scanned += 1
         snaps = (
-            db.query(EnergySnapshotModel)
-            .filter(EnergySnapshotModel.athlete_id == athlete.id)
-            .all()
+            db.query(EnergySnapshotModel).filter(EnergySnapshotModel.athlete_id == athlete.id).all()
         )
         if not snaps:
             continue

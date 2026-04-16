@@ -1,8 +1,6 @@
 import os
-from datetime import datetime, date
-from urllib.parse import urlencode, quote
-
-import httpx
+from datetime import date, datetime
+from urllib.parse import quote, urlencode
 
 from ..connectors.base import BaseConnector, ConnectorAPIError
 from ..schemas.connector import ConnectorCredential, StravaActivity, StravaLap
@@ -78,11 +76,13 @@ class StravaConnector(BaseConnector):
         )
         response.raise_for_status()
         data = response.json()
-        return self.credential.model_copy(update={
-            "access_token": data["access_token"],
-            "refresh_token": data["refresh_token"],
-            "expires_at": data["expires_at"],
-        })
+        return self.credential.model_copy(
+            update={
+                "access_token": data["access_token"],
+                "refresh_token": data["refresh_token"],
+                "expires_at": data["expires_at"],
+            }
+        )
 
     def _do_refresh_token(self) -> ConnectorCredential:
         response = self._client.post(
@@ -96,15 +96,15 @@ class StravaConnector(BaseConnector):
         )
         response.raise_for_status()
         data = response.json()
-        return self.credential.model_copy(update={
-            "access_token": data["access_token"],
-            "refresh_token": data["refresh_token"],
-            "expires_at": data["expires_at"],
-        })
+        return self.credential.model_copy(
+            update={
+                "access_token": data["access_token"],
+                "refresh_token": data["refresh_token"],
+                "expires_at": data["expires_at"],
+            }
+        )
 
-    def fetch_activities(
-        self, since: datetime, until: datetime
-    ) -> list[StravaActivity]:
+    def fetch_activities(self, since: datetime, until: datetime) -> list[StravaActivity]:
         token = self.get_valid_token()
         headers = {"Authorization": f"Bearer {token}"}
         activities: list[StravaActivity] = []

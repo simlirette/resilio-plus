@@ -22,10 +22,14 @@ from typing import Optional
 
 from ...core.allostatic import (
     calculate_allostatic_score as _core_allostatic,
+)
+from ...core.allostatic import (
     intensity_cap_from_score,
 )
 from ...core.energy_availability import (
     calculate_energy_availability as _core_ea,
+)
+from ...core.energy_availability import (
     detect_reds_risk,
     get_ea_status,
 )
@@ -39,23 +43,25 @@ _SYSTEM_PROMPT = ENERGY_COACH_PROMPT
 # Structures de données d'entrée
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class EnergyInput:
     """Toutes les données nécessaires à l'Energy Coach pour une journée."""
 
-    hrv_deviation: float            # % déviation vs baseline (négatif = pire)
-    sleep_quality: float            # 0-100
-    caloric_intake: float           # kcal totaux du jour
-    exercise_energy: float          # EAT — énergie dépensée à l'entraînement
-    ffm_kg: float                   # Fat-Free Mass en kg
+    hrv_deviation: float  # % déviation vs baseline (négatif = pire)
+    sleep_quality: float  # 0-100
+    caloric_intake: float  # kcal totaux du jour
+    exercise_energy: float  # EAT — énergie dépensée à l'entraînement
+    ffm_kg: float  # Fat-Free Mass en kg
     check_in: EnergyCheckIn
-    sex: str = "M"                  # "M" ou "F"
+    sex: str = "M"  # "M" ou "F"
     ea_history: list[float] = field(default_factory=list)  # EA des jours précédents
 
 
 # ---------------------------------------------------------------------------
 # Agent
 # ---------------------------------------------------------------------------
+
 
 class EnergyCoach:
     """Spécialiste de la charge de vie totale.
@@ -181,9 +187,7 @@ class EnergyCoach:
 
         if allostatic_score > 80.0:
             veto_triggered = True
-            veto_reasons.append(
-                f"Score allostatic critique ({allostatic_score:.1f} > 80)"
-            )
+            veto_reasons.append(f"Score allostatic critique ({allostatic_score:.1f} > 80)")
 
         return {
             "allostatic_score": allostatic_score,

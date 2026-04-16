@@ -33,7 +33,9 @@ class LatencySummary:
             return 0.0
         sorted_samples = sorted(self._samples)
         # Nearest-rank method
-        k = max(0, min(len(sorted_samples) - 1, int(math.ceil(p / 100.0 * len(sorted_samples))) - 1))
+        k = max(
+            0, min(len(sorted_samples) - 1, int(math.ceil(p / 100.0 * len(sorted_samples))) - 1)
+        )
         return sorted_samples[k]
 
     def snapshot(self) -> dict[str, Any]:
@@ -52,7 +54,9 @@ class Metrics:
     def __init__(self) -> None:
         self.started_at: datetime = datetime.now(timezone.utc)
         self.http_requests_total: dict[tuple[str, str, int], int] = collections.defaultdict(int)
-        self.http_latency_ms: dict[tuple[str, str], LatencySummary] = collections.defaultdict(LatencySummary)
+        self.http_latency_ms: dict[tuple[str, str], LatencySummary] = collections.defaultdict(
+            LatencySummary
+        )
         self.agent_calls_total: dict[tuple[str, str], int] = collections.defaultdict(int)
         self.agent_latency_ms: dict[str, LatencySummary] = collections.defaultdict(LatencySummary)
         self.jobs_total: dict[tuple[str, str], int] = collections.defaultdict(int)
@@ -88,18 +92,13 @@ class Metrics:
                     },
                 },
                 "agents": {
-                    "calls_total": {
-                        f"{a}:{s}": n for (a, s), n in self.agent_calls_total.items()
-                    },
+                    "calls_total": {f"{a}:{s}": n for (a, s), n in self.agent_calls_total.items()},
                     "latency_ms": {
-                        a: summary.snapshot()
-                        for a, summary in self.agent_latency_ms.items()
+                        a: summary.snapshot() for a, summary in self.agent_latency_ms.items()
                     },
                 },
                 "jobs": {
-                    "runs_total": {
-                        f"{jt}:{s}": n for (jt, s), n in self.jobs_total.items()
-                    },
+                    "runs_total": {f"{jt}:{s}": n for (jt, s), n in self.jobs_total.items()},
                 },
             }
 

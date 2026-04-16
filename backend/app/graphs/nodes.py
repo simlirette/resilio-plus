@@ -18,9 +18,10 @@ from langchain_core.runnables import RunnableConfig
 
 from ..agents.base import AgentContext, AgentRecommendation
 from ..agents.head_coach import HeadCoach, WeeklyPlan
-from ..core.acwr import ACWRResult, ACWRStatus, compute_acwr as _compute_acwr
+from ..core.acwr import ACWRResult, ACWRStatus
+from ..core.acwr import compute_acwr as _compute_acwr
 from ..core.conflict import Conflict, ConflictSeverity, detect_conflicts
-from ..core.fatigue import GlobalFatigue, aggregate_fatigue
+from ..core.fatigue import aggregate_fatigue
 from ..core.goal_analysis import analyze_goals
 from ..core.periodization import get_current_phase
 from ..routes._agent_factory import build_agents
@@ -29,10 +30,10 @@ from ..schemas.fatigue import FatigueScore
 from ..schemas.plan import WorkoutSlot
 from .state import AthleteCoachingState
 
-
 # ---------------------------------------------------------------------------
 # Serialization helpers
 # ---------------------------------------------------------------------------
+
 
 def _acwr_to_dict(acwr: ACWRResult) -> dict:
     return {
@@ -116,6 +117,7 @@ def _athlete_from_dict(d: dict) -> AthleteProfile:
 # Node 1: analyze_profile
 # ---------------------------------------------------------------------------
 
+
 def analyze_profile(state: AthleteCoachingState, config: RunnableConfig) -> dict:
     """Compute goal-driven sport budgets from athlete profile."""
     athlete = _athlete_from_dict(state["athlete_dict"])
@@ -130,6 +132,7 @@ def analyze_profile(state: AthleteCoachingState, config: RunnableConfig) -> dict
 # ---------------------------------------------------------------------------
 # Node 2: compute_acwr
 # ---------------------------------------------------------------------------
+
 
 def compute_acwr(state: AthleteCoachingState, config: RunnableConfig) -> dict:
     """Compute ACWR from load history + projected weekly load from recommendations."""
@@ -146,6 +149,7 @@ def compute_acwr(state: AthleteCoachingState, config: RunnableConfig) -> dict:
 # ---------------------------------------------------------------------------
 # Node 3: delegate_specialists
 # ---------------------------------------------------------------------------
+
 
 def delegate_specialists(state: AthleteCoachingState, config: RunnableConfig) -> dict:
     """Invoke all sport-specific specialist agents and collect recommendations."""
@@ -184,6 +188,7 @@ def delegate_specialists(state: AthleteCoachingState, config: RunnableConfig) ->
 # Node 4: merge_recommendations (no-op pass-through)
 # ---------------------------------------------------------------------------
 
+
 def merge_recommendations(state: AthleteCoachingState, config: RunnableConfig) -> dict:
     """No-op pass-through — future hook for cross-agent merging logic."""
     return {}
@@ -192,6 +197,7 @@ def merge_recommendations(state: AthleteCoachingState, config: RunnableConfig) -
 # ---------------------------------------------------------------------------
 # Node 5: detect_conflicts_node
 # ---------------------------------------------------------------------------
+
 
 def detect_conflicts_node(state: AthleteCoachingState, config: RunnableConfig) -> dict:
     """Detect scheduling conflicts between agent recommendations."""
@@ -207,6 +213,7 @@ def detect_conflicts_node(state: AthleteCoachingState, config: RunnableConfig) -
 # Node 6: resolve_conflicts_node
 # ---------------------------------------------------------------------------
 
+
 def resolve_conflicts_node(state: AthleteCoachingState, config: RunnableConfig) -> dict:
     """Pass-through logging node — actual conflict resolution is handled by HeadCoach._arbitrate in build_proposed_plan.
 
@@ -217,13 +224,18 @@ def resolve_conflicts_node(state: AthleteCoachingState, config: RunnableConfig) 
     conflicts = [_conflict_from_dict(d) for d in state.get("conflicts_dicts", [])]
     critical = [c for c in conflicts if c.severity == ConflictSeverity.CRITICAL]
     return {
-        "messages": [AIMessage(f"{len(critical)} conflits critiques détectés — résolution déléguée à HeadCoach._arbitrate.")],
+        "messages": [
+            AIMessage(
+                f"{len(critical)} conflits critiques détectés — résolution déléguée à HeadCoach._arbitrate."
+            )
+        ],
     }
 
 
 # ---------------------------------------------------------------------------
 # Node 7: build_proposed_plan
 # ---------------------------------------------------------------------------
+
 
 def build_proposed_plan(state: AthleteCoachingState, config: RunnableConfig) -> dict:
     """Build the proposed WeeklyPlan from recommendations, ACWR, and conflicts."""
@@ -268,13 +280,18 @@ def build_proposed_plan(state: AthleteCoachingState, config: RunnableConfig) -> 
 
     return {
         "proposed_plan_dict": _weekly_plan_to_dict(plan),
-        "messages": [AIMessage(f"Plan proposé: {len(sessions)} séances, phase={phase.phase.value}, readiness={readiness_level}")],
+        "messages": [
+            AIMessage(
+                f"Plan proposé: {len(sessions)} séances, phase={phase.phase.value}, readiness={readiness_level}"
+            )
+        ],
     }
 
 
 # ---------------------------------------------------------------------------
 # Node 8: apply_energy_snapshot
 # ---------------------------------------------------------------------------
+
 
 def apply_energy_snapshot(state: AthleteCoachingState, config: RunnableConfig) -> dict:
     """Apply today's energy snapshot to scale session durations if intensity cap < 1.0."""
@@ -284,6 +301,7 @@ def apply_energy_snapshot(state: AthleteCoachingState, config: RunnableConfig) -
     # Import via importlib to ensure we use the app. module path (same as the one
     # loaded by pytest), avoiding SQLAlchemy double-table-registration conflicts.
     import importlib
+
     _ecs_mod = importlib.import_module("app.services.energy_cycle_service")
     _EnergyCycleService = _ecs_mod.EnergyCycleService
     svc = _EnergyCycleService()
@@ -299,8 +317,12 @@ def apply_energy_snapshot(state: AthleteCoachingState, config: RunnableConfig) -
     snapshot_dict = {
         "intensity_cap": cap,
         "veto_triggered": bool(snapshot.veto_triggered),
-        "objective_score": float(snapshot.objective_score) if snapshot.objective_score is not None else None,
-        "subjective_score": float(snapshot.subjective_score) if snapshot.subjective_score is not None else None,
+        "objective_score": float(snapshot.objective_score)
+        if snapshot.objective_score is not None
+        else None,
+        "subjective_score": float(snapshot.subjective_score)
+        if snapshot.subjective_score is not None
+        else None,
         "allostatic_score": float(snapshot.allostatic_score),
         "energy_availability": float(snapshot.energy_availability),
     }
@@ -318,7 +340,9 @@ def apply_energy_snapshot(state: AthleteCoachingState, config: RunnableConfig) -
         return {
             "energy_snapshot_dict": snapshot_dict,
             "proposed_plan_dict": proposed,
-            "messages": [AIMessage(f"Energy snapshot appliqué: intensity_cap={cap:.2f}, séances ajustées.")],
+            "messages": [
+                AIMessage(f"Energy snapshot appliqué: intensity_cap={cap:.2f}, séances ajustées.")
+            ],
         }
 
     return {
@@ -331,6 +355,7 @@ def apply_energy_snapshot(state: AthleteCoachingState, config: RunnableConfig) -
 # Node 9: present_to_athlete
 # ---------------------------------------------------------------------------
 
+
 def present_to_athlete(state: AthleteCoachingState, config: RunnableConfig) -> dict:
     """Present the proposed plan to the athlete and wait for approval (interrupt handled by graph)."""
     return {
@@ -342,6 +367,7 @@ def present_to_athlete(state: AthleteCoachingState, config: RunnableConfig) -> d
 # Node 10: revise_plan
 # ---------------------------------------------------------------------------
 
+
 def revise_plan(state: AthleteCoachingState, config: RunnableConfig) -> dict:
     """Clear the proposed plan so the graph loops back to rebuild it with feedback."""
     feedback = state.get("human_feedback", "")
@@ -349,13 +375,16 @@ def revise_plan(state: AthleteCoachingState, config: RunnableConfig) -> dict:
         "human_approved": False,
         "human_feedback": None,
         "proposed_plan_dict": None,
-        "messages": [AIMessage(f"Plan rejeté par l'athlète. Feedback: {feedback}. Replanification en cours…")],
+        "messages": [
+            AIMessage(f"Plan rejeté par l'athlète. Feedback: {feedback}. Replanification en cours…")
+        ],
     }
 
 
 # ---------------------------------------------------------------------------
 # Node 11: finalize_plan
 # ---------------------------------------------------------------------------
+
 
 def finalize_plan(state: AthleteCoachingState, config: RunnableConfig) -> dict:
     """Persist the approved plan to the database and return final_plan_dict."""
@@ -366,6 +395,7 @@ def finalize_plan(state: AthleteCoachingState, config: RunnableConfig) -> dict:
     # Import V3 models FIRST so the mapper can resolve EnergySnapshotModel
     # back-references on AthleteModel when TrainingPlanModel is instantiated.
     import importlib
+
     importlib.import_module("app.models.schemas")  # registers V3 SA models
     _db_models = importlib.import_module("app.db.models")
     TrainingPlanModel = _db_models.TrainingPlanModel

@@ -4,22 +4,37 @@ from __future__ import annotations
 import re
 from typing import Any
 
-_BLOCKLIST_FIELDS = frozenset({
-    "password", "passwd", "token", "access_token", "refresh_token",
-    "authorization", "auth", "api_key", "apikey", "secret",
-    "fernet_key", "encryption_key", "smtp_password", "jwt", "bearer",
-    "client_secret", "cookie",
-})
+_BLOCKLIST_FIELDS = frozenset(
+    {
+        "password",
+        "passwd",
+        "token",
+        "access_token",
+        "refresh_token",
+        "authorization",
+        "auth",
+        "api_key",
+        "apikey",
+        "secret",
+        "fernet_key",
+        "encryption_key",
+        "smtp_password",
+        "jwt",
+        "bearer",
+        "client_secret",
+        "cookie",
+    }
+)
 
 _REDACTED = "***"
 _MAX_DEPTH = 5
 
 # Order matters: more specific patterns first so they win.
 _REGEX_PATTERNS: tuple[re.Pattern, ...] = (
-    re.compile(r"eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+"),   # JWT
-    re.compile(r"[Bb]earer\s+[A-Za-z0-9_.-]+"),                          # Bearer tokens
-    re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+"),                             # Email
-    re.compile(r"[a-fA-F0-9]{32,}"),                                     # long hex (fernet, api keys)
+    re.compile(r"eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+"),  # JWT
+    re.compile(r"[Bb]earer\s+[A-Za-z0-9_.-]+"),  # Bearer tokens
+    re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+"),  # Email
+    re.compile(r"[a-fA-F0-9]{32,}"),  # long hex (fernet, api keys)
 )
 
 
@@ -55,12 +70,32 @@ def scrub_value(value: Any, _depth: int = 0) -> Any:
 
 import logging
 
-_BUILTIN_LOGRECORD_ATTRS = frozenset({
-    "name", "msg", "args", "levelname", "levelno", "pathname", "filename",
-    "module", "exc_info", "exc_text", "stack_info", "lineno", "funcName",
-    "created", "msecs", "relativeCreated", "thread", "threadName",
-    "processName", "process", "message", "asctime",
-})
+_BUILTIN_LOGRECORD_ATTRS = frozenset(
+    {
+        "name",
+        "msg",
+        "args",
+        "levelname",
+        "levelno",
+        "pathname",
+        "filename",
+        "module",
+        "exc_info",
+        "exc_text",
+        "stack_info",
+        "lineno",
+        "funcName",
+        "created",
+        "msecs",
+        "relativeCreated",
+        "thread",
+        "threadName",
+        "processName",
+        "process",
+        "message",
+        "asctime",
+    }
+)
 
 
 class PIIFilter(logging.Filter):

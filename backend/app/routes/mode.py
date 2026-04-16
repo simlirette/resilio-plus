@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from ..db.models import AthleteModel, TrainingPlanModel
-from ..dependencies import get_db, get_current_athlete_id
+from ..dependencies import get_current_athlete_id, get_db
 
 router = APIRouter(prefix="/athletes", tags=["mode"])
 

@@ -31,6 +31,7 @@ _EA_SCORES: dict[str, float] = _WEIGHTS_DATA["ea_status_scores"]
 # API publique
 # ---------------------------------------------------------------------------
 
+
 def calculate_allostatic_score(
     hrv_deviation: float,
     sleep_quality: float,

@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import logging
 import uuid
-from datetime import date, datetime, timezone
+from datetime import date
 
 from sqlalchemy.orm import Session
 
@@ -45,13 +45,15 @@ def _snapshot_all_athletes(db: Session) -> None:
                 existing.readiness = readiness
                 existing.strain_json = json.dumps(strain.model_dump())
             else:
-                db.add(AthleteStateSnapshotModel(
-                    id=str(uuid.uuid4()),
-                    athlete_id=athlete.id,
-                    snapshot_date=today,
-                    readiness=readiness,
-                    strain_json=json.dumps(strain.model_dump()),
-                ))
+                db.add(
+                    AthleteStateSnapshotModel(
+                        id=str(uuid.uuid4()),
+                        athlete_id=athlete.id,
+                        snapshot_date=today,
+                        readiness=readiness,
+                        strain_json=json.dumps(strain.model_dump()),
+                    )
+                )
         except Exception:
             logger.warning("Snapshot failed for athlete %s", athlete.id, exc_info=True)
 

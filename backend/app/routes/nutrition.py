@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from ..core.nutrition_logic import compute_nutrition_directives
 from ..db.models import AthleteModel, TrainingPlanModel
-from ..dependencies import get_db, get_current_athlete_id
+from ..dependencies import get_current_athlete_id, get_db
 from ..routes.athletes import athlete_model_to_response
 from ..schemas.athlete import DayType, Sport
 from ..schemas.nutrition import NutritionPlan, NutritionTodayResponse

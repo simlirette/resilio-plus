@@ -26,10 +26,10 @@ from pydantic import BaseModel
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
-from ..db.models import AthleteModel, TrainingPlanModel, WeeklyReviewModel, SessionLogModel
-from ..dependencies import get_db, get_current_athlete_id
+from ..db.models import AthleteModel, SessionLogModel, TrainingPlanModel, WeeklyReviewModel
+from ..dependencies import get_current_athlete_id, get_db
 from ..dependencies.mode_guard import require_full_mode
-from ..services.coaching_service import CoachingService, coaching_service
+from ..services.coaching_service import coaching_service
 
 router = APIRouter(prefix="/athletes", tags=["workflow"])
 
@@ -60,6 +60,7 @@ def _require_own(
 # ---------------------------------------------------------------------------
 # Response schemas
 # ---------------------------------------------------------------------------
+
 
 class WorkflowStatus(BaseModel):
     athlete_id: str
@@ -124,6 +125,7 @@ class WeeklySyncResponse(BaseModel):
 # Routes
 # ---------------------------------------------------------------------------
 
+
 @router.get("/{athlete_id}/workflow/status", response_model=WorkflowStatus)
 def get_workflow_status(
     athlete_id: str,
@@ -181,10 +183,7 @@ def get_workflow_status(
         .first()
     )
 
-    review_due = (
-        latest_review is None
-        or latest_review.week_start < week_start
-    )
+    review_due = latest_review is None or latest_review.week_start < week_start
 
     weeks_completed = 0
     if plan.start_date:
@@ -235,6 +234,7 @@ def create_plan_workflow(
         sports, goals, available_days, equipment = [], [], [], []
 
     from ..schemas.athlete import AthleteProfile
+
     athlete_profile = AthleteProfile(
         id=athlete.id,
         name=athlete.name,
@@ -446,13 +446,15 @@ def weekly_sync(
         adjustment_applied=None,
         readiness_score=None,
         athlete_comment="",
-        results_json=json.dumps({
-            "sessions_logged": logged_sessions,
-            "sessions_planned": planned_this_week,
-            "completion_rate": completion_rate,
-            "readiness": readiness,
-            "recommendations": recommendations,
-        }),
+        results_json=json.dumps(
+            {
+                "sessions_logged": logged_sessions,
+                "sessions_planned": planned_this_week,
+                "completion_rate": completion_rate,
+                "readiness": readiness,
+                "recommendations": recommendations,
+            }
+        ),
     )
     db.add(review)
     db.commit()
@@ -475,6 +477,7 @@ def weekly_sync(
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _compute_acwr(
     current_load: int,
@@ -530,10 +533,14 @@ def _build_recommendations(
         elif completion_rate >= 0.7:
             recs.append("Bonne semaine. Maintenir le volume actuel.")
         else:
-            recs.append("Taux de complétion faible — identifier les obstacles et ajuster le planning.")
+            recs.append(
+                "Taux de complétion faible — identifier les obstacles et ajuster le planning."
+            )
 
     if completion_rate < 0.5:
-        recs.append("Moins de 50% des séances complétées — envisager de réduire la densité du plan.")
+        recs.append(
+            "Moins de 50% des séances complétées — envisager de réduire la densité du plan."
+        )
 
     return recs
 
@@ -541,6 +548,7 @@ def _build_recommendations(
 # ---------------------------------------------------------------------------
 # S-3 — Weekly review graph endpoints
 # ---------------------------------------------------------------------------
+
 
 class ReviewStartResponse(BaseModel):
     thread_id: str

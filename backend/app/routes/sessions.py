@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import date as date_type, datetime, timezone
+from datetime import date as date_type
+from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -10,7 +11,7 @@ from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from ..db.models import AthleteModel, SessionLogModel, TrainingPlanModel
-from ..dependencies import get_db, get_current_athlete_id
+from ..dependencies import get_current_athlete_id, get_db
 from ..schemas.plan import WorkoutSlot
 from ..schemas.session_log import (
     ManualWorkoutRequest,
@@ -207,9 +208,7 @@ def get_history(
         sessions_total = len(slots)
         sessions_logged = log_counts.get(plan.id, 0)
         completion_pct = (
-            round(sessions_logged / sessions_total * 100, 1)
-            if sessions_total > 0
-            else 0.0
+            round(sessions_logged / sessions_total * 100, 1) if sessions_total > 0 else 0.0
         )
         week_number = len(plans) - i  # oldest = 1
         summaries.append(
@@ -296,7 +295,12 @@ def log_manual_workout(
         raise HTTPException(status_code=404, detail="Athlete not found")
 
     session_id = f"manual-{uuid.uuid4()}"
-    actual_data = {**req.actual_data, "sport": req.sport.value, "workout_type": req.workout_type, "date": str(req.date)}
+    actual_data = {
+        **req.actual_data,
+        "sport": req.sport.value,
+        "workout_type": req.workout_type,
+        "date": str(req.date),
+    }
 
     log = SessionLogModel(
         id=str(uuid.uuid4()),

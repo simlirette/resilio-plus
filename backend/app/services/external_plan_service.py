@@ -14,7 +14,6 @@ from ..models.schemas import ExternalPlanModel, ExternalSessionModel
 
 
 class ExternalPlanService:
-
     @staticmethod
     def create_plan(
         athlete_id: str,

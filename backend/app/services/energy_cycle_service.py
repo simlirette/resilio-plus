@@ -16,7 +16,6 @@ from ..db.models import AthleteModel
 from ..models.schemas import EnergySnapshotModel, HormonalProfileModel
 from ..schemas.checkin import CheckInInput, HormonalProfileUpdate, ReadinessResponse
 
-
 _LEG_SCORES: dict[str, float] = {"fresh": 0.0, "normal": 25.0, "heavy": 60.0, "dead": 90.0}
 _ENERGY_SCORES: dict[str, float] = {"great": 0.0, "ok": 20.0, "low": 55.0, "exhausted": 85.0}
 
@@ -79,14 +78,18 @@ def _snapshot_to_readiness(
         allostatic_score=round(snapshot.allostatic_score, 2),
         energy_availability=round(snapshot.energy_availability, 2),
         intensity_cap=round(snapshot.recommended_intensity_cap, 2),
-        insights=_build_insights(divergence_flag, subj, legs_feeling or "normal", energy_global or "ok"),
+        insights=_build_insights(
+            divergence_flag, subj, legs_feeling or "normal", energy_global or "ok"
+        ),
     )
 
 
 class EnergyCycleService:
     _coach = EnergyCoach()
 
-    def submit_checkin(self, athlete_id: str, db: Session, checkin: CheckInInput) -> ReadinessResponse:
+    def submit_checkin(
+        self, athlete_id: str, db: Session, checkin: CheckInInput
+    ) -> ReadinessResponse:
         athlete = db.get(AthleteModel, athlete_id)
         if not athlete:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Athlete not found")
@@ -101,7 +104,9 @@ class EnergyCycleService:
             .first()
         )
         if existing:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Check-in already submitted for today")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="Check-in already submitted for today"
+            )
 
         subjective_score = compute_subjective_score(checkin.legs_feeling, checkin.energy_global)
 
@@ -171,7 +176,9 @@ class EnergyCycleService:
             )
         return _snapshot_to_readiness(snapshot)
 
-    def get_history(self, athlete_id: str, db: Session, days: int = 28) -> list[EnergySnapshotModel]:
+    def get_history(
+        self, athlete_id: str, db: Session, days: int = 28
+    ) -> list[EnergySnapshotModel]:
         since = datetime.now(timezone.utc) - timedelta(days=days)
         return (
             db.query(EnergySnapshotModel)

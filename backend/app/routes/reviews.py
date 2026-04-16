@@ -7,10 +7,10 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from ..core.acwr import compute_acwr
-from ..db.models import AthleteModel, TrainingPlanModel, WeeklyReviewModel
-from ..dependencies import get_db, get_current_athlete_id
+from ..db.models import TrainingPlanModel, WeeklyReviewModel
+from ..dependencies import get_current_athlete_id, get_db
 from ..schemas.plan import TrainingPlanResponse
-from ..schemas.review import WeekStatusResponse, WeeklyReviewRequest, WeeklyReviewResponse
+from ..schemas.review import WeeklyReviewRequest, WeeklyReviewResponse, WeekStatusResponse
 from ..services.connector_service import fetch_connector_data
 
 router = APIRouter(prefix="/athletes", tags=["reviews"])
@@ -43,14 +43,24 @@ def _compute_actual_hours(activities: list, workouts: list, start: date, end: da
     """Sum duration_seconds for activities/workouts within [start, end] date range."""
     total = 0
     for act in activities:
-        act_date = act.date if hasattr(act, "date") else date.fromisoformat(str(act.get("date", "")))
+        act_date = (
+            act.date if hasattr(act, "date") else date.fromisoformat(str(act.get("date", "")))
+        )
         if start <= act_date <= end:
-            duration = act.duration_seconds if hasattr(act, "duration_seconds") else act.get("duration_seconds", 0)
+            duration = (
+                act.duration_seconds
+                if hasattr(act, "duration_seconds")
+                else act.get("duration_seconds", 0)
+            )
             total += duration
     for w in workouts:
         w_date = w.date if hasattr(w, "date") else date.fromisoformat(str(w.get("date", "")))
         if start <= w_date <= end:
-            duration = w.duration_seconds if hasattr(w, "duration_seconds") else w.get("duration_seconds", 0)
+            duration = (
+                w.duration_seconds
+                if hasattr(w, "duration_seconds")
+                else w.get("duration_seconds", 0)
+            )
             total += duration
     return round(total / 3600, 2)
 
@@ -60,8 +70,14 @@ def _build_daily_loads(activities: list, days: int = 28) -> list[float]:
     today = date.today()
     daily: dict[date, float] = {}
     for act in activities:
-        act_date = act.date if hasattr(act, "date") else date.fromisoformat(str(act.get("date", "")))
-        duration = act.duration_seconds if hasattr(act, "duration_seconds") else act.get("duration_seconds", 0)
+        act_date = (
+            act.date if hasattr(act, "date") else date.fromisoformat(str(act.get("date", "")))
+        )
+        duration = (
+            act.duration_seconds
+            if hasattr(act, "duration_seconds")
+            else act.get("duration_seconds", 0)
+        )
         daily[act_date] = daily.get(act_date, 0.0) + duration / 3600
 
     return [daily.get(today - timedelta(days=i), 0.0) for i in range(days - 1, -1, -1)]
@@ -95,9 +111,7 @@ def get_week_status(
     acwr_result = compute_acwr(daily_loads)
 
     week_number = (
-        db.query(TrainingPlanModel)
-        .filter(TrainingPlanModel.athlete_id == athlete_id)
-        .count()
+        db.query(TrainingPlanModel).filter(TrainingPlanModel.athlete_id == athlete_id).count()
     )
 
     completion_pct = (
@@ -147,9 +161,7 @@ def submit_weekly_review(
         adjustment = 1.0
 
     week_number = (
-        db.query(TrainingPlanModel)
-        .filter(TrainingPlanModel.athlete_id == athlete_id)
-        .count()
+        db.query(TrainingPlanModel).filter(TrainingPlanModel.athlete_id == athlete_id).count()
     )
 
     review = WeeklyReviewModel(

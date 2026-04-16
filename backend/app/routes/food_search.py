@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from ..dependencies import get_db, get_current_athlete_id
+from ..dependencies import get_current_athlete_id, get_db
 from ..integrations.nutrition.unified_service import fetch as nutrition_fetch
 from ..integrations.nutrition.unified_service import search as nutrition_search
 from ..schemas.food import FoodItem

@@ -24,7 +24,9 @@ def _job_id(provider: str, athlete_id: str) -> str:
 
 
 def register_athlete_jobs(
-    athlete_id: str, provider: str, scheduler: BackgroundScheduler,
+    athlete_id: str,
+    provider: str,
+    scheduler: BackgroundScheduler,
 ) -> None:
     """Add a sync job for the given athlete+provider."""
     config = _PROVIDER_CONFIG.get(provider)
@@ -45,7 +47,9 @@ def register_athlete_jobs(
 
 
 def unregister_athlete_jobs(
-    athlete_id: str, provider: str, scheduler: BackgroundScheduler,
+    athlete_id: str,
+    provider: str,
+    scheduler: BackgroundScheduler,
 ) -> None:
     """Remove a sync job for the given athlete+provider."""
     jid = _job_id(provider, athlete_id)

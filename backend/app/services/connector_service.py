@@ -68,7 +68,9 @@ def fetch_connector_data(athlete_id: str, db: Session) -> dict:
         client_id = os.getenv("STRAVA_CLIENT_ID", "")
         client_secret = os.getenv("STRAVA_CLIENT_SECRET", "")
         try:
-            with StravaConnector(cred, client_id=client_id, client_secret=client_secret) as connector:
+            with StravaConnector(
+                cred, client_id=client_id, client_secret=client_secret
+            ) as connector:
                 strava_activities = connector.fetch_activities(since=since, until=now)
                 if connector.credential.access_token != original_token:
                     _persist_token_update(strava_model, connector.credential, db)
@@ -77,9 +79,7 @@ def fetch_connector_data(athlete_id: str, db: Session) -> dict:
 
     # ── Hevy ─────────────────────────────────────────────────────────────────
     hevy_model = (
-        db.query(ConnectorCredentialModel)
-        .filter_by(athlete_id=athlete_id, provider="hevy")
-        .first()
+        db.query(ConnectorCredentialModel).filter_by(athlete_id=athlete_id, provider="hevy").first()
     )
     if hevy_model:
         cred = _model_to_credential(hevy_model)
@@ -97,6 +97,7 @@ def fetch_connector_data(athlete_id: str, db: Session) -> dict:
     )
     if terra_model:
         from datetime import date
+
         extra = json.loads(terra_model.extra_json or "{}")
         terra_health = TerraHealthData(
             date=date.today(),

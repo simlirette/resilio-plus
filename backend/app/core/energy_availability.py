@@ -26,15 +26,16 @@ with _DATA_PATH.open(encoding="utf-8") as _f:
     _EA_DATA = json.load(_f)
 
 # Seuils cliniques (section 6.2)
-_OPTIMAL_MIN: float = float(_EA_DATA["female"]["optimal_min_kcal_per_kg_ffm"])      # 45 — identique M/F
-_CRITICAL_F: float = float(_EA_DATA["female"]["critical_threshold_kcal_per_kg_ffm"]) # 30
-_CRITICAL_M: float = float(_EA_DATA["male"]["critical_threshold_kcal_per_kg_ffm"])   # 25
-_REDS_DAYS: int = int(_EA_DATA["female"]["reds_consecutive_days"])                   # 3
+_OPTIMAL_MIN: float = float(_EA_DATA["female"]["optimal_min_kcal_per_kg_ffm"])  # 45 — identique M/F
+_CRITICAL_F: float = float(_EA_DATA["female"]["critical_threshold_kcal_per_kg_ffm"])  # 30
+_CRITICAL_M: float = float(_EA_DATA["male"]["critical_threshold_kcal_per_kg_ffm"])  # 25
+_REDS_DAYS: int = int(_EA_DATA["female"]["reds_consecutive_days"])  # 3
 
 
 # ---------------------------------------------------------------------------
 # API publique
 # ---------------------------------------------------------------------------
+
 
 def calculate_energy_availability(
     caloric_intake: float,

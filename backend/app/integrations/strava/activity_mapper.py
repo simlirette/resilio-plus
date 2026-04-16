@@ -27,7 +27,9 @@ def to_model(activity: StravaActivity, athlete_id: str) -> StravaActivityModel:
 
     # Convert date → datetime at midnight UTC for started_at
     started_at = datetime(
-        activity.date.year, activity.date.month, activity.date.day,
+        activity.date.year,
+        activity.date.month,
+        activity.date.day,
         tzinfo=timezone.utc,
     )
 
@@ -58,6 +60,8 @@ def to_model(activity: StravaActivity, athlete_id: str) -> StravaActivityModel:
         avg_hr=int(activity.average_hr) if activity.average_hr is not None else None,
         max_hr=int(activity.max_hr) if activity.max_hr is not None else None,
         avg_watts=activity.avg_watts,
-        perceived_exertion=float(activity.perceived_exertion) if activity.perceived_exertion is not None else None,
+        perceived_exertion=float(activity.perceived_exertion)
+        if activity.perceived_exertion is not None
+        else None,
         raw_json=json.dumps(raw),
     )

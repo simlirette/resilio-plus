@@ -94,24 +94,28 @@ def import_hevy_workouts(
             existing.actual_data_json = json.dumps(actual_data)
             existing.logged_at = datetime.now(timezone.utc)
         else:
-            db.add(SessionLogModel(
-                id=str(uuid.uuid4()),
-                athlete_id=athlete_id,
-                plan_id=plan_id,
-                session_id=session_id,
-                actual_duration_min=None,
-                skipped=False,
-                actual_data_json=json.dumps(actual_data),
-                logged_at=datetime.now(timezone.utc),
-            ))
+            db.add(
+                SessionLogModel(
+                    id=str(uuid.uuid4()),
+                    athlete_id=athlete_id,
+                    plan_id=plan_id,
+                    session_id=session_id,
+                    actual_duration_min=None,
+                    skipped=False,
+                    actual_data_json=json.dumps(actual_data),
+                    logged_at=datetime.now(timezone.utc),
+                )
+            )
 
-        results.append({
-            "date": date_key,
-            "workout_name": workout.title,
-            "session_id": session_id,
-            "matched": matched,
-            "sets_imported": sets_imported,
-        })
+        results.append(
+            {
+                "date": date_key,
+                "workout_name": workout.title,
+                "session_id": session_id,
+                "matched": matched,
+                "sets_imported": sets_imported,
+            }
+        )
 
     db.commit()
 

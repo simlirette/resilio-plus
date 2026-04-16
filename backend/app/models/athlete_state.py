@@ -349,14 +349,34 @@ class AgentView(BaseModel):
 
 
 _AGENT_VIEWS: dict[str, set[str]] = {
-    "head_coach": {"profile", "metrics", "connectors", "plan", "energy", "recovery", "hormonal", "allostatic", "journal"},
-    "running":    {"profile", "metrics", "connectors", "plan", "hormonal"},
-    "lifting":    {"profile", "metrics", "connectors", "plan", "hormonal"},
-    "swimming":   {"profile", "metrics", "connectors", "plan"},
-    "biking":     {"profile", "metrics", "connectors", "plan"},
-    "nutrition":  {"profile", "plan", "energy", "hormonal"},
-    "recovery":   {"profile", "metrics", "connectors", "plan", "energy", "recovery", "hormonal", "allostatic", "journal"},
-    "energy":     {"profile", "metrics", "energy", "recovery", "hormonal", "allostatic", "journal"},
+    "head_coach": {
+        "profile",
+        "metrics",
+        "connectors",
+        "plan",
+        "energy",
+        "recovery",
+        "hormonal",
+        "allostatic",
+        "journal",
+    },
+    "running": {"profile", "metrics", "connectors", "plan", "hormonal"},
+    "lifting": {"profile", "metrics", "connectors", "plan", "hormonal"},
+    "swimming": {"profile", "metrics", "connectors", "plan"},
+    "biking": {"profile", "metrics", "connectors", "plan"},
+    "nutrition": {"profile", "plan", "energy", "hormonal"},
+    "recovery": {
+        "profile",
+        "metrics",
+        "connectors",
+        "plan",
+        "energy",
+        "recovery",
+        "hormonal",
+        "allostatic",
+        "journal",
+    },
+    "energy": {"profile", "metrics", "energy", "recovery", "hormonal", "allostatic", "journal"},
 }
 
 

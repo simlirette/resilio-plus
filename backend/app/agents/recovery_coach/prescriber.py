@@ -24,12 +24,12 @@ from ...models.athlete_state import (
 # ---------------------------------------------------------------------------
 
 # HRV (ratio current / baseline)
-_HRV_GREEN_MIN = 0.80      # ratio >= 0.80 → vert
-_HRV_YELLOW_MIN = 0.60     # ratio >= 0.60 → jaune ; < 0.60 → rouge
+_HRV_GREEN_MIN = 0.80  # ratio >= 0.80 → vert
+_HRV_YELLOW_MIN = 0.60  # ratio >= 0.60 → jaune ; < 0.60 → rouge
 
 # ACWR
-_ACWR_SAFE_LOW = 0.80      # en dessous → sous-entraînement, pas de risque
-_ACWR_SAFE_HIGH = 1.30     # zone sûre [0.80 – 1.30]
+_ACWR_SAFE_LOW = 0.80  # en dessous → sous-entraînement, pas de risque
+_ACWR_SAFE_HIGH = 1.30  # zone sûre [0.80 – 1.30]
 _ACWR_CAUTION_HIGH = 1.50  # caution [1.30 – 1.50] ; > 1.50 → rouge
 
 # EA (kcal/kg FFM)
@@ -38,18 +38,19 @@ _EA_CRITICAL_FEMALE = 30.0
 _EA_CRITICAL_MALE = 25.0
 
 # Allostatic score
-_ALLOSTATIC_GREEN_MAX = 60.0   # < 60 → vert
+_ALLOSTATIC_GREEN_MAX = 60.0  # < 60 → vert
 _ALLOSTATIC_YELLOW_MAX = 80.0  # 60–80 → jaune ; > 80 → rouge
 
 # Caps d'intensité
 _CAP_GREEN = 1.00
-_CAP_YELLOW = 0.85   # −15 %
-_CAP_RED = 0.00      # séance bloquée
+_CAP_YELLOW = 0.85  # −15 %
+_CAP_RED = 0.00  # séance bloquée
 
 
 # ---------------------------------------------------------------------------
 # Classificateurs individuels
 # ---------------------------------------------------------------------------
+
 
 def classify_hrv(
     current_hrv: Optional[float],
@@ -135,6 +136,7 @@ def classify_cycle(profile: Optional[HormonalProfile]) -> Optional[TrafficLight]
 # Synthèse : compute_recovery_veto_v3
 # ---------------------------------------------------------------------------
 
+
 def _component_cap(light: TrafficLight) -> float:
     if light == "red":
         return _CAP_RED
@@ -200,9 +202,7 @@ def compute_recovery_veto_v3(
         veto_triggered = False
 
     # --- Raisons ---
-    veto_reasons: list[str] = [
-        f"{name}: {value}" for name, value in active if value != "green"
-    ]
+    veto_reasons: list[str] = [f"{name}: {value}" for name, value in active if value != "green"]
 
     return RecoveryVetoV3(
         status=status,

@@ -7,9 +7,10 @@ from ..core.hormonal import get_running_adjustments
 from ..core.periodization import get_current_phase
 from ..core.readiness import compute_readiness
 from ..core.running_logic import (
-    compute_running_fatigue, estimate_vdot, generate_running_sessions,
+    compute_running_fatigue,
+    estimate_vdot,
+    generate_running_sessions,
 )
-from ..schemas.athlete import Sport
 from .prompts import RUNNING_COACH_PROMPT
 
 _SYSTEM_PROMPT = RUNNING_COACH_PROMPT
@@ -25,7 +26,8 @@ class RunningCoach(BaseAgent):
     def analyze(self, context: AgentContext) -> AgentRecommendation:
         # 1. Filter Strava activities to the 7 days before this week
         prior_activities = [
-            a for a in context.strava_activities
+            a
+            for a in context.strava_activities
             if context.date_range[0] - timedelta(days=7) <= a.date < context.date_range[0]
         ]
 
@@ -60,13 +62,13 @@ class RunningCoach(BaseAgent):
 
         # 8. Weekly load: sum(duration_min * intensity_weight)
         _INTENSITY = {
-            "easy_z1": 1.0, "long_run_z1": 1.0,
-            "tempo_z2": 1.5, "vo2max_z3": 2.0, "activation_z3": 2.0,
+            "easy_z1": 1.0,
+            "long_run_z1": 1.0,
+            "tempo_z2": 1.5,
+            "vo2max_z3": 2.0,
+            "activation_z3": 2.0,
         }
-        weekly_load = sum(
-            s.duration_min * _INTENSITY.get(s.workout_type, 1.0)
-            for s in sessions
-        )
+        weekly_load = sum(s.duration_min * _INTENSITY.get(s.workout_type, 1.0) for s in sessions)
 
         # V3: apply cycle phase adjustments if hormonal profile is enabled
         cycle_notes = ""
