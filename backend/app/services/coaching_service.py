@@ -80,6 +80,15 @@ class CoachingService:
         result = self._graph.invoke(initial_state, config=config)
         return thread_id, result.get("proposed_plan_dict")
 
+    def get_graph_state(self, thread_id: str):
+        """Return the current LangGraph StateSnapshot for a thread.
+
+        Used by debug endpoints. Returns a StateSnapshot whose `.values` is empty
+        if the thread doesn't exist in the checkpointer.
+        """
+        config = {"configurable": {"thread_id": thread_id}}
+        return self._graph.get_state(config)
+
     def resume_plan(
         self,
         thread_id: str,

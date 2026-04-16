@@ -559,9 +559,7 @@ class ReviewConfirmResponse(BaseModel):
     message: str = ""
 
 
-# Module-level service instance — shared across requests in the same process.
-# Each call to weekly_review() creates a new graph instance stored inside
-# the service, so state isolation is maintained per thread_id.
+# Alias to the module singleton — weekly_review uses the same shared checkpointer.
 _review_service = coaching_service
 
 
@@ -643,7 +641,6 @@ def get_session_state(
     athlete_id: str,
     thread_id: str,
     athlete: Annotated[AthleteModel, Depends(_require_own)],
-    db: DB,
 ) -> SessionStateResponse:
     """Debug endpoint — return the current graph state for a coaching session.
 
@@ -651,8 +648,7 @@ def get_session_state(
     """
     _validate_thread_ownership(thread_id, athlete_id)
 
-    config = {"configurable": {"thread_id": thread_id}}
-    snapshot = coaching_service._graph.get_state(config)
+    snapshot = coaching_service.get_graph_state(thread_id)
 
     if not snapshot.values:
         raise HTTPException(status_code=404, detail="Session not found")
