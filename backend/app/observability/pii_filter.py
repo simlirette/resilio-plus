@@ -1,6 +1,7 @@
 """PII filter — blocklist + regex scrubbers for logs and Sentry events."""
 from __future__ import annotations
 
+import re
 from typing import Any
 
 _BLOCKLIST_FIELDS = frozenset({
@@ -13,9 +14,25 @@ _BLOCKLIST_FIELDS = frozenset({
 _REDACTED = "***"
 _MAX_DEPTH = 5
 
+# Order matters: more specific patterns first so they win.
+_REGEX_PATTERNS: tuple[re.Pattern, ...] = (
+    re.compile(r"eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+"),   # JWT
+    re.compile(r"[Bb]earer\s+[A-Za-z0-9_.-]+"),                          # Bearer tokens
+    re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+"),                             # Email
+    re.compile(r"[a-fA-F0-9]{32,}"),                                     # long hex (fernet, api keys)
+)
+
 
 def _is_blocklisted(field_name: str) -> bool:
     return field_name.lower() in _BLOCKLIST_FIELDS
+
+
+def scrub_string(s: str) -> str:
+    """Apply all regex scrubbers to a string."""
+    out = s
+    for pattern in _REGEX_PATTERNS:
+        out = pattern.sub(_REDACTED, out)
+    return out
 
 
 def scrub_value(value: Any, _depth: int = 0) -> Any:
@@ -31,4 +48,6 @@ def scrub_value(value: Any, _depth: int = 0) -> Any:
         return [scrub_value(item, _depth + 1) for item in value]
     if isinstance(value, tuple):
         return tuple(scrub_value(item, _depth + 1) for item in value)
+    if isinstance(value, str):
+        return scrub_string(value)
     return value
