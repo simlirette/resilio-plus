@@ -266,6 +266,8 @@ Never increase total weekly load >10% in one step (applies across ALL sports com
 - **Observability Spec**: `docs/superpowers/specs/2026-04-16-observability-design.md`
 - **Observability Plan**: `docs/superpowers/plans/2026-04-16-observability.md`
 - **Deployment Reference**: `docs/backend/DEPLOYMENT.md` — Dockerfile, compose, env vars, Fly.io / Railway / VPS recipes, pre-deploy checklist, troubleshooting
+- **API Contract**: `docs/backend/API-CONTRACT.md` — tous les endpoints (méthode, path, auth, schemas request/response, codes d'erreur), interfaces TypeScript exactes, exemples curl+TS, Quick Start frontend
+- **Athlete State Model**: `docs/backend/ATHLETE-STATE.md` — AthleteState schema complet, AgentView matrice d'accès (8 agents × 9 sections), règles de mise à jour, états typiques, formule Strain EWMA
 - **Deployment Spec**: `docs/superpowers/specs/2026-04-16-backend-deployment-design.md`
 - **Deployment Plan**: `docs/superpowers/plans/2026-04-16-backend-deployment.md`
 - **Master V2 (archivé)**: `docs/archive/resilio-master-v2_archived_2026-04-12.md`
