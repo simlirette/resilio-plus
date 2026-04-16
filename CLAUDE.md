@@ -270,6 +270,9 @@ Never increase total weekly load >10% in one step (applies across ALL sports com
 - **Athlete State Model**: `docs/backend/ATHLETE-STATE.md` — AthleteState schema complet, AgentView matrice d'accès (8 agents × 9 sections), règles de mise à jour, états typiques, formule Strain EWMA
 - **Agent Specs**: `docs/backend/AGENT-SPECS.md` — 6 agents (rôle, limites dures, vetos, inputs AgentContext, intensités de charge verbatim, prompts système), matrice interactions, vocabulaire interdit
 - **Human-in-the-Loop**: `docs/backend/HUMAN-IN-THE-LOOP.md` — coaching graph 11 nœuds + weekly review 5 nœuds (diagrammes Mermaid), pattern interrupt/resume LangGraph 0.6.x, bug _after_revise corrigé, 6 cas d'usage
+- **Strain Index ADR**: `docs/backend/STRAIN-DEFINITION.md` — formule EWMA complète (λ constants, cardio/lifting), SPORT_MUSCLE_MAP × EXERCISE_MUSCLE_MAP verbatim (30 exercices), cas limites, bases scientifiques
+- **Energy Coach Spec**: `docs/backend/ENERGY-COACH-SPEC.md` — EA formula + seuils cliniques (M/F), score allostatique (6 composantes, caps d'intensité), 4 patterns de détection, modèles DB V3 (EnergySnapshot, HormonalProfile, AllostaticEntry, HeadCoachMessage)
+- **Integrations Reference**: `docs/backend/INTEGRATIONS.md` — Hevy CSV import, Strava OAuth V2 (Fernet, CSRF, auto-refresh, sync incrémentale), Nutrition Lookup (USDA/OFF/FCÉN, cache TTL, bootstrap), tableau récapitulatif 7 intégrations
 - **Deployment Spec**: `docs/superpowers/specs/2026-04-16-backend-deployment-design.md`
 - **Deployment Plan**: `docs/superpowers/plans/2026-04-16-backend-deployment.md`
 - **Master V2 (archivé)**: `docs/archive/resilio-master-v2_archived_2026-04-12.md`
