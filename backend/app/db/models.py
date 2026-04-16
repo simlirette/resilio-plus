@@ -136,6 +136,9 @@ class AthleteModel(Base):
     head_coach_messages: Mapped[list[HeadCoachMessageModel]] = relationship(
         "HeadCoachMessageModel", back_populates="athlete", cascade="all, delete-orphan"
     )
+    apple_health_daily: Mapped[list["AppleHealthDailyModel"]] = relationship(
+        "AppleHealthDailyModel", back_populates="athlete", cascade="all, delete-orphan"
+    )
 
 
 class TrainingPlanModel(Base):
@@ -427,3 +430,27 @@ class FoodCacheModel(Base):
     cached_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     # NULL = permanent (FCÉN rows have no expiry)
     ttl_hours: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+
+
+class AppleHealthDailyModel(Base):
+    """Daily aggregated Apple Health metrics per athlete."""
+
+    __tablename__ = "apple_health_daily"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    athlete_id: Mapped[str] = mapped_column(String, ForeignKey("athletes.id"), nullable=False)
+    record_date: Mapped[date] = mapped_column(Date, nullable=False)
+    hrv_sdnn_avg: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    sleep_hours: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    rhr_bpm: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    body_mass_kg: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    active_energy_kcal: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    imported_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+    athlete: Mapped["AthleteModel"] = relationship("AthleteModel", back_populates="apple_health_daily")
+
+    __table_args__ = (UniqueConstraint("athlete_id", "record_date"),)
