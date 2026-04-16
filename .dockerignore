@@ -1,14 +1,69 @@
+# VCS
 .git
-.worktrees
+.gitignore
+.gitattributes
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python build / cache
 __pycache__
 *.pyc
 *.pyo
+*.pyd
 .pytest_cache
 .mypy_cache
 .ruff_cache
+.coverage
+htmlcov
+dist
+build
+*.egg-info
+.venv
+venv
+
+# Node / frontend workspace
 node_modules
-frontend/node_modules
-frontend/.next
-data/
-.env
-*.env
+.pnpm-store
+.next
+apps/desktop
+apps/mobile
+apps/web/.next
+apps/web/node_modules
+
+# Tests (not shipped to runtime)
+tests
+
+# Docs (allow-list inline backend docs only)
+docs
+*.md
+!README.md
+!backend/app/**/*.md
+
+# IDE
+.idea
+.vscode
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local DBs / data
+*.sqlite
+*.sqlite-journal
+*.db
+data
+
+# Workspace junk
+FRONTEND_AUDIT.md
+FRONTEND_VAGUE1_POSTMORTEM.md
+BACKEND_V3_COMPLETE.md
+resilio-master-*.md
+frontend-master-*.md
+docs/ui-audit-*.md
+docs/archive
