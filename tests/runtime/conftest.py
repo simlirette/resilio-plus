@@ -31,7 +31,6 @@ STABLE_LOAD = [400.0] * 28
 
 def _canned_recommendation(agent_name: str, sport: str) -> AgentRecommendation:
     """Build a minimal valid AgentRecommendation for testing."""
-    today = date.today()
     return AgentRecommendation(
         agent_name=agent_name,
         weekly_load=200.0,
@@ -46,7 +45,7 @@ def _canned_recommendation(agent_name: str, sport: str) -> AgentRecommendation:
             WorkoutSlot(
                 id=str(uuid.uuid4()),
                 sport=sport,
-                date=today.isoformat(),
+                date=WEEK_START.isoformat(),
                 workout_type="easy_z1",
                 duration_min=45,
                 intensity_target="Z1",
@@ -68,6 +67,9 @@ def _mock_analyze(agent_name: str, sport: str):
 @pytest.fixture
 def mock_agents():
     """Patch all agent analyze() methods with canned responses."""
+    # Patches cover running + lifting + nutrition + recovery (Simon's sports +
+    # always-on agents). If a test uses an athlete with biking or swimming,
+    # extend patches to include BikingCoach.analyze / SwimmingCoach.analyze.
     patches = [
         patch("app.agents.running_coach.RunningCoach.analyze",
               _mock_analyze("running", "running")),
