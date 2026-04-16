@@ -2,6 +2,7 @@ import csv
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 from sqlalchemy.orm import Session
 
@@ -33,7 +34,7 @@ def load_fcen(
     Returns number of NEW rows inserted (re-runs return 0 if all rows already exist).
     """
     # 1. Load food names: FoodID → {name_en, name_fr}
-    foods: dict[str, dict] = {}
+    foods: dict[str, dict[str, Any]] = {}
     with open(food_name_csv, encoding="utf-8-sig", newline="") as f:
         for row in csv.DictReader(f):
             foods[row["FoodID"]] = {

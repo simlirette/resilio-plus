@@ -130,8 +130,8 @@ def compute_performance_trends(sessions: list[dict[str, Any]]) -> dict[str, list
     Extract VDOT (running) and e1RM (lifting) progression over time.
     Returns: {"vdot": [{"date", "value"}, ...], "e1rm": [{"date", "value"}, ...]}
     """
-    vdot_series = []
-    e1rm_series = []
+    vdot_series: list[dict[str, str | float]] = []
+    e1rm_series: list[dict[str, str | float]] = []
 
     for s in sessions:
         sport = s.get("sport", "")
@@ -149,7 +149,7 @@ def compute_performance_trends(sessions: list[dict[str, Any]]) -> dict[str, list
         elif sport == "lifting" and "e1rm_kg" in data:
             e1rm_series.append({"date": str(d), "value": float(data["e1rm_kg"])})
 
-    vdot_series.sort(key=lambda x: x["date"])
-    e1rm_series.sort(key=lambda x: x["date"])
+    vdot_series.sort(key=lambda x: str(x["date"]))
+    e1rm_series.sort(key=lambda x: str(x["date"]))
 
     return {"vdot": vdot_series, "e1rm": e1rm_series}

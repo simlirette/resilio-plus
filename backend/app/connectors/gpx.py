@@ -8,6 +8,7 @@ from __future__ import annotations
 import math
 import xml.etree.ElementTree as ET
 from datetime import date, datetime
+from typing import Any
 
 _GPX_NS = "http://www.topografix.com/GPX/1/1"
 
@@ -24,7 +25,7 @@ def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 
 
 class GpxConnector:
-    def parse(self, content: bytes) -> dict:
+    def parse(self, content: bytes) -> dict[str, Any]:
         """
         Parse GPX XML bytes.
         Returns: activity_date, distance_km, duration_seconds,

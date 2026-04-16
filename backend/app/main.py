@@ -8,6 +8,7 @@ from .observability.sentry import init_sentry as _init_sentry
 _init_sentry()
 
 import os
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -39,7 +40,7 @@ from .routes.workflow import router as workflow_router
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     scheduler = setup_scheduler()
     try:
         yield

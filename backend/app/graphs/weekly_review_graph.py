@@ -347,14 +347,14 @@ def apply_adjustments(
 # ---------------------------------------------------------------------------
 
 
-def build_weekly_review_graph(interrupt: bool = True):
+def build_weekly_review_graph(interrupt: bool = True) -> Any:
     """Build and compile the weekly review StateGraph with MemorySaver.
 
     Args:
         interrupt: If True, pauses at present_review (production).
                    If False, skips interrupt — human_approved must be pre-set in state (tests).
     """
-    builder: StateGraph = StateGraph(WeeklyReviewState)
+    builder: StateGraph[WeeklyReviewState] = StateGraph(WeeklyReviewState)
 
     builder.add_node("analyze_actual_vs_planned", analyze_actual_vs_planned)
     builder.add_node("compute_new_acwr", compute_new_acwr)

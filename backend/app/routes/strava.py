@@ -1,6 +1,6 @@
 # backend/app/routes/strava.py
 """Strava OAuth 2.0 + activity sync routes."""
-from typing import Annotated
+from typing import Annotated, Any
 
 import httpx as _httpx
 from fastapi import APIRouter, Depends, HTTPException
@@ -25,7 +25,7 @@ router = APIRouter(prefix="/integrations/strava", tags=["strava"])
 def connect(
     athlete_id: Annotated[str, Depends(get_current_athlete_id)],
     db: DB,
-) -> dict:
+) -> dict[str, Any]:
     """Generate Strava OAuth authorization URL."""
     if db.get(AthleteModel, athlete_id) is None:
         raise HTTPException(status_code=404, detail="Athlete not found")
@@ -37,7 +37,7 @@ def callback(
     code: str,
     state: str,
     db: DB,
-) -> dict:
+) -> dict[str, Any]:
     """Handle Strava OAuth callback — exchange code for encrypted tokens."""
     try:
         result = oauth_callback(code=code, state=state, db=db)

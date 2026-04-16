@@ -13,17 +13,20 @@ from __future__ import annotations
 import json
 import logging
 import time
+from collections.abc import Callable
 from functools import wraps
 from typing import Any
 
 logger = logging.getLogger("resilio.graph")
 
+_NodeFunc = Callable[..., dict[str, Any]]
 
-def log_node(func):
+
+def log_node(func: _NodeFunc) -> _NodeFunc:
     """Decorator that logs entry/exit for a LangGraph node function."""
 
     @wraps(func)
-    def wrapper(state: dict[str, Any], config=None) -> dict[str, Any]:
+    def wrapper(state: dict[str, Any], config: object = None) -> dict[str, Any]:
         node = func.__name__
         athlete = state.get("athlete_id", "?")
         logger.info(
@@ -36,7 +39,7 @@ def log_node(func):
             )
         )
         t0 = time.perf_counter()
-        result = func(state, config) if config is not None else func(state)
+        result: dict[str, Any] = func(state, config) if config is not None else func(state)
         ms = round((time.perf_counter() - t0) * 1000)
         changed = list(result.keys()) if isinstance(result, dict) else []
         logger.info(

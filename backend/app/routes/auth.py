@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -105,7 +105,7 @@ def refresh(req: RefreshRequest, db: DB) -> TokenResponse:
 
 
 @router.post("/logout")
-def logout(req: LogoutRequest, current_id: AuthedId, db: DB) -> dict:
+def logout(req: LogoutRequest, current_id: AuthedId, db: DB) -> dict[str, Any]:
     token_hash = hash_token(req.refresh_token)
     record = (
         db.query(RefreshTokenModel)
@@ -135,7 +135,7 @@ def me(current_id: AuthedId, db: DB) -> MeResponse:
 
 
 @router.post("/forgot-password")
-def forgot_password(req: ForgotPasswordRequest, db: DB) -> dict:
+def forgot_password(req: ForgotPasswordRequest, db: DB) -> dict[str, Any]:
     user = db.query(UserModel).filter(UserModel.email == req.email).first()
     _msg = {"message": "If this email is registered, a reset link has been sent."}
 
@@ -167,7 +167,7 @@ def forgot_password(req: ForgotPasswordRequest, db: DB) -> dict:
 
 
 @router.post("/reset-password")
-def reset_password(req: ResetPasswordRequest, db: DB) -> dict:
+def reset_password(req: ResetPasswordRequest, db: DB) -> dict[str, Any]:
     token_hash = hash_token(req.token)
     record = (
         db.query(PasswordResetTokenModel)
@@ -186,6 +186,8 @@ def reset_password(req: ResetPasswordRequest, db: DB) -> dict:
 
     record.used = True
     user = db.query(UserModel).filter(UserModel.id == record.user_id).first()
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     user.hashed_password = hash_password(req.new_password)
 
     # Revoke all active refresh tokens — password changed, all sessions invalidated

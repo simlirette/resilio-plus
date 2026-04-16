@@ -27,7 +27,7 @@ def get_current_athlete_id(
     payload = decode_access_token(credentials.credentials)
     if payload is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-    return payload["sub"]
+    return str(payload["sub"])
 
 
 from .mode_guard import require_full_mode, require_tracking_mode  # noqa: E402, F401

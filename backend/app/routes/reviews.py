@@ -1,6 +1,6 @@
 import uuid
 from datetime import date, timedelta
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import desc
@@ -39,7 +39,7 @@ def _get_latest_plan(athlete_id: str, db: Session) -> TrainingPlanModel:
     return plan
 
 
-def _compute_actual_hours(activities: list, workouts: list, start: date, end: date) -> float:
+def _compute_actual_hours(activities: list[Any], workouts: list[Any], start: date, end: date) -> float:
     """Sum duration_seconds for activities/workouts within [start, end] date range."""
     total = 0
     for act in activities:
@@ -65,7 +65,7 @@ def _compute_actual_hours(activities: list, workouts: list, start: date, end: da
     return round(total / 3600, 2)
 
 
-def _build_daily_loads(activities: list, days: int = 28) -> list[float]:
+def _build_daily_loads(activities: list[Any], days: int = 28) -> list[float]:
     """Oldest-first list of daily load (hours) for the last `days` days."""
     today = date.today()
     daily: dict[date, float] = {}

@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from typing import Any
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -37,7 +38,7 @@ def _persist_token_update(
     db.commit()
 
 
-def fetch_connector_data(athlete_id: str, db: Session) -> dict:
+def fetch_connector_data(athlete_id: str, db: Session) -> dict[str, Any]:
     """Fetch live data from all connected providers for the athlete.
 
     Always returns all keys even on error:

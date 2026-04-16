@@ -142,7 +142,7 @@ def estimate_vdot(
 
     best = 0
     for a in runs:
-        pace = a.duration_seconds / (float(a.distance_meters) / 1000)  # s/km
+        pace = a.duration_seconds / ((a.distance_meters or 1.0) / 1000)  # s/km — filtered not-None
         row = min(_VDOT_TABLE, key=lambda r: abs(r[1] - pace))
         if row[0] > best:
             best = row[0]

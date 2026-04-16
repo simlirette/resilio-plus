@@ -19,7 +19,7 @@ from ..graphs.state import AthleteCoachingState
 from ..graphs.weekly_review_graph import WeeklyReviewState, build_weekly_review_graph
 
 
-def _create_sqlite_checkpointer():
+def _create_sqlite_checkpointer() -> Any:
     """Create a SqliteSaver backed by a file on disk.
 
     Path from LANGGRAPH_CHECKPOINT_DB env var, default 'data/checkpoints.sqlite'.
@@ -41,7 +41,7 @@ def _create_sqlite_checkpointer():
 class CoachingService:
     """Wraps the coaching LangGraph graph."""
 
-    def __init__(self, *, checkpointer=None) -> None:
+    def __init__(self, *, checkpointer: Any = None) -> None:
         self._checkpointer = (
             checkpointer if checkpointer is not None else _create_sqlite_checkpointer()
         )
@@ -85,7 +85,7 @@ class CoachingService:
         result = self._graph.invoke(initial_state, config=config)
         return thread_id, result.get("proposed_plan_dict")
 
-    def get_graph_state(self, thread_id: str):
+    def get_graph_state(self, thread_id: str) -> Any:
         """Return the current LangGraph StateSnapshot for a thread.
 
         Used by debug endpoints. Returns a StateSnapshot whose `.values` is empty
@@ -124,8 +124,10 @@ class CoachingService:
         result = self._graph.invoke(None, config=config)
 
         if approved:
-            return result.get("final_plan_dict")
-        return result.get("proposed_plan_dict")
+            val: dict[str, Any] | None = result.get("final_plan_dict")
+            return val
+        val = result.get("proposed_plan_dict")
+        return val
 
     # ---------------------------------------------------------------------------
     # Weekly review — S-3

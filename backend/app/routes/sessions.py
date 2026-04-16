@@ -195,12 +195,13 @@ def get_history(
     )
 
     # Single GROUP BY query instead of N per-plan COUNT queries
-    log_counts: dict[str, int] = dict(
-        db.query(SessionLogModel.plan_id, func.count())
+    log_counts: dict[str | None, int] = {
+        row[0]: row[1]
+        for row in db.query(SessionLogModel.plan_id, func.count())
         .filter(SessionLogModel.athlete_id == athlete_id)
         .group_by(SessionLogModel.plan_id)
         .all()
-    )
+    }
 
     summaries: list[WeekSummary] = []
     for i, plan in enumerate(plans):
@@ -324,7 +325,7 @@ def log_manual_workout(
         sport=req.sport,
         workout_type=req.workout_type,
         date=req.date,
-        actual_duration_min=log.actual_duration_min,
+        actual_duration_min=log.actual_duration_min or 0,
         rpe=log.rpe,
         notes=log.notes or "",
         actual_data=json.loads(log.actual_data_json),

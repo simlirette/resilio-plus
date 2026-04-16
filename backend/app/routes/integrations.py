@@ -1,4 +1,4 @@
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy.orm import Session
@@ -18,7 +18,7 @@ def hevy_csv_import(
     athlete_id: Annotated[str, Depends(get_current_athlete_id)],
     file: UploadFile = File(...),
     unit: Literal["kg", "lbs"] = Query(default="kg"),
-) -> dict:
+) -> dict[str, Any]:
     """Import Hevy CSV export → parse → upsert to SessionLogModel.
 
     Matches workouts to active training plan lifting slots by date.

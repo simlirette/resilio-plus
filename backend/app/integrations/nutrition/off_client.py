@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 import httpx
 
@@ -9,7 +10,7 @@ logger = logging.getLogger(__name__)
 _OFF_BASE = "https://world.openfoodfacts.org"
 
 
-def _parse_product(product: dict, product_id: str) -> FoodItem | None:
+def _parse_product(product: dict[str, Any], product_id: str) -> FoodItem | None:
     name = (product.get("product_name") or "").strip()
     if not name:
         return None

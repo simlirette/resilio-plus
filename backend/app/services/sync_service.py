@@ -48,7 +48,7 @@ def _upsert_session_log(
     plan_id: str,
     session_id: str,
     actual_duration_min: int | None,
-    actual_data: dict,
+    actual_data: dict[str, Any],
     db: Session,
 ) -> None:
     existing = (

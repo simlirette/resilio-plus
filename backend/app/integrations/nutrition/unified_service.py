@@ -75,7 +75,7 @@ def _upsert_items(items: list[FoodItem], ttl_hours: int, db: Session) -> None:
     db.commit()
 
 
-def _cache_query(q: str, db: Session, source_filter: str | None = None):
+def _cache_query(q: str, db: Session, source_filter: str | None = None) -> list[FoodCacheModel]:
     pattern = f"%{q.lower()}%"
     query = db.query(FoodCacheModel).filter(
         (func.lower(FoodCacheModel.name).like(pattern))

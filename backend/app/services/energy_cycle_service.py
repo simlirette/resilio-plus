@@ -6,12 +6,13 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Literal, Optional
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from ..agents.energy_coach.agent import EnergyCheckIn, EnergyCoach, EnergyInput
+from ..agents.energy_coach.agent import EnergyCoach, EnergyInput
+from ..models.athlete_state import EnergyCheckIn
 from ..db.models import AthleteModel
 from ..db.models import EnergySnapshotModel, HormonalProfileModel
 from ..schemas.checkin import CheckInInput, HormonalProfileUpdate, ReadinessResponse
@@ -26,7 +27,7 @@ def compute_subjective_score(legs_feeling: str, energy_global: str) -> float:
     return round(100.0 - load, 2)
 
 
-def classify_divergence(divergence: float) -> str:
+def classify_divergence(divergence: float) -> Literal["none", "moderate", "high"]:
     if divergence < 15.0:
         return "none"
     if divergence <= 30.0:
@@ -34,7 +35,7 @@ def classify_divergence(divergence: float) -> str:
     return "high"
 
 
-def traffic_light_from_readiness(final_readiness: float) -> str:
+def traffic_light_from_readiness(final_readiness: float) -> Literal["green", "yellow", "red"]:
     if final_readiness >= 65.0:
         return "green"
     if final_readiness >= 40.0:

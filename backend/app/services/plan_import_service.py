@@ -66,7 +66,8 @@ class PlanImportService:
             ],
         )
 
-        raw_text = message.content[0].text
+        block = message.content[0]
+        raw_text: str = getattr(block, "text", "")
 
         try:
             data = json.loads(raw_text)

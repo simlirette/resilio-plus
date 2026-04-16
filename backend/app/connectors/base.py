@@ -1,6 +1,6 @@
 import time
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Self
 
 import httpx
 from tenacity import (
@@ -54,7 +54,7 @@ class BaseConnector(ABC):
         """Close the underlying HTTP client."""
         self._client.close()
 
-    def __enter__(self) -> "BaseConnector":
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(self, *args: object) -> None:
@@ -72,7 +72,7 @@ class BaseConnector(ABC):
         """Provider-specific token refresh. Returns updated credential."""
         ...
 
-    def _request(self, method: str, url: str, **kwargs: Any) -> dict[str, Any]:
+    def _request(self, method: str, url: str, **kwargs: Any) -> Any:
         """HTTP request with 3-attempt tenacity retry + 429/401 handling.
 
         NOTE: Uses inner-function closure pattern because @retry cannot be applied
@@ -90,7 +90,7 @@ class BaseConnector(ABC):
             retry=retry_if_exception_type((ConnectorAPIError, httpx.HTTPError)),
             reraise=True,
         )
-        def _inner() -> dict[str, Any]:
+        def _inner() -> Any:
             response = self._client.request(method, url, **kwargs)
             if response.status_code == 429:
                 retry_after = int(response.headers.get("Retry-After", 60))
@@ -112,7 +112,6 @@ class BaseConnector(ABC):
                     message=str(e),
                     status_code=response.status_code,
                 ) from e
-            result: dict[str, Any] = response.json()
-            return result
+            return response.json()
 
         return _inner()

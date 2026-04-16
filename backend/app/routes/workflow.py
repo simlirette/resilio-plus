@@ -19,7 +19,8 @@ from __future__ import annotations
 import json
 import uuid
 from datetime import date, timedelta
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal, cast
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -105,7 +106,7 @@ class PlanReviseRequest(BaseModel):
 
 class SessionStateResponse(BaseModel):
     thread_id: str
-    state: dict | None = None
+    state: dict[str, Any] | None = None
     checkpoint_ts: str | None = None
 
 
@@ -149,10 +150,10 @@ def get_workflow_status(
     )
 
     if plan is None:
-        phase = "no_plan" if athlete.target_race_date else "onboarding"
+        phase_no_plan: Literal["onboarding", "no_plan", "active", "weekly_review_due"] = "no_plan" if athlete.target_race_date else "onboarding"
         return WorkflowStatus(
             athlete_id=athlete_id,
-            phase=phase,
+            phase=phase_no_plan,
             has_plan=False,
             plan_id=None,
             plan_start_date=None,
@@ -235,15 +236,17 @@ def create_plan_workflow(
 
     from ..schemas.athlete import AthleteProfile
 
+    from ..schemas.athlete import Sport as _Sport
+
     athlete_profile = AthleteProfile(
-        id=athlete.id,
+        id=UUID(athlete.id),
         name=athlete.name,
         age=athlete.age,
-        sex=athlete.sex,
+        sex=cast(Literal["M", "F", "other"], athlete.sex),
         weight_kg=athlete.weight_kg,
         height_cm=athlete.height_cm,
         sports=sports,
-        primary_sport=athlete.primary_sport,
+        primary_sport=_Sport(athlete.primary_sport),
         goals=goals,
         available_days=available_days,
         hours_per_week=athlete.hours_per_week,
@@ -257,7 +260,7 @@ def create_plan_workflow(
         vdot=athlete.vdot,
         css_per_100m=athlete.css_per_100m,
         equipment=equipment,
-        coaching_mode=athlete.coaching_mode,
+        coaching_mode=cast(Literal["full", "tracking_only"], athlete.coaching_mode),
     )
 
     service = coaching_service
@@ -552,7 +555,7 @@ def _build_recommendations(
 
 class ReviewStartResponse(BaseModel):
     thread_id: str
-    review_summary: dict | None = None
+    review_summary: dict[str, Any] | None = None
     message: str = ""
 
 

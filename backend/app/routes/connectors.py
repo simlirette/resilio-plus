@@ -1,7 +1,7 @@
 import json
 import uuid
 from datetime import datetime, timezone
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel
@@ -91,7 +91,7 @@ def _upsert_session_log(
     plan_id: str,
     session_id: str,
     actual_duration_min: int | None,
-    actual_data: dict,
+    actual_data: dict[str, Any],
     db: Session,
 ) -> None:
     existing = (
@@ -120,11 +120,11 @@ def _upsert_session_log(
 
 def _file_import_to_session_log(
     athlete_id: str,
-    parsed: dict,
+    parsed: dict[str, Any],
     sport: str,
     source: str,
     db: Session,
-) -> dict:
+) -> dict[str, Any]:
     """Find matching plan session by date+sport and create SessionLogModel."""
     plan = _get_latest_plan(athlete_id, db)
     if plan is None:
@@ -170,7 +170,7 @@ def upload_gpx(
     db: DB,
     _: Annotated[str, Depends(_require_own)],
     file: UploadFile = File(...),
-) -> dict:
+) -> dict[str, Any]:
     """Upload GPX file → parse → map to running session → SessionLogModel."""
     content = file.file.read()
     connector = GpxConnector()
@@ -188,7 +188,7 @@ def upload_fit(
     db: DB,
     _: Annotated[str, Depends(_require_own)],
     file: UploadFile = File(...),
-) -> dict:
+) -> dict[str, Any]:
     """Upload FIT file → parse → map to running/biking session → SessionLogModel."""
     content = file.file.read()
     connector = FitConnector()
@@ -282,7 +282,7 @@ def apple_health_upload(
     req: AppleHealthUploadRequest,
     db: DB,
     _: Annotated[str, Depends(_require_own)],
-) -> dict:
+) -> dict[str, Any]:
     """Upload Apple Health data JSON → store latest HRV/sleep in connector creds."""
     if db.get(AthleteModel, athlete_id) is None:
         raise HTTPException(status_code=404, detail="Athlete not found")
@@ -331,7 +331,7 @@ def hevy_sync(
     athlete_id: str,
     db: DB,
     _: Annotated[str, Depends(_require_own)],
-) -> dict:
+) -> dict[str, Any]:
     """Fetch last 7 days of Hevy workouts → map to lifting sessions → SessionLogModel."""
     try:
         return SyncService.sync_hevy(athlete_id, db)
@@ -347,7 +347,7 @@ def terra_sync(
     athlete_id: str,
     db: DB,
     _: Annotated[str, Depends(_require_own)],
-) -> dict:
+) -> dict[str, Any]:
     """Fetch today's Terra health data and store latest HRV/sleep in connector creds."""
     try:
         return SyncService.sync_terra(athlete_id, db)
@@ -383,7 +383,7 @@ def sync_all(
     db: DB,
     _: Annotated[str, Depends(_require_own)],
 ) -> SyncAllResponse:
-    results: dict[str, str] = {}
+    results: dict[str, Literal["ok", "skipped", "error"]] = {}
     errors: dict[str, str] = {}
 
     for provider, sync_fn in [

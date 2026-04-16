@@ -1,6 +1,6 @@
 import json
 import uuid
-from typing import Annotated
+from typing import Annotated, Literal, cast
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -29,7 +29,7 @@ def athlete_model_to_response(m: AthleteModel) -> AthleteResponse:
         id=UUID(m.id),
         name=m.name,
         age=m.age,
-        sex=m.sex,
+        sex=cast(Literal["M", "F", "other"], m.sex),
         weight_kg=m.weight_kg,
         height_cm=m.height_cm,
         sports=[Sport(v) for v in json.loads(m.sports_json)],
@@ -47,7 +47,7 @@ def athlete_model_to_response(m: AthleteModel) -> AthleteResponse:
         sleep_hours_typical=m.sleep_hours_typical,
         stress_level=m.stress_level,
         job_physical=m.job_physical,
-        coaching_mode=m.coaching_mode,
+        coaching_mode=cast(Literal["full", "tracking_only"], m.coaching_mode),
     )
 
 

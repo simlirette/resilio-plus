@@ -110,7 +110,7 @@ class ExternalPlanService:
     def update_session(
         session_id: str,
         athlete_id: str,
-        updates: dict,
+        updates: dict[str, object],
         db: Session,
     ) -> ExternalSessionModel:
         """Partially update an external session.

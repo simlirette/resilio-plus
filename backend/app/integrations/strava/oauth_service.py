@@ -5,6 +5,7 @@ import os
 import secrets
 import time
 import uuid
+from typing import Any
 
 from cryptography.fernet import Fernet
 from sqlalchemy.orm import Session
@@ -64,7 +65,7 @@ def _upsert_credential(
     return row
 
 
-def connect(athlete_id: str, db: Session) -> dict:
+def connect(athlete_id: str, db: Session) -> dict[str, Any]:
     """Generate Strava OAuth URL + store anti-CSRF state.
 
     Raises RuntimeError if STRAVA_ENCRYPTION_KEY is not set.
@@ -100,7 +101,7 @@ def connect(athlete_id: str, db: Session) -> dict:
     return {"auth_url": auth_url}
 
 
-def callback(code: str, state: str, db: Session) -> dict:
+def callback(code: str, state: str, db: Session) -> dict[str, Any]:
     """Exchange authorization code for tokens, encrypt and persist.
 
     Raises ValueError if state is invalid (CSRF protection).
@@ -127,8 +128,8 @@ def callback(code: str, state: str, db: Session) -> dict:
     with StravaConnector(cred, client_id=client_id, client_secret=client_secret) as connector:
         updated = connector.exchange_code(code)
 
-    access_enc = encrypt_token(updated.access_token, key)
-    refresh_enc = encrypt_token(updated.refresh_token, key)
+    access_enc = encrypt_token(updated.access_token or "", key)
+    refresh_enc = encrypt_token(updated.refresh_token or "", key)
 
     # Clear state from extra_json after successful exchange
     extra = json.loads(matching.extra_json or "{}")
@@ -162,8 +163,8 @@ def get_valid_credential(athlete_id: str, db: Session) -> ConnectorCredential:
     if row is None or row.access_token_enc is None:
         raise ValueError(f"Strava not connected for athlete {athlete_id}")
 
-    access = decrypt_token(row.access_token_enc, key)
-    refresh = decrypt_token(row.refresh_token_enc, key)
+    access = decrypt_token(row.access_token_enc or "", key)
+    refresh = decrypt_token(row.refresh_token_enc or "", key)
 
     cred = ConnectorCredential(
         athlete_id=athlete_id,  # type: ignore[arg-type]
@@ -180,8 +181,8 @@ def get_valid_credential(athlete_id: str, db: Session) -> ConnectorCredential:
         with StravaConnector(cred, client_id=client_id, client_secret=client_secret) as connector:
             updated = connector._do_refresh_token()
 
-        new_access_enc = encrypt_token(updated.access_token, key)
-        new_refresh_enc = encrypt_token(updated.refresh_token, key)
+        new_access_enc = encrypt_token(updated.access_token or "", key)
+        new_refresh_enc = encrypt_token(updated.refresh_token or "", key)
         row.access_token_enc = new_access_enc
         row.refresh_token_enc = new_refresh_enc
         row.expires_at = updated.expires_at

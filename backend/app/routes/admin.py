@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import os
 from datetime import datetime, timedelta, timezone
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
@@ -30,7 +30,7 @@ def _require_admin(
 def list_jobs(
     _: Annotated[str, Depends(_require_admin)],
     db: DB,
-) -> dict:
+) -> dict[str, Any]:
     """List all scheduled jobs with last run info and summary."""
     from ..jobs.scheduler import get_scheduler
 
@@ -97,6 +97,6 @@ from ..observability.metrics import metrics as _metrics_singleton
 @router.get("/metrics")
 def get_metrics(
     _: Annotated[str, Depends(_require_admin)],
-) -> dict:
+) -> dict[str, Any]:
     """In-memory observability metrics snapshot (HTTP, agents, jobs)."""
     return _metrics_singleton.snapshot()

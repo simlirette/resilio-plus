@@ -1,5 +1,6 @@
 import time
 from datetime import date
+from typing import Any
 
 from ..connectors.base import BaseConnector
 from ..schemas.connector import ConnectorCredential, FatSecretDay, FatSecretMeal
@@ -13,7 +14,7 @@ def _to_date_int(d: date) -> int:
     return (d - _EPOCH).days
 
 
-def _parse_day(data: dict, query_date: date) -> FatSecretDay:
+def _parse_day(data: dict[str, Any], query_date: date) -> FatSecretDay:
     entries_data = data.get("food_entries", {})
     raw_entries = entries_data.get("food_entry", [])
     # FatSecret returns a dict (not list) when there is only one entry
