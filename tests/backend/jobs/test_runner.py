@@ -78,6 +78,8 @@ def test_run_job_timeout(db_session):
     row = db_session.query(JobRunModel).first()
     assert row is not None
     assert row.status == "timeout"
+    assert row.error_message is not None
+    assert "timed out" in row.error_message
 
 
 def test_run_job_truncates_long_error(db_session):

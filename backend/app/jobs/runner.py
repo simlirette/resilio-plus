@@ -5,6 +5,7 @@ import logging
 import threading
 import uuid
 from datetime import datetime, timezone
+from typing import Any, Callable
 
 from sqlalchemy.orm import Session
 
@@ -20,7 +21,7 @@ def run_job(
     job_id: str,
     job_type: str,
     athlete_id: str | None,
-    fn: callable,
+    fn: Callable[[], Any],
     db: Session,
     timeout_s: int | float = 60,
 ) -> None:
@@ -61,5 +62,12 @@ def run_job(
         duration_ms=elapsed_ms,
         error_message=error_message,
     )
-    db.add(run)
-    db.commit()
+    try:
+        db.add(run)
+        db.commit()
+    except Exception:
+        logger.exception("Failed to persist job_run for %s", job_id)
+        try:
+            db.rollback()
+        except Exception:
+            pass
