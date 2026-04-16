@@ -1,7 +1,7 @@
-from typing import Any
 import csv
 import io
 from datetime import date
+from typing import Any
 
 from ...schemas.connector import HevyExercise, HevySet, HevyWorkout
 

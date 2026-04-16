@@ -39,7 +39,9 @@ def _get_latest_plan(athlete_id: str, db: Session) -> TrainingPlanModel:
     return plan
 
 
-def _compute_actual_hours(activities: list[Any], workouts: list[Any], start: date, end: date) -> float:
+def _compute_actual_hours(
+    activities: list[Any], workouts: list[Any], start: date, end: date
+) -> float:
     """Sum duration_seconds for activities/workouts within [start, end] date range."""
     total = 0
     for act in activities:
@@ -87,7 +89,8 @@ def _adjustment_message(acwr: float, adjustment: float) -> str:
     if adjustment < 1.0:
         return f"Volume réduit de {round((1 - adjustment) * 100)}% (ACWR élevé : {acwr:.2f})"
     if adjustment > 1.0:
-        return f"Volume augmenté de {round((adjustment - 1) * 100)}% (sous-entraînement : ACWR {acwr:.2f})"
+        pct = round((adjustment - 1) * 100)
+        return f"Volume augmenté de {pct}% (sous-entraînement : ACWR {acwr:.2f})"
     return f"Volume maintenu (ACWR dans la zone sûre : {acwr:.2f})"
 
 

@@ -108,9 +108,9 @@ class Metrics:
 metrics = Metrics()
 
 
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
-from starlette.responses import Response
+from starlette.middleware.base import BaseHTTPMiddleware  # noqa: E402
+from starlette.requests import Request  # noqa: E402
+from starlette.responses import Response  # noqa: E402
 
 
 class MetricsMiddleware(BaseHTTPMiddleware):

@@ -1,5 +1,19 @@
 # Session Log — Resilio Plus
 
+## 2026-04-16 18:00 [saved]
+Goal: Execute V3-W tech debt sprint — mypy --strict 0 errors, ruff 0 violations.
+Decisions:
+- N806 pattern: lazy-imported model classes → `_cls` suffix (`_plan_model_cls`); function-local dicts → lowercase (`_intensity`, `_z`).
+- `redundant-cast` fix: use `var: Literal[...] = expr` annotation, not `cast()`, when assigning to a named variable.
+- `getattr(block, "text", "")` over `isinstance(block, TextBlock)` — isinstance breaks MagicMock in tests.
+- `Self` on `BaseConnector.__enter__` — fixes cascade of attr-defined errors in all connector subclasses.
+- mypy `exclude = ["backend/scripts/"]` + ruff `per-file-ignores` for prompts.py (E501) and main.py (E402).
+Rejected:
+- `[[tool.mypy.overrides]]` per-file suppression — too broad (covered by design session).
+- `isinstance(TextBlock)` for API response parsing — breaks mock-based tests.
+Open:
+- `analytics /performance` response shape `dict[str, Any]` — needs typing once stabilised.
+
 ## 2026-04-16 [saved]
 Goal: Design tech debt cleanup to reach mypy --strict + ruff clean before frontend freeze.
 Decisions:

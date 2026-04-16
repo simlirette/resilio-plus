@@ -22,8 +22,8 @@ def _require_db_url() -> str:
 
 def migrate() -> None:
     """Run alembic upgrade head."""
-    from alembic.config import Config
     from alembic import command as alembic_cmd
+    from alembic.config import Config
 
     cfg = Config("alembic.ini")
     cfg.set_main_option("sqlalchemy.url", _require_db_url())

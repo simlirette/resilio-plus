@@ -4,9 +4,9 @@ Uses fitparse library. Pure parser (no DB dependency).
 """
 
 from __future__ import annotations
-from typing import Any
 
 from datetime import date, datetime, timezone
+from typing import Any
 
 
 class FitConnector:

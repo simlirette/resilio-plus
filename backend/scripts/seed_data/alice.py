@@ -12,9 +12,6 @@ import json
 import uuid
 from datetime import date, datetime, timedelta, timezone
 
-from passlib.context import CryptContext
-from sqlalchemy.orm import Session
-
 from app.db.models import (
     AthleteModel,
     NutritionPlanModel,
@@ -29,6 +26,8 @@ from app.models.schemas import (
     HeadCoachMessageModel,
     HormonalProfileModel,
 )
+from passlib.context import CryptContext
+from sqlalchemy.orm import Session
 
 _pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

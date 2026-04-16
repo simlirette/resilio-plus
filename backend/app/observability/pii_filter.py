@@ -68,7 +68,7 @@ def scrub_value(value: Any, _depth: int = 0) -> Any:
     return value
 
 
-import logging
+import logging  # noqa: E402
 
 _BUILTIN_LOGRECORD_ATTRS = frozenset(
     {

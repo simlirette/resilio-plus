@@ -5,10 +5,10 @@ Coexists with Terra: Recovery Coach reads from both, uses most recent.
 """
 
 from __future__ import annotations
-from typing import Any
 
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
+from typing import Any
 
 
 @dataclass
@@ -46,7 +46,7 @@ class AppleHealthConnector:
         )
 
     def to_extra_dict(self, parsed: AppleHealthData) -> dict[str, Any]:
-        """Convert parsed data to dict[str, Any] suitable for ConnectorCredentialModel.extra_json."""
+        """Convert parsed data to dict[str, Any] for ConnectorCredentialModel.extra_json."""
         return {
             "last_snapshot_date": parsed.snapshot_date.isoformat(),
             "last_hrv_rmssd": parsed.hrv_rmssd,

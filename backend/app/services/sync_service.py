@@ -171,7 +171,8 @@ class SyncService:
     def sync_terra(athlete_id: str, db: Session) -> dict[str, Any]:
         """Fetch Terra health data for today → store in extra_json.
 
-        Returns: {"synced": 1, "hrv_rmssd": float|None, "sleep_hours": float|None, "sleep_score": int|None}
+        Returns: {"synced": 1, "hrv_rmssd": float|None, "sleep_hours": float|None,
+                  "sleep_score": int|None}
         Raises: ConnectorNotFoundError if Terra not connected.
         """
         from datetime import date

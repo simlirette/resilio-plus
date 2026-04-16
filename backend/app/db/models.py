@@ -425,4 +425,5 @@ class FoodCacheModel(Base):
     sodium_mg: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     sugar_g: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     cached_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    ttl_hours: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # NULL = permanent (FCÉN)
+    # NULL = permanent (FCÉN rows have no expiry)
+    ttl_hours: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)

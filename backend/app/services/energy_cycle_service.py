@@ -12,9 +12,8 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from ..agents.energy_coach.agent import EnergyCoach, EnergyInput
+from ..db.models import AthleteModel, EnergySnapshotModel, HormonalProfileModel
 from ..models.athlete_state import EnergyCheckIn
-from ..db.models import AthleteModel
-from ..db.models import EnergySnapshotModel, HormonalProfileModel
 from ..schemas.checkin import CheckInInput, HormonalProfileUpdate, ReadinessResponse
 
 _LEG_SCORES: dict[str, float] = {"fresh": 0.0, "normal": 25.0, "heavy": 60.0, "dead": 90.0}

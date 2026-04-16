@@ -91,7 +91,7 @@ def list_jobs(
     }
 
 
-from ..observability.metrics import metrics as _metrics_singleton
+from ..observability.metrics import metrics as _metrics_singleton  # noqa: E402
 
 
 @router.get("/metrics")

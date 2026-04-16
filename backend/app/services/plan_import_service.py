@@ -13,7 +13,7 @@ from ..db.models import ExternalPlanModel
 from ..schemas.external_plan import ExternalPlanDraft, ExternalPlanDraftSession
 from .external_plan_service import ExternalPlanService
 
-_SYSTEM_PROMPT = """You are a training plan parser. Extract all training sessions from the provided document.
+_SYSTEM_PROMPT = """You are a training plan parser. Extract all training sessions from the document.
 Return ONLY a valid JSON object with this exact structure:
 {
   "title": "<plan title or 'Imported Plan' if unknown>",

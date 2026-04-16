@@ -6,7 +6,8 @@ Usage:
 
 Emits two JSON log lines per node invocation:
     {"event": "node_enter", "node": "<name>", "athlete_id": "<id>"}
-    {"event": "node_exit",  "node": "<name>", "athlete_id": "<id>", "duration_ms": N, "keys_changed": [...]}
+    {"event": "node_exit", "node": "<name>", "athlete_id": "<id>",
+     "duration_ms": N, "keys_changed": [...]}
 """
 from __future__ import annotations
 

@@ -1,6 +1,6 @@
-from typing import Any
 import os
 from datetime import date, datetime
+from typing import Any
 from urllib.parse import quote, urlencode
 
 from ..connectors.base import BaseConnector, ConnectorAPIError

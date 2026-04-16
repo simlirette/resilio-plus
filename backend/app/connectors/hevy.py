@@ -1,5 +1,5 @@
-from typing import Any
 from datetime import datetime
+from typing import Any
 
 from ..connectors.base import BaseConnector
 from ..schemas.connector import ConnectorCredential, HevyExercise, HevySet, HevyWorkout
