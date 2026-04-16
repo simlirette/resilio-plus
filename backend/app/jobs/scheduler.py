@@ -59,8 +59,11 @@ def setup_scheduler() -> BackgroundScheduler:
 
     scheduler.start()
 
-    with SessionLocal() as db:
-        restore_all_jobs(scheduler, db)
+    try:
+        with SessionLocal() as db:
+            restore_all_jobs(scheduler, db)
+    except Exception as exc:  # pragma: no cover
+        logger.warning("Could not restore per-athlete jobs on startup (DB unavailable): %s", exc)
 
     _scheduler = scheduler
     logger.info("Background scheduler started with %d jobs", len(scheduler.get_jobs()))

@@ -96,6 +96,7 @@ select = ["E", "F", "I", "N", "W"]
 "backend/app/agents/prompts.py" = ["E501"]
 "backend/app/main.py" = ["E402"]
 "backend/scripts/**" = ["E402", "E501", "N806"]
+"backend/app/integrations/apple_health/**" = ["E501"]
 
 [tool.pytest.ini_options]
 pythonpath = ["backend"]

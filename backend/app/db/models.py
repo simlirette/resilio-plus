@@ -451,6 +451,8 @@ class AppleHealthDailyModel(Base):
         default=lambda: datetime.now(timezone.utc),
     )
 
-    athlete: Mapped["AthleteModel"] = relationship("AthleteModel", back_populates="apple_health_daily")
+    athlete: Mapped["AthleteModel"] = relationship(
+        "AthleteModel", back_populates="apple_health_daily"
+    )
 
     __table_args__ = (UniqueConstraint("athlete_id", "record_date"),)
