@@ -12,7 +12,7 @@
 1. [Hevy — Import CSV](#1-hevy--import-csv)
 2. [Strava — OAuth V2](#2-strava--oauth-v2)
 3. [Nutrition — Lookup Service](#3-nutrition--lookup-service)
-4. [Apple Health — Placeholder](#4-apple-health--placeholder)
+4. [Apple Health — XML Import](#4-apple-health--xml-import)
 
 ---
 
@@ -411,9 +411,88 @@ backend/scripts/load_fcen.py       — CLI bootstrap FCÉN
 
 ---
 
-## 4. Apple Health — Placeholder
+## 4. Apple Health — XML Import
 
-Pas d'intégration active. Terra API (`backend/app/connectors/terra.py`) fournit HRV (RMSSD) et heures de sommeil pour le Recovery Coach.
+> ⚠️ **WARNING: NOT VALIDATED ON REAL DEVICE.** This integration was built and tested with
+> synthetic XML fixtures only. Validate against a real iPhone export.xml before enabling
+> `APPLE_HEALTH_ENABLED=true` in production.
+
+**Endpoint:** `POST /integrations/apple-health/import`  
+**Auth:** JWT Bearer  
+**Content-Type:** `multipart/form-data`  
+**Feature flag:** `APPLE_HEALTH_ENABLED=false` (default disabled)  
+**Returns 503** if feature flag is false.
+
+### 4.1 Parsed HK Record Types
+
+| HK Record Type | DB Column | AthleteMetrics Field | Notes |
+|----------------|-----------|----------------------|-------|
+| `HKQuantityTypeIdentifierHeartRateVariabilitySDNN` | `hrv_sdnn_avg` | `hrv_sdnn` | SDNN (ms) — NOT the same as Terra's RMSSD |
+| `HKCategoryTypeIdentifierSleepAnalysis` | `sleep_hours` | `sleep_hours` | Asleep only (InBed + Awake excluded) |
+| `HKQuantityTypeIdentifierRestingHeartRate` | `rhr_bpm` | `resting_hr` | Mean daily |
+| `HKQuantityTypeIdentifierBodyMass` | `body_mass_kg` | `AthleteModel.weight_kg` | Updated if < 7 days old; lbs→kg auto-converted |
+| `HKQuantityTypeIdentifierActiveEnergyBurned` | `active_energy_kcal` | future EnergySnapshot | Sum daily |
+
+### 4.2 SDNN vs RMSSD
+
+**Do NOT compare absolute values between sources:**
+- **RMSSD** (Terra): Root Mean Square of Successive Differences — parasympathetic HRV.
+  Typical range: 20–80ms.
+- **SDNN** (Apple Health): Standard Deviation of NN intervals — overall autonomic variability.
+  Typically 30–120ms (always higher than RMSSD for same session).
+
+Both trend in the same direction (fatigue ↓ both; recovery ↑ both) but absolute values differ.
+Stored in separate fields: `AthleteMetrics.hrv_rmssd` (Terra) vs `AthleteMetrics.hrv_sdnn` (Apple Health).
+Recovery Coach uses `hrv_rmssd` when available; falls back to `hrv_sdnn` for trend detection only.
+
+### 4.3 Streaming
+
+Apple Health `export.xml` can exceed 100MB. The parser uses `lxml.etree.iterparse` with element
+clearing for O(1) memory usage. Gunicorn timeout (120s) is the practical size limit. Files
+>500MB may timeout — V1 limitation.
+
+### 4.4 Endpoint parameters
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `file` | File | required | Apple Health `export.xml` |
+| `days_back` | int | 90 | How many days back to import (max 365) |
+
+### 4.5 Response
+
+```json
+{
+  "days_imported": 42,
+  "records_processed": 387,
+  "date_range": {"from": "2026-03-06", "to": "2026-04-15"},
+  "weight_updated": false,
+  "summaries": {
+    "hrv_days": 38,
+    "sleep_days": 42,
+    "rhr_days": 41,
+    "body_mass_days": 5,
+    "active_energy_days": 42
+  }
+}
+```
+
+### 4.6 Module structure
+
+```
+backend/app/integrations/apple_health/
+  xml_parser.py    — streaming lxml.iterparse → AppleHealthRecord generator
+  aggregator.py    — records → dict[date, AppleHealthDailySummary]; iOS 15/16 sleep compat
+  importer.py      — upsert apple_health_daily + update ConnectorCredential + AthleteModel
+
+DB table: apple_health_daily (migration 0010)
+  UniqueConstraint(athlete_id, record_date) — safe re-import
+```
+
+### 4.7 Coexistence with existing JSON connector
+
+`POST /{athlete_id}/connectors/apple-health/upload` (at `routes/connectors.py`) accepts
+a simple JSON snapshot (single day, manual values). The XML import (this endpoint) writes to the
+same `ConnectorCredentialModel.extra_json` for backward compatibility.
 
 ---
 
@@ -427,4 +506,4 @@ Pas d'intégration active. Terra API (`backend/app/connectors/terra.py`) fournit
 | Open Food Facts | HTTP REST | Aucune | `food_cache` (TTL 24h) | On-demand |
 | FCÉN | CSV local | N/A | `food_cache` (permanent) | Bootstrap manuel |
 | Terra | SDK | API key | N/A (lu via connecteur) | Polling APScheduler |
-| Apple Health | — | — | — | Non implémenté |
+| Apple Health | XML Upload | JWT Bearer | `apple_health_daily` | Manuel (import, feature-flagged) |
