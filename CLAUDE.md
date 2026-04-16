@@ -86,6 +86,8 @@ class FatigueScore:
 | `backend/app/integrations/hevy/` | Hevy CSV parser + importer (`POST /integrations/hevy/import`) | V3-P |
 | `backend/app/integrations/strava/` | Strava OAuth V2: `oauth_service.py` (Fernet encryption), `activity_mapper.py`, `sync_service.py` (incremental) | V3-R |
 | `backend/app/integrations/nutrition/` | USDA + OFF + FCÉN clients + unified cache-first search service | V3-P |
+| `backend/app/jobs/` | APScheduler background jobs: `runner.py` (timeout wrapper), `registry.py` (per-athlete), `sync_jobs.py`, `compute_jobs.py`, `cleanup_jobs.py`, `scheduler.py` (global cron), `models.py` (`JobRunModel` + `AthleteStateSnapshotModel`) | V3-S |
+| `backend/app/core/energy_patterns.py` | Pure functions: `detect_heavy_legs`, `detect_chronic_stress`, `detect_persistent_divergence`, `detect_reds_signal`, `detect_energy_patterns(db)` | V3-S (extracted from deleted `sync_scheduler.py`) |
 | `frontend/src/app/` | Next.js pages: login, onboarding, dashboard, plan, review, session/[id], history | Phase 4-8 |
 | `frontend/src/components/` | TopNav, ProtectedRoute, shadcn/ui components | Phase 4+ |
 | `frontend/src/lib/` | api.ts (typed client), auth.tsx (JWT context) | Phase 4+ |
@@ -125,6 +127,9 @@ class FatigueScore:
 | V3-P | Hevy CSV Import (`POST /integrations/hevy/import`) + Nutrition Lookup Service (`GET /nutrition/search`, `GET /nutrition/food/{id}`) — USDA FDC + OFF + FCÉN, SQLite TTL cache, Alembic migration 0007 | ✅ Complete (2026-04-14) |
 | V3-Q | E2E Coaching Scenarios — 8 scenario tests (CoachingService + HeadCoach.build_week), shared `athlete_states.py` fixtures, energy cap, RED-S veto, reject/revise, luteal phase, living spec `docs/backend/E2E-SCENARIOS.md` | ✅ Complete (2026-04-14) |
 | V3-R | Strava OAuth V2 — Fernet-encrypted tokens, incremental sync (`last_sync_at`), `strava_activities` table, `/integrations/strava/{connect,callback,sync}`, Alembic 0008, old Strava routes removed | ✅ Complete (2026-04-14) |
+| V3-S | Background Jobs — APScheduler 3.x, `backend/app/jobs/` (runner, registry, sync/compute/cleanup jobs, scheduler), `job_runs` + `athlete_state_snapshots` tables, Alembic 0009, `GET /admin/jobs` endpoint, `energy_patterns.py` extracted, old `sync_scheduler.py` deleted | ✅ Complete (2026-04-16) |
+
+**Dernières phases complétées (2026-04-16) :** V3-S livré — APScheduler background jobs system. Per-athlete dynamic jobs (strava 1h, hevy/terra 6h) registered on connect. Global cron jobs (daily snapshot 4h UTC, energy patterns Mon 6h, cleanup Sun 3h). `run_job()` wrapper with threading timeout + DB logging. `GET /admin/jobs` (env-gated via `ADMIN_ATHLETE_ID`). Pure energy-pattern functions extracted to `core/energy_patterns.py`; `core/sync_scheduler.py` deleted. Alembic 0009 adds `job_runs` + `athlete_state_snapshots`. Docs at `docs/backend/JOBS.md`. 2134 tests passing (7 pre-existing failures in langgraph tests, unrelated).
 
 **Dernières phases complétées (2026-04-14) :** V3-R livré — Strava OAuth V2 with encrypted tokens (`cryptography.fernet`), incremental sync, `strava_activities` DB table, new routes at `/integrations/strava/`. Old plaintext Strava routes removed. Alembic migration 0008 renames columns (preserves data). 2271 tests passing.
 
@@ -183,7 +188,7 @@ The Running Coach has the richest existing knowledge base.
 4. **Frequent atomic commits** — one commit per logical task
 5. **Verify invariants after every task**:
    - `poetry install` must succeed
-   - `pytest tests/` must pass (≥2271 passing — état V3-R)
+   - `pytest tests/` must pass (≥2134 passing — état V3-S; 7 pre-existing langgraph failures tracked separately)
    - `npx tsc --noEmit` (frontend) must have no errors
 
 **pytest path (Windows):** `C:\Users\simon\AppData\Local\pypoetry\Cache\virtualenvs\resilio-8kDCl3fk-py3.13\Scripts\pytest.exe`
@@ -227,6 +232,9 @@ Never increase total weekly load >10% in one step (applies across ALL sports com
 - **Integrations Reference**: `docs/backend/INTEGRATIONS.md` — Hevy CSV import + Nutrition Lookup (USDA/OFF/FCÉN, TTL cache, FCÉN bootstrap)
 - **Strava OAuth V2 Spec**: `docs/superpowers/specs/2026-04-14-strava-oauth-design.md`
 - **Strava OAuth V2 Plan**: `docs/superpowers/plans/2026-04-14-strava-oauth.md`
+- **Background Jobs Reference**: `docs/backend/JOBS.md` — job types, scheduling, debugging SQL, monitoring endpoint
+- **Background Jobs Spec**: `docs/superpowers/specs/2026-04-14-background-jobs-design.md`
+- **Background Jobs Plan**: `docs/superpowers/plans/2026-04-14-background-jobs.md`
 - **Master V2 (archivé)**: `docs/archive/resilio-master-v2_archived_2026-04-12.md`
 
 ---
