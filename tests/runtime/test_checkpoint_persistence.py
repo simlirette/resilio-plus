@@ -5,14 +5,13 @@ from __future__ import annotations
 import os
 import sqlite3
 import tempfile
-from unittest.mock import patch
 
 import pytest
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.checkpoint.sqlite import SqliteSaver
 
 from app.services.coaching_service import CoachingService
-from tests.runtime.conftest import SIMON_PROFILE, STABLE_LOAD, _mock_analyze
+from tests.runtime.conftest import SIMON_PROFILE, STABLE_LOAD
 
 
 def test_coaching_service_accepts_checkpointer():
@@ -30,25 +29,7 @@ def test_coaching_service_checkpointer_kwarg_only():
 class TestSqliteCheckpointPersistence:
     """Checkpoint written to SQLite file survives service reinstantiation."""
 
-    @pytest.fixture(autouse=True)
-    def _mock(self):
-        patches = [
-            patch("app.agents.running_coach.RunningCoach.analyze",
-                  _mock_analyze("running", "running")),
-            patch("app.agents.lifting_coach.LiftingCoach.analyze",
-                  _mock_analyze("lifting", "lifting")),
-            patch("app.agents.nutrition_coach.NutritionCoach.analyze",
-                  _mock_analyze("nutrition", "running")),
-            patch("app.agents.recovery_coach.RecoveryCoach.analyze",
-                  _mock_analyze("recovery", "running")),
-        ]
-        for p in patches:
-            p.start()
-        yield
-        for p in patches:
-            p.stop()
-
-    def test_checkpoint_survives_service_restart(self, runtime_db):
+    def test_checkpoint_survives_service_restart(self, runtime_db, mock_agents):
         """Create plan with svc1, resume with svc2 using same SQLite file."""
         with tempfile.NamedTemporaryFile(suffix=".sqlite", delete=False) as f:
             db_path = f.name

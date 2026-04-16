@@ -10,7 +10,7 @@ class TestRevisionLoop:
 
     def test_first_rejection_loops_back(self, mock_agents, runtime_db, runtime_svc):
         """First rejection returns a new proposed plan (revision happened)."""
-        thread_id, _ = runtime_svc.create_plan(
+        thread_id, proposed_v1 = runtime_svc.create_plan(
             athlete_id="rt-simon-001",
             athlete_dict=SIMON_PROFILE,
             load_history=STABLE_LOAD,
@@ -26,6 +26,8 @@ class TestRevisionLoop:
 
         assert proposed_v2 is not None
         assert "sessions" in proposed_v2
+        # Distinct dict object — confirms a new plan was rebuilt, not stale ref
+        assert proposed_v2 is not proposed_v1
 
     def test_second_rejection_still_produces_plan(self, mock_agents, runtime_db, runtime_svc):
         """Second rejection routes to present_to_athlete (no more delegate loop).
@@ -59,6 +61,7 @@ class TestRevisionLoop:
 
         # Graph should still produce a plan (routes to present, not delegate)
         assert proposed_v3 is not None
+        assert "sessions" in proposed_v3
 
     def test_reject_twice_then_approve(self, mock_agents, runtime_db, runtime_svc):
         """Full cycle: create → reject → reject → approve → persisted."""
