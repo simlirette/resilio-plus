@@ -34,9 +34,13 @@ backend/app/observability/
 ```
 
 Wire-up in `backend/app/main.py`:
-1. `configure_logging()` at import time (runs before routers register)
-2. `init_sentry()` (no-op if `SENTRY_DSN` unset)
-3. Middleware stack order: CORS (outer) → CorrelationIdMiddleware → MetricsMiddleware → app
+1. `configure_logging()` called at the VERY TOP of `main.py` — before any other `app.*` import. Reason: other modules call `logging.getLogger(__name__)` at import time; handlers/filters attached later still apply to those loggers (Python's logging hierarchy is lazy), but any log line emitted DURING import would use stderr default. Calling configure first avoids that edge.
+2. `init_sentry()` right after `configure_logging()` (also before other imports)
+3. Middleware stack registration order (FastAPI applies in reverse — last added = innermost):
+   - `app.add_middleware(CORSMiddleware, ...)` — outermost (existing)
+   - `app.add_middleware(CorrelationIdMiddleware)` — next
+   - `app.add_middleware(MetricsMiddleware)` — innermost (closest to route handler)
+   Runtime order on a request: CORS → CorrelationId → Metrics → handler.
 4. `/admin/metrics` added to existing `admin_router` (shares `_require_admin` dep with `/admin/jobs`)
 
 Jobs: wrap `run_job()` internals (no API change) — set `correlation_id_ctx` to `job-<uuid4>`, emit `job_start`/`job_end` JSON events to `resilio.jobs` logger, increment `metrics.jobs_total` counter.
@@ -175,7 +179,11 @@ def track_agent_call(agent_name: str):
         metrics.inc_agent(agent_name, status, ms)
 ```
 
-Wrapped at each of the 7 agents' primary entry points. Agent names: `head_coach`, `running_coach`, `lifting_coach`, `swimming_coach`, `biking_coach`, `nutrition_coach`, `recovery_coach`.
+Wrapping points (concrete):
+- `HeadCoach.build_week()` in `backend/app/agents/head_coach.py` — wrap with `track_agent_call("head_coach")`
+- `BaseAgent.analyze()` in `backend/app/agents/base.py` — wrap ONCE at base class; `agent_name` derived from `self.__class__.__name__.lower().replace("coach", "_coach")` → covers the 6 specialist subclasses (`RunningCoach` → `running_coach`, `LiftingCoach` → `lifting_coach`, `SwimmingCoach` → `swimming_coach`, `BikingCoach` → `biking_coach`, `NutritionCoach` → `nutrition_coach`, `RecoveryCoach` → `recovery_coach`)
+
+Result: 7 distinct agent-name labels in metrics, 2 wrapping edits.
 
 ### `/admin/metrics` endpoint
 
