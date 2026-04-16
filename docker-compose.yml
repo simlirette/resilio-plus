@@ -38,12 +38,12 @@ services:
       - ./resilio:/app/resilio
       - ./alembic:/app/alembic
       - ./.bmad-core:/app/.bmad-core
-      - checkpoint_data:/app/data
+      - checkpoint_data:/app/runtime
     env_file:
       - .env
     environment:
       DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-resilio}:${POSTGRES_PASSWORD:-resilio}@db:5432/${POSTGRES_DB:-resilio_db}
-      LANGGRAPH_CHECKPOINT_DB: /app/data/checkpoints.sqlite
+      LANGGRAPH_CHECKPOINT_DB: /app/runtime/checkpoints.sqlite
     depends_on:
       db:
         condition: service_healthy

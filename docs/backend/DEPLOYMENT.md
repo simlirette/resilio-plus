@@ -17,13 +17,13 @@ This document covers building the Docker image, running it locally in prod-like 
 | Port | `8000` |
 | Healthcheck | `curl -fsS http://localhost:8000/health` every 30s |
 | Target size | ~250MB (stop the line if > 500MB) |
-| Writable volume | `/app/data` — LangGraph SQLite checkpoints |
+| Writable volume | `/app/runtime` — LangGraph SQLite checkpoints (separate from `/app/data` which ships read-only JSON knowledge bases) |
 
 ### Stateful requirements
 
 The container expects:
 - An external PostgreSQL 16+ reachable via `DATABASE_URL`.
-- A writable path at `/app/data` for the LangGraph SQLite checkpoint store (set via `LANGGRAPH_CHECKPOINT_DB`). Mount a volume here or checkpoints reset on restart.
+- A writable path at `/app/runtime` for the LangGraph SQLite checkpoint store (set via `LANGGRAPH_CHECKPOINT_DB`). Mount a volume here or checkpoints reset on restart.
 
 ---
 
@@ -86,7 +86,7 @@ curl -fsS http://localhost:8000/ready/deep      # → DB + Anthropic status
 | `APP_BASE_URL` | password reset | `http://localhost:3000` | Used to build password reset links. |
 | `ALLOWED_ORIGINS` | **yes** | — | Comma-separated CORS origins. Tighten for prod. |
 | `ANTHROPIC_API_KEY` | **yes** | — | Claude API key. Alias: `CLAUDE_API_KEY` (either works). |
-| `LANGGRAPH_CHECKPOINT_DB` | no | `data/checkpoints.sqlite` | SQLite path for LangGraph checkpoints. |
+| `LANGGRAPH_CHECKPOINT_DB` | no | `data/checkpoints.sqlite` | SQLite path for LangGraph checkpoints. In Docker: set to `/app/runtime/checkpoints.sqlite`. |
 | `STRAVA_CLIENT_ID` | Strava users | — | OAuth client ID. |
 | `STRAVA_CLIENT_SECRET` | Strava users | — | OAuth client secret. |
 | `STRAVA_REDIRECT_URI` | Strava users | — | Must match Strava app config. |
@@ -127,10 +127,10 @@ fly volumes create checkpoints --size 1 --region cdg
 
 # 4. Edit fly.toml (excerpt):
 #   [env]
-#     LANGGRAPH_CHECKPOINT_DB = "/app/data/checkpoints.sqlite"
+#     LANGGRAPH_CHECKPOINT_DB = "/app/runtime/checkpoints.sqlite"
 #   [[mounts]]
 #     source = "checkpoints"
-#     destination = "/app/data"
+#     destination = "/app/runtime"
 #   [[services.http_checks]]
 #     path = "/ready"
 #     interval = "30s"
@@ -146,7 +146,7 @@ Use Fly Postgres (`fly postgres create`) for `DATABASE_URL`.
 - New project → "Deploy from Dockerfile" → point at `Dockerfile.backend`.
 - Add a Postgres plugin, copy the connection string into `DATABASE_URL` (remember to prefix with `postgresql+psycopg2://`).
 - Set all other variables from the table as service variables.
-- Attach a volume to `/app/data` for checkpoint persistence.
+- Attach a volume to `/app/runtime` for checkpoint persistence.
 - Railway auto-wires the healthcheck via the Docker `HEALTHCHECK` directive.
 
 ### 5.3 Plain VPS (docker compose)
@@ -175,13 +175,13 @@ Back up the `postgres_data` and `checkpoint_data` Docker volumes on a schedule.
 - [ ] `ALLOWED_ORIGINS` tightened to the actual production frontend origin(s).
 - [ ] `APP_BASE_URL` points at the production frontend (used in password reset emails).
 - [ ] `LANGGRAPH_CHECKPOINT_DB` path backed by a persistent volume (not container-local).
-- [ ] `/app/data` mount writable by UID 1000 (`resilio` user).
+- [ ] `/app/runtime` mount writable by UID 1000 (`resilio` user).
 - [ ] Container image built from `main` and tagged (e.g., `resilio-backend:v3-u`).
 - [ ] Image size under 500MB (`docker images`).
 - [ ] `/health` returns 200 immediately after boot.
 - [ ] `/ready` returns 200 once the DB is reachable.
 - [ ] Alembic migrations ran to head on first boot (check entrypoint logs).
-- [ ] Backup schedule in place for Postgres + `/app/data` volume.
+- [ ] Backup schedule in place for Postgres + `/app/runtime` volume.
 
 ---
 
@@ -189,7 +189,7 @@ Back up the `postgres_data` and `checkpoint_data` Docker volumes on a schedule.
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| Container exits with `permission denied: /app/data/checkpoints.sqlite` | Volume owner is root, container is UID 1000 | `chown -R 1000:1000 /path/to/volume` on host before re-running |
+| Container exits with `permission denied: /app/runtime/checkpoints.sqlite` | Volume owner is root, container is UID 1000 | `chown -R 1000:1000 /path/to/volume` on host before re-running |
 | `/ready` returns 503 | DB unreachable | Check `DATABASE_URL`; confirm Postgres is up; test with `psql` from host |
 | `/ready/deep` returns 503 with `"anthropic": "no_key"` | `ANTHROPIC_API_KEY` not set | Populate the env var (not just `.env.example`) |
 | `alembic upgrade head` fails at boot | Migration conflict or DB schema drift | Connect with `psql`, run `alembic current`; resolve manually |

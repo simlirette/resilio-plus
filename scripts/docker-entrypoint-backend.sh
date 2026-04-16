@@ -16,6 +16,12 @@ esac
 echo "[entrypoint] running alembic migrations..."
 alembic upgrade head
 
+# Pre-initialize the LangGraph SQLite checkpoint DB once — enables WAL mode +
+# runs schema setup in a single-process context. Without this, gunicorn workers
+# race on the first PRAGMA journal_mode=WAL and crash with "database is locked".
+echo "[entrypoint] initializing LangGraph checkpoint DB..."
+python -c "from app.services.coaching_service import _create_sqlite_checkpointer; _create_sqlite_checkpointer()"
+
 case "$MODE" in
   prod)
     WORKERS="${WEB_CONCURRENCY:-2}"

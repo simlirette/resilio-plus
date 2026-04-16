@@ -53,11 +53,12 @@ docs
 .DS_Store
 Thumbs.db
 
-# Local DBs / data
+# Local DBs / data (allow-list JSON knowledge bases, keep SQLite excluded)
 *.sqlite
 *.sqlite-journal
 *.db
 data
+!data/*.json
 
 # Workspace junk
 FRONTEND_AUDIT.md

@@ -37,12 +37,15 @@ COPY alembic/ ./alembic/
 COPY resilio/ ./resilio/
 COPY backend/ ./backend/
 COPY .bmad-core/ ./.bmad-core/
+COPY data/ ./data/
 COPY scripts/docker-entrypoint-backend.sh /entrypoint.sh
 
-# Strip Windows CRLF, make executable, create runtime data dir, fix ownership.
+# Strip Windows CRLF, make executable, create runtime checkpoint dir, fix ownership.
+# /app/runtime holds the LangGraph SQLite checkpoint — separate from /app/data
+# (which ships read-only JSON knowledge bases baked into the image).
 RUN sed -i 's/\r$//' /entrypoint.sh && \
     chmod +x /entrypoint.sh && \
-    mkdir -p /app/data && \
+    mkdir -p /app/runtime && \
     chown -R resilio:resilio /app
 
 USER resilio

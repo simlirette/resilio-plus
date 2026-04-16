@@ -29,7 +29,11 @@ def _create_sqlite_checkpointer():
 
     db_path = os.environ.get("LANGGRAPH_CHECKPOINT_DB", "data/checkpoints.sqlite")
     os.makedirs(os.path.dirname(db_path) or ".", exist_ok=True)
-    conn = sqlite3.connect(db_path, check_same_thread=False)
+    # timeout=30 sets busy_timeout at connect time — required BEFORE journal_mode
+    # change so concurrent gunicorn workers wait instead of erroring.
+    conn = sqlite3.connect(db_path, check_same_thread=False, timeout=30.0)
+    conn.execute("PRAGMA busy_timeout=30000")
+    conn.execute("PRAGMA journal_mode=WAL")
     saver = SqliteSaver(conn)
     saver.setup()
     return saver
