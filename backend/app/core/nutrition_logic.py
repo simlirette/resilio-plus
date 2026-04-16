@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Any
 
 import json
 from pathlib import Path
@@ -7,7 +8,7 @@ from ..schemas.athlete import AthleteProfile, DayType
 from ..schemas.nutrition import DayNutrition, MacroTarget, NutritionPlan
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
-_NUTRITION_DATA: dict = json.loads(
+_NUTRITION_DATA: dict[str, Any] = json.loads(
     (_REPO_ROOT / ".bmad-core" / "data" / "nutrition-targets.json").read_text()
 )
 

@@ -9,14 +9,14 @@ from datetime import date, timedelta
 from typing import Any
 
 
-def _load_by_date(sessions: list[dict]) -> dict[str, float]:
+def _load_by_date(sessions: list[dict[str, Any]]) -> dict[str, float]:
     """Aggregate total_load per ISO date string."""
     by_date: dict[str, float] = defaultdict(float)
     for s in sessions:
         d = s.get("session_date")
         if d:
             by_date[str(d)] += float(s.get("total_load") or 0.0)
-    return dict(by_date)
+    return dict[str, Any](by_date)
 
 
 def _date_range(start: date, end: date) -> list[date]:
@@ -28,7 +28,7 @@ def _date_range(start: date, end: date) -> list[date]:
     return days
 
 
-def compute_acwr_series(sessions: list[dict]) -> list[dict[str, Any]]:
+def compute_acwr_series(sessions: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
     Compute ACWR (Acute:Chronic Workload Ratio) series using EWMA.
     Acute window: 7 days (λ = 2/8 = 0.25)
@@ -70,7 +70,7 @@ def compute_acwr_series(sessions: list[dict]) -> list[dict[str, Any]]:
     return result
 
 
-def compute_ctl_atl_tsb(sessions: list[dict]) -> list[dict[str, Any]]:
+def compute_ctl_atl_tsb(sessions: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
     Compute CTL (Chronic Training Load), ATL (Acute Training Load), TSB (Training Stress Balance).
     CTL: 42-day EWMA (λ = 2/43)
@@ -111,7 +111,7 @@ def compute_ctl_atl_tsb(sessions: list[dict]) -> list[dict[str, Any]]:
     return result
 
 
-def compute_sport_breakdown(sessions: list[dict]) -> dict[str, int]:
+def compute_sport_breakdown(sessions: list[dict[str, Any]]) -> dict[str, int]:
     """
     Sum duration_minutes per sport.
     Returns: {"running": 180, "lifting": 90, ...}
@@ -122,10 +122,10 @@ def compute_sport_breakdown(sessions: list[dict]) -> dict[str, int]:
         mins = int(s.get("duration_minutes") or 0)
         if sport and mins:
             totals[sport] += mins
-    return dict(totals)
+    return dict[str, Any](totals)
 
 
-def compute_performance_trends(sessions: list[dict]) -> dict[str, list[dict[str, Any]]]:
+def compute_performance_trends(sessions: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
     """
     Extract VDOT (running) and e1RM (lifting) progression over time.
     Returns: {"vdot": [{"date", "value"}, ...], "e1rm": [{"date", "value"}, ...]}

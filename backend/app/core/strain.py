@@ -308,7 +308,7 @@ def compute_muscle_strain(
         delta = (activity.date - start_date).days
         if not (0 <= delta < 28):
             continue
-        rpe = activity.perceived_exertion or 7
+        rpe: float = float(activity.perceived_exertion or 7)
         duration_h = activity.duration_seconds / 3600.0
         intensity_factor = rpe / 10.0
         base_au = duration_h * intensity_factor**2 * 100.0

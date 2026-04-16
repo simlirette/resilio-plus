@@ -1,12 +1,15 @@
 import json
 from datetime import date
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
 from .athlete import Sport
 from .fatigue import FatigueScore
+
+if TYPE_CHECKING:
+    from ..db.models import TrainingPlanModel
 
 
 class WorkoutSlot(BaseModel):
@@ -42,7 +45,7 @@ class TrainingPlanResponse(BaseModel):
     sessions: list[WorkoutSlot]
 
     @classmethod
-    def from_model(cls, m: object) -> "TrainingPlanResponse":
+    def from_model(cls, m: "TrainingPlanModel") -> "TrainingPlanResponse":
         sessions = [WorkoutSlot.model_validate(s) for s in json.loads(m.weekly_slots_json)]
         return cls(
             id=m.id,

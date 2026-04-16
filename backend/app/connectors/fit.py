@@ -4,12 +4,13 @@ Uses fitparse library. Pure parser (no DB dependency).
 """
 
 from __future__ import annotations
+from typing import Any
 
 from datetime import date, datetime, timezone
 
 
 class FitConnector:
-    def parse(self, content: bytes) -> dict:
+    def parse(self, content: bytes) -> dict[str, Any]:
         """
         Parse FIT binary bytes.
         Returns: activity_date, distance_km, duration_seconds,

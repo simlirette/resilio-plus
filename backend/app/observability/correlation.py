@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 import uuid
 from contextvars import ContextVar
-from typing import Optional
+from typing import Any, Optional
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -34,11 +34,11 @@ def _coerce_cid(incoming: str | None) -> str:
 class CorrelationIdMiddleware(BaseHTTPMiddleware):
     """Reads/generates X-Request-ID, sets ContextVar, echoes header back on response."""
 
-    async def dispatch(self, request: Request, call_next) -> Response:
+    async def dispatch(self, request: Request, call_next: Any) -> Response:
         cid = _coerce_cid(request.headers.get(_HEADER))
         token = correlation_id_ctx.set(cid)
         try:
-            response = await call_next(request)
+            response: Response = await call_next(request)
         finally:
             correlation_id_ctx.reset(token)
         response.headers[_HEADER] = cid

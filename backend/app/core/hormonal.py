@@ -6,7 +6,7 @@ Data      : data/hormonal_adjustments.json, data/ea_thresholds.json
 from __future__ import annotations
 
 from datetime import date
-from typing import Literal
+from typing import Any, Literal
 
 CyclePhase = Literal["menstrual", "follicular", "ovulation", "luteal"]
 
@@ -51,7 +51,7 @@ def detect_cycle_phase(cycle_day: int, cycle_length: int = 28) -> CyclePhase:
 # Lifting adjustments
 # ---------------------------------------------------------------------------
 
-_LIFTING: dict[str, dict] = {
+_LIFTING: dict[str, dict[str, Any]] = {
     "menstrual": {
         "rpe_offset": -1,
         "no_1rm": True,
@@ -90,7 +90,7 @@ _LIFTING: dict[str, dict] = {
 }
 
 
-def get_lifting_adjustments(phase: CyclePhase) -> dict:
+def get_lifting_adjustments(phase: CyclePhase) -> dict[str, Any]:
     """Return lifting coaching adjustments for the given cycle phase.
 
     Keys guaranteed:
@@ -101,14 +101,14 @@ def get_lifting_adjustments(phase: CyclePhase) -> dict:
     - pr_week (bool)    : follicular only — ideal for PRs
     - ligament_risk_note (bool) : ovulation only — warn about ACL/ligament laxity
     """
-    return dict(_LIFTING[phase])
+    return dict[str, Any](_LIFTING[phase])
 
 
 # ---------------------------------------------------------------------------
 # Running adjustments
 # ---------------------------------------------------------------------------
 
-_RUNNING: dict[str, dict] = {
+_RUNNING: dict[str, dict[str, Any]] = {
     "menstrual": {
         "replace_intervals_with_z2": True,
         "avoid_direction_changes": False,
@@ -153,7 +153,7 @@ _RUNNING: dict[str, dict] = {
 }
 
 
-def get_running_adjustments(phase: CyclePhase) -> dict:
+def get_running_adjustments(phase: CyclePhase) -> dict[str, Any]:
     """Return running coaching adjustments for the given cycle phase.
 
     Keys guaranteed:
@@ -165,14 +165,14 @@ def get_running_adjustments(phase: CyclePhase) -> dict:
     Optional keys:
     - high_intensity_optimal (bool) : follicular only
     """
-    return dict(_RUNNING[phase])
+    return dict[str, Any](_RUNNING[phase])
 
 
 # ---------------------------------------------------------------------------
 # Nutrition adjustments
 # ---------------------------------------------------------------------------
 
-_NUTRITION: dict[str, dict] = {
+_NUTRITION: dict[str, dict[str, Any]] = {
     "menstrual": {
         "protein_extra_g_per_kg": 0.0,
         "calories_extra": 0,
@@ -211,7 +211,7 @@ _NUTRITION: dict[str, dict] = {
 }
 
 
-def get_nutrition_adjustments(phase: CyclePhase) -> dict:
+def get_nutrition_adjustments(phase: CyclePhase) -> dict[str, Any]:
     """Return nutrition coaching adjustments for the given cycle phase.
 
     Keys guaranteed:
@@ -220,7 +220,7 @@ def get_nutrition_adjustments(phase: CyclePhase) -> dict:
     - supplements (list[str])        : recommended supplements
     - notes (str)
     """
-    adj = dict(_NUTRITION[phase])
+    adj = dict[str, Any](_NUTRITION[phase])
     adj["supplements"] = list(adj["supplements"])  # return a copy
     return adj
 

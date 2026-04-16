@@ -44,13 +44,14 @@ class GpxConnector:
         eles: list[float | None] = []
         for tp in trackpoints:
             ele_el = tp.find("g:ele", ns)
-            eles.append(float(ele_el.text) if ele_el is not None else None)
+            eles.append(float(ele_el.text) if ele_el is not None and ele_el.text is not None else None)
 
         times: list[datetime] = []
         for tp in trackpoints:
             time_el = tp.find("g:time", ns)
             if time_el is not None:
-                times.append(datetime.fromisoformat(time_el.text.replace("Z", "+00:00")))
+                if time_el.text is not None:
+                    times.append(datetime.fromisoformat(time_el.text.replace("Z", "+00:00")))
 
         if len(times) < 2:
             raise ValueError(

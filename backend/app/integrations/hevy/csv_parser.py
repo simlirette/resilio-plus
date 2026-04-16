@@ -1,3 +1,4 @@
+from typing import Any
 import csv
 import io
 from datetime import date
@@ -46,7 +47,7 @@ def parse_hevy_csv(content: bytes, unit: str = "kg") -> list[HevyWorkout]:
         raise ValueError("no workouts found")
 
     # Group by (Date, Workout Name) preserving CSV order
-    workout_map: dict[tuple[str, str], list[dict]] = {}
+    workout_map: dict[tuple[str, str], list[dict[str, Any]]] = {}
     for row in rows:
         key = (row["Date"].strip(), row["Workout Name"].strip())
         if key not in workout_map:
@@ -62,7 +63,7 @@ def parse_hevy_csv(content: bytes, unit: str = "kg") -> list[HevyWorkout]:
             raise ValueError(f"Invalid date: {date_str!r}")
 
         # Group rows by exercise name, preserving first-appearance order
-        exercise_map: dict[str, list[dict]] = {}
+        exercise_map: dict[str, list[dict[str, Any]]] = {}
         for row in workout_rows:
             ex_name = row["Exercise Name"].strip()
             if ex_name not in exercise_map:

@@ -1,3 +1,4 @@
+from typing import Any
 import logging
 import os
 
@@ -10,7 +11,7 @@ logger = logging.getLogger(__name__)
 _USDA_BASE = "https://api.nal.usda.gov/fdc/v1"
 
 
-def _nv_search(nutrients: list[dict], name_prefix: str) -> float | None:
+def _nv_search(nutrients: list[dict[str, Any]], name_prefix: str) -> float | None:
     """Extract nutrient value from search-response nutrients (flat list with nutrientName/value)."""
     for n in nutrients:
         if n.get("nutrientName", "").startswith(name_prefix):
@@ -19,7 +20,7 @@ def _nv_search(nutrients: list[dict], name_prefix: str) -> float | None:
     return None
 
 
-def _nv_fetch(nutrients: list[dict], name_prefix: str) -> float | None:
+def _nv_fetch(nutrients: list[dict[str, Any]], name_prefix: str) -> float | None:
     """Extract nutrient value from detail-response nutrients (nested: nutrient.name / amount)."""
     for n in nutrients:
         nutrient = n.get("nutrient", {})
@@ -68,7 +69,7 @@ def fetch(fdc_id: str) -> FoodItem | None:
         return None
 
 
-def _parse_search(food: dict) -> FoodItem:
+def _parse_search(food: dict[str, Any]) -> FoodItem:
     nutrients = food.get("foodNutrients", [])
     fdc_id = food.get("fdcId", 0)
     name = food.get("description", "Unknown")
@@ -87,7 +88,7 @@ def _parse_search(food: dict) -> FoodItem:
     )
 
 
-def _parse_fetch(data: dict) -> FoodItem:
+def _parse_fetch(data: dict[str, Any]) -> FoodItem:
     nutrients = data.get("foodNutrients", [])
     fdc_id = data.get("fdcId", 0)
     name = data.get("description", "Unknown")

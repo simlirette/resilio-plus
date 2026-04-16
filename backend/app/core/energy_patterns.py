@@ -8,41 +8,42 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timedelta, timezone
+from typing import Any
 
 from sqlalchemy.orm import Session
 
 from ..db.models import EnergySnapshotModel, HeadCoachMessageModel
 
 
-def _last_7_days(snapshots: list) -> list:
+def _last_7_days(snapshots: list[EnergySnapshotModel]) -> list[EnergySnapshotModel]:
     """Filter snapshots to those within the last 7 days."""
     cutoff_aware = datetime.now(timezone.utc) - timedelta(days=7)
     cutoff_naive = cutoff_aware.replace(tzinfo=None)
 
-    def _within_7d(snap) -> bool:
-        ts = snap.timestamp
+    def _within_7d(snap: EnergySnapshotModel) -> bool:
+        ts: datetime = snap.timestamp
         if ts.tzinfo is None:
-            return ts >= cutoff_naive
-        return ts >= cutoff_aware
+            return bool(ts >= cutoff_naive)
+        return bool(ts >= cutoff_aware)
 
     return [s for s in snapshots if _within_7d(s)]
 
 
-def detect_heavy_legs(snapshots: list) -> bool:
+def detect_heavy_legs(snapshots: list[EnergySnapshotModel]) -> bool:
     """Pattern 1: legs_feeling heavy/dead on >=3 of last 7 days."""
     recent = _last_7_days(snapshots)
     count = sum(1 for s in recent if s.legs_feeling in ("heavy", "dead"))
     return count >= 3
 
 
-def detect_chronic_stress(snapshots: list) -> bool:
+def detect_chronic_stress(snapshots: list[EnergySnapshotModel]) -> bool:
     """Pattern 2: stress_level == 'significant' on >=4 of last 7 days."""
     recent = _last_7_days(snapshots)
     count = sum(1 for s in recent if s.stress_level == "significant")
     return count >= 4
 
 
-def detect_persistent_divergence(snapshots: list) -> bool:
+def detect_persistent_divergence(snapshots: list[EnergySnapshotModel]) -> bool:
     """Pattern 3: divergence >30 pts for >=3 consecutive days."""
     recent = sorted(_last_7_days(snapshots), key=lambda s: s.timestamp, reverse=True)
     consecutive = 0
@@ -58,7 +59,7 @@ def detect_persistent_divergence(snapshots: list) -> bool:
     return False
 
 
-def detect_reds_signal(snapshots: list) -> bool:
+def detect_reds_signal(snapshots: list[EnergySnapshotModel]) -> bool:
     """Pattern 4: energy_availability < 30.0 on >=3 of last 7 days."""
     recent = _last_7_days(snapshots)
     count = sum(1 for s in recent if float(s.energy_availability) < 30.0)
@@ -120,7 +121,7 @@ def _maybe_create_message(athlete_id: str, pattern_type: str, db: Session) -> bo
     return True
 
 
-def detect_energy_patterns(db: Session) -> dict:
+def detect_energy_patterns(db: Session) -> dict[str, Any]:
     """Scan all athletes' energy snapshots, detect 4 patterns, store messages.
 
     Returns: {"athletes_scanned": N, "messages_created": M}

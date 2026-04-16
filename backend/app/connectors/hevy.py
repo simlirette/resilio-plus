@@ -1,3 +1,4 @@
+from typing import Any
 from datetime import datetime
 
 from ..connectors.base import BaseConnector
@@ -7,7 +8,7 @@ HEVY_BASE = "https://api.hevyapp.com/v1"
 PAGE_SIZE = 10
 
 
-def _parse_set(item: dict) -> HevySet:
+def _parse_set(item: dict[str, Any]) -> HevySet:
     return HevySet(
         reps=item.get("reps"),
         weight_kg=item.get("weight_kg"),
@@ -16,14 +17,14 @@ def _parse_set(item: dict) -> HevySet:
     )
 
 
-def _parse_exercise(item: dict) -> HevyExercise:
+def _parse_exercise(item: dict[str, Any]) -> HevyExercise:
     return HevyExercise(
         name=item["title"],
         sets=[_parse_set(s) for s in item.get("sets", [])],
     )
 
 
-def _parse_workout(item: dict, start: datetime) -> HevyWorkout:
+def _parse_workout(item: dict[str, Any], start: datetime) -> HevyWorkout:
     end = datetime.fromisoformat(item["end_time"].replace("Z", "+00:00"))
     duration_seconds = int((end - start).total_seconds())
     return HevyWorkout(

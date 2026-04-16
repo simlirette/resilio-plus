@@ -5,6 +5,7 @@ Coexists with Terra: Recovery Coach reads from both, uses most recent.
 """
 
 from __future__ import annotations
+from typing import Any
 
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
@@ -21,7 +22,7 @@ class AppleHealthData:
 class AppleHealthConnector:
     """Parses Apple Health export JSON and converts to storage format."""
 
-    def parse(self, data: dict) -> AppleHealthData:
+    def parse(self, data: dict[str, Any]) -> AppleHealthData:
         """
         Parse Apple Health JSON payload.
         Required: snapshot_date (ISO string).
@@ -44,8 +45,8 @@ class AppleHealthConnector:
             hr_rest=int(hr_rest) if hr_rest is not None else None,
         )
 
-    def to_extra_dict(self, parsed: AppleHealthData) -> dict:
-        """Convert parsed data to dict suitable for ConnectorCredentialModel.extra_json."""
+    def to_extra_dict(self, parsed: AppleHealthData) -> dict[str, Any]:
+        """Convert parsed data to dict[str, Any] suitable for ConnectorCredentialModel.extra_json."""
         return {
             "last_snapshot_date": parsed.snapshot_date.isoformat(),
             "last_hrv_rmssd": parsed.hrv_rmssd,

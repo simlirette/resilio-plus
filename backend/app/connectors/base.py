@@ -72,7 +72,7 @@ class BaseConnector(ABC):
         """Provider-specific token refresh. Returns updated credential."""
         ...
 
-    def _request(self, method: str, url: str, **kwargs: object) -> dict[str, Any]:
+    def _request(self, method: str, url: str, **kwargs: Any) -> dict[str, Any]:
         """HTTP request with 3-attempt tenacity retry + 429/401 handling.
 
         NOTE: Uses inner-function closure pattern because @retry cannot be applied
@@ -112,6 +112,7 @@ class BaseConnector(ABC):
                     message=str(e),
                     status_code=response.status_code,
                 ) from e
-            return response.json()
+            result: dict[str, Any] = response.json()
+            return result
 
         return _inner()

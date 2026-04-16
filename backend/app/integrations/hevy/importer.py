@@ -1,3 +1,4 @@
+from typing import Any
 import json
 import uuid
 from datetime import datetime, timezone
@@ -26,18 +27,18 @@ def import_hevy_workouts(
     athlete_id: str,
     workouts: list[HevyWorkout],
     db: Session,
-) -> dict:
+) -> dict[str, Any]:
     """Upsert HevyWorkout list into SessionLogModel.
 
     Matches each workout to a training plan lifting slot by date if available.
     Falls back to a standalone session_id when no plan slot is found.
 
-    Returns a summary dict with per-workout results and totals.
+    Returns a summary dict[str, Any] with per-workout results and totals.
     """
     plan = _get_latest_plan(athlete_id, db)
-    plan_slots: list[dict] = json.loads(plan.weekly_slots_json) if plan else []
+    plan_slots: list[dict[str, Any]] = json.loads(plan.weekly_slots_json) if plan else []
 
-    results: list[dict] = []
+    results: list[dict[str, Any]] = []
     matched_count = 0
     standalone_count = 0
 

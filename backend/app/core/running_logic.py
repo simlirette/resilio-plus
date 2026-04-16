@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Any
 
 import json
 import pathlib
@@ -15,10 +16,10 @@ from ..schemas.plan import WorkoutSlot
 # ---------------------------------------------------------------------------
 
 _VDOT_PACES_PATH = pathlib.Path(__file__).parents[3] / "data" / "vdot_paces.json"
-_VDOT_PACES: dict[str, dict] = {}
+_VDOT_PACES: dict[str, dict[str, Any]] = {}
 
 
-def _load_vdot_paces() -> dict[str, dict]:
+def _load_vdot_paces() -> dict[str, dict[str, Any]]:
     global _VDOT_PACES
     if not _VDOT_PACES:
         with _VDOT_PACES_PATH.open(encoding="utf-8") as f:
@@ -27,16 +28,16 @@ def _load_vdot_paces() -> dict[str, dict]:
     return _VDOT_PACES
 
 
-def get_vdot_paces(vdot: float) -> dict:
+def get_vdot_paces(vdot: float) -> dict[str, Any]:
     """Lookup Daniels paces for a VDOT value from data/vdot_paces.json.
 
-    Returns a dict with keys:
+    Returns a dict[str, Any] with keys:
       easy_min_per_km, easy_max_per_km, long_run_pace_per_km,
       threshold_pace_per_km, interval_pace_per_km, repetition_pace_per_km, etc.
 
     Clamps VDOT to the available range [20, 85] and rounds to nearest integer.
     Falls back to nearest available entry if exact match not found.
-    Returns empty dict if data file unavailable.
+    Returns empty dict[str, Any] if data file unavailable.
     """
     try:
         paces = _load_vdot_paces()
@@ -49,12 +50,12 @@ def get_vdot_paces(vdot: float) -> dict:
     vdot_int = max(20, min(85, round(vdot)))
     key = str(vdot_int)
     if key in paces:
-        return dict(paces[key])
+        return dict[str, Any](paces[key])
 
     # Fallback: nearest available VDOT
     available = sorted(int(k) for k in paces.keys())
     nearest = min(available, key=lambda v: abs(v - vdot_int))
-    return dict(paces.get(str(nearest), {}))
+    return dict[str, Any](paces.get(str(nearest), {}))
 
 
 # HR zone descriptions (Daniels/Seiler hybrid — running_zones.json)
@@ -67,7 +68,7 @@ _HR_ZONES: dict[str, str] = {
 }
 
 
-def _build_pace_note(workout_type: str, paces: dict) -> str:
+def _build_pace_note(workout_type: str, paces: dict[str, Any]) -> str:
     """Build a human-readable pace + HR zone note for a WorkoutSlot."""
     if not paces:
         return ""
@@ -141,7 +142,7 @@ def estimate_vdot(
 
     best = 0
     for a in runs:
-        pace = a.duration_seconds / (a.distance_meters / 1000)  # s/km
+        pace = a.duration_seconds / (float(a.distance_meters) / 1000)  # s/km
         row = min(_VDOT_TABLE, key=lambda r: abs(r[1] - pace))
         if row[0] > best:
             best = row[0]
@@ -208,7 +209,7 @@ def generate_running_sessions(
     volume_modifier: float,
     tid_strategy: TIDStrategy,
     week_start: date,  # Monday of the planning week
-    _paces: dict | None = None,  # injected in tests to avoid file I/O
+    _paces: dict[str, Any] | None = None,  # injected in tests to avoid file I/O
 ) -> list[WorkoutSlot]:
     """Generate weekly running sessions as WorkoutSlots.
 

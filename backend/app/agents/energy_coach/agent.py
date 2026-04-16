@@ -162,7 +162,7 @@ class EnergyCoach:
         recovery_capacity: float,
         flags: list[str],
         sex: str = "M",
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Génère le rapport synthétique pour le Head Coach.
 
         Le veto est déclenché si :
@@ -265,7 +265,7 @@ class EnergyCoach:
             allostatic_score=allostatic,
             cognitive_load=cognitive,
             energy_availability=ea,
-            cycle_phase=inp.check_in.cycle_phase,  # type: ignore[arg-type]
+            cycle_phase=inp.check_in.cycle_phase,
             sleep_quality=min(100.0, max(0.0, inp.sleep_quality)),
             recommended_intensity_cap=cap,
             veto_triggered=report["veto_triggered"],

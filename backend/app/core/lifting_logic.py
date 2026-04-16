@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Any
 
 import json
 from datetime import date, timedelta
@@ -12,10 +13,10 @@ from ..schemas.plan import WorkoutSlot
 
 # Load data files at module import time
 _REPO_ROOT = Path(__file__).resolve().parents[3]
-_EXERCISE_DB: dict = json.loads(
+_EXERCISE_DB: dict[str, Any] = json.loads(
     (_REPO_ROOT / ".bmad-core" / "data" / "exercise-database.json").read_text()
 )
-_VOLUME_LANDMARKS: dict = json.loads(
+_VOLUME_LANDMARKS: dict[str, Any] = json.loads(
     (_REPO_ROOT / ".bmad-core" / "data" / "volume-landmarks.json").read_text()
 )
 

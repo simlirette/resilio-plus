@@ -41,9 +41,9 @@ def run_job(
 
         status = "ok"
         error_message: str | None = None
-        exception_holder: list = []
+        exception_holder: list[Exception] = []
 
-        def _target():
+        def _target() -> None:
             try:
                 fn()
             except Exception as exc:

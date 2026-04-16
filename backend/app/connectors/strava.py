@@ -1,3 +1,4 @@
+from typing import Any
 import os
 from datetime import date, datetime
 from urllib.parse import quote, urlencode
@@ -21,7 +22,7 @@ def _speed_to_pace_per_km(speed_mps: float | None) -> str | None:
     return f"{mins}:{secs:02d}"
 
 
-def _parse_activity(item: dict) -> StravaActivity:
+def _parse_activity(item: dict[str, Any]) -> StravaActivity:
     raw_date = item["start_date_local"][:10]  # "YYYY-MM-DD"
     return StravaActivity(
         id=f"strava_{item['id']}",
@@ -37,7 +38,7 @@ def _parse_activity(item: dict) -> StravaActivity:
     )
 
 
-def _parse_lap(item: dict) -> StravaLap:
+def _parse_lap(item: dict[str, Any]) -> StravaLap:
     return StravaLap(
         lap_index=item["lap_index"],
         elapsed_time_seconds=item["elapsed_time"],

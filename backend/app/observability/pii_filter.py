@@ -30,7 +30,7 @@ _REDACTED = "***"
 _MAX_DEPTH = 5
 
 # Order matters: more specific patterns first so they win.
-_REGEX_PATTERNS: tuple[re.Pattern, ...] = (
+_REGEX_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+"),  # JWT
     re.compile(r"[Bb]earer\s+[A-Za-z0-9_.-]+"),  # Bearer tokens
     re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+"),  # Email

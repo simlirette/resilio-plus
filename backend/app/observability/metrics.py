@@ -5,6 +5,7 @@ import collections
 import math
 import threading
 import time
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import Any
@@ -115,13 +116,14 @@ from starlette.responses import Response
 class MetricsMiddleware(BaseHTTPMiddleware):
     """Record HTTP request count + latency per (method, path_template, status)."""
 
-    async def dispatch(self, request: Request, call_next) -> Response:
+    async def dispatch(self, request: Request, call_next: Any) -> Response:
         t0 = time.perf_counter()
         status = 500
         try:
             response = await call_next(request)
             status = response.status_code
-            return response
+            resp: Response = response
+            return resp
         finally:
             duration_ms = (time.perf_counter() - t0) * 1000
             # Prefer the parameterized route template; fall back to raw path
@@ -131,7 +133,7 @@ class MetricsMiddleware(BaseHTTPMiddleware):
 
 
 @contextmanager
-def track_agent_call(agent_name: str):
+def track_agent_call(agent_name: str) -> Generator[None, None, None]:
     """Context manager: time an agent call, record ok/error status."""
     t0 = time.perf_counter()
     status = "ok"

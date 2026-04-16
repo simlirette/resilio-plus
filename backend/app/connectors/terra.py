@@ -1,3 +1,4 @@
+from typing import Any
 from datetime import date
 
 from ..connectors.base import BaseConnector
@@ -6,7 +7,7 @@ from ..schemas.connector import ConnectorCredential, TerraHealthData
 TERRA_BASE = "https://api.tryterra.co/v2"
 
 
-def _parse_daily(data: dict, query_date: date) -> TerraHealthData:
+def _parse_daily(data: dict[str, Any], query_date: date) -> TerraHealthData:
     items = data.get("data", [])
     if not items:
         return TerraHealthData(
@@ -53,7 +54,7 @@ class TerraConnector(BaseConnector):
     def _do_refresh_token(self) -> ConnectorCredential:
         return self.credential  # API Key never expires
 
-    def _headers(self) -> dict:
+    def _headers(self) -> dict[str, Any]:
         return {
             "x-api-key": self.client_id,  # TERRA_API_KEY
             "dev-id": self.client_secret,  # TERRA_DEV_ID
