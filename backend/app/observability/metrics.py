@@ -44,3 +44,65 @@ class LatencySummary:
             "p95": round(self.percentile(95), 3),
             "p99": round(self.percentile(99), 3),
         }
+
+
+class Metrics:
+    """Thread-safe in-memory counters + latency summaries."""
+
+    def __init__(self) -> None:
+        self.started_at: datetime = datetime.now(timezone.utc)
+        self.http_requests_total: dict[tuple[str, str, int], int] = collections.defaultdict(int)
+        self.http_latency_ms: dict[tuple[str, str], LatencySummary] = collections.defaultdict(LatencySummary)
+        self.agent_calls_total: dict[tuple[str, str], int] = collections.defaultdict(int)
+        self.agent_latency_ms: dict[str, LatencySummary] = collections.defaultdict(LatencySummary)
+        self.jobs_total: dict[tuple[str, str], int] = collections.defaultdict(int)
+        self._lock: threading.Lock = threading.Lock()
+
+    def inc_http(self, method: str, path: str, status: int, duration_ms: float) -> None:
+        with self._lock:
+            self.http_requests_total[(method, path, status)] += 1
+            self.http_latency_ms[(method, path)].observe(duration_ms)
+
+    def inc_agent(self, agent: str, status: str, duration_ms: float) -> None:
+        with self._lock:
+            self.agent_calls_total[(agent, status)] += 1
+            self.agent_latency_ms[agent].observe(duration_ms)
+
+    def inc_job(self, job_type: str, status: str) -> None:
+        with self._lock:
+            self.jobs_total[(job_type, status)] += 1
+
+    def snapshot(self) -> dict[str, Any]:
+        with self._lock:
+            uptime = (datetime.now(timezone.utc) - self.started_at).total_seconds()
+            return {
+                "started_at": self.started_at.isoformat().replace("+00:00", "Z"),
+                "uptime_s": round(uptime, 1),
+                "http": {
+                    "requests_total": {
+                        f"{m} {p}:{s}": n for (m, p, s), n in self.http_requests_total.items()
+                    },
+                    "latency_ms": {
+                        f"{m} {p}": summary.snapshot()
+                        for (m, p), summary in self.http_latency_ms.items()
+                    },
+                },
+                "agents": {
+                    "calls_total": {
+                        f"{a}:{s}": n for (a, s), n in self.agent_calls_total.items()
+                    },
+                    "latency_ms": {
+                        a: summary.snapshot()
+                        for a, summary in self.agent_latency_ms.items()
+                    },
+                },
+                "jobs": {
+                    "runs_total": {
+                        f"{jt}:{s}": n for (jt, s), n in self.jobs_total.items()
+                    },
+                },
+            }
+
+
+# Module-level singleton
+metrics = Metrics()
