@@ -22,6 +22,8 @@ from sqlalchemy.orm import sessionmaker
 from app.db.database import Base
 from app.db import models as _db_models   # noqa: F401
 from app.models import schemas as _v3     # noqa: F401
+from langgraph.checkpoint.memory import MemorySaver
+
 from app.services.coaching_service import CoachingService
 from tests.fixtures.athlete_states import (
     make_scenario_engine,
@@ -59,7 +61,7 @@ def scenario_db():
 
 def test_01_create_plan_does_not_crash(scenario_db):
     """create_plan with RED-S veto snapshot completes without exception."""
-    svc = CoachingService()
+    svc = CoachingService(checkpointer=MemorySaver())
     _state["svc"] = svc
 
     thread_id, proposed = svc.create_plan(
