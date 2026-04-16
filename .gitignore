@@ -254,4 +254,6 @@ scripts/*
 !scripts/README.md
 !scripts/docker-entrypoint-backend.sh
 !scripts/smoke_test_runtime.py
+!scripts/start_dev.ps1
+!scripts/start_prod.sh
 .worktrees/
