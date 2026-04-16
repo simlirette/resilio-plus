@@ -23,7 +23,7 @@ def import_daily_summaries(
     athlete_id: str,
     summaries: dict[date, AppleHealthDailySummary],
     db: Session,
-) -> dict:
+) -> dict[str, object]:
     """Upsert daily Apple Health summaries into apple_health_daily.
 
     Returns:

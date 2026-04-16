@@ -81,6 +81,8 @@ module = [
     "sentry_sdk.*",
     "fitparse",
     "fitparse.*",
+    "lxml",
+    "lxml.*",
 ]
 ignore_missing_imports = true
 
