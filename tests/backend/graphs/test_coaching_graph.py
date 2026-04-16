@@ -4,6 +4,7 @@ from datetime import date
 from unittest.mock import MagicMock, patch
 
 import pytest
+from langgraph.checkpoint.memory import MemorySaver
 
 # Pre-import via 'app.' path to avoid SQLAlchemy double-table-registration.
 import app.services.energy_cycle_service  # noqa: F401
@@ -41,13 +42,13 @@ def _db_mock():
 
 def test_build_coaching_graph_returns_compiled():
     """build_coaching_graph returns a compiled LangGraph app."""
-    graph = build_coaching_graph(interrupt=False)
+    graph = build_coaching_graph(checkpointer=MemorySaver(), interrupt=False)
     assert hasattr(graph, "invoke")
 
 
 def test_graph_no_interrupt_runs_to_completion():
     """With interrupt=False and human_approved=True pre-set, graph produces final_plan_dict."""
-    graph = build_coaching_graph(interrupt=False)
+    graph = build_coaching_graph(checkpointer=MemorySaver(), interrupt=False)
     athlete = _make_athlete()
 
     initial_state: AthleteCoachingState = {

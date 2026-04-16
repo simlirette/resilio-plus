@@ -1,6 +1,6 @@
 """Tests for V3-D workflow endpoints: create-plan with LangGraph, approve, revise."""
 from datetime import date
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -70,13 +70,11 @@ def test_create_plan_returns_thread_id(client_and_athlete):
     client, athlete_id, _ = client_and_athlete
     start = date.today()
 
-    with patch("app.routes.workflow.CoachingService") as MockService:
-        mock_instance = MagicMock()
-        mock_instance.create_plan.return_value = (
+    with patch("app.routes.workflow.coaching_service.create_plan") as mock_create:
+        mock_create.return_value = (
             "thread-abc-123",
             {"sessions": [], "phase": "base", "readiness_level": "green"},
         )
-        MockService.return_value = mock_instance
 
         resp = client.post(
             f"/athletes/{athlete_id}/workflow/create-plan",
@@ -95,15 +93,13 @@ def test_approve_plan_returns_plan_id(client_and_athlete):
     client, athlete_id, _ = client_and_athlete
     thread_id = f"{athlete_id}:thread-abc-123"
 
-    with patch("app.routes.workflow.CoachingService") as MockService:
-        mock_instance = MagicMock()
-        mock_instance.resume_plan.return_value = {
+    with patch("app.routes.workflow.coaching_service.resume_plan") as mock_resume:
+        mock_resume.return_value = {
             "sessions": [],
             "phase": "base",
             "readiness_level": "green",
             "db_plan_id": "plan-xyz",
         }
-        MockService.return_value = mock_instance
 
         resp = client.post(
             f"/athletes/{athlete_id}/workflow/plans/{thread_id}/approve",
@@ -120,14 +116,12 @@ def test_revise_plan_returns_new_proposed(client_and_athlete):
     client, athlete_id, _ = client_and_athlete
     thread_id = f"{athlete_id}:thread-abc-123"
 
-    with patch("app.routes.workflow.CoachingService") as MockService:
-        mock_instance = MagicMock()
-        mock_instance.resume_plan.return_value = {
+    with patch("app.routes.workflow.coaching_service.resume_plan") as mock_resume:
+        mock_resume.return_value = {
             "sessions": [],
             "phase": "base",
             "readiness_level": "green",
         }
-        MockService.return_value = mock_instance
 
         resp = client.post(
             f"/athletes/{athlete_id}/workflow/plans/{thread_id}/revise",

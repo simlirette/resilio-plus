@@ -8,7 +8,7 @@ All tests share the module-scoped `e2e_client` fixture (one in-memory DB per mod
 _state carries token + athlete_id + thread_id across sequential tests.
 """
 from datetime import date, timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 _state: dict = {}
 
@@ -105,10 +105,8 @@ def test_05_create_plan_via_workflow(e2e_client):
         "readiness_level": "green",
     }
 
-    with patch("app.routes.workflow.CoachingService") as MockService:
-        mock_instance = MagicMock()
-        mock_instance.create_plan.return_value = (thread_id, mock_plan)
-        MockService.return_value = mock_instance
+    with patch("app.routes.workflow.coaching_service.create_plan") as mock_create:
+        mock_create.return_value = (thread_id, mock_plan)
 
         resp = e2e_client.post(
             f"/athletes/{athlete_id}/workflow/create-plan",
@@ -137,10 +135,8 @@ def test_06_approve_plan(e2e_client):
         "db_plan_id": "mock-plan-id-001",
     }
 
-    with patch("app.routes.workflow.CoachingService") as MockService:
-        mock_instance = MagicMock()
-        mock_instance.resume_plan.return_value = mock_final
-        MockService.return_value = mock_instance
+    with patch("app.routes.workflow.coaching_service.resume_plan") as mock_resume:
+        mock_resume.return_value = mock_final
 
         resp = e2e_client.post(
             f"/athletes/{athlete_id}/workflow/plans/{thread_id}/approve",

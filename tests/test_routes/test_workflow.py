@@ -74,14 +74,12 @@ def test_create_plan_workflow_success(authed_client):
     client, athlete_id = authed_client
     start = str(date.today() + timedelta(days=1))
 
-    from unittest.mock import MagicMock, patch
-    with patch("app.routes.workflow.CoachingService") as MockService:
-        mock_instance = MagicMock()
-        mock_instance.create_plan.return_value = (
+    from unittest.mock import patch
+    with patch("app.routes.workflow.coaching_service.create_plan") as mock_create:
+        mock_create.return_value = (
             "thread-test-001",
             {"sessions": [], "phase": "base", "readiness_level": "green"},
         )
-        MockService.return_value = mock_instance
 
         resp = client.post(
             f"/athletes/{athlete_id}/workflow/create-plan",
