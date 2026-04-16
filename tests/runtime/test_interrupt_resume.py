@@ -61,6 +61,10 @@ class TestInterruptResume:
 
         assert proposed_v2 is not None
         assert "sessions" in proposed_v2
+        # New session UUIDs prove the agents were re-invoked, not the stale plan returned
+        v1_ids = {s["id"] for s in proposed_v1["sessions"]}
+        v2_ids = {s["id"] for s in proposed_v2["sessions"]}
+        assert v1_ids != v2_ids
 
     def test_reject_then_approve(self, mock_agents, runtime_db, runtime_svc):
         """Full cycle: create → reject → re-propose → approve → persisted."""
@@ -99,7 +103,6 @@ class TestInterruptResume:
             db=runtime_db,
         )
 
-        config = {"configurable": {"thread_id": thread_id, "db": runtime_db}}
-        snapshot = runtime_svc._graph.get_state(config)
+        snapshot = runtime_svc.get_graph_state(thread_id)
         assert snapshot.values.get("proposed_plan_dict") is not None
         assert snapshot.values.get("human_approved") is False
