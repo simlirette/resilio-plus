@@ -110,3 +110,83 @@ def test_metrics_thread_safety():
     for t in threads:
         t.join()
     assert m.http_requests_total[("GET", "/x", 200)] == 4000
+
+
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+from app.observability.metrics import (
+    MetricsMiddleware,
+    track_agent_call,
+    metrics,
+)
+
+
+def _reset_metrics():
+    metrics.http_requests_total.clear()
+    metrics.http_latency_ms.clear()
+    metrics.agent_calls_total.clear()
+    metrics.agent_latency_ms.clear()
+    metrics.jobs_total.clear()
+
+
+def test_middleware_increments_http_counter():
+    _reset_metrics()
+    app = FastAPI()
+    app.add_middleware(MetricsMiddleware)
+
+    @app.get("/foo")
+    def foo():
+        return {"ok": True}
+
+    client = TestClient(app)
+    client.get("/foo")
+    client.get("/foo")
+    assert metrics.http_requests_total[("GET", "/foo", 200)] == 2
+
+
+def test_middleware_uses_path_template_not_raw():
+    _reset_metrics()
+    app = FastAPI()
+    app.add_middleware(MetricsMiddleware)
+
+    @app.get("/athletes/{athlete_id}")
+    def get_athlete(athlete_id: str):
+        return {"id": athlete_id}
+
+    client = TestClient(app)
+    client.get("/athletes/abc-123")
+    client.get("/athletes/def-456")
+    # Both hits should collapse to the template
+    assert metrics.http_requests_total[("GET", "/athletes/{athlete_id}", 200)] == 2
+
+
+def test_middleware_captures_status_code():
+    _reset_metrics()
+    app = FastAPI()
+    app.add_middleware(MetricsMiddleware)
+
+    @app.get("/bad")
+    def bad():
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404)
+
+    client = TestClient(app)
+    client.get("/bad")
+    assert metrics.http_requests_total[("GET", "/bad", 404)] == 1
+
+
+def test_track_agent_call_ok():
+    _reset_metrics()
+    with track_agent_call("running_coach"):
+        pass
+    assert metrics.agent_calls_total[("running_coach", "ok")] == 1
+    assert metrics.agent_latency_ms["running_coach"].count == 1
+
+
+def test_track_agent_call_error_reraises_and_records_error():
+    _reset_metrics()
+    with pytest.raises(ValueError):
+        with track_agent_call("lifting_coach"):
+            raise ValueError("boom")
+    assert metrics.agent_calls_total[("lifting_coach", "error")] == 1
+    assert metrics.agent_latency_ms["lifting_coach"].count == 1

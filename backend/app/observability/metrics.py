@@ -106,3 +106,41 @@ class Metrics:
 
 # Module-level singleton
 metrics = Metrics()
+
+
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
+
+
+class MetricsMiddleware(BaseHTTPMiddleware):
+    """Record HTTP request count + latency per (method, path_template, status)."""
+
+    async def dispatch(self, request: Request, call_next) -> Response:
+        t0 = time.perf_counter()
+        status = 500
+        try:
+            response = await call_next(request)
+            status = response.status_code
+            return response
+        finally:
+            duration_ms = (time.perf_counter() - t0) * 1000
+            # Prefer the parameterized route template; fall back to raw path
+            route = request.scope.get("route")
+            path = route.path if route is not None and hasattr(route, "path") else request.url.path
+            metrics.inc_http(request.method, path, status, duration_ms)
+
+
+@contextmanager
+def track_agent_call(agent_name: str):
+    """Context manager: time an agent call, record ok/error status."""
+    t0 = time.perf_counter()
+    status = "ok"
+    try:
+        yield
+    except Exception:
+        status = "error"
+        raise
+    finally:
+        ms = (time.perf_counter() - t0) * 1000
+        metrics.inc_agent(agent_name, status, ms)
