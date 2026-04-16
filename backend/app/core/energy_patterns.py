@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session
 
-from ..models.schemas import EnergySnapshotModel, HeadCoachMessageModel
+from ..db.models import EnergySnapshotModel, HeadCoachMessageModel
 
 
 def _last_7_days(snapshots: list) -> list:

@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from ..agents.energy_coach.agent import EnergyCheckIn, EnergyCoach, EnergyInput
 from ..db.models import AthleteModel
-from ..models.schemas import EnergySnapshotModel, HormonalProfileModel
+from ..db.models import EnergySnapshotModel, HormonalProfileModel
 from ..schemas.checkin import CheckInInput, HormonalProfileUpdate, ReadinessResponse
 
 _LEG_SCORES: dict[str, float] = {"fresh": 0.0, "normal": 25.0, "heavy": 60.0, "dead": 90.0}

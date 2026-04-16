@@ -9,7 +9,7 @@ import anthropic
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from ..models.schemas import ExternalPlanModel
+from ..db.models import ExternalPlanModel
 from ..schemas.external_plan import ExternalPlanDraft, ExternalPlanDraftSession
 from .external_plan_service import ExternalPlanService
 

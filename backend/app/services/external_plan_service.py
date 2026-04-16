@@ -10,7 +10,7 @@ from datetime import date
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from ..models.schemas import ExternalPlanModel, ExternalSessionModel
+from ..db.models import ExternalPlanModel, ExternalSessionModel
 
 
 class ExternalPlanService:
