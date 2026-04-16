@@ -87,3 +87,14 @@ def list_jobs(
             "next_run": earliest_next,
         },
     }
+
+
+from ..observability.metrics import metrics as _metrics_singleton
+
+
+@router.get("/metrics")
+def get_metrics(
+    _: Annotated[str, Depends(_require_admin)],
+) -> dict:
+    """In-memory observability metrics snapshot (HTTP, agents, jobs)."""
+    return _metrics_singleton.snapshot()
