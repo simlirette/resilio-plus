@@ -29,6 +29,10 @@ from app.agents.running_coach import RunningCoach
 from app.agents.base import AgentContext
 from tests.fixtures.athlete_states import layla_luteal_context, STABLE_LOAD
 
+# NOTE: This scenario uses HeadCoach.build_week() directly and does NOT instantiate
+# CoachingService. If refactored to use CoachingService, pass an explicit
+# MemorySaver checkpointer (see scenarios 01-07) for test isolation.
+
 random.seed(42)
 
 WEEK_START = date(2026, 4, 14)

@@ -9,13 +9,12 @@ from __future__ import annotations
 import random
 
 import pytest
+from langgraph.checkpoint.memory import MemorySaver
 from sqlalchemy.orm import sessionmaker
 
 from app.db.database import Base
 from app.db import models as _db_models   # noqa: F401 — registers ORM
 from app.models import schemas as _v3     # noqa: F401 — registers V3 models
-from langgraph.checkpoint.memory import MemorySaver
-
 from app.services.coaching_service import CoachingService
 from tests.fixtures.athlete_states import (
     make_scenario_engine,
