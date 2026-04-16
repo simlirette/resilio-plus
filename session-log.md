@@ -1,5 +1,42 @@
 # Session Log — Resilio Plus
 
+## 2026-04-16 23:30 [saved]
+Goal: Fix ruff/test regressions introduced by Apple Health parallel session merge.
+Decisions:
+- `setup_scheduler()` wraps `restore_all_jobs` in try/except — DB unreachable at startup must not crash lifespan; jobs restore on next boot.
+- `/ready` and `/ready/deep` health tests mock `engine.connect` — these routes bypass `get_db` dep, so SQLite override doesn't apply; mocking is correct.
+- Apple Health E501 violations: add `"backend/app/integrations/apple_health/**" = ["E501"]` to ruff per-file-ignores, not inline noqa.
+Rejected:
+- Patching `get_db` to fix health tests — route uses `engine` directly, dep override irrelevant.
+- Skipping health tests when PG unavailable — they should be self-contained.
+Open:
+- None.
+
+## 2026-04-16 23:00 [saved]
+Goal: Pre-launch audit V3-X — find and fix all critical issues before ship.
+Decisions:
+- 3 connector routes had no auth (`POST/GET/DELETE /connectors/*`) — fixed with `_require_own`; prior tests used bare `client` fixture so never caught this.
+- Connector tests must use `authed_client` fixture — bare `client` bypasses auth dependency and produces false-green tests.
+- `_require_own` pattern: FastAPI dependency injected as `_: Annotated[str, Depends(_require_own)]` — consistent across all athlete-scoped routes.
+Rejected:
+- Treating unauthed connector routes as acceptable — any caller could disconnect any athlete's Strava/Hevy.
+- Bare `client` fixture for route tests that require ownership — masks auth bugs.
+Open:
+- `POST /athletes/` still public — intentional V1.1 design decision.
+
+## 2026-04-16 20:30 [saved]
+Goal: Design pre-launch audit for Resilio+ backend before V1 ship.
+Decisions:
+- Triage-first approach: all read-only checks before any fixes — report is accurate before code changes.
+- `POST /athletes/` stays public by design — pre-auth onboarding, not a security gap; goes to V1.1 backlog.
+- Docker optional: if unavailable, Axis E marked "manual verification required" rather than blocking.
+- Fix scope: delete .backup files + patch .env.example only; fix wrong docs, not just incomplete ones.
+Rejected:
+- Parallel subagents per axis — harder to synthesize into coherent report.
+- Fixing all doc gaps — only wrong docs fixed, missing docs go to V1.1 backlog.
+Open:
+- Next session: `writing-plans` on spec, then `execute-plan`.
+
 ## 2026-04-16 18:00 [saved]
 Goal: Execute V3-W tech debt sprint — mypy --strict 0 errors, ruff 0 violations.
 Decisions:
