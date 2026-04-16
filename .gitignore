@@ -253,4 +253,5 @@ docs/artifacts/
 scripts/*
 !scripts/README.md
 !scripts/docker-entrypoint-backend.sh
+!scripts/smoke_test_runtime.py
 .worktrees/
