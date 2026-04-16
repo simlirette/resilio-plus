@@ -72,7 +72,11 @@ def test_json_formatter_serializes_exception():
     assert "stack" in out["error"]
 
 
-def test_configure_logging_attaches_pii_filter(caplog):
+def test_configure_logging_attaches_pii_filter(caplog, monkeypatch):
+    import app.observability.logging_config as _lc
+    # Reset the guard so configure_logging() re-runs (it may have been called
+    # at module import time by main.py's top-level _configure_logging() call).
+    monkeypatch.setattr(_lc, "_CONFIGURED", False)
     configure_logging()
     logger = logging.getLogger("app.test.configure")
     logger.info("user a@b.com logged in")

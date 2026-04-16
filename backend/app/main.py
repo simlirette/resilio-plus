@@ -1,3 +1,10 @@
+# Observability MUST be configured before anything else imports logging
+from .observability.logging_config import configure_logging as _configure_logging
+_configure_logging()
+
+from .observability.sentry import init_sentry as _init_sentry
+_init_sentry()
+
 import os
 from contextlib import asynccontextmanager
 
@@ -5,6 +12,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .jobs.scheduler import setup_scheduler
+from .observability.correlation import CorrelationIdMiddleware
+from .observability.metrics import MetricsMiddleware
 from .routes.auth import router as auth_router
 from .routes.onboarding import router as onboarding_router
 from .routes.athletes import router as athletes_router
@@ -44,13 +53,19 @@ _raw = os.environ.get(
 )
 _ALLOWED_ORIGINS = [o.strip() for o in _raw.split(",") if o.strip()]
 
+# Middleware stack — FastAPI applies in reverse registration order.
+# Desired runtime flow on a request: CORS → CorrelationId → Metrics → handler.
+# So add CORS first (outermost), then CorrelationId, then Metrics last (innermost).
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+    expose_headers=["X-Request-ID"],
 )
+app.add_middleware(CorrelationIdMiddleware)
+app.add_middleware(MetricsMiddleware)
 
 app.include_router(auth_router)
 app.include_router(onboarding_router)   # MUST be before athletes_router
