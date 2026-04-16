@@ -168,7 +168,7 @@ def _make_snapshot(
 # ---------------------------------------------------------------------------
 
 def test_detect_heavy_legs_triggers_at_3_days():
-    from app.core.sync_scheduler import _detect_heavy_legs
+    from app.core.energy_patterns import detect_heavy_legs
     from app.models.schemas import EnergySnapshotModel
 
     engine = _make_engine()
@@ -182,12 +182,12 @@ def test_detect_heavy_legs_triggers_at_3_days():
     _make_snapshot(session, athlete.id, days_ago=4, legs_feeling="normal")
 
     snaps = session.query(EnergySnapshotModel).filter_by(athlete_id=athlete.id).all()
-    assert _detect_heavy_legs(snaps) is True
+    assert detect_heavy_legs(snaps) is True
     session.close()
 
 
 def test_detect_heavy_legs_no_trigger_below_3_days():
-    from app.core.sync_scheduler import _detect_heavy_legs
+    from app.core.energy_patterns import detect_heavy_legs
     from app.models.schemas import EnergySnapshotModel
 
     engine = _make_engine()
@@ -201,12 +201,12 @@ def test_detect_heavy_legs_no_trigger_below_3_days():
     _make_snapshot(session, athlete.id, days_ago=4, legs_feeling="fresh")
 
     snaps = session.query(EnergySnapshotModel).filter_by(athlete_id=athlete.id).all()
-    assert _detect_heavy_legs(snaps) is False
+    assert detect_heavy_legs(snaps) is False
     session.close()
 
 
 def test_detect_heavy_legs_ignores_snapshots_older_than_7_days():
-    from app.core.sync_scheduler import _detect_heavy_legs
+    from app.core.energy_patterns import detect_heavy_legs
     from app.models.schemas import EnergySnapshotModel
 
     engine = _make_engine()
@@ -219,7 +219,7 @@ def test_detect_heavy_legs_ignores_snapshots_older_than_7_days():
     _make_snapshot(session, athlete.id, days_ago=10, legs_feeling="heavy")
 
     snaps = session.query(EnergySnapshotModel).filter_by(athlete_id=athlete.id).all()
-    assert _detect_heavy_legs(snaps) is False
+    assert detect_heavy_legs(snaps) is False
     session.close()
 
 
@@ -228,7 +228,7 @@ def test_detect_heavy_legs_ignores_snapshots_older_than_7_days():
 # ---------------------------------------------------------------------------
 
 def test_detect_chronic_stress_triggers_at_4_days():
-    from app.core.sync_scheduler import _detect_chronic_stress
+    from app.core.energy_patterns import detect_chronic_stress
     from app.models.schemas import EnergySnapshotModel
 
     engine = _make_engine()
@@ -240,12 +240,12 @@ def test_detect_chronic_stress_triggers_at_4_days():
     _make_snapshot(session, athlete.id, days_ago=5, stress_level="none")
 
     snaps = session.query(EnergySnapshotModel).filter_by(athlete_id=athlete.id).all()
-    assert _detect_chronic_stress(snaps) is True
+    assert detect_chronic_stress(snaps) is True
     session.close()
 
 
 def test_detect_chronic_stress_no_trigger_below_4_days():
-    from app.core.sync_scheduler import _detect_chronic_stress
+    from app.core.energy_patterns import detect_chronic_stress
     from app.models.schemas import EnergySnapshotModel
 
     engine = _make_engine()
@@ -258,7 +258,7 @@ def test_detect_chronic_stress_no_trigger_below_4_days():
     _make_snapshot(session, athlete.id, days_ago=4, stress_level="mild")
 
     snaps = session.query(EnergySnapshotModel).filter_by(athlete_id=athlete.id).all()
-    assert _detect_chronic_stress(snaps) is False
+    assert detect_chronic_stress(snaps) is False
     session.close()
 
 
@@ -267,7 +267,7 @@ def test_detect_chronic_stress_no_trigger_below_4_days():
 # ---------------------------------------------------------------------------
 
 def test_detect_persistent_divergence_triggers_at_3_consecutive():
-    from app.core.sync_scheduler import _detect_persistent_divergence
+    from app.core.energy_patterns import detect_persistent_divergence
     from app.models.schemas import EnergySnapshotModel
 
     engine = _make_engine()
@@ -281,12 +281,12 @@ def test_detect_persistent_divergence_triggers_at_3_consecutive():
     _make_snapshot(session, athlete.id, days_ago=4, objective_score=65.0, subjective_score=60.0)  # divergence=5
 
     snaps = session.query(EnergySnapshotModel).filter_by(athlete_id=athlete.id).all()
-    assert _detect_persistent_divergence(snaps) is True
+    assert detect_persistent_divergence(snaps) is True
     session.close()
 
 
 def test_detect_persistent_divergence_no_trigger_if_gap_breaks_streak():
-    from app.core.sync_scheduler import _detect_persistent_divergence
+    from app.core.energy_patterns import detect_persistent_divergence
     from app.models.schemas import EnergySnapshotModel
 
     engine = _make_engine()
@@ -299,7 +299,7 @@ def test_detect_persistent_divergence_no_trigger_if_gap_breaks_streak():
     _make_snapshot(session, athlete.id, days_ago=3, objective_score=75.0, subjective_score=35.0)
 
     snaps = session.query(EnergySnapshotModel).filter_by(athlete_id=athlete.id).all()
-    assert _detect_persistent_divergence(snaps) is False
+    assert detect_persistent_divergence(snaps) is False
     session.close()
 
 
@@ -308,7 +308,7 @@ def test_detect_persistent_divergence_no_trigger_if_gap_breaks_streak():
 # ---------------------------------------------------------------------------
 
 def test_detect_reds_signal_triggers_at_3_days():
-    from app.core.sync_scheduler import _detect_reds_signal
+    from app.core.energy_patterns import detect_reds_signal
     from app.models.schemas import EnergySnapshotModel
 
     engine = _make_engine()
@@ -321,12 +321,12 @@ def test_detect_reds_signal_triggers_at_3_days():
     _make_snapshot(session, athlete.id, days_ago=4, energy_availability=45.0)
 
     snaps = session.query(EnergySnapshotModel).filter_by(athlete_id=athlete.id).all()
-    assert _detect_reds_signal(snaps) is True
+    assert detect_reds_signal(snaps) is True
     session.close()
 
 
 def test_detect_reds_signal_no_trigger_below_3_days():
-    from app.core.sync_scheduler import _detect_reds_signal
+    from app.core.energy_patterns import detect_reds_signal
     from app.models.schemas import EnergySnapshotModel
 
     engine = _make_engine()
@@ -338,7 +338,7 @@ def test_detect_reds_signal_no_trigger_below_3_days():
     _make_snapshot(session, athlete.id, days_ago=3, energy_availability=50.0)
 
     snaps = session.query(EnergySnapshotModel).filter_by(athlete_id=athlete.id).all()
-    assert _detect_reds_signal(snaps) is False
+    assert detect_reds_signal(snaps) is False
     session.close()
 
 
@@ -347,7 +347,7 @@ def test_detect_reds_signal_no_trigger_below_3_days():
 # ---------------------------------------------------------------------------
 
 def test_detect_energy_patterns_creates_heavy_legs_message():
-    from app.core.sync_scheduler import detect_energy_patterns
+    from app.core.energy_patterns import detect_energy_patterns
     from app.models.schemas import HeadCoachMessageModel
 
     engine = _make_engine()
@@ -369,7 +369,7 @@ def test_detect_energy_patterns_creates_heavy_legs_message():
 
 
 def test_detect_energy_patterns_creates_chronic_stress_message():
-    from app.core.sync_scheduler import detect_energy_patterns
+    from app.core.energy_patterns import detect_energy_patterns
     from app.models.schemas import HeadCoachMessageModel
 
     engine = _make_engine()
@@ -389,7 +389,7 @@ def test_detect_energy_patterns_creates_chronic_stress_message():
 
 
 def test_detect_energy_patterns_no_duplicate_message_within_7_days():
-    from app.core.sync_scheduler import detect_energy_patterns
+    from app.core.energy_patterns import detect_energy_patterns
     from app.models.schemas import HeadCoachMessageModel
 
     engine = _make_engine()
@@ -412,7 +412,7 @@ def test_detect_energy_patterns_no_duplicate_message_within_7_days():
 
 
 def test_detect_energy_patterns_no_message_when_no_pattern():
-    from app.core.sync_scheduler import detect_energy_patterns
+    from app.core.energy_patterns import detect_energy_patterns
     from app.models.schemas import HeadCoachMessageModel
 
     engine = _make_engine()
@@ -431,7 +431,7 @@ def test_detect_energy_patterns_no_message_when_no_pattern():
 
 
 def test_detect_energy_patterns_creates_reds_message():
-    from app.core.sync_scheduler import detect_energy_patterns
+    from app.core.energy_patterns import detect_energy_patterns
     from app.models.schemas import HeadCoachMessageModel
 
     engine = _make_engine()
@@ -451,27 +451,28 @@ def test_detect_energy_patterns_creates_reds_message():
 
 
 # ---------------------------------------------------------------------------
-# APScheduler weekly job
+# APScheduler weekly job — now uses app.jobs.scheduler
+# Note: old "energy_patterns_weekly" job id was renamed to "energy_patterns"
 # ---------------------------------------------------------------------------
 
 def test_setup_scheduler_has_energy_patterns_job():
-    from app.core.sync_scheduler import setup_scheduler
+    from app.jobs.scheduler import setup_scheduler
     from apscheduler.schedulers.background import BackgroundScheduler
 
     scheduler = setup_scheduler()
     try:
         job_ids = [job.id for job in scheduler.get_jobs()]
-        assert "energy_patterns_weekly" in job_ids
+        assert "energy_patterns" in job_ids
     finally:
         scheduler.shutdown(wait=False)
 
 
 def test_energy_patterns_job_runs_weekly_on_monday():
-    from app.core.sync_scheduler import setup_scheduler
+    from app.jobs.scheduler import setup_scheduler
 
     scheduler = setup_scheduler()
     try:
-        job = next(j for j in scheduler.get_jobs() if j.id == "energy_patterns_weekly")
+        job = next(j for j in scheduler.get_jobs() if j.id == "energy_patterns")
         trigger = job.trigger
         assert trigger.__class__.__name__ == "CronTrigger"
         field_names = [f.name for f in trigger.fields]

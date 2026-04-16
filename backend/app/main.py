@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .core.sync_scheduler import setup_scheduler
+from .jobs.scheduler import setup_scheduler
 from .routes.auth import router as auth_router
 from .routes.onboarding import router as onboarding_router
 from .routes.athletes import router as athletes_router
