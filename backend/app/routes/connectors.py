@@ -204,7 +204,12 @@ def upload_fit(
 
 
 @router.post("/{athlete_id}/connectors/hevy", status_code=201)
-def hevy_connect(athlete_id: str, req: HevyConnectRequest, db: DB) -> ConnectorStatus:
+def hevy_connect(
+    athlete_id: str,
+    req: HevyConnectRequest,
+    db: DB,
+    _: Annotated[str, Depends(_require_own)],
+) -> ConnectorStatus:
     if db.get(AthleteModel, athlete_id) is None:
         raise HTTPException(status_code=404)
 
@@ -359,7 +364,11 @@ def terra_sync(
 
 
 @router.get("/{athlete_id}/connectors", response_model=ConnectorListResponse)
-def list_connectors(athlete_id: str, db: DB) -> ConnectorListResponse:
+def list_connectors(
+    athlete_id: str,
+    db: DB,
+    _: Annotated[str, Depends(_require_own)],
+) -> ConnectorListResponse:
     if db.get(AthleteModel, athlete_id) is None:
         raise HTTPException(status_code=404)
 
@@ -407,7 +416,12 @@ def sync_all(
 
 
 @router.delete("/{athlete_id}/connectors/{provider}", status_code=204)
-def delete_connector(athlete_id: str, provider: Literal["strava", "hevy", "terra"], db: DB) -> None:
+def delete_connector(
+    athlete_id: str,
+    provider: Literal["strava", "hevy", "terra"],
+    db: DB,
+    _: Annotated[str, Depends(_require_own)],
+) -> None:
     if db.get(AthleteModel, athlete_id) is None:
         raise HTTPException(status_code=404)
     cred = (
