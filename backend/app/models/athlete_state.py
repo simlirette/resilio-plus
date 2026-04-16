@@ -172,7 +172,7 @@ class AthleteStateV3(BaseModel):
 # SyncSource  (metadata sur la dernière sync par connecteur)
 # ---------------------------------------------------------------------------
 
-SyncSourceName = Literal["strava", "hevy", "terra", "manual"]
+SyncSourceName = Literal["strava", "hevy", "terra", "apple_health", "manual"]
 SyncStatus = Literal["ok", "error", "stale"]
 
 
@@ -220,7 +220,8 @@ class AthleteMetrics(BaseModel):
 
     date: date
     # Raw Terra
-    hrv_rmssd: Optional[float] = None
+    hrv_rmssd: Optional[float] = None        # RMSSD (ms) from Terra — primary HRV metric
+    hrv_sdnn: Optional[float] = None         # SDNN (ms) from Apple Health — NOT comparable to hrv_rmssd
     hrv_history_7d: list[float] = Field(default_factory=list)
     sleep_hours: Optional[float] = None
     terra_sleep_score: Optional[float] = Field(default=None, ge=0.0, le=100.0)
