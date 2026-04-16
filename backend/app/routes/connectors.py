@@ -20,6 +20,8 @@ from ..schemas.connector_api import (
     HevyConnectRequest,
 )
 from ..services.sync_service import ConnectorNotFoundError, SyncService
+from ..jobs.registry import register_athlete_jobs, unregister_athlete_jobs
+from ..jobs.scheduler import get_scheduler
 
 router = APIRouter(prefix="/athletes", tags=["connectors"])
 
@@ -212,6 +214,10 @@ def hevy_connect(athlete_id: str, req: HevyConnectRequest, db: DB) -> ConnectorS
         extra_json=json.dumps({"api_key": req.api_key}),
         db=db,
     )
+    try:
+        register_athlete_jobs(athlete_id, "hevy", get_scheduler())
+    except RuntimeError:
+        pass  # scheduler not started (testing)
     return ConnectorStatus(provider="hevy", connected=True, expires_at=None)
 
 
@@ -250,6 +256,10 @@ def terra_connect(
         extra_json=json.dumps({"terra_user_id": req.terra_user_id}),
         db=db,
     )
+    try:
+        register_athlete_jobs(athlete_id, "terra", get_scheduler())
+    except RuntimeError:
+        pass  # scheduler not started (testing)
     return ConnectorStatus(provider="terra", connected=True, expires_at=None)
 
 
@@ -405,4 +415,8 @@ def delete_connector(athlete_id: str, provider: Literal["strava", "hevy", "terra
     if cred is None:
         raise HTTPException(status_code=404)
     db.delete(cred)
+    try:
+        unregister_athlete_jobs(athlete_id, provider, get_scheduler())
+    except RuntimeError:
+        pass  # scheduler not started (testing)
     db.commit()

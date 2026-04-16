@@ -12,6 +12,8 @@ from ..dependencies import get_db, get_current_athlete_id
 from ..integrations.strava.oauth_service import callback as oauth_callback
 from ..integrations.strava.oauth_service import connect as oauth_connect
 from ..integrations.strava.sync_service import sync as strava_sync
+from ..jobs.registry import register_athlete_jobs
+from ..jobs.scheduler import get_scheduler
 from ..schemas.strava import SyncSummary
 
 DB = Annotated[Session, Depends(get_db)]
@@ -38,11 +40,18 @@ def callback(
 ) -> dict:
     """Handle Strava OAuth callback — exchange code for encrypted tokens."""
     try:
-        return oauth_callback(code=code, state=state, db=db)
+        result = oauth_callback(code=code, state=state, db=db)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except _httpx.HTTPStatusError:
         raise HTTPException(status_code=502, detail="Strava token exchange failed")
+
+    try:
+        register_athlete_jobs(result["athlete_id"], "strava", get_scheduler())
+    except RuntimeError:
+        pass  # scheduler not started (testing)
+
+    return result
 
 
 @router.post("/sync", response_model=SyncSummary)

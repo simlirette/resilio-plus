@@ -147,7 +147,7 @@ def callback(code: str, state: str, db: Session) -> dict:
         db=db,
     )
 
-    return {"connected": True}
+    return {"connected": True, "athlete_id": matching.athlete_id}
 
 
 def get_valid_credential(athlete_id: str, db: Session) -> ConnectorCredential:
