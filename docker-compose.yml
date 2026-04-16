@@ -8,7 +8,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U resilio -d resilio_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-resilio} -d ${POSTGRES_DB:-resilio_db}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -30,19 +30,20 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
+    command: ["dev"]
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app/backend
       - ./resilio:/app/resilio
+      - ./alembic:/app/alembic
       - ./.bmad-core:/app/.bmad-core
+      - checkpoint_data:/app/data
+    env_file:
+      - .env
     environment:
-      PYTHONPATH: /app/backend
-      DATABASE_URL: postgresql+psycopg2://resilio:${POSTGRES_PASSWORD:-resilio}@db:5432/resilio_db
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-      STRAVA_CLIENT_ID: ${STRAVA_CLIENT_ID:-}
-      STRAVA_CLIENT_SECRET: ${STRAVA_CLIENT_SECRET:-}
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-change-in-production}
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-resilio}:${POSTGRES_PASSWORD:-resilio}@db:5432/${POSTGRES_DB:-resilio_db}
+      LANGGRAPH_CHECKPOINT_DB: /app/data/checkpoints.sqlite
     depends_on:
       db:
         condition: service_healthy
@@ -64,3 +65,4 @@ services:
 
 volumes:
   postgres_data:
+  checkpoint_data:
