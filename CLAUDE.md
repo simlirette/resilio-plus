@@ -128,8 +128,11 @@ class FatigueScore:
 | V3-Q | E2E Coaching Scenarios — 8 scenario tests (CoachingService + HeadCoach.build_week), shared `athlete_states.py` fixtures, energy cap, RED-S veto, reject/revise, luteal phase, living spec `docs/backend/E2E-SCENARIOS.md` | ✅ Complete (2026-04-14) |
 | V3-R | Strava OAuth V2 — Fernet-encrypted tokens, incremental sync (`last_sync_at`), `strava_activities` table, `/integrations/strava/{connect,callback,sync}`, Alembic 0008, old Strava routes removed | ✅ Complete (2026-04-14) |
 | V3-S | Background Jobs — APScheduler 3.x, `backend/app/jobs/` (runner, registry, sync/compute/cleanup jobs, scheduler), `job_runs` + `athlete_state_snapshots` tables, Alembic 0009, `GET /admin/jobs` endpoint, `energy_patterns.py` extracted, old `sync_scheduler.py` deleted | ✅ Complete (2026-04-16) |
+| V3-T | LangGraph Runtime Validation — SQLite checkpointer (replaces MemorySaver), `CoachingService` module-level singleton, `log_node` decorator + structured JSON logs, runtime test suite (`tests/runtime/`, 26 tests), debug endpoint `GET /athletes/{id}/coach/session/{thread_id}/state`, smoke script `scripts/smoke_test_runtime.py`, `docs/backend/LANGGRAPH-FLOW.md` | ✅ Complete (2026-04-14) |
 
-**Dernières phases complétées (2026-04-16) :** V3-S livré — APScheduler background jobs system. Per-athlete dynamic jobs (strava 1h, hevy/terra 6h) registered on connect. Global cron jobs (daily snapshot 4h UTC, energy patterns Mon 6h, cleanup Sun 3h). `run_job()` wrapper with threading timeout + DB logging. `GET /admin/jobs` (env-gated via `ADMIN_ATHLETE_ID`). Pure energy-pattern functions extracted to `core/energy_patterns.py`; `core/sync_scheduler.py` deleted. Alembic 0009 adds `job_runs` + `athlete_state_snapshots`. Docs at `docs/backend/JOBS.md`. 2134 tests passing (7 pre-existing failures in langgraph tests, unrelated).
+**Dernières phases complétées (2026-04-14) :** V3-T livré — LangGraph runtime fix. `build_coaching_graph(checkpointer, ...)` requires explicit checkpointer (no more per-request `MemorySaver` losing state between create/approve). Production wires `SqliteSaver` at `LANGGRAPH_CHECKPOINT_DB` (default `data/checkpoints.sqlite`). `coaching_service` singleton in `app.services.coaching_service` shared across `workflow.py` endpoints. Every node wrapped with `log_node` (JSON enter/exit logs to `resilio.graph`). 26 runtime tests cover topology, checkpoint persistence, interrupt/resume, state transitions, revision loop. Found + fixed `_after_revise` routing bug (revision_count > 1 routes to `build_proposed_plan` not `present_to_athlete` because `revise_plan` clears `proposed_plan_dict`). 2310 tests passing (2 pre-existing unrelated failures: `test_history_shows_logged_count` flake, `test_high_continuity_no_breaks` date drift).
+
+**Dernières phases complétées (2026-04-16) :** V3-S livré — APScheduler background jobs system. Per-athlete dynamic jobs (strava 1h, hevy/terra 6h) registered on connect. Global cron jobs (daily snapshot 4h UTC, energy patterns Mon 6h, cleanup Sun 3h). `run_job()` wrapper with threading timeout + DB logging. `GET /admin/jobs` (env-gated via `ADMIN_ATHLETE_ID`). Pure energy-pattern functions extracted to `core/energy_patterns.py`; `core/sync_scheduler.py` deleted. Alembic 0009 adds `job_runs` + `athlete_state_snapshots`. Docs at `docs/backend/JOBS.md`.
 
 **Dernières phases complétées (2026-04-14) :** V3-R livré — Strava OAuth V2 with encrypted tokens (`cryptography.fernet`), incremental sync, `strava_activities` DB table, new routes at `/integrations/strava/`. Old plaintext Strava routes removed. Alembic migration 0008 renames columns (preserves data). 2271 tests passing.
 
@@ -188,7 +191,7 @@ The Running Coach has the richest existing knowledge base.
 4. **Frequent atomic commits** — one commit per logical task
 5. **Verify invariants after every task**:
    - `poetry install` must succeed
-   - `pytest tests/` must pass (≥2134 passing — état V3-S; 7 pre-existing langgraph failures tracked separately)
+   - `pytest tests/` must pass (≥2310 passing — état V3-T; 2 pre-existing unrelated failures: `test_history_shows_logged_count` flake, `test_high_continuity_no_breaks` date drift)
    - `npx tsc --noEmit` (frontend) must have no errors
 
 **pytest path (Windows):** `C:\Users\simon\AppData\Local\pypoetry\Cache\virtualenvs\resilio-8kDCl3fk-py3.13\Scripts\pytest.exe`
@@ -235,6 +238,9 @@ Never increase total weekly load >10% in one step (applies across ALL sports com
 - **Background Jobs Reference**: `docs/backend/JOBS.md` — job types, scheduling, debugging SQL, monitoring endpoint
 - **Background Jobs Spec**: `docs/superpowers/specs/2026-04-14-background-jobs-design.md`
 - **Background Jobs Plan**: `docs/superpowers/plans/2026-04-14-background-jobs.md`
+- **LangGraph Flow Reference**: `docs/backend/LANGGRAPH-FLOW.md` — graph topology, node table, conditional edges, interrupt + checkpoint lifecycle, debug endpoint
+- **LangGraph Runtime Spec**: `docs/superpowers/specs/2026-04-14-langgraph-runtime-design.md`
+- **LangGraph Runtime Plan**: `docs/superpowers/plans/2026-04-14-langgraph-runtime.md`
 - **Master V2 (archivé)**: `docs/archive/resilio-master-v2_archived_2026-04-12.md`
 
 ---
