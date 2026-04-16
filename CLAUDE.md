@@ -240,7 +240,6 @@ Never increase total weekly load >10% in one step (applies across ALL sports com
 - **Architecture Modulaire 2-Volets**: `docs/superpowers/specs/2026-04-11-modular-architecture-design.md`
 - **Phase 8 Design**: `docs/superpowers/specs/2026-04-10-phase8-design.md`
 - **Coaching Methodology**: `docs/coaching/methodology.md`
-- **Strain Index ADR**: `docs/backend/STRAIN-DEFINITION.md`
 - **Database Guide**: `docs/backend/DATABASE.md`
 - **Agent Prompts Spec**: `docs/superpowers/specs/2026-04-13-agent-prompts-design.md`
 - **Muscle Strain Spec**: `docs/superpowers/specs/2026-04-13-muscle-strain-design.md`
@@ -253,7 +252,6 @@ Never increase total weekly load >10% in one step (applies across ALL sports com
 - **Knowledge JSONs Audit Spec**: `docs/superpowers/specs/2026-04-13-knowledge-jsons-audit-design.md`
 - **Knowledge JSONs Schema**: `docs/knowledge/schemas/common_rule.schema.json`
 - **Auth System**: `docs/backend/AUTH.md` — endpoints, flows, curl/TypeScript examples
-- **Integrations Reference**: `docs/backend/INTEGRATIONS.md` — Hevy CSV import + Nutrition Lookup (USDA/OFF/FCÉN, TTL cache, FCÉN bootstrap)
 - **Strava OAuth V2 Spec**: `docs/superpowers/specs/2026-04-14-strava-oauth-design.md`
 - **Strava OAuth V2 Plan**: `docs/superpowers/plans/2026-04-14-strava-oauth.md`
 - **Background Jobs Reference**: `docs/backend/JOBS.md` — job types, scheduling, debugging SQL, monitoring endpoint
