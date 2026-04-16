@@ -11,6 +11,7 @@ from ..core.fatigue import GlobalFatigue, aggregate_fatigue
 from ..core.periodization import PeriodizationPhase, get_current_phase
 from ..schemas.plan import WorkoutSlot
 from .prompts import HEAD_COACH_PROMPT
+from ..observability.metrics import track_agent_call
 
 _SYSTEM_PROMPT = HEAD_COACH_PROMPT
 
@@ -44,58 +45,60 @@ class HeadCoach:
             load_history: Daily loads in oldest-first chronological order (from DB).
                           HeadCoach appends the new week's total load before computing ACWR.
         """
-        # 0. Compute goal-driven sport budgets and inject into context
-        budgets = analyze_goals(context.athlete)
-        context = dataclasses.replace(
-            context,
-            sport_budgets={s.value: h for s, h in budgets.items()},
-        )
+        with track_agent_call("head_coach"):
+            # 0. Compute goal-driven sport budgets and inject into context
+            budgets = analyze_goals(context.athlete)
+            context = dataclasses.replace(
+                context,
+                sport_budgets={s.value: h for s, h in budgets.items()},
+            )
 
-        # 1. Invoke all specialist agents
-        recommendations: list[AgentRecommendation] = [
-            a.analyze(context) for a in self.agents
-        ]
+            # 1. Invoke all specialist agents
+            recommendations: list[AgentRecommendation] = []
+            for a in self.agents:
+                with track_agent_call(f"{a.name}_coach"):
+                    recommendations.append(a.analyze(context))
 
-        # 2. Compute unified cross-sport ACWR
-        weekly_load = sum(r.weekly_load for r in recommendations)
-        acwr = compute_acwr(load_history + [weekly_load])
+            # 2. Compute unified cross-sport ACWR
+            weekly_load = sum(r.weekly_load for r in recommendations)
+            acwr = compute_acwr(load_history + [weekly_load])
 
-        # 3. Aggregate FatigueScores
-        global_fatigue = aggregate_fatigue([r.fatigue_score for r in recommendations])
+            # 3. Aggregate FatigueScores
+            global_fatigue = aggregate_fatigue([r.fatigue_score for r in recommendations])
 
-        # 4. Determine macro phase
-        phase = get_current_phase(
-            context.athlete.target_race_date,
-            context.date_range[0],
-        )
+            # 4. Determine macro phase
+            phase = get_current_phase(
+                context.athlete.target_race_date,
+                context.date_range[0],
+            )
 
-        # 5. Detect inter-agent conflicts
-        conflicts = detect_conflicts(recommendations)
+            # 5. Detect inter-agent conflicts
+            conflicts = detect_conflicts(recommendations)
 
-        # 6. Compute global readiness (minimum modifier drives decisions)
-        readiness_modifier = (
-            min(r.readiness_modifier for r in recommendations)
-            if recommendations
-            else 1.0
-        )
-        readiness_level = self._modifier_to_level(readiness_modifier)
+            # 6. Compute global readiness (minimum modifier drives decisions)
+            readiness_modifier = (
+                min(r.readiness_modifier for r in recommendations)
+                if recommendations
+                else 1.0
+            )
+            readiness_level = self._modifier_to_level(readiness_modifier)
 
-        # 7. Collect agent notes
-        notes = [r.notes for r in recommendations if r.notes]
+            # 7. Collect agent notes
+            notes = [r.notes for r in recommendations if r.notes]
 
-        # 8. Arbitrate final session list
-        all_sessions = [s for r in recommendations for s in r.suggested_sessions]
-        sessions = self._arbitrate(all_sessions, conflicts, acwr, readiness_modifier)
+            # 8. Arbitrate final session list
+            all_sessions = [s for r in recommendations for s in r.suggested_sessions]
+            sessions = self._arbitrate(all_sessions, conflicts, acwr, readiness_modifier)
 
-        return WeeklyPlan(
-            phase=phase,
-            acwr=acwr,
-            global_fatigue=global_fatigue,
-            conflicts=conflicts,
-            sessions=sessions,
-            readiness_level=readiness_level,
-            notes=notes,
-        )
+            return WeeklyPlan(
+                phase=phase,
+                acwr=acwr,
+                global_fatigue=global_fatigue,
+                conflicts=conflicts,
+                sessions=sessions,
+                readiness_level=readiness_level,
+                notes=notes,
+            )
 
     def _modifier_to_level(self, modifier: float) -> str:
         if modifier >= 0.9:
