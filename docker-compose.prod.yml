@@ -1,0 +1,16 @@
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up backend db
+# Simulates production locally: gunicorn, no bind-mounts, no reload, resource limits.
+services:
+  backend:
+    command: ["prod"]
+    volumes:
+      - checkpoint_data:/app/data
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1.0"
+
+  frontend:
+    profiles: ["donotrun"]
