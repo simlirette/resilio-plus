@@ -44,11 +44,11 @@ def test_ready_deep_returns_503_when_no_api_key(client, monkeypatch):
 def test_ready_deep_returns_200_when_all_green(client, monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
 
-    def fake_get(self, url, headers=None, **kwargs):
-        request = httpx.Request("GET", url)
-        return httpx.Response(200, request=request)
+    import respx
+    from httpx import Response
 
-    with patch.object(httpx.Client, "get", fake_get):
+    with respx.mock(base_url="https://api.anthropic.com") as mock:
+        mock.get("/v1/models").mock(return_value=Response(200))
         resp = client.get("/ready/deep")
 
     assert resp.status_code == 200
