@@ -24,6 +24,7 @@ from .routes.strain import router as strain_router
 from .routes.integrations import router as integrations_router
 from .routes.strava import router as strava_router
 from .routes.admin import router as admin_router
+from .routes.health import router as health_router
 
 
 @asynccontextmanager
@@ -70,3 +71,4 @@ app.include_router(strain_router)
 app.include_router(integrations_router)
 app.include_router(strava_router)
 app.include_router(admin_router)
+app.include_router(health_router)
