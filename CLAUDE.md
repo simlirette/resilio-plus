@@ -205,6 +205,20 @@ The Running Coach has the richest existing knowledge base.
 
 ---
 
+## Docker / Deployment Gotchas (V3-V)
+
+- **Module-relative data paths:** `backend/app/core/allostatic.py`, `energy_availability.py`, `running_logic.py` use `pathlib.Path(__file__).parents[3] / "data" / "*.json"` → image must `COPY data/ ./data/` AND `.dockerignore` must allow-list with `!data/*.json` (the `data` exclude rule would otherwise drop them).
+- **Checkpoint volume ≠ data dir:** Mount the LangGraph SQLite checkpoint volume at `/app/runtime/` (not `/app/data/`) — mounting over `/app/data` shadows the baked-in JSONs. Default: `LANGGRAPH_CHECKPOINT_DB=/app/runtime/checkpoints.sqlite`.
+- **SQLite WAL race with gunicorn:** Two workers calling `PRAGMA journal_mode=WAL` concurrently crashes with "database is locked". Fix: entrypoint pre-initializes the checkpointer in a single process before gunicorn forks. See `scripts/docker-entrypoint-backend.sh`.
+- **Gunicorn timeout:** Must be ≥120s — LangGraph sync LLM calls exceed the default 60s and cause 502s.
+- **Poetry 2.x required:** `pyproject.toml` uses PEP 621 `[project]` metadata which Poetry 1.8 rejects. Builder stage installs `poetry==2.3.3 poetry-plugin-export==1.8.0`.
+
+## Testing Gotchas
+
+- **Mocking httpx in FastAPI tests:** `TestClient` extends `httpx.Client`, so `patch.object(httpx.Client, "get", ...)` intercepts the TestClient's own ASGI dispatch. Use `respx.mock(base_url="https://api.example.com")` to scope the patch to the real external URL. Example: `tests/backend/api/test_health.py::test_ready_deep_all_green`.
+
+---
+
 ## ACWR Rule (applies to coaching logic AND load planning)
 
 ACWR (Acute:Chronic Workload Ratio) = 7-day load / 28-day rolling average:
