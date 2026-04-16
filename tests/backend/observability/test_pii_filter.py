@@ -94,3 +94,43 @@ def test_scrub_idempotent():
     once = scrub_string(s)
     twice = scrub_string(once)
     assert once == twice
+
+
+import logging
+from app.observability.pii_filter import PIIFilter
+
+
+def _make_record(msg: str, extra: dict | None = None) -> logging.LogRecord:
+    record = logging.LogRecord(
+        name="test",
+        level=logging.INFO,
+        pathname=__file__,
+        lineno=1,
+        msg=msg,
+        args=None,
+        exc_info=None,
+    )
+    if extra:
+        for k, v in extra.items():
+            setattr(record, k, v)
+    return record
+
+
+def test_pii_filter_scrubs_msg():
+    f = PIIFilter()
+    record = _make_record("user a@b.com logged in")
+    assert f.filter(record) is True
+    assert "a@b.com" not in record.getMessage()
+
+
+def test_pii_filter_scrubs_extra_dict():
+    f = PIIFilter()
+    record = _make_record("event", extra={"user": {"password": "secret"}})
+    f.filter(record)
+    assert record.user["password"] == "***"
+
+
+def test_pii_filter_returns_true_always():
+    f = PIIFilter()
+    record = _make_record("hello")
+    assert f.filter(record) is True

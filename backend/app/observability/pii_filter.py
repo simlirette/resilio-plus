@@ -51,3 +51,35 @@ def scrub_value(value: Any, _depth: int = 0) -> Any:
     if isinstance(value, str):
         return scrub_string(value)
     return value
+
+
+import logging
+
+_BUILTIN_LOGRECORD_ATTRS = frozenset({
+    "name", "msg", "args", "levelname", "levelno", "pathname", "filename",
+    "module", "exc_info", "exc_text", "stack_info", "lineno", "funcName",
+    "created", "msecs", "relativeCreated", "thread", "threadName",
+    "processName", "process", "message", "asctime",
+})
+
+
+class PIIFilter(logging.Filter):
+    """Scrub PII from LogRecord before formatter runs.
+
+    Applies:
+    - regex scrubbers on record.msg (if string)
+    - field-name blocklist + regex on any custom attributes set via extra={...}
+    """
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if isinstance(record.msg, str):
+            record.msg = scrub_string(record.msg)
+        for key in list(record.__dict__.keys()):
+            if key in _BUILTIN_LOGRECORD_ATTRS:
+                continue
+            value = record.__dict__[key]
+            if _is_blocklisted(key):
+                record.__dict__[key] = _REDACTED
+            else:
+                record.__dict__[key] = scrub_value(value)
+        return True
