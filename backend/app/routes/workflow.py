@@ -29,7 +29,7 @@ from sqlalchemy.orm import Session
 from ..db.models import AthleteModel, TrainingPlanModel, WeeklyReviewModel, SessionLogModel
 from ..dependencies import get_db, get_current_athlete_id
 from ..dependencies.mode_guard import require_full_mode
-from ..services.coaching_service import CoachingService
+from ..services.coaching_service import CoachingService, coaching_service
 
 router = APIRouter(prefix="/athletes", tags=["workflow"])
 
@@ -100,6 +100,12 @@ class PlanApproveResponse(BaseModel):
 class PlanReviseRequest(BaseModel):
     feedback: str
     weeks: int | None = None
+
+
+class SessionStateResponse(BaseModel):
+    thread_id: str
+    state: dict | None = None
+    checkpoint_ts: str | None = None
 
 
 class WeeklySyncResponse(BaseModel):
@@ -254,7 +260,7 @@ def create_plan_workflow(
         coaching_mode=athlete.coaching_mode,
     )
 
-    service = CoachingService()
+    service = coaching_service
     try:
         thread_id, proposed_dict = service.create_plan(
             athlete_id=athlete_id,
@@ -292,7 +298,7 @@ def approve_plan(
 ) -> PlanApproveResponse:
     """Approve the proposed plan — finalize and persist to DB."""
     _validate_thread_ownership(thread_id, athlete_id)
-    service = CoachingService()
+    service = coaching_service
     try:
         final_dict = service.resume_plan(
             thread_id=thread_id,
@@ -321,7 +327,7 @@ def revise_plan_endpoint(
 ) -> PlanCreateResponse:
     """Reject the proposed plan with feedback and request a revision."""
     _validate_thread_ownership(thread_id, athlete_id)
-    service = CoachingService()
+    service = coaching_service
     try:
         new_proposed = service.resume_plan(
             thread_id=thread_id,
@@ -556,7 +562,7 @@ class ReviewConfirmResponse(BaseModel):
 # Module-level service instance — shared across requests in the same process.
 # Each call to weekly_review() creates a new graph instance stored inside
 # the service, so state isolation is maintained per thread_id.
-_review_service = CoachingService()
+_review_service = coaching_service
 
 
 @router.post("/{athlete_id}/plan/review/start", response_model=ReviewStartResponse)
@@ -629,4 +635,37 @@ def confirm_weekly_review(
         success=True,
         review_id=None,
         message=f"Révision hebdomadaire {action}.",
+    )
+
+
+@router.get("/{athlete_id}/coach/session/{thread_id}/state", response_model=SessionStateResponse)
+def get_session_state(
+    athlete_id: str,
+    thread_id: str,
+    athlete: Annotated[AthleteModel, Depends(_require_own)],
+    db: DB,
+) -> SessionStateResponse:
+    """Debug endpoint — return the current graph state for a coaching session.
+
+    Athlete-scoped: only the owning athlete can view their session state.
+    """
+    _validate_thread_ownership(thread_id, athlete_id)
+
+    config = {"configurable": {"thread_id": thread_id}}
+    snapshot = coaching_service._graph.get_state(config)
+
+    if not snapshot.values:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    state_dict = dict(snapshot.values)
+    state_dict.pop("messages", None)
+
+    checkpoint_ts = None
+    if snapshot.metadata:
+        checkpoint_ts = snapshot.metadata.get("created_at")
+
+    return SessionStateResponse(
+        thread_id=thread_id,
+        state=state_dict,
+        checkpoint_ts=checkpoint_ts,
     )

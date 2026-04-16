@@ -44,3 +44,14 @@ def test_graph_no_interrupt_when_false():
     """With interrupt=False, graph does not interrupt."""
     graph = build_coaching_graph(checkpointer=MemorySaver(), interrupt=False)
     assert not (graph.interrupt_before_nodes or [])
+
+
+def test_debug_endpoint_schema():
+    """The debug state endpoint response schema has required keys."""
+    from langgraph.checkpoint.memory import MemorySaver
+    from app.services.coaching_service import CoachingService
+
+    svc = CoachingService(checkpointer=MemorySaver())
+    config = {"configurable": {"thread_id": "nonexistent:123"}}
+    state = svc._graph.get_state(config)
+    assert state is not None
