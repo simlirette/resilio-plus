@@ -55,12 +55,12 @@ class BikingCoach(BaseAgent):
         )
 
         # 8. Weekly load
-        _INTENSITY = {
+        _intensity = {
             "Z2_endurance_ride": 1.0,
             "Z3_tempo_ride": 1.4,
             "Z4_threshold_intervals": 1.8,
         }
-        weekly_load = sum(s.duration_min * _INTENSITY.get(s.workout_type, 1.0) for s in sessions)
+        weekly_load = sum(s.duration_min * _intensity.get(s.workout_type, 1.0) for s in sessions)
 
         return AgentRecommendation(
             agent_name=self.name,

@@ -1,10 +1,10 @@
 from __future__ import annotations
-from typing import Any
 
 import json
 from datetime import date, timedelta
 from enum import Enum
 from pathlib import Path
+from typing import Any
 
 from ..schemas.athlete import Sport
 from ..schemas.connector import HevyWorkout
@@ -160,14 +160,14 @@ def generate_lifting_sessions(
         return []
 
     # Exercise tier note based on phase
-    _TIER_NOTE: dict[str, str] = {
+    _tier_note: dict[str, str] = {
         "general_prep": "Tier 1",
         "specific_prep": "Tier 1-2",
         "pre_competition": "Tier 1-2",
         "competition": "Tier 1-2",
         "transition": "Tier 2-3",
     }
-    tier_note = _TIER_NOTE.get(phase, "Tier 1")
+    tier_note = _tier_note.get(phase, "Tier 1")
 
     # Wave loading multiplier (deload check first), scaled by volume_modifier
     dur_mult = volume_modifier * (0.6 if week_number % 4 == 0 else 1.0)
@@ -204,7 +204,7 @@ def generate_lifting_sessions(
     # Cap to available days
     slots = raw[: len(available_days)]
 
-    _Z = FatigueScore(
+    _z = FatigueScore(
         local_muscular=0.0,
         cns_load=0.0,
         metabolic_cost=0.0,
@@ -218,7 +218,7 @@ def generate_lifting_sessions(
             sport=Sport.LIFTING,
             workout_type=wtype,
             duration_min=dur,
-            fatigue_score=_Z,
+            fatigue_score=_z,
             notes=notes,
         )
         for i, (wtype, dur, notes) in enumerate(slots)

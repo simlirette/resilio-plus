@@ -216,7 +216,8 @@ def detect_conflicts_node(state: AthleteCoachingState, config: RunnableConfig) -
 
 
 def resolve_conflicts_node(state: AthleteCoachingState, config: RunnableConfig) -> dict[str, Any]:
-    """Pass-through logging node — actual conflict resolution is handled by HeadCoach._arbitrate in build_proposed_plan.
+    """Pass-through logging node — conflict resolution handled by HeadCoach._arbitrate
+    in build_proposed_plan.
 
     This node filters for critical conflicts and logs them, but makes no state
     changes. The duplicate resolution logic previously here has been removed to
@@ -227,7 +228,7 @@ def resolve_conflicts_node(state: AthleteCoachingState, config: RunnableConfig) 
     return {
         "messages": [
             AIMessage(
-                f"{len(critical)} conflits critiques détectés — résolution déléguée à HeadCoach._arbitrate."
+                f"{len(critical)} conflits critiques — résolution déléguée à HeadCoach._arbitrate."
             )
         ],
     }
@@ -283,7 +284,8 @@ def build_proposed_plan(state: AthleteCoachingState, config: RunnableConfig) -> 
         "proposed_plan_dict": _weekly_plan_to_dict(plan),
         "messages": [
             AIMessage(
-                f"Plan proposé: {len(sessions)} séances, phase={phase.phase.value}, readiness={readiness_level}"
+                f"Plan proposé: {len(sessions)} séances, "
+                f"phase={phase.phase.value}, readiness={readiness_level}"
             )
         ],
     }
@@ -304,8 +306,8 @@ def apply_energy_snapshot(state: AthleteCoachingState, config: RunnableConfig) -
     import importlib
 
     _ecs_mod = importlib.import_module("app.services.energy_cycle_service")
-    _EnergyCycleService = _ecs_mod.EnergyCycleService
-    svc = _EnergyCycleService()
+    _ecs_cls = _ecs_mod.EnergyCycleService
+    svc = _ecs_cls()
     snapshot = svc.get_today_snapshot(athlete_id, db)
 
     if snapshot is None:
@@ -358,7 +360,7 @@ def apply_energy_snapshot(state: AthleteCoachingState, config: RunnableConfig) -
 
 
 def present_to_athlete(state: AthleteCoachingState, config: RunnableConfig) -> dict[str, Any]:
-    """Present the proposed plan to the athlete and wait for approval (interrupt handled by graph)."""
+    """Present the proposed plan to the athlete and wait for approval (interrupt by graph)."""
     return {
         "messages": [AIMessage("Plan présenté à l'athlète — en attente de validation.")],
     }
@@ -399,7 +401,7 @@ def finalize_plan(state: AthleteCoachingState, config: RunnableConfig) -> dict[s
 
     importlib.import_module("app.models.schemas")  # registers V3 SA models
     _db_models = importlib.import_module("app.db.models")
-    TrainingPlanModel = _db_models.TrainingPlanModel
+    _plan_model_cls = _db_models.TrainingPlanModel
     db = config.get("configurable", {}).get("db")
     if db is None:
         raise ValueError("finalize_plan: config['configurable']['db'] is required")
@@ -416,7 +418,7 @@ def finalize_plan(state: AthleteCoachingState, config: RunnableConfig) -> dict[s
     acwr_val = plan_dict.get("acwr", {}).get("ratio", 0.0)
 
     plan_id = str(uuid.uuid4())
-    plan_model = TrainingPlanModel(
+    plan_model = _plan_model_cls(
         id=plan_id,
         athlete_id=athlete_id,
         start_date=today,

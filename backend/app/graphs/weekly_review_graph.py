@@ -131,13 +131,13 @@ def analyze_actual_vs_planned(
 
     importlib.import_module("app.models.schemas")  # registers V3 SA models first
     _db_models = importlib.import_module("app.db.models")
-    SessionLogModel = _db_models.SessionLogModel
-    TrainingPlanModel = _db_models.TrainingPlanModel
+    _session_log_cls = _db_models.SessionLogModel
+    _plan_model_cls = _db_models.TrainingPlanModel
 
     # Count planned sessions for this week from the plan's weekly_slots_json
     sessions_planned = 0
     if plan_id:
-        plan = db.get(TrainingPlanModel, plan_id)
+        plan = db.get(_plan_model_cls, plan_id)
         if plan:
             try:
                 slots_data = json.loads(plan.weekly_slots_json)
@@ -155,11 +155,11 @@ def analyze_actual_vs_planned(
 
     # Count completed sessions (non-skipped, has actual_duration_min)
     sessions_completed = (
-        db.query(SessionLogModel)
+        db.query(_session_log_cls)
         .filter(
-            SessionLogModel.athlete_id == athlete_id,
-            SessionLogModel.skipped == False,  # noqa: E712
-            SessionLogModel.actual_duration_min.isnot(None),
+            _session_log_cls.athlete_id == athlete_id,
+            _session_log_cls.skipped == False,  # noqa: E712
+            _session_log_cls.actual_duration_min.isnot(None),
         )
         .count()
     )
@@ -169,11 +169,11 @@ def analyze_actual_vs_planned(
     # Estimate actual hours from logged session durations
     try:
         duration_rows = (
-            db.query(SessionLogModel.actual_duration_min)
+            db.query(_session_log_cls.actual_duration_min)
             .filter(
-                SessionLogModel.athlete_id == athlete_id,
-                SessionLogModel.skipped == False,  # noqa: E712
-                SessionLogModel.actual_duration_min.isnot(None),
+                _session_log_cls.athlete_id == athlete_id,
+                _session_log_cls.skipped == False,  # noqa: E712
+                _session_log_cls.actual_duration_min.isnot(None),
             )
             .all()
         )
@@ -303,7 +303,7 @@ def apply_adjustments(
 
     importlib.import_module("app.models.schemas")  # registers V3 SA models first
     _db_models = importlib.import_module("app.db.models")
-    WeeklyReviewModel = _db_models.WeeklyReviewModel
+    _review_model_cls = _db_models.WeeklyReviewModel
 
     try:
         week_start = date.fromisoformat(state["week_start"])
@@ -311,7 +311,7 @@ def apply_adjustments(
         week_start = date.today() - timedelta(days=date.today().weekday())
 
     review_id = str(uuid.uuid4())
-    review = WeeklyReviewModel(
+    review = _review_model_cls(
         id=review_id,
         athlete_id=athlete_id,
         plan_id=plan_id,

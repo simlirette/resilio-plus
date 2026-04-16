@@ -2,7 +2,9 @@
 
 Public API:
     from app.services.coaching_service import coaching_service  # singleton
-    thread_id, proposed_dict = coaching_service.create_plan(athlete_id, athlete_dict, load_history, db)
+    thread_id, proposed_dict = coaching_service.create_plan(
+        athlete_id, athlete_dict, load_history, db
+    )
     final_dict = coaching_service.resume_plan(thread_id, approved, feedback, db)
 """
 from __future__ import annotations
@@ -155,17 +157,17 @@ class CoachingService:
 
         importlib.import_module("app.models.schemas")  # registers V3 SA models first
         _db_models = importlib.import_module("app.db.models")
-        TrainingPlanModel = _db_models.TrainingPlanModel
-        WeeklyReviewModel = _db_models.WeeklyReviewModel
+        _plan_model_cls = _db_models.TrainingPlanModel
+        _review_model_cls = _db_models.WeeklyReviewModel
 
         # Determine current week context
         today = date.today()
         week_start = today - timedelta(days=today.weekday())
 
         plan = (
-            db.query(TrainingPlanModel)
-            .filter(TrainingPlanModel.athlete_id == athlete_id)
-            .order_by(desc(TrainingPlanModel.created_at))
+            db.query(_plan_model_cls)
+            .filter(_plan_model_cls.athlete_id == athlete_id)
+            .order_by(desc(_plan_model_cls.created_at))
             .first()
         )
         plan_id = plan.id if plan else None
@@ -175,9 +177,9 @@ class CoachingService:
 
         # Build load_history from recent weekly reviews (sessions_completed as proxy for load)
         recent_reviews = (
-            db.query(WeeklyReviewModel)
-            .filter(WeeklyReviewModel.athlete_id == athlete_id)
-            .order_by(desc(WeeklyReviewModel.week_start))
+            db.query(_review_model_cls)
+            .filter(_review_model_cls.athlete_id == athlete_id)
+            .order_by(desc(_review_model_cls.week_start))
             .limit(28)
             .all()
         )

@@ -67,7 +67,7 @@ class LiftingCoach(BaseAgent):
         )
 
         # 9. Weekly load: sum(duration_min * intensity_weight)
-        _LIFT_INTENSITY = {
+        _lift_intensity = {
             "upper_strength": 2.0,
             "lower_strength": 2.0,
             "upper_hypertrophy": 1.5,
@@ -75,7 +75,7 @@ class LiftingCoach(BaseAgent):
             "full_body_endurance": 1.0,
         }
         weekly_load = sum(
-            s.duration_min * _LIFT_INTENSITY.get(s.workout_type, 1.0) for s in sessions
+            s.duration_min * _lift_intensity.get(s.workout_type, 1.0) for s in sessions
         )
 
         # V3: apply cycle phase adjustments if hormonal profile is enabled

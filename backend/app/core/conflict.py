@@ -82,8 +82,8 @@ def detect_conflicts(recommendations: list[AgentRecommendation]) -> list[Conflic
                             rule="hiit_strength_same_session",
                             agents=[end_agent, lift_agent],
                             message=(
-                                f"{end_agent} has HIIT session and {lift_agent} is on the same day. "
-                                "HIIT + strength training causes maximal interference. "
+                                f"{end_agent} has HIIT session and {lift_agent} on the same day. "
+                                "HIIT + strength training: maximal interference. "
                                 "Separate by at least 24h."
                             ),
                         )
@@ -103,7 +103,7 @@ def detect_conflicts(recommendations: list[AgentRecommendation]) -> list[Conflic
                             agents=[end_agent, lift_agent],
                             message=(
                                 f"Swimming and {lift_agent} on the same day. "
-                                "Swimming is less inflammatory than running — minor interference risk."
+                                "Swimming is less inflammatory than running — minor interference."
                             ),
                         )
                     )
@@ -117,7 +117,8 @@ def detect_conflicts(recommendations: list[AgentRecommendation]) -> list[Conflic
                         agents=[end_agent, lift_agent],
                         message=(
                             f"{end_agent} ({wt}) and {lift_agent} on the same day. "
-                            "Endurance before strength requires 3h gap to avoid mTOR/AMPK interference."
+                            "Endurance before strength: 3h gap needed to avoid mTOR/AMPK"
+                            " interference."
                         ),
                     )
                 )

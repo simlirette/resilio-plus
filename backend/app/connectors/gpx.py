@@ -6,7 +6,7 @@ Pure parser (no DB dependency) — route layer handles persistence.
 from __future__ import annotations
 
 import math
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ET  # noqa: N817
 from datetime import date, datetime
 from typing import Any
 
@@ -14,14 +14,14 @@ _GPX_NS = "http://www.topografix.com/GPX/1/1"
 
 
 def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    R = 6371.0
+    _earth_radius = 6371.0
     dlat = math.radians(lat2 - lat1)
     dlon = math.radians(lon2 - lon1)
     a = (
         math.sin(dlat / 2) ** 2
         + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) ** 2
     )
-    return R * 2 * math.asin(math.sqrt(a))
+    return _earth_radius * 2 * math.asin(math.sqrt(a))
 
 
 class GpxConnector:
@@ -45,7 +45,8 @@ class GpxConnector:
         eles: list[float | None] = []
         for tp in trackpoints:
             ele_el = tp.find("g:ele", ns)
-            eles.append(float(ele_el.text) if ele_el is not None and ele_el.text is not None else None)
+            ele_val = ele_el.text if ele_el is not None else None
+            eles.append(float(ele_val) if ele_val is not None else None)
 
         times: list[datetime] = []
         for tp in trackpoints:

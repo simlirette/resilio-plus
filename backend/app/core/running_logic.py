@@ -1,9 +1,9 @@
 from __future__ import annotations
-from typing import Any
 
 import json
 import pathlib
 from datetime import date, timedelta
+from typing import Any
 
 from ..core.periodization import TIDStrategy
 from ..schemas.athlete import Sport
@@ -283,7 +283,7 @@ def generate_running_sessions(
 
     sessions_to_place = raw_sorted[: len(day_pool)]
 
-    _Z = FatigueScore(
+    _z = FatigueScore(
         local_muscular=0.0,
         cns_load=0.0,
         metabolic_cost=0.0,
@@ -297,7 +297,7 @@ def generate_running_sessions(
             sport=Sport.RUNNING,
             workout_type=wtype,
             duration_min=dur,
-            fatigue_score=_Z,
+            fatigue_score=_z,
             notes=_build_pace_note(wtype, paces),
         )
         for i, (wtype, dur) in enumerate(sessions_to_place)

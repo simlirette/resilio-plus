@@ -1,0 +1,26 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.4
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.10.0
+    hooks:
+      - id: mypy
+        args: [--config-file, pyproject.toml]
+        files: ^backend/app/
+        additional_dependencies:
+          - anthropic
+          - apscheduler
+          - cryptography
+          - fastapi
+          - httpx
+          - langgraph
+          - langchain-core
+          - pydantic
+          - sqlalchemy
+          - starlette
+          - types-python-dateutil

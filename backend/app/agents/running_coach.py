@@ -61,14 +61,14 @@ class RunningCoach(BaseAgent):
         )
 
         # 8. Weekly load: sum(duration_min * intensity_weight)
-        _INTENSITY = {
+        _intensity = {
             "easy_z1": 1.0,
             "long_run_z1": 1.0,
             "tempo_z2": 1.5,
             "vo2max_z3": 2.0,
             "activation_z3": 2.0,
         }
-        weekly_load = sum(s.duration_min * _INTENSITY.get(s.workout_type, 1.0) for s in sessions)
+        weekly_load = sum(s.duration_min * _intensity.get(s.workout_type, 1.0) for s in sessions)
 
         # V3: apply cycle phase adjustments if hormonal profile is enabled
         cycle_notes = ""

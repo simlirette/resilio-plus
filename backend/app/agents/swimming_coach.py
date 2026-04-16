@@ -43,12 +43,12 @@ class SwimmingCoach(BaseAgent):
             week_start=context.date_range[0],
         )
 
-        _INTENSITY = {
+        _intensity = {
             "Z1_technique": 0.8,
             "Z2_endurance_swim": 1.0,
             "Z3_threshold_set": 1.5,
         }
-        weekly_load = sum(s.duration_min * _INTENSITY.get(s.workout_type, 1.0) for s in sessions)
+        weekly_load = sum(s.duration_min * _intensity.get(s.workout_type, 1.0) for s in sessions)
 
         return AgentRecommendation(
             agent_name=self.name,

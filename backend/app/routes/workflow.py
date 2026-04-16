@@ -9,7 +9,7 @@ to run within a single HTTP request. For multi-minute jobs, consider background 
 
 Endpoints:
   GET  /athletes/{id}/workflow/status                        — current workflow phase + readiness
-  POST /athletes/{id}/workflow/create-plan                   — trigger full plan creation (steps 1-9)
+  POST /athletes/{id}/workflow/create-plan                   — trigger plan creation (steps 1-9)
   POST /athletes/{id}/workflow/weekly-sync                   — trigger weekly review cycle (H1-H5)
   POST /athletes/{id}/workflow/plans/{thread_id}/approve     — approve proposed plan
   POST /athletes/{id}/workflow/plans/{thread_id}/revise      — reject and revise plan
@@ -150,7 +150,9 @@ def get_workflow_status(
     )
 
     if plan is None:
-        phase_no_plan: Literal["onboarding", "no_plan", "active", "weekly_review_due"] = "no_plan" if athlete.target_race_date else "onboarding"
+        phase_no_plan: Literal["onboarding", "no_plan", "active", "weekly_review_due"] = (
+            "no_plan" if athlete.target_race_date else "onboarding"
+        )
         return WorkflowStatus(
             athlete_id=athlete_id,
             phase=phase_no_plan,
@@ -235,7 +237,6 @@ def create_plan_workflow(
         sports, goals, available_days, equipment = [], [], [], []
 
     from ..schemas.athlete import AthleteProfile
-
     from ..schemas.athlete import Sport as _Sport
 
     athlete_profile = AthleteProfile(
@@ -382,7 +383,6 @@ def weekly_sync(
 
     today = date.today()
     week_start = today - timedelta(days=today.weekday())
-    week_end = week_start + timedelta(days=6)
 
     # H1 + H2: Planned vs actual sessions
     try:
