@@ -38,14 +38,15 @@ def _after_present(state: AthleteCoachingState) -> str:
 
 
 def _after_revise(state: AthleteCoachingState) -> str:
-    # Count revision messages to enforce max 1 revision
+    # Count revision messages to enforce max 1 full re-delegation cycle
     revision_count = sum(
         1 for m in state.get("messages", [])
         if hasattr(m, "content") and "Replanification en cours" in m.content
     )
     if revision_count <= 1:
         return "delegate"
-    return "present"
+    # Cap reached: rebuild from existing recommendations (no re-delegation)
+    return "build"
 
 
 def build_coaching_graph(*, checkpointer, interrupt: bool = True):
@@ -96,11 +97,11 @@ def build_coaching_graph(*, checkpointer, interrupt: bool = True):
         {"apply_energy": "apply_energy_snapshot", "revise": "revise_plan"},
     )
 
-    # Revision routing (max 1 revision)
+    # Revision routing (max 1 full re-delegation; after that, rebuild from existing recs)
     builder.add_conditional_edges(
         "revise_plan",
         _after_revise,
-        {"delegate": "delegate_specialists", "present": "present_to_athlete"},
+        {"delegate": "delegate_specialists", "build": "build_proposed_plan"},
     )
 
     builder.add_edge("apply_energy_snapshot", "finalize_plan")
