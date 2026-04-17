@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
+import { colors as globalColors } from '@resilio/design-tokens';
 import { Circle } from './Circle';
 import { Text } from './Text';
 import { useTheme } from '../theme/ThemeProvider';
@@ -18,19 +19,27 @@ interface MetricRowProps {
 }
 
 /**
- * Row of 3 metric circles: Nutrition, Strain (Récup.), Sommeil.
- * Design v2: 68px circles, fixed stroke=5, semantic colors per metric type,
- * hairline dividers between columns. Wrap in <Card> at call site.
+ * Row of 3 metric circles: Nutrition, Strain, Sommeil.
+ * Design v2: 68px circles, fixed stroke=5, state-based colors (green/yellow/red).
+ * Hairline dividers between columns. Wrap in <Card> at call site.
  *
- * Colors sourced from theme tokens: warn (nutrition), ok (strain), okStrong (sleep).
+ * Colors: state='green' → ok, 'yellow' → warn, 'red' → zoneRed.
  */
+function stateColor(state: MetricState, themeColors: { ok: string; warn: string }): string {
+  switch (state) {
+    case 'green': return themeColors.ok;
+    case 'yellow': return themeColors.warn;
+    case 'red': return globalColors.zoneRed;
+  }
+}
+
 export function MetricRow({ nutrition, strain, sleep }: MetricRowProps): React.JSX.Element {
   const { colors: themeColors } = useTheme();
 
   const metrics: Array<{ key: string; label: string; data: Metric; color: string }> = [
-    { key: 'nutrition', label: 'Nutrition', data: nutrition, color: themeColors.warn },
-    { key: 'strain',    label: 'Récup.',    data: strain,    color: themeColors.ok },
-    { key: 'sleep',     label: 'Sommeil',   data: sleep,     color: themeColors.okStrong },
+    { key: 'nutrition', label: 'Nutrition', data: nutrition, color: stateColor(nutrition.state, themeColors) },
+    { key: 'strain',    label: 'Strain',    data: strain,    color: stateColor(strain.state, themeColors) },
+    { key: 'sleep',     label: 'Sommeil',   data: sleep,     color: stateColor(sleep.state, themeColors) },
   ];
 
   return (
