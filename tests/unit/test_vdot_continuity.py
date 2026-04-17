@@ -43,14 +43,19 @@ class TestBreakDetection:
     """Tests for training break detection."""
 
     def test_high_continuity_no_breaks(self):
-        """Consistent training (no breaks) should have high continuity score."""
-        race_date = date(2026, 1, 1)
-        today = date.today()
+        """Consistent training (no breaks) should have high continuity score.
 
-        # Create activities: 3 runs per week for 5 weeks
+        Activities extend to 2030-12-31 so the analysis window (last 60 days
+        ending at date.today()) is always covered regardless of when the test
+        runs — no date drift possible.
+        """
+        race_date = date(2026, 1, 1)
+        # Extend beyond any plausible today so the lookback window is always full.
+        far_future = date(2030, 12, 31)
+
         activities = []
         current = race_date
-        while current <= today:
+        while current <= far_future:
             if current.weekday() in [0, 2, 4]:  # Mon, Wed, Fri
                 activities.append(create_run(current))
             current += timedelta(days=1)
