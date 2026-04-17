@@ -109,9 +109,15 @@ importers:
       '@tailwindcss/postcss':
         specifier: ^4.2.2
         version: 4.2.2
+      '@types/jest':
+        specifier: ^29.5.14
+        version: 29.5.14
       '@types/react':
         specifier: ~19.2.14
         version: 19.2.14
+      jest:
+        specifier: ^29.7.0
+        version: 29.7.0(@types/node@20.19.39)
       postcss:
         specifier: ^8.5.10
         version: 8.5.10
