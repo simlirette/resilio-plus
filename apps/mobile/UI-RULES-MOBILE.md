@@ -38,9 +38,9 @@ Autres options: Emerald `#2F7D5B`, Indigo `#5B5BAF` — via `colors.accent` seul
 | textSecondary | `rgba(43,40,36,0.62)` | Secondary text |
 | textMuted | `rgba(43,40,36,0.38)` | Tertiary / labels |
 | border | `rgba(43,40,36,0.08)` | Hairline borders |
-| warn | `#B8863A` | Nutrition metric |
-| ok | `#6B9259` | Strain metric |
-| okStrong | `#5C8250` | Sleep metric |
+| warn | `#B8863A` | Metric state: yellow |
+| ok | `#6B9259` | Metric state: green |
+| okStrong | `#5C8250` | Reserved (not used in MetricRow) |
 | caution | `#A6762E` | Prudent state |
 
 ### Dark mode
@@ -53,9 +53,9 @@ Autres options: Emerald `#2F7D5B`, Indigo `#5B5BAF` — via `colors.accent` seul
 | textSecondary | `rgba(237,233,226,0.62)` | Secondary text |
 | textMuted | `rgba(237,233,226,0.38)` | Tertiary / labels |
 | border | `rgba(237,233,226,0.08)` | Hairline borders |
-| warn | `#D6A24A` | Nutrition metric |
-| ok | `#7DA66A` | Strain metric |
-| okStrong | `#6B9259` | Sleep metric |
+| warn | `#D6A24A` | Metric state: yellow |
+| ok | `#7DA66A` | Metric state: green |
+| okStrong | `#6B9259` | Reserved (not used in MetricRow) |
 | caution | `#C79140` | Prudent state |
 
 ---
@@ -95,6 +95,15 @@ import { Icon } from '@resilio/ui-mobile';
 // ✅ CORRECT — name prop pattern (icône dynamique)
 import { IconComponent } from '@resilio/ui-mobile';
 <IconComponent name="Heart" color={colors.accent} size={20} />
+```
+
+**Exception SF Symbols — tab bar uniquement :**
+La tab bar principale (`app/(tabs)/_layout.tsx`) utilise SF Symbols via `NativeTabs.Trigger.Icon` pour l'intégration native iOS liquid glass. Sur web/Android, l'icône SF est ignorée (labels seuls). Tous les autres icônes dans l'app utilisent Lucide via `@resilio/ui-mobile/Icon`.
+
+```tsx
+// ✅ CORRECT — tab bar uniquement
+import { NativeTabs } from 'expo-router/unstable-native-tabs';
+<NativeTabs.Trigger.Icon sf={{ default: 'house', selected: 'house.fill' }} />
 ```
 
 ### 10 — Styles
@@ -147,6 +156,8 @@ import { Screen } from '@resilio/ui-mobile';
 ### 14 — Copy en français (tu)
 
 Tout le texte affiché est en français, tutoiement.
+
+**Termes techniques conservés en anglais :** les termes de sport science consacrés restent en anglais — Strain, Readiness, VO₂max, RPE, HRV, ACWR, EWMA. Les termes généraux sont en français : Sommeil, Nutrition, Repos, Séance.
 
 ### 15 — Animations
 
@@ -213,4 +224,16 @@ router.push('/(tabs)/check-in');
 
 ---
 
-*Mis à jour : Session FE-HOME-FROM-DESIGN (2026-04-17). Voir `CLAUDE.md` pour les règles globales.*
+## MetricRow — Couleurs state-based
+
+Les cercles `MetricRow` changent de couleur selon la **valeur** (état), pas selon le **type de métrique**.
+
+| State | Token | Description |
+|-------|-------|-------------|
+| `'green'` | `themeColors.ok` | Optimal |
+| `'yellow'` | `themeColors.warn` | Caution |
+| `'red'` | `colors.zoneRed` (#ef4444) | Alert |
+
+---
+
+*Mis à jour : Session FE-HOME-POLISH-NATIVETABS (2026-04-17). Voir `CLAUDE.md` pour les règles globales.*
