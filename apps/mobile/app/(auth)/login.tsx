@@ -23,14 +23,14 @@ export default function LoginScreen() {
 
   async function handleLogin() {
     if (!email || !password) {
-      setError('Email and password are required.');
+      setError('Email et mot de passe requis.');
       return;
     }
     setError('');
     setLoading(true);
     await new Promise((r) => setTimeout(r, 800));
     setLoading(false);
-    router.replace('/dashboard');
+    router.replace('/(tabs)/');
   }
 
   return (
@@ -46,20 +46,20 @@ export default function LoginScreen() {
           RESILIO+
         </Text>
         <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>
-          Your hybrid coaching platform
+          Ta plateforme de coaching hybride
         </Text>
         <Card style={styles.card}>
           <Input
             label="Email"
             value={email}
             onChangeText={setEmail}
-            placeholder="athlete@example.com"
+            placeholder="athlete@exemple.com"
             keyboardType="email-address"
             autoCapitalize="none"
             autoComplete="email"
           />
           <Input
-            label="Password"
+            label="Mot de passe"
             value={password}
             onChangeText={setPassword}
             placeholder="••••••••"
@@ -71,7 +71,7 @@ export default function LoginScreen() {
             <Text style={[styles.error, { color: colors.zoneRed }]}>{error}</Text>
           ) : null}
           <Button
-            title={loading ? 'Signing in…' : 'Sign in'}
+            title={loading ? 'Connexion…' : 'Se connecter'}
             onPress={handleLogin}
             disabled={loading}
             style={{ marginTop: 24 }}

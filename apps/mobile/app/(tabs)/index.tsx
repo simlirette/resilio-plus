@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { Card, useTheme, Icon } from '@resilio/ui-mobile';
 import { colors } from '@resilio/design-tokens';
 
-export default function DashboardScreen() {
+export default function HomeScreen() {
   const router = useRouter();
   const { colorMode } = useTheme();
   const themeColors = colorMode === 'dark' ? colors.dark : colors.light;
@@ -11,8 +11,8 @@ export default function DashboardScreen() {
   const readinessScore = 75;
   const nextSession = {
     title: 'Easy Run Z1',
-    detail: '45 min — Zone 1 (60–74% HRmax)',
-    day: 'Today',
+    detail: '45 min — Zone 1 (60–74% FCmax)',
+    day: 'Aujourd\'hui',
   };
   const readinessColor =
     readinessScore >= 70 ? colors.zoneGreen
@@ -26,10 +26,10 @@ export default function DashboardScreen() {
     >
       <View style={styles.header}>
         <Text style={[styles.greeting, { color: themeColors.foreground }]}>
-          Good morning 👋
+          Bonjour
         </Text>
         <Text style={[styles.subGreeting, { color: themeColors.textSecondary }]}>
-          Here's your coaching summary
+          Résumé de coaching du jour
         </Text>
       </View>
 
@@ -37,7 +37,7 @@ export default function DashboardScreen() {
         <View style={styles.cardRow}>
           <Icon.Heart color={readinessColor} size={20} />
           <Text style={[styles.cardLabel, { color: themeColors.textSecondary }]}>
-            Readiness
+            Forme du jour
           </Text>
         </View>
         <Text style={[styles.scoreValue, { color: readinessColor }]}>
@@ -45,7 +45,7 @@ export default function DashboardScreen() {
           <Text style={[styles.scoreUnit, { color: themeColors.textSecondary }]}> / 100</Text>
         </Text>
         <Text style={[styles.cardCaption, { color: themeColors.textSecondary }]}>
-          Good to train — moderate intensity OK
+          Prêt à l'entraînement — intensité modérée possible
         </Text>
       </Card>
 
@@ -75,7 +75,7 @@ export default function DashboardScreen() {
         activeOpacity={0.8}
       >
         <Icon.Energy color="#fff" size={18} />
-        <Text style={styles.checkinButtonText}>Daily Check-in</Text>
+        <Text style={styles.checkinButtonText}>Check-in quotidien</Text>
       </TouchableOpacity>
     </ScrollView>
   );

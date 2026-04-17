@@ -7,8 +7,8 @@ import { colors } from '@resilio/design-tokens';
 type Step = 0 | 1;
 
 const QUESTIONS = [
-  { id: 0 as Step, label: 'How is your energy level today?', options: ['Very low', 'Low', 'Moderate', 'High', 'Very high'] },
-  { id: 1 as Step, label: 'How did you sleep last night?', options: ['Very poor', 'Poor', 'OK', 'Good', 'Excellent'] },
+  { id: 0 as Step, label: 'Quel est ton niveau d\'énergie aujourd\'hui ?', options: ['Très bas', 'Bas', 'Modéré', 'Élevé', 'Très élevé'] },
+  { id: 1 as Step, label: 'Comment as-tu dormi la nuit dernière ?', options: ['Très mal', 'Mal', 'Correctement', 'Bien', 'Excellent'] },
 ];
 
 export default function CheckInScreen() {
@@ -28,7 +28,7 @@ export default function CheckInScreen() {
 
   function handleNext() {
     if (isLast) {
-      router.replace('/dashboard');
+      router.replace('/');
     } else {
       setStep((s) => (s + 1) as Step);
     }
@@ -46,7 +46,7 @@ export default function CheckInScreen() {
           <TouchableOpacity onPress={handleBack} style={styles.backButton}>
             <Icon.ChevronLeft color={themeColors.foreground} size={24} />
           </TouchableOpacity>
-          <Text style={[styles.title, { color: themeColors.foreground }]}>Daily Check-in</Text>
+          <Text style={[styles.title, { color: themeColors.foreground }]}>Check-in quotidien</Text>
           <Text style={[styles.stepIndicator, { color: themeColors.textSecondary }]}>
             {step + 1} / {QUESTIONS.length}
           </Text>
