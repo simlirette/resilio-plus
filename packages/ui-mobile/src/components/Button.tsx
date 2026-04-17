@@ -15,6 +15,10 @@ interface ButtonProps {
   style?: ViewStyle;
 }
 
+/**
+ * Button component. Design v2: height=54, radius=16, accent color.
+ * Primary: Clinical Blue #3B74C9, 6px shadow bloom.
+ */
 export function Button({ title, onPress, disabled = false, loading = false, variant = 'primary', style }: ButtonProps): React.JSX.Element {
   const { colorMode } = useTheme();
   const themeColors = colorMode === 'dark' ? colors.dark : colors.light;
@@ -31,13 +35,19 @@ export function Button({ title, onPress, disabled = false, loading = false, vari
   const containerStyle = [
     styles.base,
     variant === 'primary' && {
-      backgroundColor: disabled ? colors.primaryDim : colors.primary,
+      backgroundColor: disabled ? colors.accentDim : colors.accent,
       borderWidth: 0,
+      // Shadow bloom
+      shadowColor: colors.accent,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: disabled ? 0 : 0.22,
+      shadowRadius: 14,
+      elevation: disabled ? 0 : 4,
     },
     variant === 'secondary' && {
       backgroundColor: themeColors.surface2,
       borderColor: themeColors.border,
-      borderWidth: 1,
+      borderWidth: 0.5,
     },
     variant === 'ghost' && {
       backgroundColor: 'transparent',
@@ -49,7 +59,7 @@ export function Button({ title, onPress, disabled = false, loading = false, vari
 
   const textColor =
     variant === 'primary' ? '#ffffff'
-    : variant === 'ghost' ? colors.primary
+    : variant === 'ghost' ? colors.accent
     : themeColors.foreground;
 
   return (
@@ -60,7 +70,7 @@ export function Button({ title, onPress, disabled = false, loading = false, vari
       style={containerStyle}
     >
       {loading ? (
-        <ActivityIndicator size="small" color={variant === 'primary' ? '#ffffff' : colors.primary} />
+        <ActivityIndicator size="small" color={variant === 'primary' ? '#ffffff' : colors.accent} />
       ) : (
         <Text style={[styles.label, { color: textColor }]}>{title}</Text>
       )}
@@ -69,7 +79,7 @@ export function Button({ title, onPress, disabled = false, loading = false, vari
 }
 
 const styles = StyleSheet.create({
-  base: { height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
-  label: { fontSize: 15, fontWeight: '600' },
+  base: { height: 54, borderRadius: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
+  label: { fontFamily: 'Inter_500Medium', fontSize: 16, letterSpacing: -0.1 },
   disabled: { opacity: 0.5 },
 });

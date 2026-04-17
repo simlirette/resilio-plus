@@ -1,6 +1,8 @@
 # UI Rules Mobile — Resilio+ (apps/mobile)
 
 Anti-drift reference for all Claude Code sessions working on the Resilio+ mobile app.
+**Design system v2** — Warm minimalist, Apple Health / Whoop 5.0 inspired.
+Source: Claude Design handoff `RbXZRFnMZI1nsG_v0vkzMw` (2026-04-17)
 
 ---
 
@@ -12,10 +14,69 @@ Anti-drift reference for all Claude Code sessions working on the Resilio+ mobile
 | 2 | **Jamais d'import direct de `lucide-react-native`** hors `@resilio/ui-mobile` |
 | 3 | Jamais de valeur de couleur hardcodée hors `@resilio/design-tokens` |
 | 4 | Toujours passer par `@resilio/api-client` pour les appels backend |
-| 5 | Dark mode `dark:` variants obligatoires + CSS variables pour inline styles |
+| 5 | Light + dark mode obligatoires sur tout nouveau composant |
 | 6 | Commits conventionnels (`feat(mobile):`, `fix(mobile):`, `chore(mobile):`, etc.) |
 | 7 | Tests non négociables pour `shared-logic` et `api-client` |
 | 8 | Pas de logique métier dans les composants UI |
+
+---
+
+## Design System v2 — Palette
+
+### Accent
+**Un seul accent coloré visible simultanément.**
+Default: **Clinical Blue `#3B74C9`** (`colors.accent`).
+Autres options: Emerald `#2F7D5B`, Indigo `#5B5BAF` — via `colors.accent` seulement.
+
+### Light mode
+| Token | Hex | Usage |
+|-------|-----|-------|
+| background | `#F7F4EE` | Screen bg |
+| surface1 | `#FDFBF7` | Card bg |
+| surface2 | `#F3EFE8` | Badge bg, inner metric |
+| foreground | `#2B2824` | Primary text |
+| textSecondary | `rgba(43,40,36,0.62)` | Secondary text |
+| textMuted | `rgba(43,40,36,0.38)` | Tertiary / labels |
+| border | `rgba(43,40,36,0.08)` | Hairline borders |
+| warn | `#B8863A` | Nutrition metric |
+| ok | `#6B9259` | Strain metric |
+| okStrong | `#5C8250` | Sleep metric |
+| caution | `#A6762E` | Prudent state |
+
+### Dark mode
+| Token | Hex | Usage |
+|-------|-----|-------|
+| background | `#131210` | Screen bg |
+| surface1 | `#1C1B18` | Card bg |
+| surface2 | `#232120` | Badge bg, inner metric |
+| foreground | `#EDE9E2` | Primary text |
+| textSecondary | `rgba(237,233,226,0.62)` | Secondary text |
+| textMuted | `rgba(237,233,226,0.38)` | Tertiary / labels |
+| border | `rgba(237,233,226,0.08)` | Hairline borders |
+| warn | `#D6A24A` | Nutrition metric |
+| ok | `#7DA66A` | Strain metric |
+| okStrong | `#6B9259` | Sleep metric |
+| caution | `#C79140` | Prudent state |
+
+---
+
+## Typographie
+
+**Font: Inter** (via `@expo-google-fonts/inter`).
+Migration: Space Grotesk → Inter (v2, 2026-04-17). ❌ Ne pas réintroduire Space Grotesk.
+
+| Variant | Size | Weight | Usage |
+|---------|------|--------|-------|
+| `display` | 72px | 300 | Readiness number |
+| `headline` | 38px | 300 | Allostatic dial number |
+| `title` | 26px | 500 | Greeting name |
+| `body` | 15px | 400 | Body text |
+| `secondary` | 13px | 400 | Dates, details (tabular-nums) |
+| `caption` | 12px | 400 | Metric labels |
+| `label` | 11px | 500 | Section labels (CAPS) |
+| `mono` | 13px | — | Tabular numeric (SpaceMono) |
+
+**Tabular nums obligatoires** sur tous les chiffres visibles (`fontVariant: ['tabular-nums']`).
 
 ---
 
@@ -29,58 +90,54 @@ import { Heart } from 'lucide-react-native';
 
 // ✅ CORRECT — objet pattern
 import { Icon } from '@resilio/ui-mobile';
-<Icon.Heart color={colors.zoneGreen} size={20} />
+<Icon.Heart color={colors.accent} size={20} />
 
 // ✅ CORRECT — name prop pattern (icône dynamique)
 import { IconComponent } from '@resilio/ui-mobile';
-<IconComponent name="Heart" color={colors.zoneGreen} size={20} />
+<IconComponent name="Heart" color={colors.accent} size={20} />
 ```
 
 ### 10 — Styles
 
+StyleSheet est autorisé (v2 adopte StyleSheet pour tous les composants de base).
+❌ Hex hardcodés dans les styles — toujours via `colors.*` ou `useTheme()`.
+
 ```tsx
-// ❌ INTERDIT — StyleSheet dans les écrans (sauf exception documentée)
-const styles = StyleSheet.create({ container: { backgroundColor: '#08080e' } });
+// ❌ INTERDIT — hex hardcodé
+<View style={{ backgroundColor: '#131210' }} />
 
-// ✅ CORRECT — className NativeWind (préféré pour nouveaux composants)
-<View className="flex-1 bg-background px-6 pt-4" />
+// ✅ CORRECT — design tokens
+const { colors: themeColors } = useTheme();
+<View style={{ backgroundColor: themeColors.background }} />
 
-// ✅ CORRECT — tokens via useTheme() pour valeurs dynamiques
-const { colors } = useTheme();
-<View style={{ backgroundColor: colors.background }} />
+// ✅ CORRECT — tokens globaux
+import { colors } from '@resilio/design-tokens';
+<View style={{ borderColor: colors.accent }} />
 ```
 
-**Exception StyleSheet acceptée :** uniquement si NativeWind ne supporte pas la propriété CSS cible (ex: `shadowOffset`, `transform` complexes). Documenter l'exception dans le commit message.
+**Exception StyleSheet:** `contentContainerStyle` sur ScrollView (NativeWind ne peut pas cibler cette prop). Documenter dans le commit.
 
 ### 11 — Safe Area
 
 ```tsx
 // ❌ INTERDIT
 import { SafeAreaView } from 'react-native-safe-area-context';
-<SafeAreaView>...</SafeAreaView>
 
 // ✅ CORRECT — wrapper Screen de @resilio/ui-mobile
 import { Screen } from '@resilio/ui-mobile';
-<Screen padded>...</Screen>
-<Screen scroll padded>...</Screen>
+<Screen>...</Screen>
 ```
 
 ### 12 — Haptics
 
-Toutes les actions primaires déclenchent un retour haptique :
-- `Button` primary → `ImpactFeedbackStyle.Medium` (déjà intégré dans Button.tsx)
+- `Button` primary → `ImpactFeedbackStyle.Medium` (intégré dans Button.tsx)
 - `Button` secondary/ghost → `ImpactFeedbackStyle.Light`
-- Confirmations critiques → `NotificationFeedbackType.Success`
-
-```tsx
-import * as Haptics from 'expo-haptics';
-await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-```
+- Confirmations → `NotificationFeedbackType.Success`
 
 ### 13 — Pas d'emoji ni de copy célébratoire
 
 ```tsx
-// ❌ INTERDIT — copie célébratoire (règle clinique Resilio+)
+// ❌ INTERDIT
 <Text>Bravo ! 🎉 Tu as terminé ta séance !</Text>
 
 // ✅ CORRECT — ton clinique neutre
@@ -89,17 +146,11 @@ await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
 ### 14 — Copy en français (tu)
 
-Tout le texte affiché à l'utilisateur est en français, tutoiement :
-- Boutons : "Se connecter", "Continuer", "Terminer"
-- Labels : "Forme du jour", "Prochaine séance"
-- Erreurs : "Email et mot de passe requis."
+Tout le texte affiché est en français, tutoiement.
 
 ### 15 — Animations
 
 ```tsx
-// ❌ INTERDIT — API Animated classique
-import { Animated } from 'react-native';
-
 // ✅ CORRECT — react-native-reanimated
 import Animated, { useSharedValue, withSpring } from 'react-native-reanimated';
 ```
@@ -107,84 +158,59 @@ import Animated, { useSharedValue, withSpring } from 'react-native-reanimated';
 ### 16 — Fonts
 
 ```tsx
-// ❌ INTERDIT — import URL Google Fonts
-// @import url('https://fonts.googleapis.com/...')
-
 // ✅ CORRECT — expo-font via useFonts dans _layout.tsx
-import { useFonts, SpaceGrotesk_400Regular } from '@expo-google-fonts/space-grotesk';
-const [fontsLoaded] = useFonts({ SpaceGrotesk_400Regular });
+import { useFonts, Inter_400Regular } from '@expo-google-fonts/inter';
 ```
 
 ### 17 — Dark / Light mode
 
-Tous les composants doivent fonctionner en dark ET light mode.
-- Défaut : dark (Resilio+ est dark-first)
-- Utiliser `useTheme()` pour les couleurs dynamiques
-- `className` NativeWind utilise automatiquement les tokens dark/light du `tailwind.config.js`
+**Tout composant testé en light ET dark avant merge.**
 
 ```tsx
 const { colorMode, colors } = useTheme();
-// colors.background, colors.foreground, etc. — auto dark/light
+// colorMode: 'light' | 'dark' — suit la préférence système iOS
 ```
 
 ### 18 — Navigation
 
 ```tsx
-// ❌ INTERDIT — SafeAreaView pour navigation guard
-// ❌ INTERDIT — React Navigation direct
-
 // ✅ CORRECT — expo-router
-import { useRouter, Redirect } from 'expo-router';
-const router = useRouter();
+import { useRouter } from 'expo-router';
 router.push('/(tabs)/check-in');
-router.replace('/(tabs)/');
 ```
 
 ---
 
-## Design Tokens Rappel (mobile)
+## Composant sizing (design handoff)
 
-Tokens disponibles depuis `@resilio/design-tokens` et mappés dans `tailwind.config.js` :
-
-| Token NW class | Valeur (dark) | Usage |
-|---|---|---|
-| `bg-background` | `#08080e` | Fond écran principal |
-| `bg-surface-1` | `#0f0f18` | Tab bar, header |
-| `bg-surface-2` | `#14141f` | Cards, inputs |
-| `bg-surface-3` | `#1a1a28` | Éléments imbriqués |
-| `text-foreground` | `#eeeef4` | Texte principal |
-| `text-text-muted` | `#5c5c7a` | Texte désactivé |
-| `text-text-secondary` | `#8888a8` | Labels secondaires |
-| `bg-primary` | `#5b5fef` | Boutons primaires, accent |
-| `text-zone-green` | `#10b981` | Readiness ≥ 70 |
-| `text-zone-yellow` | `#f59e0b` | Readiness 50–69 |
-| `text-zone-red` | `#ef4444` | Readiness < 50 |
-
-Via `useTheme()` :
-```tsx
-const { colors } = useTheme();
-colors.background  // '#08080e' en dark
-colors.primary     // '#5b5fef'
-colors.zoneGreen   // '#10b981'
-```
+| Composant | Valeur | Notes |
+|-----------|--------|-------|
+| Card radius | 22px | borderRadius: 22 |
+| Card border | 0.5px | hairline |
+| Button height | 54px | |
+| Button radius | 16px | |
+| Readiness ring | 216px diam, stroke 10px | innerLabel="Readiness" |
+| Metric rings | 68px diam, stroke 5px | Circle strokeWidth=5 |
+| Tab bar radius | 33px | |
+| State badge | pill 999 + 7px dot | |
 
 ---
 
-## Anti-patterns à éviter
+## Anti-patterns formels
 
-| Anti-pattern | Raison | Alternative |
-|---|---|---|
-| `import { X } from 'lucide-react-native'` | Violation règle 2 | `Icon.X` from `@resilio/ui-mobile` |
-| Hex hardcodé dans composant | Violation règle 3 | `colors.*` from `@resilio/design-tokens` ou `useTheme()` |
-| `StyleSheet.create` dans écrans | NativeWind préféré | `className` NativeWind |
-| `<SafeAreaView>` direct | Type instable React 19 | `<Screen>` from `@resilio/ui-mobile` |
-| `Animated` API RN classique | Non compatible Fabric/RN 0.83 | `react-native-reanimated` |
-| `@import url()` Google Fonts | Pas d'optimisation build | `expo-font` + `useFonts` |
-| Emoji dans UI | Règle clinique Resilio+ | Texte neutre |
-| Copy anglais | Convention Resilio+ mobile | Français, tutoiement |
-| Logique métier dans composant UI | Règle 8 | `@resilio/shared-logic` |
-| `fetch()` direct dans composant | Règle 4 | `@resilio/api-client` |
+| Anti-pattern | Raison |
+|---|---|
+| Photos paysages en background (Bevel-style) | ❌ Aesthetic incompatible |
+| Serif display typography | ❌ Aesthetic incompatible |
+| Palettes pastel surchargées | ❌ Aesthetic incompatible |
+| Accents multiples dans un écran | ❌ Règle d'unité |
+| Gradients agressifs | ❌ Aesthetic incompatible |
+| L'ancien `#08080e` dark clinical | ❌ Deprecated — remplacé par `#131210` |
+| Space Grotesk font | ❌ Deprecated — remplacé par Inter |
+| `colors.primary = '#5b5fef'` | ❌ Deprecated — remplacé par `#3B74C9` |
+| Import direct de `lucide-react-native` | ❌ Règle 2 |
+| Hex hardcodé hors design-tokens | ❌ Règle 3 |
 
 ---
 
-*Mis à jour : Session FE-MOBILE-1 (2026-04-16). Voir `CLAUDE.md` pour les règles globales.*
+*Mis à jour : Session FE-HOME-FROM-DESIGN (2026-04-17). Voir `CLAUDE.md` pour les règles globales.*

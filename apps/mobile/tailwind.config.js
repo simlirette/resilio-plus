@@ -9,26 +9,28 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Source: @resilio/design-tokens/src/colors.ts
-        primary: '#5b5fef',
-        'primary-dim': 'rgba(91, 95, 239, 0.15)',
-        'zone-green': '#10b981',
-        'zone-yellow': '#f59e0b',
+        // Source: @resilio/design-tokens/src/colors.ts v2
+        // Accent
+        accent: '#3B74C9',
+        primary: '#3B74C9',
+        'primary-dim': 'rgba(59,116,201,0.15)',
+        // Semantic zone (training logic — not UI chrome)
+        'zone-green': '#6B9259',
+        'zone-yellow': '#B8863A',
         'zone-red': '#ef4444',
         'zone-critical': '#dc2626',
-        // Dark surfaces (default — Resilio+ is dark-first)
-        background: '#08080e',
-        'surface-1': '#0f0f18',
-        'surface-2': '#14141f',
-        'surface-3': '#1a1a28',
-        'border-col': '#22223a',
-        foreground: '#eeeef4',
-        'text-muted': '#5c5c7a',
-        'text-secondary': '#8888a8',
+        // Light mode
+        'bg-light': '#F7F4EE',
+        'surface-light': '#FDFBF7',
+        'surface2-light': '#F3EFE8',
+        // Dark mode
+        'bg-dark': '#131210',
+        'surface-dark': '#1C1B18',
+        'surface2-dark': '#232120',
       },
       fontFamily: {
-        // Source: @resilio/design-tokens/src/typography.ts
-        sans: ['SpaceGrotesk_400Regular', 'system-ui', 'sans-serif'],
+        // Source: @resilio/design-tokens/src/typography.ts v2
+        sans: ['Inter_400Regular', 'system-ui', 'sans-serif'],
         mono: ['SpaceMono_400Regular', 'monospace'],
       },
       borderRadius: {
@@ -37,7 +39,8 @@ module.exports = {
         md: 8,
         lg: 12,
         xl: 16,
-        '2xl': 24,
+        '2xl': 22,
+        '3xl': 33,
       },
       spacing: {
         // Source: @resilio/design-tokens/src/spacing.ts (4px scale)
@@ -45,6 +48,7 @@ module.exports = {
         2: 8,
         3: 12,
         4: 16,
+        5: 20,
         6: 24,
         8: 32,
         12: 48,
