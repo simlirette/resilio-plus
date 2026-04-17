@@ -3,11 +3,21 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@resilio/design-tokens": ["../../packages/design-tokens/src/index.ts"],
-      "@resilio/ui-mobile": ["../../packages/ui-mobile/src/index.ts"],
-      "@resilio/shared-logic": ["../../packages/shared-logic/src/index.ts"],
-      "@resilio/brand": ["../../packages/brand/src/index.ts"],
-      "@resilio/api-client": ["../../packages/api-client/src/index.ts"]
+      "@resilio/design-tokens": [
+        "../../packages/design-tokens/src/index.ts"
+      ],
+      "@resilio/ui-mobile": [
+        "../../packages/ui-mobile/src/index.ts"
+      ],
+      "@resilio/shared-logic": [
+        "../../packages/shared-logic/src/index.ts"
+      ],
+      "@resilio/brand": [
+        "../../packages/brand/src/index.ts"
+      ],
+      "@resilio/api-client": [
+        "../../packages/api-client/src/index.ts"
+      ]
     }
   },
   "include": [
@@ -15,6 +25,7 @@
     "**/*.tsx",
     ".expo/types/**/*.d.ts",
     "expo-env.d.ts",
-    "nativewind-env.d.ts"
+    "nativewind-env.d.ts",
+    ".expo/types/**/*.ts"
   ]
 }
