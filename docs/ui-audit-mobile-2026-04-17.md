@@ -171,4 +171,36 @@ No obvious unused imports detected in manual review. ESLint run in Step 2 will c
 
 ## 5. Bundler Warnings & Errors
 
-See Step 3 for bundler dry-run results.
+### TypeScript (Step 3a)
+✅ **0 errors** after fixing `'/(tabs)/'` → `'/(tabs)'` typed route in `login.tsx`.
+
+### ESLint (Step 3b)
+⚠️ **ESLint not installed** in `@resilio/mobile`. No eslint config or dependency. This is expected for an Expo app that relies on TypeScript for linting. To add: `pnpm add -D eslint eslint-config-expo` and create `eslint.config.js`.
+
+### Bundler dry-run: iOS, Android, Web (Steps 3c/3d/3e)
+❌ **All three platforms fail** with identical error:
+
+```
+SyntaxError: expo-router/_ctx.{ios|android|web}.js:
+Invalid call at line 2: process.env.EXPO_ROUTER_APP_ROOT
+First argument of `require.context` should be a string denoting the directory to require.
+```
+
+**Root cause (pre-existing):** In a pnpm monorepo, `expo-router/_ctx.ios.js` lives in the pnpm content-addressable store (`node_modules/.pnpm/expo-router@55.0.12_.../`), OUTSIDE the Metro `projectRoot` (`apps/mobile`). Metro's Babel transform only processes files within `projectRoot`. Therefore, `babel-preset-expo`'s `expo-router-plugin.js` — which replaces `process.env.EXPO_ROUTER_APP_ROOT` with a string literal — never runs on this file.
+
+**Evidence this is pre-existing:**
+- Not caused by any change in FE-MOBILE-1 or FE-MOBILE-1B
+- SESSION_REPORT_FE_MOBILE_1 does not mention running `expo export`
+- Error is in `expo-router` internals, not in our code
+
+**Impact:** `expo export` is blocked. `expo start` (dev server) likely works because it uses a different route context generation path.
+
+**Fix needed (FE-MOBILE-2):** Add pnpm store path to Metro's transform exclusion override:
+```js
+// In metro.config.js
+config.transformer.enableBabelRCLookup = false;
+// AND add transformerOptions that pass ExpoRouterAbsoluteAppRoot via caller
+```
+OR use `expo-doctor` to verify and apply the official Expo monorepo template fix.
+
+**Acceptable for this session?** YES — dev server (`expo start`) is the primary dev workflow. EAS Build in CI bypasses Metro export entirely. Document and defer to FE-MOBILE-2.
