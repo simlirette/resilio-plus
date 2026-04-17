@@ -1,5 +1,20 @@
 # Session Log — Resilio Plus
 
+## 2026-04-17 [saved]
+Goal: FE-MOBILE-1B — Consolidation: audit, polish, unit tests, regression tests, docs, FE-MOBILE-2 prep.
+Decisions:
+- jest-expo preset for `@resilio/ui-mobile` tests (not bare jest). Matches app's test runner, handles RN transforms.
+- pnpm transformIgnorePatterns: two-pattern approach (`.pnpm/` + flat). Character class `[-@+]` required — scoped pkgs use `+` (e.g., `@react-native+js-polyfills`), variants use `-` (e.g., `expo-modules-core@55.0.22_...`). Standard `[@]` fails silently.
+- `renderWithTheme` helper in `packages/ui-mobile/src/__tests__/helpers.tsx` — all tests wrap in ThemeProvider.
+- Regression tests: pure Node.js (`testEnvironment: 'node'`), fs/path grep — no RN runtime. Soft Rule 3 check (≤4 violations) not hard-fail: known #fff in index.tsx.
+- `expo export` bundler failure in pnpm monorepo documented as pre-existing, not blocking. `expo start` (dev path) unaffected.
+Rejected:
+- Root jest.config.js (would conflict with apps/mobile config). Per-package config is correct isolation.
+- Deleting 3 backup files — gitignored, deferred to FE-MOBILE-2 start.
+Open:
+- Web build: unused `@ts-expect-error` in `packages/ui-web/src/theme/ThemeProvider.tsx:25` → fix in F5.
+- `expo export` EXPO_ROUTER_APP_ROOT unresolved in pnpm monorepo → upstream Expo/Metro issue.
+
 ## 2026-04-16 [saved]
 Goal: Implement V3-X Apple Health XML import — streaming parser + daily aggregation + endpoint.
 Decisions:
