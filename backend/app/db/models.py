@@ -231,9 +231,7 @@ class StravaActivityModel(Base):
     __tablename__ = "strava_activities"
 
     id: Mapped[str] = mapped_column(String, primary_key=True)  # "strava_{strava_id}"
-    athlete_id: Mapped[str] = mapped_column(
-        String, ForeignKey("athletes.id", ondelete="CASCADE")
-    )
+    athlete_id: Mapped[str] = mapped_column(String, ForeignKey("athletes.id", ondelete="CASCADE"))
     strava_id: Mapped[int] = mapped_column(BigInteger, unique=True)
     sport_type: Mapped[str] = mapped_column(String)  # "running"|"biking"|"swimming"
     name: Mapped[str] = mapped_column(String)
@@ -323,9 +321,7 @@ class HormonalProfileModel(Base):
     tracking_source: Mapped[str] = mapped_column(String, default="manual")
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
-    athlete: Mapped[AthleteModel] = relationship(
-        "AthleteModel", back_populates="hormonal_profile"
-    )
+    athlete: Mapped[AthleteModel] = relationship("AthleteModel", back_populates="hormonal_profile")
 
 
 class AllostaticEntryModel(Base):

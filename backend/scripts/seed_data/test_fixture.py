@@ -78,75 +78,87 @@ def insert_test_fixture(session: Session) -> None:
         phase="base",
         total_weekly_hours=8.0,
         acwr=1.05,
-        weekly_slots_json=json.dumps([
-            {"day": 1, "sport": "running", "duration_min": 60, "session_type": "easy"},
-            {"day": 3, "sport": "lifting", "duration_min": 60, "session_type": "strength"},
-            {"day": 5, "sport": "running", "duration_min": 90, "session_type": "long"},
-        ]),
+        weekly_slots_json=json.dumps(
+            [
+                {"day": 1, "sport": "running", "duration_min": 60, "session_type": "easy"},
+                {"day": 3, "sport": "lifting", "duration_min": 60, "session_type": "strength"},
+                {"day": 5, "sport": "running", "duration_min": 90, "session_type": "long"},
+            ]
+        ),
         status="active",
         created_at=datetime(2026, 4, 7, tzinfo=timezone.utc),
     )
     session.add(plan)
 
     # Session logs (1 completed, 1 skipped, 1 pending)
-    session.add(SessionLogModel(
-        id=str(uuid.uuid4()),
-        athlete_id=TEST_ATHLETE_ID,
-        plan_id=TEST_PLAN_ID,
-        session_id="slot-mon-easy",
-        actual_duration_min=62,
-        skipped=False,
-        rpe=6,
-        notes="Felt good.",
-        actual_data_json=json.dumps({}),
-        logged_at=datetime(2026, 4, 7, 8, 0, tzinfo=timezone.utc),
-    ))
-    session.add(SessionLogModel(
-        id=str(uuid.uuid4()),
-        athlete_id=TEST_ATHLETE_ID,
-        plan_id=TEST_PLAN_ID,
-        session_id="slot-wed-lift",
-        actual_duration_min=None,
-        skipped=True,
-        rpe=None,
-        notes="Sick.",
-        actual_data_json=json.dumps({}),
-        logged_at=datetime(2026, 4, 9, 8, 0, tzinfo=timezone.utc),
-    ))
-    session.add(SessionLogModel(
-        id=str(uuid.uuid4()),
-        athlete_id=TEST_ATHLETE_ID,
-        plan_id=TEST_PLAN_ID,
-        session_id="slot-fri-long",
-        actual_duration_min=None,
-        skipped=False,
-        rpe=None,
-        notes="",
-        actual_data_json=json.dumps({}),
-        logged_at=datetime(2026, 4, 11, 8, 0, tzinfo=timezone.utc),
-    ))
+    session.add(
+        SessionLogModel(
+            id=str(uuid.uuid4()),
+            athlete_id=TEST_ATHLETE_ID,
+            plan_id=TEST_PLAN_ID,
+            session_id="slot-mon-easy",
+            actual_duration_min=62,
+            skipped=False,
+            rpe=6,
+            notes="Felt good.",
+            actual_data_json=json.dumps({}),
+            logged_at=datetime(2026, 4, 7, 8, 0, tzinfo=timezone.utc),
+        )
+    )
+    session.add(
+        SessionLogModel(
+            id=str(uuid.uuid4()),
+            athlete_id=TEST_ATHLETE_ID,
+            plan_id=TEST_PLAN_ID,
+            session_id="slot-wed-lift",
+            actual_duration_min=None,
+            skipped=True,
+            rpe=None,
+            notes="Sick.",
+            actual_data_json=json.dumps({}),
+            logged_at=datetime(2026, 4, 9, 8, 0, tzinfo=timezone.utc),
+        )
+    )
+    session.add(
+        SessionLogModel(
+            id=str(uuid.uuid4()),
+            athlete_id=TEST_ATHLETE_ID,
+            plan_id=TEST_PLAN_ID,
+            session_id="slot-fri-long",
+            actual_duration_min=None,
+            skipped=False,
+            rpe=None,
+            notes="",
+            actual_data_json=json.dumps({}),
+            logged_at=datetime(2026, 4, 11, 8, 0, tzinfo=timezone.utc),
+        )
+    )
 
     # Energy snapshot
-    session.add(EnergySnapshotModel(
-        id=str(uuid.uuid4()),
-        athlete_id=TEST_ATHLETE_ID,
-        timestamp=datetime(2026, 4, 13, 7, 0, tzinfo=timezone.utc),
-        allostatic_score=28.0,
-        cognitive_load=20.0,
-        energy_availability=42.0,
-        sleep_quality=82.0,
-        recommended_intensity_cap=1.0,
-        veto_triggered=False,
-        legs_feeling="normal",
-        stress_level="none",
-    ))
+    session.add(
+        EnergySnapshotModel(
+            id=str(uuid.uuid4()),
+            athlete_id=TEST_ATHLETE_ID,
+            timestamp=datetime(2026, 4, 13, 7, 0, tzinfo=timezone.utc),
+            allostatic_score=28.0,
+            cognitive_load=20.0,
+            energy_availability=42.0,
+            sleep_quality=82.0,
+            recommended_intensity_cap=1.0,
+            veto_triggered=False,
+            legs_feeling="normal",
+            stress_level="none",
+        )
+    )
 
     # Allostatic entry
-    session.add(AllostaticEntryModel(
-        id=str(uuid.uuid4()),
-        athlete_id=TEST_ATHLETE_ID,
-        entry_date=today,
-        allostatic_score=28.0,
-        components_json=json.dumps({"hrv": 20.0, "sleep": 30.0, "work": 25.0}),
-        intensity_cap_applied=1.0,
-    ))
+    session.add(
+        AllostaticEntryModel(
+            id=str(uuid.uuid4()),
+            athlete_id=TEST_ATHLETE_ID,
+            entry_date=today,
+            allostatic_score=28.0,
+            components_json=json.dumps({"hrv": 20.0, "sleep": 30.0, "work": 25.0}),
+            intensity_cap_applied=1.0,
+        )
+    )

@@ -25,11 +25,13 @@ def main() -> None:
     if args.db_url:
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
+
         engine = create_engine(args.db_url)
         Session = sessionmaker(engine)
     else:
         from app.db.database import engine
         from sqlalchemy.orm import sessionmaker
+
         Session = sessionmaker(engine)
 
     from app.integrations.nutrition.fcen_loader import load_fcen

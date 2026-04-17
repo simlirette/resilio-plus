@@ -16,13 +16,15 @@ from lxml import etree
 
 _DATE_FMT = "%Y-%m-%d %H:%M:%S %z"
 
-TARGET_TYPES: frozenset[str] = frozenset({
-    "HKQuantityTypeIdentifierHeartRateVariabilitySDNN",
-    "HKCategoryTypeIdentifierSleepAnalysis",
-    "HKQuantityTypeIdentifierRestingHeartRate",
-    "HKQuantityTypeIdentifierBodyMass",
-    "HKQuantityTypeIdentifierActiveEnergyBurned",
-})
+TARGET_TYPES: frozenset[str] = frozenset(
+    {
+        "HKQuantityTypeIdentifierHeartRateVariabilitySDNN",
+        "HKCategoryTypeIdentifierSleepAnalysis",
+        "HKQuantityTypeIdentifierRestingHeartRate",
+        "HKQuantityTypeIdentifierBodyMass",
+        "HKQuantityTypeIdentifierActiveEnergyBurned",
+    }
+)
 
 
 @dataclass
@@ -30,9 +32,9 @@ class AppleHealthRecord:
     """A single parsed Apple Health record."""
 
     record_type: str
-    start_date: datetime   # timezone-aware, UTC
-    end_date: datetime     # timezone-aware, UTC
-    value: str             # Raw string. Quantity types: numeric. Category types: HKCategory* constant.
+    start_date: datetime  # timezone-aware, UTC
+    end_date: datetime  # timezone-aware, UTC
+    value: str  # Raw string. Quantity types: numeric. Category types: HKCategory* constant.
     unit: str
     source_name: str
 
