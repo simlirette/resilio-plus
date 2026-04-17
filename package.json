@@ -14,7 +14,9 @@
     "build:mobile:ios:production": "cd apps/mobile && eas build --platform ios --profile production",
     "typecheck": "pnpm --filter @resilio/web typecheck",
     "typecheck:mobile": "cd apps/mobile && npx tsc --noEmit",
-    "lint": "pnpm --filter @resilio/web lint"
+    "lint": "pnpm --filter @resilio/web lint",
+    "test:mobile": "pnpm --filter @resilio/ui-mobile test",
+    "test:mobile:watch": "pnpm --filter @resilio/ui-mobile test:watch"
   },
   "devDependencies": {
     "concurrently": "^9.0.0",
