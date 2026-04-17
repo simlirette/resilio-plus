@@ -16,7 +16,8 @@
     "typecheck:mobile": "cd apps/mobile && npx tsc --noEmit",
     "lint": "pnpm --filter @resilio/web lint",
     "test:mobile": "pnpm --filter @resilio/ui-mobile test",
-    "test:mobile:watch": "pnpm --filter @resilio/ui-mobile test:watch"
+    "test:mobile:watch": "pnpm --filter @resilio/ui-mobile test:watch",
+    "test:mobile:regression": "pnpm --filter @resilio/mobile test:regression"
   },
   "devDependencies": {
     "concurrently": "^9.0.0",
