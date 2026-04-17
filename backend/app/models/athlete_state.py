@@ -220,8 +220,10 @@ class AthleteMetrics(BaseModel):
 
     date: date
     # Raw Terra
-    hrv_rmssd: Optional[float] = None        # RMSSD (ms) from Terra — primary HRV metric
-    hrv_sdnn: Optional[float] = None         # SDNN (ms) from Apple Health — NOT comparable to hrv_rmssd  # noqa: E501
+    hrv_rmssd: Optional[float] = None  # RMSSD (ms) from Terra — primary HRV metric
+    hrv_sdnn: Optional[
+        float
+    ] = None  # SDNN (ms) from Apple Health — NOT comparable to hrv_rmssd  # noqa: E501
     hrv_history_7d: list[float] = Field(default_factory=list)
     sleep_hours: Optional[float] = None
     terra_sleep_score: Optional[float] = Field(default=None, ge=0.0, le=100.0)

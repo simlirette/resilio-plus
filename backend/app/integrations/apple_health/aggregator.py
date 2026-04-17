@@ -12,13 +12,15 @@ from typing import Iterable
 from .xml_parser import AppleHealthRecord
 
 # Sleep values that count as "asleep" time (InBed and Awake excluded)
-_SLEEP_ASLEEP_VALUES: frozenset[str] = frozenset({
-    "HKCategoryValueSleepAnalysisAsleep",       # iOS ≤ 15
-    "HKCategoryValueSleepAnalysisAsleepCore",   # iOS 16+
-    "HKCategoryValueSleepAnalysisAsleepDeep",   # iOS 16+
-    "HKCategoryValueSleepAnalysisAsleepREM",    # iOS 16+
-    # Excluded: HKCategoryValueSleepAnalysisInBed, HKCategoryValueSleepAnalysisAwake
-})
+_SLEEP_ASLEEP_VALUES: frozenset[str] = frozenset(
+    {
+        "HKCategoryValueSleepAnalysisAsleep",  # iOS ≤ 15
+        "HKCategoryValueSleepAnalysisAsleepCore",  # iOS 16+
+        "HKCategoryValueSleepAnalysisAsleepDeep",  # iOS 16+
+        "HKCategoryValueSleepAnalysisAsleepREM",  # iOS 16+
+        # Excluded: HKCategoryValueSleepAnalysisInBed, HKCategoryValueSleepAnalysisAwake
+    }
+)
 
 
 @dataclass
@@ -26,10 +28,10 @@ class AppleHealthDailySummary:
     """Aggregated daily metrics from Apple Health records."""
 
     date: date
-    hrv_sdnn_avg: float | None = None       # Mean SDNN (ms). NOTE: SDNN ≠ RMSSD; see INTEGRATIONS.md
-    sleep_hours: float | None = None         # Sum of asleep durations; None if no asleep records
-    rhr_bpm: float | None = None            # Mean resting heart rate (bpm)
-    body_mass_kg: float | None = None       # Last body mass reading of the day (kg)
+    hrv_sdnn_avg: float | None = None  # Mean SDNN (ms). NOTE: SDNN ≠ RMSSD; see INTEGRATIONS.md
+    sleep_hours: float | None = None  # Sum of asleep durations; None if no asleep records
+    rhr_bpm: float | None = None  # Mean resting heart rate (bpm)
+    body_mass_kg: float | None = None  # Last body mass reading of the day (kg)
     active_energy_kcal: float | None = None  # Sum of active energy burned (kcal)
 
 
@@ -49,7 +51,7 @@ def aggregate(records: Iterable[AppleHealthRecord]) -> dict[date, AppleHealthDai
     _sleep: dict[date, float] = defaultdict(float)
     _sleep_seen: set[date] = set()  # tracks days with at least one asleep record
     _rhr: dict[date, list[float]] = defaultdict(list)
-    _mass: dict[date, tuple[datetime, float]] = {}   # (end_datetime, value_kg)
+    _mass: dict[date, tuple[datetime, float]] = {}  # (end_datetime, value_kg)
     _energy: dict[date, float] = defaultdict(float)
     all_dates: set[date] = set()
 

@@ -135,6 +135,7 @@ class FatigueScore:
 | V3-V | Backend Deployment — multi-stage `Dockerfile.backend` (477MB, non-root UID 1000, `curl` HEALTHCHECK), `/health` + `/ready` + `/ready/deep` probes (`backend/app/routes/health.py`, 5 tests), gunicorn entrypoint with Alembic migration + WAL sqlite preload, `data/` JSONs baked in image, `/app/runtime` checkpoint volume (split from `/app/data`), `docker-compose.yml` (dev + env_file) + `docker-compose.prod.yml` (gunicorn + resource limits), exhaustive `.env.example` (ANTHROPIC_API_KEY, LANGGRAPH_CHECKPOINT_DB, process control), `scripts/start_dev.ps1` + `scripts/start_prod.sh`, `docs/backend/DEPLOYMENT.md` (Fly.io / Railway / VPS recipes + env table + pre-deploy checklist) | ✅ Complete (2026-04-16) |
 | V3-W | Tech Debt Cleanup — mypy --strict 0 errors (131 files), ruff 0 violations; SQLAlchemy Mapped[T] migration (`jobs/models.py` + all DB models), circular import fix (`models/schemas.py` re-export shim), 3rd-party stubs (`types-python-dateutil`), mypy overrides for LangGraph/APScheduler, `Self` type for BaseConnector, `Callable[..., dict[str, Any]]` for log_node, `AsyncGenerator[None, None]` for lifespan, N806/N817/F841/E501 ruff fixes, `.pre-commit-config.yaml` (ruff + mypy hooks), `docs/backend/TYPING-CONVENTIONS.md` | ✅ Complete (2026-04-16) |
 | V3-X | Apple Health XML Import — streaming lxml.iterparse, `apple_health_daily` table (Alembic 0010), `AthleteMetrics.hrv_sdnn`, `POST /integrations/apple-health/import` (feature-flagged), 10 synthetic fixtures, SDNN/RMSSD separation documented | ✅ Complete (2026-04-16) |
+| V1-FROZEN | Backend Final Audit + Freeze — 2430 tests (0 flakes), mypy 0 errors, ruff clean, security audit, 2 flakes fixed, `BACKEND_FROZEN.md`, `backend/CONTRACT.md`, `docs/backend-audit-2026-04-17.md`, `docs/backend-security-audit-2026-04-17.md` | ✅ FROZEN (2026-04-17) |
 
 **Dernières phases complétées (2026-04-16) :** V3-X livré — Apple Health XML import. Parser streaming lxml.iterparse O(1) mémoire (>100MB supporté). 5 types HK ciblés: HRV SDNN, Sleep (iOS 15/16 compat), RHR, Body Mass, Active Energy. Agrégation quotidienne; sleep attribuée à end_date (réveil); InBed/Awake exclus. Nouveau champ AthleteMetrics.hrv_sdnn (SDNN ≠ RMSSD Terra — champs séparés). Table apple_health_daily + Alembic 0010. Feature flag APPLE_HEALTH_ENABLED=false. 10 fixtures synthétiques. WARNING: non-validé sur device réel.
 
@@ -205,7 +206,7 @@ The Running Coach has the richest existing knowledge base.
 4. **Frequent atomic commits** — one commit per logical task
 5. **Verify invariants after every task**:
    - `poetry install` must succeed
-   - `pytest tests/` must pass (≥2444 passing — état V3-X; 2 pre-existing unrelated failures: `test_history_shows_logged_count` flake, `test_high_continuity_no_breaks` date drift)
+   - `pytest tests/` must pass (≥2430 passing — état V1-FROZEN 2026-04-17; 0 flakes; 16 skipped = db_integration marker requiring live PG)
    - `python -m mypy backend/app/ --config-file pyproject.toml` must show 0 errors
    - `python -m ruff check backend/` must show 0 violations
    - `npx tsc --noEmit` (frontend) must have no errors

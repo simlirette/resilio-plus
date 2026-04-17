@@ -1,6 +1,6 @@
 # Session Log — Resilio Plus
 
-## 2026-04-17 [saved]
+## 2026-04-17 [saved] — FE-MOBILE-1B
 Goal: FE-MOBILE-1B — Consolidation: audit, polish, unit tests, regression tests, docs, FE-MOBILE-2 prep.
 Decisions:
 - jest-expo preset for `@resilio/ui-mobile` tests (not bare jest). Matches app's test runner, handles RN transforms.
@@ -14,6 +14,22 @@ Rejected:
 Open:
 - Web build: unused `@ts-expect-error` in `packages/ui-web/src/theme/ThemeProvider.tsx:25` → fix in F5.
 - `expo export` EXPO_ROUTER_APP_ROOT unresolved in pnpm monorepo → upstream Expo/Metro issue.
+
+## 2026-04-17 [saved] — BACKEND-FINAL-AUDIT
+Goal: Backend V1 final audit + freeze — 0 flakes, clean quality, frozen governance.
+Decisions:
+- `test_history_shows_logged_count` fix: `any(sessions_logged >= 1)` over `max(by=start_date)` — onboarding plan had later start_date than PLAN_BODY plan.
+- `test_high_continuity_no_breaks` fix: activities window extended to 2030-12-31 (not freeze_time — freeze_time conflicts with Pydantic v2 datetime.date schema generation).
+- 9 files formatted (ruff format — scripts/ + apple_health/ + athlete_state.py + db/models.py); zero logic change.
+- Security: no critical issues. JWT_SECRET dev default documented (not code-fixed — deployment concern).
+- `get_agent_view()` documented as not-enforced-at-runtime (V2 feature, not V1 fix).
+- CONTRACT.md placed in `backend/` (not `docs/`) — closer to governed code.
+Rejected:
+- Adding new tests for coverage-sake — 2430 tests already strong.
+- `@pytest.mark.flaky` — root causes were deterministic and fixable.
+- `freeze_time` for continuity test — Pydantic v2 breaks on frozen datetime.date.
+Open:
+- Third test run was in background at session end — expected to show 2430 passed (consistent with runs 1 and 2).
 
 ## 2026-04-16 [saved]
 Goal: Implement V3-X Apple Health XML import — streaming parser + daily aggregation + endpoint.

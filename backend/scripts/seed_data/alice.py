@@ -77,25 +77,29 @@ def insert_alice(session: Session) -> None:
     session.add(athlete)
 
     # --- User ---
-    session.add(UserModel(
-        id=_id(),
-        email=ALICE_EMAIL,
-        hashed_password=_pwd_ctx.hash("alice2026"),
-        athlete_id=ALICE_ID,
-        created_at=datetime(2026, 3, 1, tzinfo=timezone.utc),
-    ))
+    session.add(
+        UserModel(
+            id=_id(),
+            email=ALICE_EMAIL,
+            hashed_password=_pwd_ctx.hash("alice2026"),
+            athlete_id=ALICE_ID,
+            created_at=datetime(2026, 3, 1, tzinfo=timezone.utc),
+        )
+    )
 
     # --- Hormonal profile ---
-    session.add(HormonalProfileModel(
-        id=_id(),
-        athlete_id=ALICE_ID,
-        enabled=True,
-        cycle_length_days=28,
-        current_cycle_day=7,
-        current_phase="follicular",
-        last_period_start=date(2026, 4, 7),
-        tracking_source="manual",
-    ))
+    session.add(
+        HormonalProfileModel(
+            id=_id(),
+            athlete_id=ALICE_ID,
+            enabled=True,
+            cycle_length_days=28,
+            current_cycle_day=7,
+            current_phase="follicular",
+            last_period_start=date(2026, 4, 7),
+            tracking_source="manual",
+        )
+    )
 
     # --- Training plan ---
     plan_start = REF_DATE - timedelta(days=41)
@@ -107,33 +111,39 @@ def insert_alice(session: Session) -> None:
         phase="base",
         total_weekly_hours=8.0,
         acwr=1.08,
-        weekly_slots_json=json.dumps([
-            {"day": 1, "sport": "running", "duration_min": 60, "session_type": "easy"},
-            {"day": 3, "sport": "lifting", "duration_min": 60, "session_type": "strength"},
-            {"day": 4, "sport": "running", "duration_min": 50, "session_type": "tempo"},
-            {"day": 5, "sport": "lifting", "duration_min": 55, "session_type": "strength"},
-            {"day": 6, "sport": "running", "duration_min": 90, "session_type": "long"},
-            {"day": 7, "sport": "running", "duration_min": 45, "session_type": "easy"},
-        ]),
+        weekly_slots_json=json.dumps(
+            [
+                {"day": 1, "sport": "running", "duration_min": 60, "session_type": "easy"},
+                {"day": 3, "sport": "lifting", "duration_min": 60, "session_type": "strength"},
+                {"day": 4, "sport": "running", "duration_min": 50, "session_type": "tempo"},
+                {"day": 5, "sport": "lifting", "duration_min": 55, "session_type": "strength"},
+                {"day": 6, "sport": "running", "duration_min": 90, "session_type": "long"},
+                {"day": 7, "sport": "running", "duration_min": 45, "session_type": "easy"},
+            ]
+        ),
         status="active",
         created_at=datetime(2026, 3, 2, tzinfo=timezone.utc),
     )
     session.add(plan)
 
     # --- Nutrition plan ---
-    session.add(NutritionPlanModel(
-        id=_id(),
-        athlete_id=ALICE_ID,
-        weight_kg=60.0,
-        targets_json=json.dumps({
-            "protein_g": 108,
-            "carbs_g_easy": 200,
-            "carbs_g_hard": 300,
-            "fat_g": 65,
-            "calories_rest": 1800,
-            "calories_training": 2300,
-        }),
-    ))
+    session.add(
+        NutritionPlanModel(
+            id=_id(),
+            athlete_id=ALICE_ID,
+            weight_kg=60.0,
+            targets_json=json.dumps(
+                {
+                    "protein_g": 108,
+                    "carbs_g_easy": 200,
+                    "carbs_g_hard": 300,
+                    "fat_g": 65,
+                    "calories_rest": 1800,
+                    "calories_training": 2300,
+                }
+            ),
+        )
+    )
 
     # --- Session logs (35 total across 6 weeks) ---
     _sessions = [
@@ -182,42 +192,74 @@ def insert_alice(session: Session) -> None:
     ]
     for days_ago, stype, sport, dur, rpe, skipped in _sessions:
         log_date = REF_DATE - timedelta(days=days_ago)
-        session.add(SessionLogModel(
-            id=_id(),
-            athlete_id=ALICE_ID,
-            plan_id=ALICE_PLAN_ID,
-            session_id=f"alice-{log_date.isoformat()}-{stype}",
-            actual_duration_min=dur if not skipped else None,
-            skipped=skipped,
-            rpe=rpe,
-            notes="" if not skipped else "Skipped — fatigue",
-            actual_data_json=json.dumps({}),
-            logged_at=datetime(log_date.year, log_date.month, log_date.day, 9, 0, tzinfo=timezone.utc),
-        ))
+        session.add(
+            SessionLogModel(
+                id=_id(),
+                athlete_id=ALICE_ID,
+                plan_id=ALICE_PLAN_ID,
+                session_id=f"alice-{log_date.isoformat()}-{stype}",
+                actual_duration_min=dur if not skipped else None,
+                skipped=skipped,
+                rpe=rpe,
+                notes="" if not skipped else "Skipped — fatigue",
+                actual_data_json=json.dumps({}),
+                logged_at=datetime(
+                    log_date.year, log_date.month, log_date.day, 9, 0, tzinfo=timezone.utc
+                ),
+            )
+        )
 
     # --- Allostatic entries (28 days) ---
     _allostatic_scores = [
-        28, 30, 29, 32, 31, 28, 27,
-        35, 38, 42, 55, 68, 72, 65,
-        55, 45, 38, 32, 30, 28, 27,
-        26, 28, 30, 29, 31, 28, 27,
+        28,
+        30,
+        29,
+        32,
+        31,
+        28,
+        27,
+        35,
+        38,
+        42,
+        55,
+        68,
+        72,
+        65,
+        55,
+        45,
+        38,
+        32,
+        30,
+        28,
+        27,
+        26,
+        28,
+        30,
+        29,
+        31,
+        28,
+        27,
     ]
     for i, score in enumerate(_allostatic_scores):
         entry_date = REF_DATE - timedelta(days=27 - i)
         cap = 0.6 if score > 65 else (0.8 if score > 50 else 1.0)
-        session.add(AllostaticEntryModel(
-            id=_id(),
-            athlete_id=ALICE_ID,
-            entry_date=entry_date,
-            allostatic_score=float(score),
-            components_json=json.dumps({
-                "hrv": max(0.0, float(score - 10)),
-                "sleep": float(score * 0.8),
-                "work": 20.0,
-                "stress": 15.0,
-            }),
-            intensity_cap_applied=cap,
-        ))
+        session.add(
+            AllostaticEntryModel(
+                id=_id(),
+                athlete_id=ALICE_ID,
+                entry_date=entry_date,
+                allostatic_score=float(score),
+                components_json=json.dumps(
+                    {
+                        "hrv": max(0.0, float(score - 10)),
+                        "sleep": float(score * 0.8),
+                        "work": 20.0,
+                        "stress": 15.0,
+                    }
+                ),
+                intensity_cap_applied=cap,
+            )
+        )
 
     # --- Energy snapshots (14 days) ---
     _hrv_values = [62, 58, 55, 42, 38, 35, 40, 48, 55, 60, 62, 64, 65, 63]
@@ -228,64 +270,74 @@ def insert_alice(session: Session) -> None:
         slp = _sleep_values[i]
         allostatic = _allostatic_scores[14 + i]
         veto = hrv < 40 or slp < 6.0
-        session.add(EnergySnapshotModel(
-            id=_id(),
-            athlete_id=ALICE_ID,
-            timestamp=datetime(snap_date.year, snap_date.month, snap_date.day, 7, 0, tzinfo=timezone.utc),
-            allostatic_score=float(allostatic),
-            cognitive_load=20.0,
-            energy_availability=40.0 if veto else 42.0,
-            cycle_phase="follicular" if i >= 7 else "menstrual",
-            sleep_quality=float(slp / 9.0 * 100),
-            recommended_intensity_cap=0.6 if veto else 1.0,
-            veto_triggered=veto,
-            veto_reason="HRV below 70% baseline and sleep below 6h" if veto else None,
-            legs_feeling="heavy" if allostatic > 60 else "normal",
-            stress_level="none",
-        ))
+        session.add(
+            EnergySnapshotModel(
+                id=_id(),
+                athlete_id=ALICE_ID,
+                timestamp=datetime(
+                    snap_date.year, snap_date.month, snap_date.day, 7, 0, tzinfo=timezone.utc
+                ),
+                allostatic_score=float(allostatic),
+                cognitive_load=20.0,
+                energy_availability=40.0 if veto else 42.0,
+                cycle_phase="follicular" if i >= 7 else "menstrual",
+                sleep_quality=float(slp / 9.0 * 100),
+                recommended_intensity_cap=0.6 if veto else 1.0,
+                veto_triggered=veto,
+                veto_reason="HRV below 70% baseline and sleep below 6h" if veto else None,
+                legs_feeling="heavy" if allostatic > 60 else "normal",
+                stress_level="none",
+            )
+        )
 
     # --- Weekly reviews (weeks 5 and 6) ---
-    session.add(WeeklyReviewModel(
-        id=_id(),
-        athlete_id=ALICE_ID,
-        plan_id=ALICE_PLAN_ID,
-        week_start=REF_DATE - timedelta(days=13),
-        week_number=5,
-        planned_hours=8.0,
-        actual_hours=6.5,
-        acwr=0.92,
-        readiness_score=72.0,
-        hrv_rmssd=55.0,
-        sleep_hours_avg=7.0,
-        athlete_comment="Recovery week, felt better by Thursday.",
-        results_json=json.dumps({"completed": 5, "skipped": 1}),
-    ))
-    session.add(WeeklyReviewModel(
-        id=_id(),
-        athlete_id=ALICE_ID,
-        plan_id=ALICE_PLAN_ID,
-        week_start=WEEK_START,
-        week_number=6,
-        planned_hours=8.0,
-        actual_hours=7.5,
-        acwr=1.08,
-        readiness_score=84.0,
-        hrv_rmssd=63.0,
-        sleep_hours_avg=7.4,
-        athlete_comment="Back on track.",
-        results_json=json.dumps({"completed": 5, "skipped": 0}),
-    ))
+    session.add(
+        WeeklyReviewModel(
+            id=_id(),
+            athlete_id=ALICE_ID,
+            plan_id=ALICE_PLAN_ID,
+            week_start=REF_DATE - timedelta(days=13),
+            week_number=5,
+            planned_hours=8.0,
+            actual_hours=6.5,
+            acwr=0.92,
+            readiness_score=72.0,
+            hrv_rmssd=55.0,
+            sleep_hours_avg=7.0,
+            athlete_comment="Recovery week, felt better by Thursday.",
+            results_json=json.dumps({"completed": 5, "skipped": 1}),
+        )
+    )
+    session.add(
+        WeeklyReviewModel(
+            id=_id(),
+            athlete_id=ALICE_ID,
+            plan_id=ALICE_PLAN_ID,
+            week_start=WEEK_START,
+            week_number=6,
+            planned_hours=8.0,
+            actual_hours=7.5,
+            acwr=1.08,
+            readiness_score=84.0,
+            hrv_rmssd=63.0,
+            sleep_hours_avg=7.4,
+            athlete_comment="Back on track.",
+            results_json=json.dumps({"completed": 5, "skipped": 0}),
+        )
+    )
 
     # --- Head Coach message (recovery dip alert) ---
-    session.add(HeadCoachMessageModel(
-        id=_id(),
-        athlete_id=ALICE_ID,
-        pattern_type="reds_signal",
-        message=(
-            "HRV dropped to 35ms (−44% from baseline) and sleep averaged 5.8h "
-            "over 3 consecutive nights. Intensity cap set to 60% for the next 48h. "
-            "Prioritize sleep and reduce training volume this week."
-        ),
-        created_at=datetime(2026, 3, 27, 8, 0, tzinfo=timezone.utc),
-        is_read=False,
-    ))
+    session.add(
+        HeadCoachMessageModel(
+            id=_id(),
+            athlete_id=ALICE_ID,
+            pattern_type="reds_signal",
+            message=(
+                "HRV dropped to 35ms (−44% from baseline) and sleep averaged 5.8h "
+                "over 3 consecutive nights. Intensity cap set to 60% for the next 48h. "
+                "Prioritize sleep and reduce training volume this week."
+            ),
+            created_at=datetime(2026, 3, 27, 8, 0, tzinfo=timezone.utc),
+            is_read=False,
+        )
+    )

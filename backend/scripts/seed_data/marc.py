@@ -74,24 +74,28 @@ def insert_marc(session: Session) -> None:
     session.add(athlete)
 
     # --- User ---
-    session.add(UserModel(
-        id=_id(),
-        email=MARC_EMAIL,
-        hashed_password=_pwd_ctx.hash("marc2026"),
-        athlete_id=MARC_ID,
-        created_at=datetime(2026, 3, 1, tzinfo=timezone.utc),
-    ))
+    session.add(
+        UserModel(
+            id=_id(),
+            email=MARC_EMAIL,
+            hashed_password=_pwd_ctx.hash("marc2026"),
+            athlete_id=MARC_ID,
+            created_at=datetime(2026, 3, 1, tzinfo=timezone.utc),
+        )
+    )
 
     # --- Strava connector credential (fake token for dev) ---
-    session.add(ConnectorCredentialModel(
-        id=_id(),
-        athlete_id=MARC_ID,
-        provider="strava",
-        access_token="fake_strava_access_token_marc_dev_only",
-        refresh_token="fake_strava_refresh_token_marc_dev_only",
-        expires_at=1800000000,
-        extra_json=json.dumps({"athlete_id": 99999999, "scope": "activity:read_all"}),
-    ))
+    session.add(
+        ConnectorCredentialModel(
+            id=_id(),
+            athlete_id=MARC_ID,
+            provider="strava",
+            access_token="fake_strava_access_token_marc_dev_only",
+            refresh_token="fake_strava_refresh_token_marc_dev_only",
+            expires_at=1800000000,
+            extra_json=json.dumps({"athlete_id": 99999999, "scope": "activity:read_all"}),
+        )
+    )
 
     # --- Training plan ---
     plan_start = REF_DATE - timedelta(days=41)
@@ -103,34 +107,40 @@ def insert_marc(session: Session) -> None:
         phase="build",
         total_weekly_hours=12.0,
         acwr=1.10,
-        weekly_slots_json=json.dumps([
-            {"day": 1, "sport": "running", "duration_min": 60, "session_type": "easy"},
-            {"day": 2, "sport": "cycling", "duration_min": 90, "session_type": "base"},
-            {"day": 3, "sport": "swimming", "duration_min": 45, "session_type": "technique"},
-            {"day": 4, "sport": "running", "duration_min": 75, "session_type": "tempo"},
-            {"day": 5, "sport": "cycling", "duration_min": 75, "session_type": "intervals"},
-            {"day": 6, "sport": "running", "duration_min": 100, "session_type": "long"},
-            {"day": 7, "sport": "swimming", "duration_min": 50, "session_type": "endurance"},
-        ]),
+        weekly_slots_json=json.dumps(
+            [
+                {"day": 1, "sport": "running", "duration_min": 60, "session_type": "easy"},
+                {"day": 2, "sport": "cycling", "duration_min": 90, "session_type": "base"},
+                {"day": 3, "sport": "swimming", "duration_min": 45, "session_type": "technique"},
+                {"day": 4, "sport": "running", "duration_min": 75, "session_type": "tempo"},
+                {"day": 5, "sport": "cycling", "duration_min": 75, "session_type": "intervals"},
+                {"day": 6, "sport": "running", "duration_min": 100, "session_type": "long"},
+                {"day": 7, "sport": "swimming", "duration_min": 50, "session_type": "endurance"},
+            ]
+        ),
         status="active",
         created_at=datetime(2026, 3, 2, tzinfo=timezone.utc),
     )
     session.add(plan)
 
     # --- Nutrition plan ---
-    session.add(NutritionPlanModel(
-        id=_id(),
-        athlete_id=MARC_ID,
-        weight_kg=75.0,
-        targets_json=json.dumps({
-            "protein_g": 135,
-            "carbs_g_easy": 280,
-            "carbs_g_hard": 420,
-            "fat_g": 80,
-            "calories_rest": 2400,
-            "calories_training": 3200,
-        }),
-    ))
+    session.add(
+        NutritionPlanModel(
+            id=_id(),
+            athlete_id=MARC_ID,
+            weight_kg=75.0,
+            targets_json=json.dumps(
+                {
+                    "protein_g": 135,
+                    "carbs_g_easy": 280,
+                    "carbs_g_hard": 420,
+                    "fat_g": 80,
+                    "calories_rest": 2400,
+                    "calories_training": 3200,
+                }
+            ),
+        )
+    )
 
     # --- Session logs (41 total: 7+7+7+7+7+6) ---
     _sessions = [
@@ -184,41 +194,73 @@ def insert_marc(session: Session) -> None:
     ]
     for days_ago, stype, sport, dur, rpe, skipped in _sessions:
         log_date = REF_DATE - timedelta(days=days_ago)
-        session.add(SessionLogModel(
-            id=_id(),
-            athlete_id=MARC_ID,
-            plan_id=MARC_PLAN_ID,
-            session_id=f"marc-{log_date.isoformat()}-{stype}",
-            actual_duration_min=dur if not skipped else None,
-            skipped=skipped,
-            rpe=rpe,
-            notes="" if not skipped else "Planned rest — high ACWR",
-            actual_data_json=json.dumps({}),
-            logged_at=datetime(log_date.year, log_date.month, log_date.day, 7, 30, tzinfo=timezone.utc),
-        ))
+        session.add(
+            SessionLogModel(
+                id=_id(),
+                athlete_id=MARC_ID,
+                plan_id=MARC_PLAN_ID,
+                session_id=f"marc-{log_date.isoformat()}-{stype}",
+                actual_duration_min=dur if not skipped else None,
+                skipped=skipped,
+                rpe=rpe,
+                notes="" if not skipped else "Planned rest — high ACWR",
+                actual_data_json=json.dumps({}),
+                logged_at=datetime(
+                    log_date.year, log_date.month, log_date.day, 7, 30, tzinfo=timezone.utc
+                ),
+            )
+        )
 
     # --- Allostatic entries (28 days) ---
     _allostatic_scores = [
-        28, 30, 29, 30, 32, 30, 28,
-        35, 40, 45, 42, 38, 35, 32,
-        30, 28, 28, 27, 29, 28, 27,
-        28, 30, 29, 31, 30, 28, 27,
+        28,
+        30,
+        29,
+        30,
+        32,
+        30,
+        28,
+        35,
+        40,
+        45,
+        42,
+        38,
+        35,
+        32,
+        30,
+        28,
+        28,
+        27,
+        29,
+        28,
+        27,
+        28,
+        30,
+        29,
+        31,
+        30,
+        28,
+        27,
     ]
     for i, score in enumerate(_allostatic_scores):
         entry_date = REF_DATE - timedelta(days=27 - i)
-        session.add(AllostaticEntryModel(
-            id=_id(),
-            athlete_id=MARC_ID,
-            entry_date=entry_date,
-            allostatic_score=float(score),
-            components_json=json.dumps({
-                "hrv": max(0.0, float(score - 8)),
-                "sleep": float(score * 0.75),
-                "work": 18.0,
-                "stress": 12.0,
-            }),
-            intensity_cap_applied=0.9 if score > 42 else 1.0,
-        ))
+        session.add(
+            AllostaticEntryModel(
+                id=_id(),
+                athlete_id=MARC_ID,
+                entry_date=entry_date,
+                allostatic_score=float(score),
+                components_json=json.dumps(
+                    {
+                        "hrv": max(0.0, float(score - 8)),
+                        "sleep": float(score * 0.75),
+                        "work": 18.0,
+                        "stress": 12.0,
+                    }
+                ),
+                intensity_cap_applied=0.9 if score > 42 else 1.0,
+            )
+        )
 
     # --- Energy snapshots (14 days) ---
     _hrv_values = [70, 68, 65, 62, 58, 62, 65, 68, 70, 71, 70, 72, 71, 70]
@@ -227,49 +269,57 @@ def insert_marc(session: Session) -> None:
         snap_date = REF_DATE - timedelta(days=13 - i)
         slp = _sleep_values[i]
         allostatic = _allostatic_scores[14 + i]
-        session.add(EnergySnapshotModel(
-            id=_id(),
-            athlete_id=MARC_ID,
-            timestamp=datetime(snap_date.year, snap_date.month, snap_date.day, 6, 30, tzinfo=timezone.utc),
-            allostatic_score=float(allostatic),
-            cognitive_load=18.0,
-            energy_availability=48.0,
-            cycle_phase=None,
-            sleep_quality=float(slp / 9.0 * 100),
-            recommended_intensity_cap=0.9 if allostatic > 42 else 1.0,
-            veto_triggered=False,
-            legs_feeling="normal",
-            stress_level="none",
-        ))
+        session.add(
+            EnergySnapshotModel(
+                id=_id(),
+                athlete_id=MARC_ID,
+                timestamp=datetime(
+                    snap_date.year, snap_date.month, snap_date.day, 6, 30, tzinfo=timezone.utc
+                ),
+                allostatic_score=float(allostatic),
+                cognitive_load=18.0,
+                energy_availability=48.0,
+                cycle_phase=None,
+                sleep_quality=float(slp / 9.0 * 100),
+                recommended_intensity_cap=0.9 if allostatic > 42 else 1.0,
+                veto_triggered=False,
+                legs_feeling="normal",
+                stress_level="none",
+            )
+        )
 
     # --- Weekly reviews ---
-    session.add(WeeklyReviewModel(
-        id=_id(),
-        athlete_id=MARC_ID,
-        plan_id=MARC_PLAN_ID,
-        week_start=REF_DATE - timedelta(days=13),
-        week_number=5,
-        planned_hours=12.0,
-        actual_hours=11.5,
-        acwr=1.12,
-        readiness_score=80.0,
-        hrv_rmssd=68.0,
-        sleep_hours_avg=7.1,
-        athlete_comment="Good week. Legs felt heavy Tuesday but recovered by Thursday.",
-        results_json=json.dumps({"completed": 6, "skipped": 1}),
-    ))
-    session.add(WeeklyReviewModel(
-        id=_id(),
-        athlete_id=MARC_ID,
-        plan_id=MARC_PLAN_ID,
-        week_start=WEEK_START,
-        week_number=6,
-        planned_hours=12.0,
-        actual_hours=11.8,
-        acwr=1.10,
-        readiness_score=85.0,
-        hrv_rmssd=70.0,
-        sleep_hours_avg=7.1,
-        athlete_comment="Strong week. Bike power up 8W vs last month.",
-        results_json=json.dumps({"completed": 6, "skipped": 0}),
-    ))
+    session.add(
+        WeeklyReviewModel(
+            id=_id(),
+            athlete_id=MARC_ID,
+            plan_id=MARC_PLAN_ID,
+            week_start=REF_DATE - timedelta(days=13),
+            week_number=5,
+            planned_hours=12.0,
+            actual_hours=11.5,
+            acwr=1.12,
+            readiness_score=80.0,
+            hrv_rmssd=68.0,
+            sleep_hours_avg=7.1,
+            athlete_comment="Good week. Legs felt heavy Tuesday but recovered by Thursday.",
+            results_json=json.dumps({"completed": 6, "skipped": 1}),
+        )
+    )
+    session.add(
+        WeeklyReviewModel(
+            id=_id(),
+            athlete_id=MARC_ID,
+            plan_id=MARC_PLAN_ID,
+            week_start=WEEK_START,
+            week_number=6,
+            planned_hours=12.0,
+            actual_hours=11.8,
+            acwr=1.10,
+            readiness_score=85.0,
+            hrv_rmssd=70.0,
+            sleep_hours_avg=7.1,
+            athlete_comment="Strong week. Bike power up 8W vs last month.",
+            results_json=json.dumps({"completed": 6, "skipped": 0}),
+        )
+    )

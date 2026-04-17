@@ -39,9 +39,7 @@ def import_daily_summaries(
 
     for d, summary in sorted(summaries.items()):
         row = (
-            db.query(AppleHealthDailyModel)
-            .filter_by(athlete_id=athlete_id, record_date=d)
-            .first()
+            db.query(AppleHealthDailyModel).filter_by(athlete_id=athlete_id, record_date=d).first()
         )
         if row is None:
             row = AppleHealthDailyModel(
