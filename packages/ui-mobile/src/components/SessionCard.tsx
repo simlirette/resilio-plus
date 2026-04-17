@@ -28,11 +28,6 @@ interface SessionCardProps {
   session: WorkoutSlotForCard | null;
 }
 
-/**
- * Sport icon mapping. Uses IconComponent (typed wrapper) — no direct lucide JSX.
- * Running → Activity (no dedicated Running icon in lucide-react-native).
- * Unknown sport → Target as safe fallback.
- */
 const SPORT_ICON_MAP: Record<SportType, IconName> = {
   running:  'Activity',
   lifting:  'Lifting',
@@ -43,7 +38,7 @@ const SPORT_ICON_MAP: Record<SportType, IconName> = {
 
 function SportIcon({ sport, color }: { sport: SportType; color: string }): React.JSX.Element {
   const name: IconName = SPORT_ICON_MAP[sport] ?? 'Target';
-  return <IconComponent name={name} size={18} color={color} />;
+  return <IconComponent name={name} size={16} color={color} />;
 }
 
 function sportLabel(sport: SportType): string {
@@ -60,93 +55,103 @@ function sportLabel(sport: SportType): string {
 export function SessionCard({ session }: SessionCardProps): React.JSX.Element {
   const { colors: themeColors } = useTheme();
 
-  // Rest day — no session planned
   if (session === null) {
     return (
-      <Card>
-        <View style={styles.row}>
-          <IconComponent name="DarkMode" size={18} color={themeColors.textSecondary} />
-          <Text variant="caption" color={themeColors.textSecondary} style={styles.sectionLabel}>
+      <Card style={styles.cardPad}>
+        <View style={styles.labelRow}>
+          <IconComponent name="DarkMode" size={14} color={themeColors.textMuted} />
+          <Text variant="label" color={themeColors.textMuted} style={styles.sectionLabel}>
             Séance du jour
           </Text>
         </View>
-        <Text variant="body" color={themeColors.textMuted} style={styles.restText}>
+        <Text variant="body" color={themeColors.textSecondary} style={styles.restText}>
           Repos programmé — aucune séance aujourd'hui
         </Text>
       </Card>
     );
   }
 
-  // Active rest day (prescribed recovery)
   if (session.is_rest_day) {
     return (
-      <Card>
-        <View style={styles.row}>
-          <IconComponent name="Heart" size={18} color={themeColors.textSecondary} />
-          <Text variant="caption" color={themeColors.textSecondary} style={styles.sectionLabel}>
+      <Card style={styles.cardPad}>
+        <View style={styles.labelRow}>
+          <IconComponent name="Heart" size={14} color={themeColors.textMuted} />
+          <Text variant="label" color={themeColors.textMuted} style={styles.sectionLabel}>
             Séance du jour
           </Text>
         </View>
-        <Text variant="body" color={themeColors.textMuted} style={styles.restText}>
+        <Text variant="body" color={themeColors.textSecondary} style={styles.restText}>
           Repos actif — récupération
         </Text>
       </Card>
     );
   }
 
-  // Normal session
-  const sportColor = colors.primary;
+  // Normal session — side-by-side: content left, chevron right
   return (
-    <Card>
+    <Card style={styles.cardPad}>
       <View style={styles.row}>
-        <SportIcon sport={session.sport} color={themeColors.textSecondary} />
-        <Text variant="caption" color={themeColors.textSecondary} style={styles.sectionLabel}>
-          Séance du jour
-        </Text>
-      </View>
+        {/* Left content */}
+        <View style={styles.leftContent}>
+          {/* Label row: SÉANCE DU JOUR + zone badge */}
+          <View style={styles.labelRow}>
+            <Text variant="label" color={themeColors.textMuted} style={styles.sectionLabel}>
+              Séance du jour
+            </Text>
+            <View style={[styles.zoneBadge, { backgroundColor: themeColors.surface2 }]}>
+              <Text variant="label" color={themeColors.textSecondary} style={styles.zoneText}>
+                {session.zone.split(' ')[0]}
+              </Text>
+            </View>
+          </View>
 
-      <View style={styles.row}>
-        <SportIcon sport={session.sport} color={sportColor} />
-        <Text variant="caption" color={sportColor} style={styles.sportLabelAccent}>
-          {sportLabel(session.sport)}
-        </Text>
-      </View>
+          {/* Sport label */}
+          <View style={styles.sportRow}>
+            <SportIcon sport={session.sport} color={themeColors.textMuted} />
+            <Text variant="caption" color={colors.accent} style={styles.sportLabelText}>
+              {sportLabel(session.sport)}
+            </Text>
+          </View>
 
-      <Text variant="body" color={themeColors.foreground} style={styles.title} numberOfLines={2}>
-        {session.title}
-      </Text>
+          {/* Session title */}
+          <Text variant="body" color={themeColors.foreground} style={styles.title} numberOfLines={2}>
+            {session.title}
+          </Text>
 
-      <Text variant="caption" color={themeColors.textSecondary} style={styles.zone}>
-        {session.zone}
-      </Text>
+          {/* Duration + zone details */}
+          <Text variant="secondary" color={themeColors.textSecondary} style={styles.details}>
+            {session.duration_min} min
+          </Text>
+          <Text variant="secondary" color={themeColors.textSecondary} numberOfLines={1}>
+            {session.zone}
+          </Text>
+        </View>
 
-      <View style={styles.durationBadge}>
-        <IconComponent name="Clock" size={12} color={colors.primary} />
-        <Text variant="caption" color={colors.primary} style={styles.durationText}>
-          {session.duration_min} min
-        </Text>
+        {/* Chevron */}
+        <View style={[styles.chevronCircle, { backgroundColor: themeColors.surface2 }]}>
+          <IconComponent name="ChevronRight" size={14} color={themeColors.textSecondary} />
+        </View>
       </View>
     </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
-  sectionLabel: { textTransform: 'uppercase', letterSpacing: 0.5 },
-  restText: { marginTop: 4 },
-  sportLabel: { marginLeft: 2 },
-  sportLabelAccent: { marginLeft: 2, fontWeight: '600' },
-  title: { marginBottom: 6, fontWeight: '600' },
-  zone: { marginBottom: 12 },
-  durationBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    alignSelf: 'flex-start',
-    backgroundColor: colors.primaryDim,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
+  cardPad: { padding: 18 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  leftContent: { flex: 1 },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
+  sectionLabel: { textTransform: 'uppercase' },
+  zoneBadge: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 4 },
+  zoneText: { textTransform: 'uppercase' },
+  sportRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
+  sportLabelText: { fontFamily: 'Inter_600SemiBold', fontSize: 12, letterSpacing: 0.1, color: colors.accent },
+  title: { fontFamily: 'Inter_500Medium', fontSize: 17, letterSpacing: -0.3, lineHeight: 21, marginBottom: 6 },
+  details: { marginBottom: 2 },
+  restText: { marginTop: 2 },
+  chevronCircle: {
+    width: 36, height: 36, borderRadius: 18,
+    alignItems: 'center', justifyContent: 'center',
+    flexShrink: 0,
   },
-  durationText: { marginLeft: 2 },
 });

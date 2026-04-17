@@ -11,21 +11,34 @@ interface CircleProps {
   size?: number;
   /** Stroke color — use design token values */
   color: string;
-  /** Optional label below the value */
+  /** Fixed stroke width override. Default: size * 0.1 */
+  strokeWidth?: number;
+  /** Optional label BELOW the circle */
   label?: string;
+  /** Optional label rendered INSIDE the ring, above the value (e.g. "Readiness") */
+  innerLabel?: string;
 }
 
 /**
  * SVG circle progress indicator. Base for Readiness + sub-metric circles.
  * value prop: 0–100 maps to circle fill percentage.
+ *
+ * Design v2 additions:
+ * - strokeWidth prop: explicit override (design uses 10 for main ring, 5 for metrics)
+ * - innerLabel prop: tertiary label inside ring above value
  */
-export function Circle({ value, size = 80, color, label }: CircleProps): React.JSX.Element {
+export function Circle({ value, size = 80, color, strokeWidth: strokeWidthProp, label, innerLabel }: CircleProps): React.JSX.Element {
   const { colors: themeColors } = useTheme();
   const clampedValue = Math.min(100, Math.max(0, value));
-  const strokeWidth = size * 0.1;
+  const strokeWidth = strokeWidthProp ?? size * 0.1;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference * (1 - clampedValue / 100);
+
+  // Value font scale: weight 300 for large rings (size >= 150), 500 for small
+  const isLarge = size >= 150;
+  const valueFontSize = isLarge ? size * 0.33 : size * 0.28;
+  const valueFontFamily = isLarge ? 'Inter_300Light' : 'Inter_500Medium';
 
   return (
     <View style={styles.container}>
@@ -36,7 +49,7 @@ export function Circle({ value, size = 80, color, label }: CircleProps): React.J
             cx={size / 2}
             cy={size / 2}
             r={radius}
-            stroke={themeColors.border}
+            stroke={themeColors.track}
             strokeWidth={strokeWidth}
             fill="none"
           />
@@ -55,9 +68,22 @@ export function Circle({ value, size = 80, color, label }: CircleProps): React.J
             origin={`${size / 2}, ${size / 2}`}
           />
         </Svg>
-        {/* Centered value */}
+        {/* Center overlay: optional innerLabel + value */}
         <View style={[StyleSheet.absoluteFill, styles.valueContainer]}>
-          <Text variant="title" color={color} style={{ fontSize: size * 0.28, lineHeight: size * 0.34 }}>
+          {innerLabel ? (
+            <Text
+              variant="label"
+              color={themeColors.textMuted}
+              style={styles.innerLabel}
+            >
+              {innerLabel.toUpperCase()}
+            </Text>
+          ) : null}
+          <Text
+            variant="body"
+            color={themeColors.foreground}
+            style={{ fontFamily: valueFontFamily, fontSize: valueFontSize, lineHeight: valueFontSize * 1.1, letterSpacing: isLarge ? -2 : -0.5, fontVariant: ['tabular-nums'] }}
+          >
             {clampedValue}
           </Text>
         </View>
@@ -74,5 +100,6 @@ export function Circle({ value, size = 80, color, label }: CircleProps): React.J
 const styles = StyleSheet.create({
   container: { alignItems: 'center', gap: 6 },
   valueContainer: { alignItems: 'center', justifyContent: 'center' },
+  innerLabel: { marginBottom: 2 },
   label: { textAlign: 'center' },
 });
