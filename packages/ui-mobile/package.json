@@ -11,14 +11,13 @@
     "@resilio/design-tokens": "workspace:*"
   },
   "devDependencies": {
-    "@types/react": "~18.3.12",
-    "@types/react-native": "~0.73.0",
-    "typescript": "^5"
+    "@types/react": "~19.0.14",
+    "typescript": "~5.8.3"
   },
   "peerDependencies": {
     "lucide-react-native": ">=0.300.0",
-    "react": ">=18.0.0",
-    "react-native": ">=0.73.0"
+    "react": ">=19.0.0",
+    "react-native": ">=0.79.0"
   },
   "peerDependenciesMeta": {
     "lucide-react-native": { "optional": false },
