@@ -18,7 +18,8 @@
     "test:mobile": "pnpm --filter @resilio/ui-mobile test",
     "test:mobile:watch": "pnpm --filter @resilio/ui-mobile test:watch",
     "test:mobile:regression": "pnpm --filter @resilio/mobile test:regression",
-    "test:mobile:app": "pnpm --filter @resilio/mobile test:app"
+    "test:mobile:app": "pnpm --filter @resilio/mobile test:app",
+    "preview:mobile-web": "pnpm --filter @resilio/mobile preview-web"
   },
   "devDependencies": {
     "concurrently": "^9.0.0",
