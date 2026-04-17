@@ -10,3 +10,6 @@ dist/
 web-build/
 .env
 .env.local
+
+# AI assistant artifacts
+context-snapshot.json

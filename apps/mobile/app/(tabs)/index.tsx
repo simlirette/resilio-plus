@@ -1,105 +1,183 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+/**
+ * Home screen — Resilio+ Mobile
+ *
+ * Layout:
+ * ┌────────────────────────────────────┐
+ * │ [Bannière "Repos recommandé"]      │  ← conditionnelle si readiness < 50
+ * ├────────────────────────────────────┤
+ * │ Bonjour,                           │
+ * │ Résumé de coaching du jour         │
+ * ├────────────────────────────────────┤
+ * │         [Circle size=160]          │  ← Readiness principal
+ * │          [ReadinessStatusBadge]    │
+ * ├────────────────────────────────────┤
+ * │  (●)       (●)       (●)           │  ← MetricRow
+ * │ Nutrition  Récup.   Sommeil        │
+ * ├────────────────────────────────────┤
+ * │  [CognitiveLoadDial — card]        │  ← label="Charge allostatique"
+ * ├────────────────────────────────────┤
+ * │  [SessionCard]                     │
+ * ├────────────────────────────────────┤
+ * │     [ Check-in quotidien ]         │  ← Button primary
+ * └────────────────────────────────────┘
+ *
+ * Data source: useHomeData() → mockHomeData (FE-MOBILE-2)
+ * To test different scenarios, change the import in src/hooks/useHomeData.ts.
+ *
+ * StyleSheet exception: contentContainerStyle on ScrollView (NativeWind cannot
+ * target contentContainerStyle). All other styles use className (NativeWind).
+ */
+import React, { useCallback } from 'react';
+import { View, ScrollView, RefreshControl, StyleSheet } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { Card, useTheme, Icon } from '@resilio/ui-mobile';
+import {
+  Screen,
+  Text,
+  Circle,
+  Card,
+  Button,
+  CognitiveLoadDial,
+  MetricRow,
+  ReadinessStatusBadge,
+  SessionCard,
+  useTheme,
+} from '@resilio/ui-mobile';
 import { colors } from '@resilio/design-tokens';
+import { useHomeData } from '../../src/hooks/useHomeData';
+import type { WorkoutSlotStub } from '../../src/types/home';
+import type { WorkoutSlotForCard } from '@resilio/ui-mobile';
 
-export default function HomeScreen() {
-  const router = useRouter();
-  const { colorMode } = useTheme();
-  const themeColors = colorMode === 'dark' ? colors.dark : colors.light;
-
-  const readinessScore = 75;
-  const nextSession = {
-    title: 'Easy Run Z1',
-    detail: '45 min — Zone 1 (60–74% FCmax)',
-    day: 'Aujourd\'hui',
+function mapSession(s: WorkoutSlotStub): WorkoutSlotForCard {
+  return {
+    sport: s.sport,
+    title: s.title,
+    duration_min: s.duration_min,
+    zone: s.zone,
+    is_rest_day: s.is_rest_day,
   };
-  const readinessColor =
-    readinessScore >= 70 ? colors.zoneGreen
-    : readinessScore >= 50 ? colors.zoneYellow
-    : colors.zoneRed;
+}
+
+function readinessColor(value: number): string {
+  if (value >= 70) return colors.zoneGreen;
+  if (value >= 50) return colors.zoneYellow;
+  return colors.zoneRed;
+}
+
+export default function HomeScreen(): React.JSX.Element {
+  const router = useRouter();
+  const { colors: themeColors } = useTheme();
+  const { data, loading, refresh } = useHomeData();
+
+  const handleRefresh = useCallback(async () => {
+    await refresh();
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, [refresh]);
+
+  const handleCheckin = useCallback(() => {
+    router.push('/(tabs)/check-in');
+  }, [router]);
+
+  const readiness = data.readiness.value;
+  const showRestBanner = readiness < 50;
+  const circleColor = readinessColor(readiness);
+
+  const todaySession = data.todaysSessions?.[0] ?? null;
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: themeColors.background }]}
-      contentContainerStyle={styles.content}
-    >
-      <View style={styles.header}>
-        <Text style={[styles.greeting, { color: themeColors.foreground }]}>
-          Bonjour
-        </Text>
-        <Text style={[styles.subGreeting, { color: themeColors.textSecondary }]}>
-          Résumé de coaching du jour
-        </Text>
-      </View>
-
-      <Card style={styles.cardSpacing}>
-        <View style={styles.cardRow}>
-          <Icon.Heart color={readinessColor} size={20} />
-          <Text style={[styles.cardLabel, { color: themeColors.textSecondary }]}>
-            Forme du jour
-          </Text>
-        </View>
-        <Text style={[styles.scoreValue, { color: readinessColor }]}>
-          {readinessScore}
-          <Text style={[styles.scoreUnit, { color: themeColors.textSecondary }]}> / 100</Text>
-        </Text>
-        <Text style={[styles.cardCaption, { color: themeColors.textSecondary }]}>
-          Prêt à l'entraînement — intensité modérée possible
-        </Text>
-      </Card>
-
-      <Card style={styles.cardSpacing}>
-        <View style={styles.cardRow}>
-          <Icon.Activity color={colors.primary} size={20} />
-          <Text style={[styles.cardLabel, { color: themeColors.textSecondary }]}>
-            Prochaine séance
-          </Text>
-        </View>
-        <Text style={[styles.sessionTitle, { color: themeColors.foreground }]}>
-          {nextSession.title}
-        </Text>
-        <Text style={[styles.sessionDetail, { color: themeColors.textSecondary }]}>
-          {nextSession.detail}
-        </Text>
-        <View style={[styles.badge, { backgroundColor: colors.primaryDim }]}>
-          <Text style={[styles.badgeText, { color: colors.primary }]}>
-            {nextSession.day}
-          </Text>
-        </View>
-      </Card>
-
-      <TouchableOpacity
-        style={[styles.checkinButton, { backgroundColor: colors.primary }]}
-        onPress={() => router.push('/check-in')}
-        activeOpacity={0.8}
+    <Screen>
+      <ScrollView
+        style={styles.flex}
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={handleRefresh}
+            tintColor={themeColors.textSecondary}
+          />
+        }
       >
-        <Icon.Energy color="#fff" size={18} />
-        <Text style={styles.checkinButtonText}>Check-in quotidien</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        {/* ── Bannière repos recommandé ─────────────────────────────────────── */}
+        {showRestBanner && (
+          <View
+            className="rounded-xl px-4 py-3 mb-4"
+            style={{ backgroundColor: colors.zoneRedBg }}
+            accessibilityRole="alert"
+            accessibilityLabel="Repos recommandé — ton score de forme est bas"
+          >
+            <Text variant="body" color={colors.zoneRed}>
+              Repos recommandé — ton score de forme est bas
+            </Text>
+          </View>
+        )}
+
+        {/* ── Greeting ──────────────────────────────────────────────────────── */}
+        <View className="mb-8">
+          <Text variant="title" color={themeColors.foreground}>
+            Bonjour,
+          </Text>
+          <Text variant="body" color={themeColors.textSecondary}>
+            Résumé de coaching du jour
+          </Text>
+        </View>
+
+        {/* ── Readiness principal ────────────────────────────────────────────── */}
+        <View
+          className="items-center mb-8"
+          accessibilityLabel={`Score de forme : ${readiness} sur 100`}
+        >
+          <Circle
+            value={readiness}
+            size={160}
+            color={circleColor}
+          />
+          <View className="mt-3">
+            <ReadinessStatusBadge value={readiness} />
+          </View>
+        </View>
+
+        {/* ── Sous-métriques ─────────────────────────────────────────────────── */}
+        <View className="mb-8">
+          <MetricRow
+            nutrition={data.nutrition}
+            strain={data.strain}
+            sleep={data.sleep}
+          />
+        </View>
+
+        {/* ── Charge allostatique ────────────────────────────────────────────── */}
+        <Card style={styles.cardSpacing}>
+          <View className="items-center">
+            <CognitiveLoadDial
+              value={data.cognitiveLoad.value}
+              state={data.cognitiveLoad.state}
+              size={180}
+              label="Charge allostatique"
+            />
+          </View>
+        </Card>
+
+        {/* ── Séance du jour ─────────────────────────────────────────────────── */}
+        <View style={styles.cardSpacing}>
+          <SessionCard session={todaySession ? mapSession(todaySession) : null} />
+        </View>
+
+        {/* ── CTA Check-in ───────────────────────────────────────────────────── */}
+        {/* Button.primary handles haptics internally (ImpactFeedbackStyle.Medium) */}
+        <Button
+          variant="primary"
+          title="Check-in quotidien"
+          onPress={handleCheckin}
+        />
+      </ScrollView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  content: { padding: 24, paddingTop: 60 },
-  header: { marginBottom: 24 },
-  greeting: { fontSize: 22, fontWeight: '700', marginBottom: 4 },
-  subGreeting: { fontSize: 14 },
+  // flex:1 on ScrollView (NativeWind className="flex-1" targets View wrapper only)
+  flex: { flex: 1 },
+  // contentContainerStyle: NativeWind cannot target this prop on ScrollView
+  content: { paddingHorizontal: 24, paddingVertical: 24, paddingBottom: 48 },
   cardSpacing: { marginBottom: 16 },
-  cardRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 8 },
-  cardLabel: { fontSize: 12, fontWeight: '500', textTransform: 'uppercase', letterSpacing: 0.5 },
-  scoreValue: { fontSize: 48, fontWeight: '700', lineHeight: 56 },
-  scoreUnit: { fontSize: 20, fontWeight: '400' },
-  cardCaption: { fontSize: 13, marginTop: 4 },
-  sessionTitle: { fontSize: 18, fontWeight: '600', marginBottom: 4 },
-  sessionDetail: { fontSize: 14, marginBottom: 12 },
-  badge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
-  badgeText: { fontSize: 12, fontWeight: '600' },
-  checkinButton: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 8, paddingVertical: 14, borderRadius: 12, marginTop: 8,
-  },
-  checkinButtonText: { color: '#fff', fontSize: 15, fontWeight: '600' },
 });

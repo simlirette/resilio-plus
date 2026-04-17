@@ -1,5 +1,21 @@
 # Session Log — Resilio Plus
 
+## 2026-04-17 [saved] — FE-MOBILE-2
+Goal: FE-MOBILE-2 — Home screen implementation: 4 new ui-mobile components, useHomeData hook, home screen layout, jest harness for apps/mobile component tests.
+Decisions:
+- pnpm dual react-native instances: apps/mobile → `_0e81f392...`, packages/ui-mobile → `_392dc7d...`. jest preset only mocks one. Fix: moduleNameMapper `'^react-native$'` → apps/mobile's instance. All components use same mocked instance.
+- Do NOT mock TurboModuleRegistry in setupFilesAfterEnv: preset already provides `NativeModules.DeviceInfo.getConstants() → { Dimensions: {...} }`. Naive mock returns `{ window, screen }` (wrong shape → Dimensions crash).
+- `IconComponent` (typed wrapper) instead of `Icon.*` direct JSX in ui-mobile components — avoids TS2786 (ForwardRefExoticComponent in package context).
+- French clinical term "Charge allostatique" (not "Cognitive Load") — matches backend `allostatic_score`.
+- Readiness < 50 → show rest banner AND still show session (clinical: inform, don't decide).
+- jest-expo + react-test-renderer + @testing-library/react-native added to apps/mobile devDeps — required for `preset: 'jest-expo'` to find setup files.
+Rejected:
+- TurboModuleRegistry moduleNameMapper for logical path — does not intercept relative requires from within react-native own code.
+- jest.mock in setup.ts for TurboModuleRegistry — overrides correct preset mock with wrong shape.
+Open:
+- Check-in screen (FE-MOBILE-3)
+- Real API wiring (FE-MOBILE-BACKEND-WIRING)
+
 ## 2026-04-17 [saved] — FE-MOBILE-1B
 Goal: FE-MOBILE-1B — Consolidation: audit, polish, unit tests, regression tests, docs, FE-MOBILE-2 prep.
 Decisions:
