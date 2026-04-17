@@ -2,7 +2,8 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Card } from './Card';
 import { Text } from './Text';
-import { Icon } from '../Icon';
+import { IconComponent } from '../Icon';
+import type { IconName } from '../Icon';
 import { useTheme } from '../theme/ThemeProvider';
 import { colors } from '@resilio/design-tokens';
 
@@ -28,20 +29,21 @@ interface SessionCardProps {
 }
 
 /**
- * Sport icon mapping. Uses only Icon.* keys — no direct lucide imports.
+ * Sport icon mapping. Uses IconComponent (typed wrapper) — no direct lucide JSX.
  * Running → Activity (no dedicated Running icon in lucide-react-native).
- * Unknown sport → Icon.Target as safe fallback.
+ * Unknown sport → Target as safe fallback.
  */
+const SPORT_ICON_MAP: Record<SportType, IconName> = {
+  running:  'Activity',
+  lifting:  'Lifting',
+  swimming: 'Swimming',
+  cycling:  'Biking',
+  rest:     'DarkMode',
+};
+
 function SportIcon({ sport, color }: { sport: SportType; color: string }): React.JSX.Element {
-  const size = 18;
-  switch (sport) {
-    case 'running':  return <Icon.Activity size={size} color={color} />;
-    case 'lifting':  return <Icon.Lifting size={size} color={color} />;
-    case 'swimming': return <Icon.Swimming size={size} color={color} />;
-    case 'cycling':  return <Icon.Biking size={size} color={color} />;
-    case 'rest':     return <Icon.DarkMode size={size} color={color} />;
-    default:         return <Icon.Target size={size} color={color} />;
-  }
+  const name: IconName = SPORT_ICON_MAP[sport] ?? 'Target';
+  return <IconComponent name={name} size={18} color={color} />;
 }
 
 function sportLabel(sport: SportType): string {
@@ -63,7 +65,7 @@ export function SessionCard({ session }: SessionCardProps): React.JSX.Element {
     return (
       <Card>
         <View style={styles.row}>
-          <Icon.DarkMode size={18} color={themeColors.textSecondary} />
+          <IconComponent name="DarkMode" size={18} color={themeColors.textSecondary} />
           <Text variant="caption" color={themeColors.textSecondary} style={styles.sectionLabel}>
             Séance du jour
           </Text>
@@ -80,7 +82,7 @@ export function SessionCard({ session }: SessionCardProps): React.JSX.Element {
     return (
       <Card>
         <View style={styles.row}>
-          <Icon.Heart size={18} color={themeColors.textSecondary} />
+          <IconComponent name="Heart" size={18} color={themeColors.textSecondary} />
           <Text variant="caption" color={themeColors.textSecondary} style={styles.sectionLabel}>
             Séance du jour
           </Text>
@@ -105,7 +107,7 @@ export function SessionCard({ session }: SessionCardProps): React.JSX.Element {
 
       <View style={styles.row}>
         <SportIcon sport={session.sport} color={sportColor} />
-        <Text variant="label" color={sportColor} style={styles.sportLabel}>
+        <Text variant="caption" color={sportColor} style={styles.sportLabelAccent}>
           {sportLabel(session.sport)}
         </Text>
       </View>
@@ -119,7 +121,7 @@ export function SessionCard({ session }: SessionCardProps): React.JSX.Element {
       </Text>
 
       <View style={styles.durationBadge}>
-        <Icon.Clock size={12} color={colors.primary} />
+        <IconComponent name="Clock" size={12} color={colors.primary} />
         <Text variant="caption" color={colors.primary} style={styles.durationText}>
           {session.duration_min} min
         </Text>
@@ -133,6 +135,7 @@ const styles = StyleSheet.create({
   sectionLabel: { textTransform: 'uppercase', letterSpacing: 0.5 },
   restText: { marginTop: 4 },
   sportLabel: { marginLeft: 2 },
+  sportLabelAccent: { marginLeft: 2, fontWeight: '600' },
   title: { marginBottom: 6, fontWeight: '600' },
   zone: { marginBottom: 12 },
   durationBadge: {

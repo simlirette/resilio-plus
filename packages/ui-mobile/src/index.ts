@@ -17,4 +17,5 @@ export { MetricRow } from './components/MetricRow';
 export { ReadinessStatusBadge } from './components/ReadinessStatusBadge';
 export { Screen } from './components/Screen';
 export { SessionCard } from './components/SessionCard';
+export type { WorkoutSlotForCard, SportType as CardSportType } from './components/SessionCard';
 export { Text } from './components/Text';

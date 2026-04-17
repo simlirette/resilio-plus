@@ -17,7 +17,8 @@
     "lint": "pnpm --filter @resilio/web lint",
     "test:mobile": "pnpm --filter @resilio/ui-mobile test",
     "test:mobile:watch": "pnpm --filter @resilio/ui-mobile test:watch",
-    "test:mobile:regression": "pnpm --filter @resilio/mobile test:regression"
+    "test:mobile:regression": "pnpm --filter @resilio/mobile test:regression",
+    "test:mobile:app": "pnpm --filter @resilio/mobile test:app"
   },
   "devDependencies": {
     "concurrently": "^9.0.0",

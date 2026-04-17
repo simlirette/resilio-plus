@@ -38,12 +38,16 @@ export function MetricRow({ nutrition, strain, sleep }: MetricRowProps): React.J
   return (
     <View style={styles.row}>
       {metrics.map(({ key, label, data }) => (
-        <View key={key} style={styles.col}>
+        <View
+          key={key}
+          style={styles.col}
+          accessible={true}
+          accessibilityLabel={`${label} : ${data.value} sur 100`}
+        >
           <Circle
             value={data.value}
             size={80}
             color={colorForState(data.state)}
-            accessibilityLabel={`${label} : ${data.value} sur 100`}
           />
           <Text
             variant="caption"
