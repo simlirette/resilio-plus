@@ -1,31 +1,32 @@
 /**
  * Home screen — Resilio+ Mobile
+ * Design v2 (2026-04-17) — Warm minimalist, Apple Health / Whoop 5.0 inspired.
+ * Source: Claude Design handoff RbXZRFnMZI1nsG_v0vkzMw
  *
  * Layout:
  * ┌────────────────────────────────────┐
- * │ [Bannière "Repos recommandé"]      │  ← conditionnelle si readiness < 50
+ * │ Bonjour, Simon-Olivier             │  ← Greeting (px 24)
+ * │ Vendredi 17 avril                  │
  * ├────────────────────────────────────┤
- * │ Bonjour,                           │
- * │ Résumé de coaching du jour         │
+ * │  [Bannière repos recommandé]       │  ← Conditionnelle si readiness < 50
  * ├────────────────────────────────────┤
- * │         [Circle size=160]          │  ← Readiness principal
- * │          [ReadinessStatusBadge]    │
+ * │       ┌──────────────────┐         │
+ * │       │  [Circle 216px]  │         │  ← Readiness ring accent color
+ * │       └──────────────────┘         │
+ * │        [ReadinessStatusBadge]      │
  * ├────────────────────────────────────┤
- * │  (●)       (●)       (●)           │  ← MetricRow
- * │ Nutrition  Récup.   Sommeil        │
+ * │  [Card: MetricRow Nut/Rcup/Sleep]  │  ← px 20
  * ├────────────────────────────────────┤
- * │  [CognitiveLoadDial — card]        │  ← label="Charge allostatique"
+ * │  [Card: Allostatic — text | dial]  │  ← px 20, side-by-side layout
  * ├────────────────────────────────────┤
- * │  [SessionCard]                     │
+ * │  [SessionCard]                     │  ← px 20
  * ├────────────────────────────────────┤
- * │     [ Check-in quotidien ]         │  ← Button primary
+ * │     [ Check-in quotidien ]         │  ← Button primary, px 20
  * └────────────────────────────────────┘
  *
  * Data source: useHomeData() → mockHomeData (FE-MOBILE-2)
- * To test different scenarios, change the import in src/hooks/useHomeData.ts.
- *
  * StyleSheet exception: contentContainerStyle on ScrollView (NativeWind cannot
- * target contentContainerStyle). All other styles use className (NativeWind).
+ * target contentContainerStyle). All other styles use StyleSheet.
  */
 import React, { useCallback } from 'react';
 import { View, ScrollView, RefreshControl, StyleSheet } from 'react-native';
@@ -58,15 +59,9 @@ function mapSession(s: WorkoutSlotStub): WorkoutSlotForCard {
   };
 }
 
-function readinessColor(value: number): string {
-  if (value >= 70) return colors.zoneGreen;
-  if (value >= 50) return colors.zoneYellow;
-  return colors.zoneRed;
-}
-
 export default function HomeScreen(): React.JSX.Element {
   const router = useRouter();
-  const { colors: themeColors } = useTheme();
+  const { colors: themeColors, colorMode } = useTheme();
   const { data, loading, refresh } = useHomeData();
 
   const handleRefresh = useCallback(async () => {
@@ -80,9 +75,15 @@ export default function HomeScreen(): React.JSX.Element {
 
   const readiness = data.readiness.value;
   const showRestBanner = readiness < 50;
-  const circleColor = readinessColor(readiness);
 
   const todaySession = data.todaysSessions?.[0] ?? null;
+
+  // Today's date formatted
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('fr-FR', {
+    weekday: 'long', day: 'numeric', month: 'long',
+  });
+  const dateCap = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
 
   return (
     <Screen>
@@ -97,11 +98,27 @@ export default function HomeScreen(): React.JSX.Element {
           />
         }
       >
+        {/* ── Greeting ──────────────────────────────────────────────────────── */}
+        <View style={styles.greetingSection}>
+          <Text
+            variant="title"
+            color={themeColors.foreground}
+          >
+            Bonjour, Simon-Olivier
+          </Text>
+          <Text
+            variant="secondary"
+            color={themeColors.textSecondary}
+            style={styles.dateText}
+          >
+            {dateCap}
+          </Text>
+        </View>
+
         {/* ── Bannière repos recommandé ─────────────────────────────────────── */}
         {showRestBanner && (
           <View
-            className="rounded-xl px-4 py-3 mb-4"
-            style={{ backgroundColor: colors.zoneRedBg }}
+            style={[styles.restBanner, { backgroundColor: colorMode === 'dark' ? 'rgba(239,68,68,0.12)' : 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.20)' }]}
             accessibilityRole="alert"
             accessibilityLabel="Repos recommandé — ton score de forme est bas"
           >
@@ -111,73 +128,135 @@ export default function HomeScreen(): React.JSX.Element {
           </View>
         )}
 
-        {/* ── Greeting ──────────────────────────────────────────────────────── */}
-        <View className="mb-8">
-          <Text variant="title" color={themeColors.foreground}>
-            Bonjour,
-          </Text>
-          <Text variant="body" color={themeColors.textSecondary}>
-            Résumé de coaching du jour
-          </Text>
-        </View>
-
-        {/* ── Readiness principal ────────────────────────────────────────────── */}
+        {/* ── Readiness ring (dominant) ──────────────────────────────────────── */}
         <View
-          className="items-center mb-8"
+          style={styles.readinessSection}
           accessibilityLabel={`Score de forme : ${readiness} sur 100`}
         >
           <Circle
             value={readiness}
-            size={160}
-            color={circleColor}
+            size={216}
+            strokeWidth={10}
+            color={colors.accent}
+            innerLabel="Readiness"
           />
-          <View className="mt-3">
+          <View style={styles.badgeContainer}>
             <ReadinessStatusBadge value={readiness} />
           </View>
         </View>
 
-        {/* ── Sous-métriques ─────────────────────────────────────────────────── */}
-        <View className="mb-8">
-          <MetricRow
-            nutrition={data.nutrition}
-            strain={data.strain}
-            sleep={data.sleep}
-          />
+        {/* ── Row 3 metric rings ──────────────────────────────────────────────── */}
+        <View style={styles.cardRow}>
+          <Card style={styles.metricCard}>
+            <MetricRow
+              nutrition={data.nutrition}
+              strain={data.strain}
+              sleep={data.sleep}
+            />
+          </Card>
         </View>
 
-        {/* ── Charge allostatique ────────────────────────────────────────────── */}
-        <Card style={styles.cardSpacing}>
-          <View className="items-center">
-            <CognitiveLoadDial
-              value={data.cognitiveLoad.value}
-              state={data.cognitiveLoad.state}
-              size={180}
-              label="Charge allostatique"
-            />
-          </View>
-        </Card>
+        {/* ── Charge allostatique card ────────────────────────────────────────── */}
+        <View style={styles.cardRow}>
+          <Card style={styles.allostaticCard}>
+            {/* Side-by-side: text left, dial right */}
+            <View style={styles.allostaticRow}>
+              <View style={styles.allostaticLeft}>
+                <Text
+                  variant="label"
+                  color={themeColors.textMuted}
+                  style={styles.allostaticLabel}
+                >
+                  CHARGE ALLOSTATIQUE
+                </Text>
+                <Text
+                  variant="body"
+                  color={themeColors.textSecondary}
+                  style={styles.allostaticDesc}
+                >
+                  Stress cumulé 7 jours.
+                </Text>
+              </View>
+              <CognitiveLoadDial
+                value={data.cognitiveLoad.value}
+                state={data.cognitiveLoad.state}
+                size={160}
+              />
+            </View>
+            {/* 0 / 50 / 100 legend */}
+            <View style={styles.legend}>
+              <Text variant="label" color={themeColors.textMuted} style={styles.legendText}>0</Text>
+              <Text variant="label" color={themeColors.textMuted} style={styles.legendText}>50</Text>
+              <Text variant="label" color={themeColors.textMuted} style={styles.legendText}>100</Text>
+            </View>
+          </Card>
+        </View>
 
         {/* ── Séance du jour ─────────────────────────────────────────────────── */}
-        <View style={styles.cardSpacing}>
+        <View style={styles.cardRow}>
           <SessionCard session={todaySession ? mapSession(todaySession) : null} />
         </View>
 
         {/* ── CTA Check-in ───────────────────────────────────────────────────── */}
-        {/* Button.primary handles haptics internally (ImpactFeedbackStyle.Medium) */}
-        <Button
-          variant="primary"
-          title="Check-in quotidien"
-          onPress={handleCheckin}
-        />
+        <View style={styles.cardRow}>
+          <Button
+            variant="primary"
+            title="Check-in quotidien"
+            onPress={handleCheckin}
+          />
+        </View>
       </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  // flex:1 on ScrollView (NativeWind className="flex-1" targets View wrapper only)
   flex: { flex: 1 },
-  // contentContainerStyle: NativeWind cannot target this prop on ScrollView
-  content: { paddingHorizontal: 24, paddingVertical: 24, paddingBottom: 48 },
-  cardSpacing: { marginBottom: 16 },
+  content: { paddingBottom: 48 },
+
+  greetingSection: {
+    paddingHorizontal: 24,
+    paddingTop: 14,
+    paddingBottom: 20,
+  },
+  dateText: { marginTop: 6 },
+
+  restBanner: {
+    marginHorizontal: 20,
+    marginBottom: 16,
+    borderRadius: 12,
+    borderWidth: 0.5,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+
+  readinessSection: {
+    paddingHorizontal: 24,
+    paddingBottom: 20,
+    alignItems: 'center',
+  },
+  badgeContainer: { marginTop: 18 },
+
+  cardRow: {
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  metricCard: { paddingHorizontal: 4, paddingVertical: 2 },
+
+  allostaticCard: { padding: 20 },
+  allostaticRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
+  allostaticLeft: { flex: 1, paddingRight: 12, justifyContent: 'flex-start' },
+  allostaticLabel: { textTransform: 'uppercase', marginBottom: 6 },
+  allostaticDesc: { fontSize: 13, lineHeight: 18, letterSpacing: -0.05 },
+
+  legend: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  legendText: {
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    fontVariant: ['tabular-nums'] as const,
+  },
 });
