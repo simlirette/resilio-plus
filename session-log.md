@@ -1,5 +1,27 @@
 # Session Log — Resilio Plus
 
+## 2026-04-17 [saved] — FE-HOME-FROM-DESIGN
+Goal: Implement Home screen from Claude Design handoff. Pivot design system to warm minimalist (Apple Health / Whoop 5.0).
+Decisions:
+- Design handoff URL (api.anthropic.com) returned 404 → files provided locally in `docs/design/home/`.
+- Font migration: Space Grotesk → Inter. Design explicitly uses Inter 300/400/500. Package `@expo-google-fonts/inter` added.
+- Accent color: `#3B74C9` (Clinical Blue) replaces `#5b5fef` (indigo). Stored as `colors.accent`.
+- Palette: warm off-white `#F7F4EE` (light) / `#131210` (dark). Not the old dark clinical `#08080e`.
+- MetricRow: type-based colors (nutrition=warn, strain=ok, sleep=okStrong) — not state-based. Discusses with SO needed.
+- Card.tsx: padding=0 + overflow:hidden (content controls padding). Card radius=22px, 0.5px border.
+- Tab bar: NOT updated — floating liquid-glass bar from design is FE-MOBILE-3.
+- Circle props: `strokeWidth` (explicit override) + `innerLabel` (ring interior label) added for readiness ring.
+- CognitiveLoadDial: tick marks at 25/50/75%, accent color for fill, weight-300 number.
+- SessionCard: side-by-side layout (left content + right chevron circle).
+- Home: allostatic card has side-by-side (text left, dial right) with 0/50/100 legend.
+Rejected:
+- State-based metric colors — design hardcodes per-metric-type colors.
+- backgroundColor on MetricRow — Card wrapping done at call site in Home screen.
+Open:
+- Tab bar: liquid-glass floating bar → FE-MOBILE-3
+- MetricRow color strategy (type vs state) → discuss with Simon-Olivier
+- Inter on real iOS device: not validated yet
+
 ## 2026-04-17 [saved] — FE-FIX-WEB-BUILD
 Goal: Débloquer `npx expo export --platform web` pour preview visuel du Home screen FE-MOBILE-2.
 Decisions:
