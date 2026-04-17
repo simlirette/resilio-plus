@@ -5,12 +5,16 @@
     "dev:web": "pnpm --filter @resilio/web dev",
     "dev:desktop": "concurrently -n \"next,tauri\" -c \"cyan,green\" \"pnpm dev:web\" \"wait-on tcp:3000 && pnpm --filter @resilio/desktop dev\"",
     "dev:mobile": "pnpm --filter @resilio/mobile dev",
+    "dev:mobile:ios": "pnpm --filter @resilio/mobile ios",
     "build:web": "pnpm --filter @resilio/web build",
     "build:desktop": "pnpm --filter @resilio/web build:static && pnpm --filter @resilio/desktop build",
     "build:mobile": "pnpm --filter @resilio/mobile build",
     "build:mobile:ios": "pnpm --filter @resilio/mobile build:ios",
-    "lint": "pnpm --filter @resilio/web lint",
-    "typecheck": "pnpm --filter @resilio/web typecheck"
+    "build:mobile:ios:preview": "cd apps/mobile && eas build --platform ios --profile preview",
+    "build:mobile:ios:production": "cd apps/mobile && eas build --platform ios --profile production",
+    "typecheck": "pnpm --filter @resilio/web typecheck",
+    "typecheck:mobile": "cd apps/mobile && npx tsc --noEmit",
+    "lint": "pnpm --filter @resilio/web lint"
   },
   "devDependencies": {
     "concurrently": "^9.0.0",

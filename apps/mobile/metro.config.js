@@ -1,4 +1,5 @@
 const { getDefaultConfig } = require('expo/metro-config');
+const { withNativewind } = require('nativewind/metro');
 const path = require('path');
 
 const projectRoot = __dirname;
@@ -15,4 +16,5 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, 'node_modules'),
 ];
 
-module.exports = config;
+// NativeWind v5 — wraps config to handle CSS/Tailwind transformation
+module.exports = withNativewind(config);

@@ -271,6 +271,16 @@ Premiers écrans : Dashboard, Check-in, Energy.
 Ajouter `next-pwa` pour offline + installation sur mobile.
 Manifest, service worker, icônes.
 
+### Session FE-MOBILE-2 — Home Screen complet
+Implémentation production-ready de l'écran d'accueil mobile :
+Circle Readiness large + 3 petits cercles (HRV, Sommeil, Strain), carte prochaine séance,
+bouton check-in. Utiliser les nouveaux composants Circle, Screen, Text de `@resilio/ui-mobile`.
+
+### Session FE-MOBILE-WIDGET — Readiness iOS Widget
+Implémenter le widget iOS home screen Readiness via `expo-widgets` + `@expo/ui`.
+Préreq : iOS 17+, Xcode 26+ via EAS Build cloud, expo-widgets stable (post-alpha).
+Voir `apps/mobile/ios-widget/README.md` pour architecture cible et contraintes.
+
 ---
 
 ## 10. Dette technique frontend
