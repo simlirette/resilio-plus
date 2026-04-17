@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Button, useTheme, Icon } from '@resilio/ui-mobile';
+import { Button, Screen, useTheme, Icon } from '@resilio/ui-mobile';
 import { colors } from '@resilio/design-tokens';
 
 type Step = 0 | 1;
@@ -40,7 +40,7 @@ export default function CheckInScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: themeColors.background }]}>
+    <Screen>
       <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={handleBack} style={styles.backButton}>
@@ -81,12 +81,11 @@ export default function CheckInScreen() {
           <Button title={isLast ? 'Terminer' : 'Continuer'} onPress={handleNext} disabled={!canProceed} style={styles.actionButton} />
         </View>
       </View>
-    </SafeAreaView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1 },
   container: { flex: 1, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 32 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   backButton: { padding: 4 },

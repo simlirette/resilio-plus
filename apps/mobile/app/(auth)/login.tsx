@@ -30,7 +30,7 @@ export default function LoginScreen() {
     setLoading(true);
     await new Promise((r) => setTimeout(r, 800));
     setLoading(false);
-    router.replace('/(tabs)/');
+    router.replace('/(tabs)');
   }
 
   return (
