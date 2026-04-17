@@ -1,5 +1,20 @@
 # Session Log — Resilio Plus
 
+## 2026-04-16 [saved]
+Goal: Implement V3-X Apple Health XML import — streaming parser + daily aggregation + endpoint.
+Decisions:
+- SDNN (Apple Health) and RMSSD (Terra) stored in separate fields — `hrv_sdnn` vs `hrv_rmssd` — not interchangeable numerically.
+- Sleep attributed to `end_date` (wake-up day), not `start_date`; InBed/Awake excluded by aggregator, not parser.
+- `FIXTURE_DIR` in tests: `Path(__file__).parents[3] / "tests" / "fixtures"` — not `parents[3] / "fixtures"` (would miss the `tests/` dir).
+- `ConnectorCredentialModel.extra_json` updated on each import for backward compat with JSON connector at `routes/connectors.py`.
+- Feature flag `APPLE_HEALTH_ENABLED=false` default — WARNING not validated on real iPhone.
+Rejected:
+- Reusing `hrv_rmssd` field for SDNN — absolute values not comparable.
+- Parallel agent commits without `git pull --rebase` — causes non-fast-forward failures.
+Open:
+- Alembic migration 0010 not applied locally (no PostgreSQL) — run `poetry run alembic upgrade head` in Docker.
+- No validation on real iPhone `export.xml` — V1 limit, must test before enabling flag in prod.
+
 ## 2026-04-16 23:30 [saved]
 Goal: Fix ruff/test regressions introduced by Apple Health parallel session merge.
 Decisions:
