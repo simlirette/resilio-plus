@@ -17,7 +17,7 @@
   "peerDependencies": {
     "lucide-react-native": ">=0.300.0",
     "react": ">=19.0.0",
-    "react-native": ">=0.79.0"
+    "react-native": ">=0.83.0"
   },
   "peerDependenciesMeta": {
     "lucide-react-native": { "optional": false },
