@@ -8,6 +8,7 @@ dist/
 *.mobileprovision
 *.orig.*
 web-build/
+dist-web-preview/
 .env
 .env.local
 

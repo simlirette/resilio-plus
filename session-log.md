@@ -1,5 +1,17 @@
 # Session Log — Resilio Plus
 
+## 2026-04-17 [saved] — FE-FIX-WEB-BUILD
+Goal: Débloquer `npx expo export --platform web` pour preview visuel du Home screen FE-MOBILE-2.
+Decisions:
+- Cause: `react-native-web` et `react-dom` complètement absents — ni dans package.json ni dans pnpm store. Expo SDK 55 bundledNativeModules.json attend `~0.21.0`.
+- `.npmrc` hoisting requis en plus de l'install dans apps/mobile: `@expo/router-server` Node.js SSR path cherche react-native-web depuis deep pnpm virtual store; ne le trouve qu'en root node_modules/.
+- `pnpm install --no-frozen-lockfile` requis (lockfile outdated après ajout deps en non-CI mode).
+- Version résolue: react-native-web@0.21.2 (compatible React 19.2.4).
+Rejected:
+- Hoisting global (`shamefully-hoist=true`) — trop agressif, préféré ciblé.
+Open:
+- Aucun — fix complet, 85 tests verts, web export 12 routes.
+
 ## 2026-04-17 [saved] — FE-MOBILE-2
 Goal: FE-MOBILE-2 — Home screen implementation: 4 new ui-mobile components, useHomeData hook, home screen layout, jest harness for apps/mobile component tests.
 Decisions:
