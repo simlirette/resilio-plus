@@ -273,8 +273,46 @@ Manifest, service worker, icônes.
 
 ### Session FE-MOBILE-2 — Home Screen complet
 Implémentation production-ready de l'écran d'accueil mobile :
-Circle Readiness large + 3 petits cercles (HRV, Sommeil, Strain), carte prochaine séance,
-bouton check-in. Utiliser les nouveaux composants Circle, Screen, Text de `@resilio/ui-mobile`.
+Circle Readiness large (size=160) + 3 petits cercles sous-métriques (Nutrition/Strain/Sommeil),
+carte "Prochaine séance", Cognitive Load dial semi-arc, bouton check-in.
+Utilise `athlete-home-stub.ts` (mock typé créé en FE-MOBILE-1B) — pas de backend réel.
+Nouveaux composants à créer : `CognitiveLoadDial`, `SessionCard`.
+Brainstorm + questions ouvertes : `docs/superpowers/brainstorms/2026-04-17-home-screen.md`.
+
+### Session FE-MOBILE-3 — Morning Check-in
+Refonte du check-in multi-étapes : énergie + sommeil + humeur + charge perçue (4 questions).
+Intégration avec `/athletes/{id}/checkin` backend.
+UI step-indicator, animations avec react-native-reanimated.
+
+### Session FE-MOBILE-4 — Session Detail (workout prescriptif)
+Écran de détail d'une séance planifiée : exercices, séries/reps/poids, zones, instructions.
+Source : `WorkoutSlot` + exercises depuis `@resilio/shared-logic`.
+
+### Session FE-MOBILE-5 — Login + Auth réelle
+Remplace le mock d'auth (800ms delay) par JWT réel + expo-secure-store.
+Refresh tokens, session persistence, route guards.
+Source : `docs/backend/AUTH.md`, endpoint `/auth/token`.
+
+### Session FE-MOBILE-6 — Nutrition Log
+Écran de log nutritionnel journalier.
+Recherche aliment via `GET /nutrition/search` (USDA/OFF/FCÉN).
+Affichage macros vs objectifs (NutritionCoach targets).
+
+### Session FE-MOBILE-7 — Chat Coach IA
+Écran de chat avec les agents coaching.
+Messages asynchrones via `/athletes/{id}/coach/message`.
+Affichage des agents par specialty (Running/Lifting/Recovery...).
+
+### Session FE-MOBILE-8 — History (charts)
+Historique des séances, scores readiness, évolution VDOT.
+Charts via react-native-svg (bar charts, line charts, radar strain).
+
+### Session FE-MOBILE-9 — Réglages
+Écran réglages : profil athlète, intégrations (Strava/Hevy), notifications, thème.
+
+### Session FE-MOBILE-BACKEND-WIRING — Remplacement mocks par API réelle
+Remplace tous les stubs (athlete-home-stub.ts etc.) par vrais appels `@resilio/api-client`.
+Auth réelle obligatoire avant cette session.
 
 ### Session FE-MOBILE-WIDGET — Readiness iOS Widget
 Implémenter le widget iOS home screen Readiness via `expo-widgets` + `@expo/ui`.
