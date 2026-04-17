@@ -28,33 +28,32 @@ describe('SessionCard', () => {
     expect(getByText('Easy Run Z1')).toBeTruthy();
   });
 
-  it('renders zone for normal session', () => {
+  it('renders meta line with duration and zone', () => {
     const { getByText } = renderWithTheme(<SessionCard session={baseSession} />);
-    expect(getByText('Zone 1 (60–74% FCmax)')).toBeTruthy();
+    expect(getByText('45 min · Zone 1 (60–74% FCmax)')).toBeTruthy();
   });
 
-  it('renders duration badge', () => {
+  it('renders zone badge abbreviated (Z1 format)', () => {
     const { getByText } = renderWithTheme(<SessionCard session={baseSession} />);
-    expect(getByText('45 min')).toBeTruthy();
+    expect(getByText('Z1')).toBeTruthy();
   });
 
-  it('renders lifting session label', () => {
+  it('renders lifting session title', () => {
     const session: WorkoutSlotForCard = { ...baseSession, sport: 'lifting', title: 'Upper Pull' };
     const { getByText } = renderWithTheme(<SessionCard session={session} />);
     expect(getByText('Upper Pull')).toBeTruthy();
-    expect(getByText('Musculation')).toBeTruthy();
   });
 
-  it('renders swimming session label', () => {
+  it('renders swimming session title', () => {
     const session: WorkoutSlotForCard = { ...baseSession, sport: 'swimming', title: 'Endurance Natation' };
     const { getByText } = renderWithTheme(<SessionCard session={session} />);
-    expect(getByText('Natation')).toBeTruthy();
+    expect(getByText('Endurance Natation')).toBeTruthy();
   });
 
-  it('renders cycling session label', () => {
+  it('renders cycling session title', () => {
     const session: WorkoutSlotForCard = { ...baseSession, sport: 'cycling', title: 'Zone 2 Vélo' };
     const { getByText } = renderWithTheme(<SessionCard session={session} />);
-    expect(getByText('Vélo')).toBeTruthy();
+    expect(getByText('Zone 2 Vélo')).toBeTruthy();
   });
 
   it('shows section label on all variants', () => {
