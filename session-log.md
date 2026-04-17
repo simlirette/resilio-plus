@@ -196,3 +196,18 @@ Rejected:
 - Prose summary of EXERCISE_MUSCLE_MAP — verbatim copy only (drift risk, same rule as previous sessions)
 Open:
 - `docs/backend/INTEGRATIONS.md.backup` still on disk — can delete once user confirms
+
+## 2026-04-17 [saved]
+Goal: FE-HOME-POLISH-NATIVETABS — 4 visual fixes + NativeTabs liquid glass migration
+Decisions:
+- MetricRow colors are now state-based (green→ok, yellow→warn, red→zoneRed) not hardcoded per metric type
+- Label 'Récup.' renamed to 'Strain' — technical sport science term preserved in English per design decision
+- SessionCard: removed blue sport label row (separate accent-colored text), merged duration+zone into one meta line, zone badge now extracts 'Z1' from 'Zone 1 (60–74%)'
+- Mock stubs French titles: 'Easy Run Z1' → 'Course facile', 'Muscu — Upper Pull' → 'Musculation haut du corps'
+- NativeTabs migration: expo-router/unstable-native-tabs with SF Symbols + built-in web Radix UI fallback — no Platform.OS branch needed
+- Fix 4 (light mode) SKIPPED: ThemeProvider already uses useColorScheme() correctly
+- SF Symbols for tab bar: house/house.fill, heart/heart.fill, bolt/bolt.fill, person/person.fill
+Rejected:
+- Platform.OS fallback for web — not needed, NativeTabsView.web.js handles this inside expo-router
+Open:
+- NativeTabs not validated on physical iOS device — liquid glass blur effect untested on real hardware
