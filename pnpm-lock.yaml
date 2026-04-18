@@ -8,6 +8,7 @@ overrides:
   lightningcss: 1.28.2
   react: 19.1.0
   react-dom: 19.1.0
+  react-native-svg: 15.12.1
 
 importers:
 
@@ -111,7 +112,7 @@ importers:
         specifier: ~4.16.0
         version: 4.16.0(react-native@0.81.5(@babel/core@7.29.0)(@react-native/metro-config@0.85.1(@babel/core@7.29.0))(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       react-native-svg:
-        specifier: ~15.12.1
+        specifier: 15.12.1
         version: 15.12.1(react-native@0.81.5(@babel/core@7.29.0)(@react-native/metro-config@0.85.1(@babel/core@7.29.0))(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       react-native-web:
         specifier: ~0.21.0
@@ -309,7 +310,7 @@ importers:
         specifier: '>=4.0.0'
         version: 5.6.2(react-native@0.83.4(@babel/core@7.29.0)(@react-native/metro-config@0.85.1(@babel/core@7.29.0))(@types/react@19.0.14)(react@19.1.0))(react@19.1.0)
       react-native-svg:
-        specifier: '>=13.0.0'
+        specifier: 15.12.1
         version: 15.12.1(react-native@0.83.4(@babel/core@7.29.0)(@react-native/metro-config@0.85.1(@babel/core@7.29.0))(@types/react@19.0.14)(react@19.1.0))(react@19.1.0)
     devDependencies:
       '@testing-library/react-native':
@@ -4339,7 +4340,7 @@ packages:
     peerDependencies:
       react: 19.1.0
       react-native: '*'
-      react-native-svg: ^12.0.0 || ^13.0.0 || ^14.0.0 || ^15.0.0
+      react-native-svg: 15.12.1
 
   lucide-react@1.8.0:
     resolution: {integrity: sha512-WuvlsjngSk7TnTBJ1hsCy3ql9V9VOdcPkd3PKcSmM34vJD8KG6molxz7m7zbYFgICwsanQWmJ13JlYs4Zp7Arw==}
