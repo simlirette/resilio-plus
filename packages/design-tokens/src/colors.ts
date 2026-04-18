@@ -6,14 +6,14 @@
  */
 
 export const colors = {
-  // ── Accent (default: Clinical Blue) ─────────────────────────────────────
-  accent: '#3B74C9',
-  accentDim: 'rgba(59,116,201,0.20)',
+  // ── Accent (Amber/Terracotta — canonical) ───────────────────────────────
+  accent: '#B8552E',
+  accentDim: 'rgba(184,85,46,0.20)',
 
   // Legacy alias — keep so existing imports of colors.primary still compile
-  primary: '#3B74C9',
+  primary: '#B8552E',
   primaryForeground: '#ffffff',
-  primaryDim: 'rgba(59,116,201,0.15)',
+  primaryDim: 'rgba(184,85,46,0.15)',
 
   // ── Semantic status ──────────────────────────────────────────────────────
   // Zone colors (legacy aliases for training-zone logic — not for UI chrome)
@@ -26,7 +26,7 @@ export const colors = {
   zoneCritical: '#dc2626',
 
   // RGB channels for alpha variants
-  primaryRgb: '59, 116, 201',
+  primaryRgb: '184, 85, 46',
   zoneGreenRgb: '107, 146, 89',
   zoneYellowRgb: '184, 134, 58',
   zoneRedRgb: '239, 68, 68',
@@ -85,14 +85,14 @@ export const colors = {
       muted: '#232120',
       mutedForeground: 'rgba(237,233,226,0.38)',
       border: 'rgba(237,233,226,0.08)',
-      primary: '#3B74C9',
+      primary: '#D97A52',
       primaryForeground: '#ffffff',
       secondary: '#232120',
       secondaryForeground: 'rgba(237,233,226,0.62)',
       destructive: '#ef4444',
       destructiveForeground: '#ffffff',
       input: '#232120',
-      ring: '#3B74C9',
+      ring: '#D97A52',
     },
     light: {
       background: '#F7F4EE',
@@ -102,14 +102,14 @@ export const colors = {
       muted: '#F3EFE8',
       mutedForeground: 'rgba(43,40,36,0.38)',
       border: 'rgba(43,40,36,0.08)',
-      primary: '#3B74C9',
+      primary: '#B8552E',
       primaryForeground: '#ffffff',
       secondary: '#F3EFE8',
       secondaryForeground: 'rgba(43,40,36,0.62)',
       destructive: '#ef4444',
       destructiveForeground: '#ffffff',
       input: '#F3EFE8',
-      ring: '#3B74C9',
+      ring: '#B8552E',
     },
   },
 } as const;
