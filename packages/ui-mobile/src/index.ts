@@ -9,6 +9,9 @@ export type { ColorMode, ThemeContextValue } from './theme/ThemeProvider';
 // Components
 export { Button } from './components/Button';
 export { Card } from './components/Card';
+export { HeroNumber } from './components/HeroNumber';
+export { ProgressSegments } from './components/ProgressSegments';
+export { SegmentedControl } from './components/SegmentedControl';
 export { Circle } from './components/Circle';
 export { CognitiveLoadDial } from './components/CognitiveLoadDial';
 export type { DialState } from './components/CognitiveLoadDial';

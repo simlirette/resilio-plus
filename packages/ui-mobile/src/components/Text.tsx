@@ -1,5 +1,5 @@
 import React, { type ReactNode } from 'react';
-import { Text as RNText, StyleSheet, type TextStyle } from 'react-native';
+import { Text as RNText, StyleSheet, type StyleProp, type TextStyle } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 
 type TextVariant =
@@ -25,7 +25,7 @@ interface TextProps {
   children: ReactNode;
   variant?: TextVariantAlias;
   color?: string;
-  style?: TextStyle;
+  style?: StyleProp<TextStyle>;
   numberOfLines?: number;
   tabular?: boolean; // force tabular-nums even on non-numeric variants
 }
