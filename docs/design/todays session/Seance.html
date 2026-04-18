@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Resilio+ — Séance du jour</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; font-family: 'Space Grotesk', system-ui, sans-serif; }
+  body { background: #f0eee9; -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; }
+  /* Tweaks panel */
+  #tweaks {
+    position: fixed; right: 18px; bottom: 18px; width: 260px;
+    background: #1a1a1a; color: #fff; border-radius: 14px;
+    padding: 14px 16px; font-family: 'Space Grotesk', sans-serif; font-size: 13px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25); z-index: 1000;
+    display: none;
+  }
+  #tweaks h3 { margin: 0 0 10px; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: #888; font-weight: 500;}
+  #tweaks label { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #2a2a2a; font-weight: 400; }
+  #tweaks label:last-child { border-bottom: none; }
+  #tweaks select { background: #2a2a2a; color: #fff; border: none; padding: 5px 8px; border-radius: 6px; font-family: inherit; font-size: 12px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div id="tweaks">
+  <h3>Tweaks</h3>
+  <label>Thème <select id="tw-theme"><option value="both">Light + Dark</option><option value="light">Light only</option><option value="dark">Dark only</option></select></label>
+  <label>Sport <select id="tw-sport"><option value="both">Course + Musculation</option><option value="run">Course</option><option value="lift">Musculation</option></select></label>
+  <label>Mode <select id="tw-mode"><option value="both">Prescription + Exécution</option><option value="A">Prescription</option><option value="B">Exécution</option></select></label>
+  <label>Accent
+    <select id="tw-accent">
+      <option value="electric">Electric (#C8FF4D)</option>
+      <option value="amber">Amber</option>
+      <option value="ice">Ice blue</option>
+    </select>
+  </label>
+</div>
+
+<script>
+  // Tweaks protocol
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "theme": "both",
+    "sport": "both",
+    "mode": "both",
+    "accent": "electric"
+  }/*EDITMODE-END*/;
+  window.__RESILIO_TWEAKS = {...TWEAK_DEFAULTS};
+  window.addEventListener('message', (e) => {
+    const d = e.data || {};
+    if (d.type === '__activate_edit_mode') document.getElementById('tweaks').style.display = 'block';
+    if (d.type === '__deactivate_edit_mode') document.getElementById('tweaks').style.display = 'none';
+  });
+  window.parent.postMessage({type: '__edit_mode_available'}, '*');
+
+  function setTweak(k, v) {
+    window.__RESILIO_TWEAKS[k] = v;
+    window.parent.postMessage({type:'__edit_mode_set_keys', edits:{[k]:v}},'*');
+    window.dispatchEvent(new CustomEvent('resilio-tweak', {detail:{k,v}}));
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    for (const k of ['theme','sport','mode','accent']) {
+      const el = document.getElementById('tw-'+k);
+      if (!el) continue;
+      el.value = window.__RESILIO_TWEAKS[k];
+      el.addEventListener('change', e => setTweak(k, e.target.value));
+    }
+  });
+</script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="lib/design-canvas.jsx"></script>
+<script type="text/babel" src="lib/ios-frame.jsx"></script>
+<script type="text/babel" src="lib/tokens.jsx"></script>
+<script type="text/babel" src="lib/icons.jsx"></script>
+<script type="text/babel" src="lib/prescription.jsx"></script>
+<script type="text/babel" src="lib/execution.jsx"></script>
+<script type="text/babel" src="app.jsx"></script>
+</body>
+</html>

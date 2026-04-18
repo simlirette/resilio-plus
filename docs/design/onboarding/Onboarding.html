@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Resilio+ — Onboarding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; font-family: 'Space Grotesk', system-ui, sans-serif;
+    background: #0F0E11;
+    color: #F0EEEA;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    min-height: 100vh;
+  }
+  .canvas {
+    padding: 56px 48px 80px;
+  }
+  .canvas-header {
+    max-width: 1800px; margin: 0 auto 48px;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 32px;
+  }
+  .canvas-title {
+    font-size: 28px; font-weight: 500; letter-spacing: -0.6px; color: #F0EEEA;
+    margin: 0;
+  }
+  .canvas-sub {
+    font-size: 14px; color: oklch(0.62 0.008 80); margin: 8px 0 0;
+    letter-spacing: -0.1px; max-width: 640px; line-height: 1.5;
+  }
+  .canvas-meta {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: oklch(0.55 0.008 80); letter-spacing: 0.8px; text-transform: uppercase;
+  }
+  .legend {
+    display: flex; gap: 24px; flex-wrap: wrap;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: oklch(0.6 0.008 80); letter-spacing: 0.4px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 8px; }
+  .swatch { width: 12px; height: 12px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.1); }
+  .row {
+    max-width: 1800px; margin: 0 auto;
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    gap: 28px;
+  }
+  .cell {
+    display: flex; flex-direction: column; gap: 14px; align-items: center;
+  }
+  .cell-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
+    color: oklch(0.58 0.008 80); letter-spacing: 0.8px; text-transform: uppercase;
+    display: flex; gap: 10px; align-items: center;
+  }
+  .cell-label strong { color: #F0EEEA; font-weight: 500; letter-spacing: 0.8px; }
+  .mode-separator {
+    max-width: 1800px; margin: 80px auto 44px;
+    display: flex; align-items: center; gap: 20px;
+  }
+  .mode-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px; font-weight: 500; letter-spacing: -0.4px;
+    color: #F0EEEA; margin: 0;
+  }
+  .mode-hr {
+    flex: 1; height: 1px; background: rgba(240,238,234,0.1);
+  }
+  .mode-tag {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: oklch(0.55 0.008 80); letter-spacing: 0.6px;
+    padding: 4px 10px; border: 1px solid rgba(240,238,234,0.12); border-radius: 4px;
+  }
+  .device-wrap {
+    transform: scale(0.72);
+    transform-origin: top center;
+    margin-bottom: -220px;
+  }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="ios-frame.jsx" type="text/babel"></script>
+<script src="onboarding/tokens.js"></script>
+<script src="onboarding/steps.jsx" type="text/babel"></script>
+
+<script type="text/babel">
+const { useState } = React;
+
+function DeviceCell({ step, mode, label }) {
+  return (
+    <div className="cell">
+      <div className="cell-label">
+        <strong>{label}</strong>
+      </div>
+      <div className="device-wrap">
+        <IOSDevice width={402} height={820} dark={mode === 'dark'}>
+          <OnboardingFlow mode={mode} initialStep={step} />
+        </IOSDevice>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const labels = ['01 · Profil', '02 · Sports', '03 · Niveau', '04 · Objectif', '05 · Connecteurs'];
+
+  return (
+    <div className="canvas">
+      <div className="canvas-header">
+        <div>
+          <div className="canvas-meta" style={{ marginBottom: 10 }}>Resilio+ · iOS · Onboarding v1</div>
+          <h1 className="canvas-title">Onboarding — 5 steps, light et dark</h1>
+          <p className="canvas-sub">
+            Après signup. Profil, disciplines, niveau, objectif, connecteurs.
+            Progress segmenté en haut, retour discret, suivant pleine largeur.
+            Accent unique (amber) sur CTA et état sélectionné. Sémantique physiologique réservée.
+          </p>
+        </div>
+        <div className="legend">
+          <div className="legend-item"><div className="swatch" style={{ background: '#F5F5F2' }}></div>Light BG</div>
+          <div className="legend-item"><div className="swatch" style={{ background: '#17161A' }}></div>Dark BG</div>
+          <div className="legend-item"><div className="swatch" style={{ background: 'oklch(0.68 0.14 45)' }}></div>Accent</div>
+          <div className="legend-item"><div className="swatch" style={{ background: '#1A1A18' }}></div>Text</div>
+        </div>
+      </div>
+
+      {/* LIGHT ROW */}
+      <div className="mode-separator">
+        <h2 className="mode-title">Light</h2>
+        <div className="mode-tag">BG #F5F5F2 · Surface #FFFFFF</div>
+        <div className="mode-hr"></div>
+      </div>
+      <div className="row">
+        {[0, 1, 2, 3, 4].map((s) => (
+          <DeviceCell key={'l' + s} step={s} mode="light" label={labels[s]} />
+        ))}
+      </div>
+
+      {/* DARK ROW */}
+      <div className="mode-separator">
+        <h2 className="mode-title">Dark</h2>
+        <div className="mode-tag">BG #17161A · Surface #201E23</div>
+        <div className="mode-hr"></div>
+      </div>
+      <div className="row">
+        {[0, 1, 2, 3, 4].map((s) => (
+          <DeviceCell key={'d' + s} step={s} mode="dark" label={labels[s]} />
+        ))}
+      </div>
+
+      <div style={{ maxWidth: 1800, margin: '80px auto 0', padding: '24px 0', borderTop: '1px solid rgba(240,238,234,0.08)' }}>
+        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: 'oklch(0.55 0.008 80)', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 12 }}>Notes</div>
+        <ul style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 13.5, color: 'oklch(0.68 0.008 80)', lineHeight: 1.6, letterSpacing: -0.1, maxWidth: 900, paddingLeft: 18, margin: 0 }}>
+          <li>Chaque device est interactif. Clique dans les cards, segments, radios pour voir les états sélectionnés. Chaque colonne a son propre state.</li>
+          <li>Progress = 5 segments fins (pas de points ronds). Retour désactivé en step 1. Passer visible uniquement sur connecteurs.</li>
+          <li>Accent amber <span style={{ fontFamily: 'JetBrains Mono, monospace' }}>oklch(0.68 0.14 45)</span> identique light/dark en hue; chroma et lightness recalibrés.</li>
+          <li>Pas d'émoji. Pas de couleur sémantique. Icônes sport mono-ligne au stroke de l'accent quand sélectionnées.</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
