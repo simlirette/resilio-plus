@@ -2,14 +2,17 @@ import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { colors } from '@resilio/design-tokens';
 
 /**
- * Tab bar layout using NativeTabs (expo-router/unstable-native-tabs).
+ * Tab bar layout — 4 tabs V1.
+ * Accueil | Entraînement | Coach | Profil
+ * Métriques = V2 (drill-down depuis Home via tap sur les anneaux).
+ * Check-in = hors tab bar, accessible depuis Home via CTA → /check-in.
+ *
  * iOS: UITabBarController with liquid glass (systemChromeMaterial blur).
  * Android: Material 3 bottom navigation.
  * Web: Radix UI tabs fallback (built into expo-router).
  *
- * Icons: SF Symbols (iOS), fallback to src on other platforms.
+ * Icons: SF Symbols (iOS).
  * Exception to Lucide-only rule: tab bar uses SF Symbols for native iOS integration.
- * All other icons in the app continue to use Lucide via @resilio/ui-mobile/Icon.
  */
 export default function TabsLayout() {
   return (
@@ -24,10 +27,10 @@ export default function TabsLayout() {
         />
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="check-in">
-        <NativeTabs.Trigger.Label>Check-in</NativeTabs.Trigger.Label>
+      <NativeTabs.Trigger name="training">
+        <NativeTabs.Trigger.Label>Entraînement</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
-          sf={{ default: 'heart', selected: 'heart.fill' }}
+          sf={{ default: 'calendar', selected: 'calendar' }}
         />
       </NativeTabs.Trigger>
 

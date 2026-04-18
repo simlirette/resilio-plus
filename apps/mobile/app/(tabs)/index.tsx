@@ -70,7 +70,7 @@ export default function HomeScreen(): React.JSX.Element {
   }, [refresh]);
 
   const handleCheckin = useCallback(() => {
-    router.push('/(tabs)/check-in');
+    router.push('/check-in');
   }, [router]);
 
   const readiness = data.readiness.value;

@@ -7,7 +7,8 @@
 
 export const colors = {
   // ── Accent (Amber/Terracotta — canonical) ───────────────────────────────
-  accent: '#B8552E',
+  accent: '#B8552E',        // light mode
+  accentDark: '#D97A52',    // dark mode
   accentDim: 'rgba(184,85,46,0.20)',
 
   // Legacy alias — keep so existing imports of colors.primary still compile
@@ -15,22 +16,30 @@ export const colors = {
   primaryForeground: '#ffffff',
   primaryDim: 'rgba(184,85,46,0.15)',
 
+  // ── Physiological semantic (Readiness / Strain / Sleep ONLY) ────────────
+  // Never use these on UI chrome (buttons, cards, labels unrelated to physio)
+  physio: {
+    green:  { light: '#3F8A4A', dark: '#8FCB82' },
+    yellow: { light: '#B8863A', dark: '#E8C86A' },  // light = amber reused
+    red:    { light: '#B64536', dark: '#E27A6F' },
+  },
+
   // ── Semantic status ──────────────────────────────────────────────────────
   // Zone colors (legacy aliases for training-zone logic — not for UI chrome)
   zoneGreen: '#6B9259',
   zoneGreenBg: 'rgba(107,146,89,0.12)',
   zoneYellow: '#B8863A',
   zoneYellowBg: 'rgba(184,134,58,0.12)',
-  zoneRed: '#ef4444',
-  zoneRedBg: 'rgba(239,68,68,0.10)',
-  zoneCritical: '#dc2626',
+  zoneRed: '#B64536',               // terracotta warm (was #ef4444 cold red)
+  zoneRedBg: 'rgba(182,69,54,0.10)',
+  zoneCritical: '#9C3020',
 
   // RGB channels for alpha variants
   primaryRgb: '184, 85, 46',
   zoneGreenRgb: '107, 146, 89',
   zoneYellowRgb: '184, 134, 58',
-  zoneRedRgb: '239, 68, 68',
-  zoneCriticalRgb: '220, 38, 38',
+  zoneRedRgb: '182, 69, 54',
+  zoneCriticalRgb: '156, 48, 32',
   phaseLutealRgb: '129, 140, 248',
 
   // ── Cycle phase colors ───────────────────────────────────────────────────
