@@ -2,7 +2,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Screen, Text, Button, Input, Card, useTheme } from '@resilio/ui-mobile';
+import { Text, Button, Input, Card, useTheme } from '@resilio/ui-mobile';
 import { colors } from '@resilio/design-tokens';
 
 export default function LoginScreen(): React.JSX.Element {
