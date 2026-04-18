@@ -1,6 +1,7 @@
 /** @type {import('jest').Config} */
 module.exports = {
   preset: 'jest-expo',
+  setupFiles: ['./src/__tests__/setup-env.ts'],
   setupFilesAfterEnv: ['./src/__tests__/setup.ts'],
   testMatch: ['**/__tests__/**/*.test.{ts,tsx}'],
   moduleNameMapper: {
