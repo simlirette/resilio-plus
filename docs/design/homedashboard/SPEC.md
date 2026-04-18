@@ -29,7 +29,7 @@
    - Description: 14px, 400, textMuted, 2 lignes max
    - Métriques secondaires (3 colonnes): Allure/Puissance, FC cible/NP, TSS
    - CTA "Démarrer la séance →" — pleine largeur, fond accent
-6. **Tab bar** — Home, Training, Coach, Metrics + icône profil
+6. **Tab bar** — 4 onglets V1: Accueil | Entraînement | Coach | Profil (Métriques = V2)
 
 ## Palette observée (depuis screenshots)
 

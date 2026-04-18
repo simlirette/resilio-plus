@@ -38,24 +38,8 @@ Utilisé pour:
 
 **Jamais** utilisé pour:
 - Indicateurs physiologiques (Readiness, Strain, Sommeil, HRV)
-- CTA d'action primaire session (réservé au lime — voir ci-dessous)
 - Fonds de card décoratifs
 - Gradients
-
-### Accent action session — Lime électrique
-
-Réservé **exclusivement** aux actions primaires de l'écran Séance du Jour.
-
-```
-#C8FF4D  (identique light et dark — signal fort intentionnel)
-Ink sur lime: #0E1200
-```
-
-Utilisé pour:
-- "▶ Démarrer" (Mode A → launch session)
-- "✓ Set terminé" (Mode B muscu)
-
-**Jamais** utilisé pour autre chose. Jamais décoratif.
 
 ### Sémantique physiologique
 

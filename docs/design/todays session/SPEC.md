@@ -8,9 +8,9 @@
 - `lib/execution.jsx` — code Mode B
 
 ## Aperçu visuel
-2 modes distincts partagent la même header. **Mode A (Prescription)**: lecture de la séance + justification coach avant démarrage. **Mode B (Exécution)**: une info principale, une action, zéro chrome pendant la séance. L'accent CTA passe de amber → **lime électrique** pour signaler l'état actif.
+2 modes distincts partagent la même header. **Mode A (Prescription)**: lecture de la séance + justification coach avant démarrage. **Mode B (Exécution)**: une info principale, une action, zéro chrome pendant la séance.
 
-> **Système dual-accent**: amber = navigation/UI chrome. Lime = action primaire session uniquement. Jamais décoratif.
+> **Accent unique**: amber (`#B8552E` light / `#D97A52` dark) pour tous les CTA, y compris "Démarrer" et "Set terminé". Pas de lime.
 
 ## Structure
 
@@ -30,7 +30,7 @@
    - Course: row avec label phase (WARM-UP/MAIN/COOL-DOWN), allure cible, durée
    - Muscu: row numéroté, nom exercice, sets × reps @ RPE, note technique
 6. **PROFIL DE ZONE** (course uniquement) — barre + durée
-7. **CTA "▶ Démarrer"** — pleine largeur, 56px, radius 14–18px, fond **lime** (#C8FF4D), texte dark
+7. **CTA "▶ Démarrer"** — pleine largeur, 56px, radius 14–18px, fond **amber** (accent), texte onAccent
 
 ### Mode B — Exécution (Course)
 
@@ -55,7 +55,7 @@
 5. **CHARGE** + **RÉPÉTITIONS** — hero numbers, tabular
 6. **RPE DU SET PRÉCÉDENT** — selector 1–10 horizontal, valeur sélectionnée pill sombre
 7. **REPOS** — compteur "01:47 / 02:30" + badge "AUTO"
-8. **"✓ Set terminé"** — pleine largeur, fond **lime**, texte dark + bouton "Skip" à droite
+8. **"✓ Set terminé"** — pleine largeur, fond **amber** (accent), texte onAccent + bouton "Skip" à droite
 9. **TERMINER LA SÉANCE** — small-caps centré, texte textMuted
 
 ## Palette observée (depuis screenshots + tokens.jsx)
@@ -71,9 +71,7 @@ inkMuted:    rgba(24,22,19,0.62)
 inkDim:      rgba(24,22,19,0.42)
 inkFaint:    rgba(24,22,19,0.22)
 // DUAL ACCENT:
-accentUI:    oklch(amber)     // UI chrome, non visible sur cet écran
-accentCTA:   #C8FF4D          // lime électrique — CTA primaire UNIQUEMENT
-accentCTAInk:#0E1200          // texte sur lime
+accentUI:    oklch(amber)     // #B8552E — tous les CTA, navigation, états actifs
 // physio
 green:       #3F8A4A
 yellow:      #B88A16
@@ -89,14 +87,12 @@ hairline:    rgba(255,248,230,0.08)
 hairlineStr: rgba(255,248,230,0.14)
 ink:         #F3EFE6
 inkMuted:    rgba(243,239,230,0.62)
-accentCTA:   #C8FF4D    // lime identique light/dark
-accentCTAInk:#0E1200
+accentCTA:   #D97A52    // amber dark mode
 green:       #8FCB82
 yellow:      #E8C86A
 red:         #E27A6F
 ```
 
-> **À noter**: la lime est identique en light et dark. C'est intentionnel — signal d'action fort, pas de recalibrage.
 
 ## Typographie
 - Famille: Space Grotesk + `fontVariantNumeric: 'tabular-nums'` partout où il y a des chiffres
@@ -199,7 +195,7 @@ Mode A: pas d'input. Mode B: pas d'input (RPE par tap, pas clavier). Sans objet.
 - **Sets vs phases**: comment la navigation fonctionne-t-elle quand il y a plusieurs exercices et plusieurs sets ? L'écran montre toujours l'exercice courant. Swipe ou navigation automatique ? **À trancher.**
 
 ## Anti-patterns à éviter pour cette page
-- CTA lime JAMAIS utilisé comme accent décoratif — uniquement action primaire session
+- CTA amber = action primaire — jamais décoratif, jamais sur l'UI chrome non-interactif
 - Pas d'icône décorative — glyphes sport monoline, 1.5px stroke uniquement (note auteur)
 - Sémantique green/yellow/red uniquement pour FC live / allure vs cible (note auteur)
 - Le fond dark est #141311, PAS #08080e
