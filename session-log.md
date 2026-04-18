@@ -211,3 +211,31 @@ Rejected:
 - Platform.OS fallback for web — not needed, NativeTabsView.web.js handles this inside expo-router
 Open:
 - NativeTabs not validated on physical iOS device — liquid glass blur effect untested on real hardware
+
+## 2026-04-18 [saved]
+Goal: COLOR-PURGE — amber canonical replaces blue+mauve in packages/ and apps/mobile/
+Decisions:
+- design-tokens/colors.ts: top-level accent/primary = #B8552E; shadcn.dark primary/ring = #D97A52; shadcn.light = #B8552E; RGB channels updated
+- brand/logo.tsx PRIMARY and BRAND.md: all #5b5fef refs → #B8552E; dark bg corrected #08080e → #131210
+- app.json splash backgroundColor → #131210 (warm near-black), not amber — surface not accent
+- UI-RULES-MOBILE.md deleted; frontend/UI-RULES.md is sole source of truth for design rules
+Rejected:
+- amber splash backgroundColor (#B8552E) — flash de marque incohérent, transition douce vers dark UI préférée
+Open:
+- apps/web/ still has #5b5fef (globals.css + energy/cycle) — hors scope, traitement séparé
+
+## 2026-04-18 [saved]
+Goal: UI mobile rework — Wave 1 primitives livréss, gate Expo Go en attente
+Decisions:
+- Lime (#C8FF4D) supprimé définitivement — amber (#B8552E/#D97A52) pour tous les CTAs y compris session
+- Space Grotesk 400/500/600/700 remplace Inter — _layout.tsx + typography.ts corrigés
+- Dark bg unifié #131210 pour V1 — variations contextuelles (#17171A, #161412, etc.) abandonnées
+- Tab bar 4 onglets: Accueil|Entraînement|Coach|Profil. Check-in hors tab → /check-in
+- zoneRed: #B64536 (terracotta, cohérent amber) remplace #ef4444 (rouge froid)
+- physio tokens ajoutés: physio.green/yellow/red light+dark — sémantique physiologique stricte
+Rejected:
+- 5e tab Métriques (V1) — drill-down depuis Home via tap anneau
+- Fond dark multi-valeurs — trop de complexité tokens pour V1
+Open:
+- Tests Wave 1 non écrits (Button/FloatingLabelInput/HeroNumber/ProgressSegments/SegmentedControl)
+- Gate Expo Go Wave 1 non encore validé — continuer Wave 2 après "OK"
