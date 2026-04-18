@@ -1,37 +1,30 @@
-import { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-} from 'react-native';
+// apps/mobile/app/(auth)/login.tsx
+import React, { useState, useCallback } from 'react';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Button, Card, Input, useTheme } from '@resilio/ui-mobile';
+import { Screen, Text, Button, Input, Card, useTheme } from '@resilio/ui-mobile';
 import { colors } from '@resilio/design-tokens';
 
-export default function LoginScreen() {
+export default function LoginScreen(): React.JSX.Element {
   const router = useRouter();
-  const { colorMode } = useTheme();
-  const themeColors = colorMode === 'dark' ? colors.dark : colors.light;
+  const { colors: themeColors } = useTheme();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  async function handleLogin() {
+  const handleLogin = useCallback(async () => {
     if (!email || !password) {
       setError('Email et mot de passe requis.');
       return;
     }
     setError('');
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
+    await new Promise<void>((r) => setTimeout(r, 800));
     setLoading(false);
     router.replace('/(tabs)');
-  }
+  }, [email, password, router]);
 
   return (
     <KeyboardAvoidingView
@@ -42,18 +35,19 @@ export default function LoginScreen() {
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={[styles.wordmark, { color: colors.primary }]}>
-          RESILIO+
-        </Text>
-        <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>
+        <View style={styles.wordmarkRow}>
+          <Text variant="title" color={themeColors.foreground}>Resilio</Text>
+          <Text variant="title" color={colors.accent}>+</Text>
+        </View>
+        <Text variant="secondary" color={themeColors.textSecondary} style={styles.subtitle}>
           Ta plateforme de coaching hybride
         </Text>
+
         <Card style={styles.card}>
           <Input
             label="Email"
             value={email}
             onChangeText={setEmail}
-            placeholder="athlete@exemple.com"
             keyboardType="email-address"
             autoCapitalize="none"
             autoComplete="email"
@@ -62,21 +56,41 @@ export default function LoginScreen() {
             label="Mot de passe"
             value={password}
             onChangeText={setPassword}
-            placeholder="••••••••"
             secureTextEntry
             autoComplete="current-password"
-            style={{ marginTop: 16 }}
+            style={styles.inputGap}
           />
-          {error ? (
-            <Text style={[styles.error, { color: colors.zoneRed }]}>{error}</Text>
-          ) : null}
+          {error !== '' && (
+            <Text variant="secondary" color={colors.zoneRed} style={styles.error}>
+              {error}
+            </Text>
+          )}
           <Button
             title={loading ? 'Connexion…' : 'Se connecter'}
             onPress={handleLogin}
             disabled={loading}
-            style={{ marginTop: 24 }}
+            loading={loading}
+            style={styles.loginBtn}
           />
         </Card>
+
+        <Text variant="secondary" color={themeColors.textMuted} style={styles.applePlaceholder}>
+          Connexion Apple — bientôt disponible
+        </Text>
+
+        <View style={styles.footer}>
+          <Pressable onPress={() => router.push('/(auth)/forgot-password')}>
+            <Text variant="secondary" color={themeColors.textSecondary}>
+              Mot de passe oublié
+            </Text>
+          </Pressable>
+          <Text variant="secondary" color={themeColors.textMuted}>·</Text>
+          <Pressable onPress={() => router.push('/(auth)/signup')}>
+            <Text variant="secondary" color={colors.accent}>
+              Créer un compte
+            </Text>
+          </Pressable>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -90,18 +104,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 48,
   },
-  wordmark: {
-    fontFamily: 'SpaceGrotesk_700Bold',
-    fontSize: 32,
-    letterSpacing: 4,
-    textAlign: 'center',
+  wordmarkRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 0,
     marginBottom: 8,
   },
-  subtitle: {
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 32,
-  },
+  subtitle: { textAlign: 'center', marginBottom: 32 },
   card: { width: '100%' },
-  error: { fontSize: 13, marginTop: 8 },
+  inputGap: { marginTop: 16 },
+  error: { marginTop: 8 },
+  loginBtn: { marginTop: 24 },
+  applePlaceholder: { textAlign: 'center', marginTop: 20 },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 24,
+  },
 });
