@@ -13,6 +13,7 @@ export { Circle } from './components/Circle';
 export { CognitiveLoadDial } from './components/CognitiveLoadDial';
 export type { DialState } from './components/CognitiveLoadDial';
 export { Input } from './components/Input';
+export { FloatingLabelInput } from './components/FloatingLabelInput';
 export { MetricRow } from './components/MetricRow';
 export { ReadinessStatusBadge } from './components/ReadinessStatusBadge';
 export { Screen } from './components/Screen';
