@@ -19,3 +19,7 @@ export { Screen } from './components/Screen';
 export { SessionCard } from './components/SessionCard';
 export type { WorkoutSlotForCard, SportType as CardSportType } from './components/SessionCard';
 export { Text } from './components/Text';
+export { ProgressDots } from './components/ProgressDots';
+export { HITLSheet } from './components/HITLSheet';
+export type { HITLOption } from './components/HITLSheet';
+export { DisciplineIcon } from './components/DisciplineIcon';
