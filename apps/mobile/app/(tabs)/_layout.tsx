@@ -31,7 +31,7 @@ export default function TabsLayout() {
         />
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="chat">
+      <NativeTabs.Trigger name="coach">
         <NativeTabs.Trigger.Label>Coach</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           sf={{ default: 'bolt', selected: 'bolt.fill' }}
