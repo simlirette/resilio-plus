@@ -3,7 +3,7 @@
 ## Identité de la marque
 
 **Nom:** Resilio+  
-**Wordmark:** "Resilio+" — le "+" en couleur primaire (`#5b5fef`), le reste en gris foncé (dark: `#eeeef4`) ou gris foncé profond (light: `#0f0f18`)
+**Wordmark:** "Resilio+" — le "+" en couleur primaire (`#B8552E`), le reste en gris foncé (dark: `#eeeef4`) ou gris foncé profond (light: `#0f0f18`)
 
 ---
 
@@ -28,8 +28,8 @@
 
 **"Clinical-athlete. Dark by default. Whoop × TrainingPeaks."**
 
-- Sombre profond, pas noir pur : `#08080e` (pas `#000000`)
-- Accent unique : violet-indigo `#5b5fef`
+- Sombre profond, pas noir pur : `#131210` (warm near-black)
+- Accent unique : amber/terracotta `#B8552E` (light) / `#D97A52` (dark)
 - Typographie technique : Space Grotesk + Space Mono (chiffres)
 - Pas d'illustrations, pas d'emojis dans les états critiques
 - Les zones (vert/orange/rouge) communiquent de l'information, pas de la décoration
@@ -43,7 +43,7 @@ RESILIO+
 ```
 
 - "RESILIO" : police Space Grotesk, poids 700 (bold)
-- "+" : même police, couleur `--primary` (`#5b5fef`)
+- "+" : même police, couleur `--primary` (`#B8552E`)
 - Tracking : `tracking-widest` (letter-spacing 0.1em)
 - Tailles : sm (text-sm), md (text-base), lg (text-xl)
 
@@ -54,4 +54,4 @@ RESILIO+
 1. Ne jamais utiliser un fond blanc sur le produit principal (dark-first)
 2. Ne jamais utiliser de gradient de couleur sur les éléments de données
 3. Ne jamais arrondir à plus de `16px` (radius-xl) sur les cartes principales
-4. L'accent `#5b5fef` est réservé aux actions primaires et états actifs — pas décoratif
+4. L'accent `#B8552E` est réservé aux actions primaires et états actifs — pas décoratif
