@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Resilio+ — Home</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin:0; padding:0; background:#E8E4DC; font-family:'Inter',-apple-system,system-ui,sans-serif; }
+  * { box-sizing: border-box; }
+  .stage {
+    min-height: 100vh;
+    padding: 56px 48px 80px;
+    display: flex; flex-direction: column; align-items: center; gap: 28px;
+  }
+  .headline {
+    width: 100%; max-width: 1120px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .eyebrow {
+    font-size: 11px; letter-spacing: 1.6px; text-transform: uppercase;
+    color: rgba(43,40,36,0.5); font-weight: 500;
+  }
+  .title {
+    font-size: 32px; font-weight: 500; letter-spacing: -0.8px;
+    color: #2B2824;
+  }
+  .subtitle {
+    font-size: 15px; color: rgba(43,40,36,0.62); letter-spacing: -0.1px;
+    max-width: 640px; line-height: 1.5;
+  }
+  .pair {
+    display: flex; gap: 56px; align-items: flex-start; justify-content: center;
+    flex-wrap: wrap;
+  }
+  .col {
+    display: flex; flex-direction: column; gap: 16px; align-items: center;
+  }
+  .caption {
+    font-size: 12px; letter-spacing: 0.4px; text-transform: uppercase;
+    color: rgba(43,40,36,0.5); font-weight: 500;
+  }
+  /* Tweaks panel */
+  .tweaks {
+    position: fixed; bottom: 20px; right: 20px;
+    background: #fff; border: 0.5px solid rgba(43,40,36,0.1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 12px 32px rgba(0,0,0,0.12);
+    border-radius: 14px; padding: 16px 18px; width: 240px;
+    display: none;
+    font-size: 13px; color: #2B2824;
+  }
+  .tweaks.active { display: block; }
+  .tweaks h3 {
+    margin: 0 0 12px; font-size: 11px; font-weight: 600;
+    letter-spacing: 1.4px; text-transform: uppercase;
+    color: rgba(43,40,36,0.6);
+  }
+  .accent-row { display: flex; gap: 8px; }
+  .accent-chip {
+    flex: 1; height: 40px; border-radius: 10px; cursor: pointer;
+    border: 2px solid transparent;
+    display: flex; align-items: flex-end; justify-content: center;
+    padding-bottom: 4px; color: #fff; font-size: 9px;
+    font-weight: 500; letter-spacing: 0.4px; text-transform: uppercase;
+  }
+  .accent-chip.sel { border-color: #2B2824; }
+</style>
+</head>
+<body>
+<template id="__bundler_thumbnail" data-bg-color="#F7F4EE">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#F7F4EE"/>
+    <circle cx="600" cy="400" r="160" fill="none" stroke="rgba(43,40,36,0.08)" stroke-width="18"/>
+    <circle cx="600" cy="400" r="160" fill="none" stroke="#3B74C9" stroke-width="18" stroke-linecap="round"
+      stroke-dasharray="724 1005" transform="rotate(-90 600 400)"/>
+    <text x="600" y="418" text-anchor="middle" font-family="Inter, system-ui, sans-serif"
+      font-weight="300" font-size="110" fill="#2B2824" letter-spacing="-3">72</text>
+  </svg>
+</template>
+<div id="root"></div>
+
+<div class="tweaks" id="tweaks">
+  <h3>Tweaks</h3>
+  <div style="margin-bottom:8px; color:rgba(43,40,36,0.6); font-size:11px;">Accent color</div>
+  <div class="accent-row" id="accent-row"></div>
+</div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="home-screen.jsx"></script>
+
+<script type="text/babel">
+const TWEAKS = /*EDITMODE-BEGIN*/{
+  "accent": "clinical"
+}/*EDITMODE-END*/;
+
+const ACCENT_META = [
+  { key: 'clinical', label: 'Clinical',  name: 'Clinical Blue' },
+  { key: 'emerald',  label: 'Emerald',   name: 'Emerald Green' },
+  { key: 'indigo',   label: 'Indigo',    name: 'Soft Indigo' },
+];
+
+function App() {
+  const [accentKey, setAccentKey] = React.useState(TWEAKS.accent || 'clinical');
+  const accent = ACCENTS[accentKey];
+
+  // wire tweaks panel
+  React.useEffect(() => {
+    const row = document.getElementById('accent-row');
+    row.innerHTML = '';
+    ACCENT_META.forEach(m => {
+      const el = document.createElement('div');
+      el.className = 'accent-chip' + (m.key === accentKey ? ' sel' : '');
+      el.style.background = ACCENTS[m.key];
+      el.textContent = m.label;
+      el.onclick = () => {
+        setAccentKey(m.key);
+        window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { accent: m.key } }, '*');
+      };
+      row.appendChild(el);
+    });
+  }, [accentKey]);
+
+  // edit-mode protocol
+  React.useEffect(() => {
+    const onMsg = (e) => {
+      const d = e.data || {};
+      if (d.type === '__activate_edit_mode') document.getElementById('tweaks').classList.add('active');
+      if (d.type === '__deactivate_edit_mode') document.getElementById('tweaks').classList.remove('active');
+    };
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  const currentName = ACCENT_META.find(m => m.key === accentKey).name;
+
+  return (
+    <div className="stage">
+      <div className="headline">
+        <div className="eyebrow">Resilio+ · Hybrid athlete dashboard</div>
+        <div className="title">Home screen — {currentName}</div>
+        <div className="subtitle">
+          Home surface for hybrid athletes combining running, lifting, cycling and swimming. Clinical but warm — designed to be checked in fifteen seconds before training. Toggle the accent in the Tweaks panel.
+        </div>
+      </div>
+
+      <div className="pair">
+        <div className="col">
+          <IOSDevice dark={false} width={390} height={900}>
+            <ResilioHome dark={false} accent={accent}/>
+          </IOSDevice>
+          <div className="caption">Light</div>
+        </div>
+        <div className="col">
+          <IOSDevice dark={true} width={390} height={900}>
+            <ResilioHome dark={true} accent={accent}/>
+          </IOSDevice>
+          <div className="caption">Dark</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

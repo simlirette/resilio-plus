@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Resilio+ — Auth Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; background: #f0eee9; font-family: 'Space Grotesk', system-ui, sans-serif; }
+  * { box-sizing: border-box; }
+  @keyframes resilio-spin { to { transform: rotate(360deg); } }
+  button { font-family: inherit; }
+  input::placeholder { color: inherit; opacity: 0.5; }
+  input:-webkit-autofill { -webkit-box-shadow: 0 0 0 1000px transparent inset; transition: background-color 5000s ease-in-out 0s; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="auth-screens.jsx"></script>
+
+<script type="text/babel">
+const { useState } = React;
+
+// Custom status bar over the screen (iOS frame's default bar is positioned,
+// but we want it to match the screen bg, so we provide our own).
+function ThemedStatusBar({ dark }) {
+  const c = dark ? '#F0EEE8' : '#1A1A17';
+  return (
+    <div style={{
+      position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20,
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '18px 32px 0', pointerEvents: 'none',
+    }}>
+      <span style={{
+        fontFamily: '-apple-system, "SF Pro", system-ui', fontWeight: 600,
+        fontSize: 17, color: c,
+      }}>9:41</span>
+      <div style={{ width: 126, height: 20 }} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <svg width="18" height="11" viewBox="0 0 18 11"><rect x="0" y="7" width="3" height="4" rx="0.7" fill={c}/><rect x="4.5" y="5" width="3" height="6" rx="0.7" fill={c}/><rect x="9" y="2.5" width="3" height="8.5" rx="0.7" fill={c}/><rect x="13.5" y="0" width="3" height="11" rx="0.7" fill={c}/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 3C10.2 3 12.2 3.9 13.6 5.3L14.6 4.3C12.9 2.5 10.5 1.4 8 1.4C5.5 1.4 3.1 2.5 1.4 4.3L2.4 5.3C3.8 3.9 5.8 3 8 3Z" fill={c}/><path d="M8 6.4C9.3 6.4 10.5 6.9 11.4 7.7L12.4 6.7C11.2 5.6 9.7 4.9 8 4.9C6.3 4.9 4.8 5.6 3.6 6.7L4.6 7.7C5.5 6.9 6.7 6.4 8 6.4Z" fill={c}/><circle cx="8" cy="9.7" r="1.4" fill={c}/></svg>
+        <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0.5" y="0.5" width="21.5" height="11" rx="3" stroke={c} strokeOpacity="0.4" fill="none"/><rect x="2" y="2" width="18.5" height="8" rx="1.8" fill={c}/><path d="M23.3 4.2V7.8C24 7.5 24.5 6.7 24.5 6C24.5 5.3 24 4.5 23.3 4.2Z" fill={c} fillOpacity="0.4"/></svg>
+      </div>
+    </div>
+  );
+}
+
+// Minimal device shell — just the bezel, status bar + home indicator,
+// no nav chrome. The auth screens bring their own layout.
+function AuthDevice({ dark, children, keyboard }) {
+  const width = 390, height = 844;
+  return (
+    <div style={{
+      width, height, borderRadius: 48, overflow: 'hidden',
+      position: 'relative',
+      background: dark ? RESILIO.dark.bg : RESILIO.light.bg,
+      boxShadow: '0 40px 80px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.10)',
+    }}>
+      {/* dynamic island */}
+      <div style={{
+        position: 'absolute', top: 11, left: '50%', transform: 'translateX(-50%)',
+        width: 120, height: 35, borderRadius: 22, background: '#000', zIndex: 50,
+      }} />
+      <ThemedStatusBar dark={dark} />
+      <div style={{ position: 'absolute', inset: 0, paddingTop: 44 }}>
+        {children}
+      </div>
+      {keyboard && (
+        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 40 }}>
+          <IOSKeyboard dark={dark} />
+        </div>
+      )}
+      {/* home indicator */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 60,
+        height: 34, display: 'flex', justifyContent: 'center', alignItems: 'flex-end',
+        paddingBottom: 8, pointerEvents: 'none',
+      }}>
+        <div style={{
+          width: 134, height: 5, borderRadius: 100,
+          background: dark ? 'rgba(240,238,232,0.65)' : 'rgba(26,26,23,0.3)',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+// Reasoning panel top-left
+function Reasoning() {
+  return (
+    <div style={{
+      position: 'absolute', top: 24, left: 24, width: 420, zIndex: 100,
+      padding: '20px 22px', background: '#fff',
+      borderRadius: 2,
+      boxShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06)',
+      fontFamily: "'Space Grotesk', system-ui, sans-serif",
+      fontSize: 12, lineHeight: 1.55, color: '#2a241e',
+    }}>
+      <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: 1.2, textTransform: 'uppercase', color: '#8a7f6f', marginBottom: 10 }}>
+        Resilio+ · Auth flow · V1
+      </div>
+      <div style={{ fontSize: 15, fontWeight: 500, letterSpacing: -0.3, marginBottom: 10, color: '#1a1512' }}>
+        Système
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr', rowGap: 6, columnGap: 12 }}>
+        <div style={{ color: '#8a7f6f' }}>Type</div>
+        <div>Space Grotesk 400/500/600, tabular figures</div>
+        <div style={{ color: '#8a7f6f' }}>Accent</div>
+        <div>oklch(0.62 0.14 35) · warm amber, neutre vs physio palette</div>
+        <div style={{ color: '#8a7f6f' }}>Light bg</div>
+        <div>#F5F5F2 · warm greys #E3E0D8 → #6B6862</div>
+        <div style={{ color: '#8a7f6f' }}>Dark bg</div>
+        <div>#17171A · charbon chaud, pas clinique</div>
+        <div style={{ color: '#8a7f6f' }}>Input</div>
+        <div>Floating label small-caps, border 1px → 1.5px focus</div>
+        <div style={{ color: '#8a7f6f' }}>Bouton</div>
+        <div>54px · radius 12 · no shadow · Apple en noir/blanc par mode</div>
+        <div style={{ color: '#8a7f6f' }}>Ton</div>
+        <div>FR · tu · déclaratif · aucune exclamation</div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Canvas ───
+function App() {
+  const L = RESILIO.light, D = RESILIO.dark;
+
+  return (
+    <DesignCanvas>
+      <Reasoning />
+
+      {/* LOGIN */}
+      <DCSection title="1 — Connexion" subtitle="Écran d'entrée. Email / mot de passe, Apple, lien vers création et mot de passe oublié." gap={56}>
+        <DCArtboard label="Light · empty" width={390} height={844} style={{ borderRadius: 48 }}>
+          <AuthDevice dark={false}>
+            <LoginScreen theme={L} />
+          </AuthDevice>
+        </DCArtboard>
+        <DCArtboard label="Light · filled + focus password" width={390} height={844} style={{ borderRadius: 48 }}>
+          <AuthDevice dark={false} keyboard>
+            <LoginScreen theme={L} prefill={{
+              email: 'alex.morel@proton.me',
+              password: '••••••••••••',
+              focusPassword: true,
+            }} />
+          </AuthDevice>
+        </DCArtboard>
+        <DCArtboard label="Dark · empty" width={390} height={844} style={{ borderRadius: 48 }}>
+          <AuthDevice dark={true}>
+            <LoginScreen theme={D} />
+          </AuthDevice>
+        </DCArtboard>
+        <DCArtboard label="Dark · loading" width={390} height={844} style={{ borderRadius: 48 }}>
+          <AuthDevice dark={true}>
+            <LoginScreen theme={D} prefill={{
+              email: 'alex.morel@proton.me',
+              password: '••••••••••••',
+              loading: true,
+            }} />
+          </AuthDevice>
+        </DCArtboard>
+      </DCSection>
+
+      {/* SIGNUP */}
+      <DCSection title="2 — Création de compte" subtitle="Email + mot de passe + confirmation. Texte légal discret sous le CTA." gap={56}>
+        <DCArtboard label="Light · empty" width={390} height={844} style={{ borderRadius: 48 }}>
+          <AuthDevice dark={false}>
+            <SignupScreen theme={L} />
+          </AuthDevice>
+        </DCArtboard>
+        <DCArtboard label="Light · filled" width={390} height={844} style={{ borderRadius: 48 }}>
+          <AuthDevice dark={false}>
+            <SignupScreen theme={L} prefill={{
+              email: 'alex.morel@proton.me',
+              password: '••••••••••••',
+              confirm: '••••••••••••',
+            }} />
+          </AuthDevice>
+        </DCArtboard>
+        <DCArtboard label="Dark · empty" width={390} height={844} style={{ borderRadius: 48 }}>
+          <AuthDevice dark={true}>
+            <SignupScreen theme={D} />
+          </AuthDevice>
+        </DCArtboard>
+        <DCArtboard label="Dark · filled" width={390} height={844} style={{ borderRadius: 48 }}>
+          <AuthDevice dark={true}>
+            <SignupScreen theme={D} prefill={{
+              email: 'alex.morel@proton.me',
+              password: '••••••••••••',
+              confirm: '••••••••••••',
+            }} />
+          </AuthDevice>
+        </DCArtboard>
+      </DCSection>
+
+      {/* FORGOT */}
+      <DCSection title="3 — Mot de passe oublié" subtitle="Un input, un CTA. État envoyé confirmé inline, pas de modal." gap={56}>
+        <DCArtboard label="Light · initial" width={390} height={844} style={{ borderRadius: 48 }}>
+          <AuthDevice dark={false}>
+            <ForgotScreen theme={L} />
+          </AuthDevice>
+        </DCArtboard>
+        <DCArtboard label="Light · email envoyé" width={390} height={844} style={{ borderRadius: 48 }}>
+          <AuthDevice dark={false}>
+            <ForgotScreen theme={L} prefill={{ email: 'alex.morel@proton.me', sent: true }} />
+          </AuthDevice>
+        </DCArtboard>
+        <DCArtboard label="Dark · initial" width={390} height={844} style={{ borderRadius: 48 }}>
+          <AuthDevice dark={true}>
+            <ForgotScreen theme={D} />
+          </AuthDevice>
+        </DCArtboard>
+        <DCArtboard label="Dark · email envoyé" width={390} height={844} style={{ borderRadius: 48 }}>
+          <AuthDevice dark={true}>
+            <ForgotScreen theme={D} prefill={{ email: 'alex.morel@proton.me', sent: true }} />
+          </AuthDevice>
+        </DCArtboard>
+      </DCSection>
+
+      {/* INTERACTIVE */}
+      <DCSection title="Prototype interactif" subtitle="Navigation réelle entre les 3 écrans. Light puis dark." gap={56}>
+        <DCArtboard label="Interactive · light" width={390} height={844} style={{ borderRadius: 48 }}>
+          <AuthDevice dark={false}>
+            <InteractiveFlow dark={false} />
+          </AuthDevice>
+        </DCArtboard>
+        <DCArtboard label="Interactive · dark" width={390} height={844} style={{ borderRadius: 48 }}>
+          <AuthDevice dark={true}>
+            <InteractiveFlow dark={true} />
+          </AuthDevice>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+function InteractiveFlow({ dark }) {
+  const [route, setRoute] = useState('login');
+  const theme = dark ? RESILIO.dark : RESILIO.light;
+  const Screen = route === 'login' ? LoginScreen : route === 'signup' ? SignupScreen : ForgotScreen;
+  return <Screen theme={theme} onNavigate={setRoute} />;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

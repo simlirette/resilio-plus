@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Resilio+ — Historique d'entraînement</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; background: #F0EEE9; font-family: 'Space Grotesk', system-ui, sans-serif; }
+  * { box-sizing: border-box; }
+  button { font-family: inherit; }
+  button:focus { outline: none; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  /* Scrollbars minimal */
+  ::-webkit-scrollbar { width: 0; height: 0; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="lib/theme.js"></script>
+<script src="lib/data.js"></script>
+<script type="text/babel" src="lib/ios-frame.jsx"></script>
+<script type="text/babel" src="lib/design-canvas.jsx"></script>
+<script type="text/babel" src="lib/components.jsx"></script>
+<script type="text/babel" src="lib/views.jsx"></script>
+<script type="text/babel" src="lib/screen.jsx"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const TWEAKS = /*EDITMODE-BEGIN*/{
+  "mode": "both",
+  "initialView": "cal",
+  "showDrawerOpen": true,
+  "density": "comfortable"
+}/*EDITMODE-END*/;
+
+function PhoneSlot({ mode, view, label, initialDayKey }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+      <IOSDevice dark={mode === 'dark'} width={390} height={844}>
+        <div data-screen-label={`${label}`} style={{ width: '100%', height: '100%' }}>
+          <Screen mode={mode} view={view} initialDayKey={initialDayKey} />
+        </div>
+      </IOSDevice>
+    </div>
+  );
+}
+
+function App() {
+  const [tweaks, setTweaks] = useState(TWEAKS);
+  const [editMode, setEditMode] = useState(false);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.data?.type === '__activate_edit_mode') setEditMode(true);
+      if (e.data?.type === '__deactivate_edit_mode') setEditMode(false);
+      if (e.data?.type === '__edit_mode_set_keys') {
+        setTweaks(t => ({ ...t, ...e.data.edits }));
+      }
+    };
+    window.addEventListener('message', handler);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', handler);
+  }, []);
+
+  const setKey = (k, v) => {
+    setTweaks(t => ({ ...t, [k]: v }));
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [k]: v } }, '*');
+  };
+
+  const { todayKey } = window.TRAINING_DATA;
+  // A day with multiple sessions for demo drawer: 2 days ago has run + lift
+  const demoDayKey = (() => {
+    const d = new Date(window.TRAINING_DATA.today);
+    d.setDate(d.getDate() - 2);
+    return window.TRAINING_DATA.fmt(d);
+  })();
+
+  const modes = tweaks.mode === 'light' ? ['light']
+    : tweaks.mode === 'dark' ? ['dark']
+    : ['light', 'dark'];
+
+  return (
+    <>
+      <DesignCanvas>
+        <DCSection
+          title="Resilio+ — Historique d'entraînement"
+          subtitle="2 vues (Calendrier, Liste) × 2 modes (Light, Dark). Tap sur un jour du calendrier pour ouvrir le détail."
+        >
+          {modes.includes('light') && (
+            <DCArtboard label="01 · Calendrier — Light" width={390} height={844}>
+              <PhoneSlot mode="light" view="cal" label="01 Calendrier Light" />
+            </DCArtboard>
+          )}
+          {modes.includes('dark') && (
+            <DCArtboard label="02 · Calendrier — Dark" width={390} height={844}>
+              <PhoneSlot mode="dark" view="cal" label="02 Calendrier Dark" />
+            </DCArtboard>
+          )}
+          {modes.includes('light') && (
+            <DCArtboard label="03 · Liste — Light" width={390} height={844}>
+              <PhoneSlot mode="light" view="list" label="03 Liste Light" />
+            </DCArtboard>
+          )}
+          {modes.includes('dark') && (
+            <DCArtboard label="04 · Liste — Dark" width={390} height={844}>
+              <PhoneSlot mode="dark" view="list" label="04 Liste Dark" />
+            </DCArtboard>
+          )}
+        </DCSection>
+
+        <DCSection
+          title="Détail jour"
+          subtitle="Drawer bas — Total du jour + séance(s) avec métriques. Ouvert sur un jour avec double séance."
+        >
+          {modes.includes('light') && (
+            <DCArtboard label="05 · Détail jour — Light" width={390} height={844}>
+              <PhoneSlot mode="light" view="cal" initialDayKey={demoDayKey} label="05 Detail Light" />
+            </DCArtboard>
+          )}
+          {modes.includes('dark') && (
+            <DCArtboard label="06 · Détail jour — Dark" width={390} height={844}>
+              <PhoneSlot mode="dark" view="cal" initialDayKey={demoDayKey} label="06 Detail Dark" />
+            </DCArtboard>
+          )}
+        </DCSection>
+      </DesignCanvas>
+
+      {editMode && (
+        <TweaksPanel tweaks={tweaks} setKey={setKey} />
+      )}
+    </>
+  );
+}
+
+function TweaksPanel({ tweaks, setKey }) {
+  const row = {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    padding: '10px 0', borderBottom: '0.5px solid rgba(0,0,0,0.08)',
+    fontSize: 12,
+  };
+  const btnGroup = { display: 'flex', gap: 4 };
+  const btn = (active) => ({
+    background: active ? '#1A1916' : '#EDECE6',
+    color: active ? '#F5F5F2' : '#6B6862',
+    border: 'none', borderRadius: 6,
+    padding: '5px 10px', fontSize: 11, fontWeight: 500,
+    cursor: 'pointer', fontFamily: 'Space Grotesk', letterSpacing: -0.1,
+  });
+
+  return (
+    <div style={{
+      position: 'fixed', bottom: 20, right: 20, zIndex: 9999,
+      width: 260,
+      background: '#FAFAF7',
+      border: '0.5px solid rgba(0,0,0,0.12)',
+      borderRadius: 12,
+      padding: '14px 16px',
+      fontFamily: 'Space Grotesk',
+      color: '#1A1916',
+      boxShadow: '0 10px 30px rgba(0,0,0,0.18)',
+    }}>
+      <div style={{
+        fontSize: 11, fontWeight: 600, letterSpacing: 0.6,
+        textTransform: 'uppercase', color: '#6B6862', marginBottom: 8,
+      }}>Tweaks</div>
+
+      <div style={row}>
+        <span>Modes affichés</span>
+        <div style={btnGroup}>
+          {['both','light','dark'].map(m => (
+            <button key={m} style={btn(tweaks.mode === m)} onClick={() => setKey('mode', m)}>
+              {m === 'both' ? '2' : m[0].toUpperCase()+m.slice(1,3)}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
