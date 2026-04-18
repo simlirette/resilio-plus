@@ -16,24 +16,13 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, 'node_modules'),
 ];
 
-// Force singleton native packages to resolve from the app's node_modules only.
-// Prevents pnpm symlinking ui-mobile's own copy → two Metro module IDs → native
-// binding registered once but two JS instances → "must be a function (received undefined)".
-const SINGLETON_NATIVE_PACKAGES = [
-  'react',
-  'react-dom',
-  'react-native',
-  'react-native-svg',
-  'react-native-reanimated',
-  'react-native-safe-area-context',
-  'expo-haptics',
-];
-config.resolver.extraNodeModules = Object.fromEntries(
-  SINGLETON_NATIVE_PACKAGES.map((pkg) => [
-    pkg,
-    path.resolve(projectRoot, 'node_modules', pkg),
-  ])
-);
+// Disable hierarchical lookup so Metro does NOT walk up into packages/ui-mobile/node_modules
+// when resolving imports from within that package. Instead it uses nodeModulesPaths above,
+// which starts with apps/mobile/node_modules — ensuring a single module ID for native
+// packages that must have exactly one instance (react-native-svg, reanimated, etc.).
+// Without this, pnpm's virtual store creates separate copies per peer-dep context,
+// Metro bundles both → native binding registered once → second JS instance is undefined → crash.
+config.resolver.disableHierarchicalLookup = true;
 
 // NativeWind v5 — wraps config to handle CSS/Tailwind transformation
 module.exports = withNativewind(config);
