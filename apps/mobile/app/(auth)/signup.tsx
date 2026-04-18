@@ -26,7 +26,8 @@ export default function SignupScreen(): React.JSX.Element {
     setLoading(true);
     await new Promise<void>((r) => setTimeout(r, 800));
     setLoading(false);
-    router.replace('/(onboarding)');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    router.replace('/(onboarding)' as any);
   }, [email, password, router]);
 
   return (
