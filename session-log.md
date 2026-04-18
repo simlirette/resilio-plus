@@ -211,3 +211,34 @@ Rejected:
 - Platform.OS fallback for web — not needed, NativeTabsView.web.js handles this inside expo-router
 Open:
 - NativeTabs not validated on physical iOS device — liquid glass blur effect untested on real hardware
+
+## 2026-04-18 [saved]
+Goal: Brainstorm + plan pour porter 6 exports Claude Design dans apps/mobile (v1 partielle)
+Decisions:
+- Home (index.tsx) déjà porté — aucune action. Ne pas toucher.
+- 5 tabs : index · check-in · training · coach · profile. check-in reste tab (option A, zéro refactor home).
+- chat.tsx renommé coach.tsx — nom plus précis, trigger NativeTabs mis à jour.
+- HITLSheet = Modal RN natif (pas @gorhom) pour v1. Apple Sign In = placeholder texte.
+- Onboarding = 1 fichier useState(step), pas 5 routes séparées.
+Rejected:
+- Platform.OS branch pour tab bar — NativeTabs gère web/iOS automatiquement.
+- Accent amber/sienna des exports (oklch 0.62 0.14 35, #B8552E) — remplacer par colors.accent #3B74C9.
+- Space Grotesk dans tout nouveau code — deprecated v2, Inter only.
+Open:
+- Plan non exécuté — valider sur Expo Go avant v2 (4 exports manquants).
+- NativeTabs 5 tabs non testé sur device physique iOS.
+
+## 2026-04-18 [saved] — UI Integration v1 EXECUTED
+Goal: Porter 6 exports Claude Design dans apps/mobile — complet (27 commits).
+Decisions:
+- HITLSheet Modal RN: overlay Pressable + sheet View (pas Modal transparent seul) pour que onRequestClose fonctionne.
+- DisciplineIcon importe SportType depuis ./SessionCard (pas re-exporté comme CardSportType depuis index.ts).
+- react-test-renderer mismatch 19.2.4 vs 19.1.0 → fix: setup-env.ts avec RNTL_SKIP_DEPS_CHECK=true dans setupFiles.
+- coach.tsx accent: #B8552E sienna → colors.accent #3B74C9 (correction export design).
+- training.tsx SportType défini inline (pas importé) — CardSportType n'est pas le bon export.
+Rejected:
+- @gorhom/bottom-sheet pour v1 — Modal RN suffit, pas de dépendance supplémentaire.
+- 5 fichiers séparés pour onboarding — 1 fichier useState(step) suffit pour v1.
+Open:
+- NativeTabs 5 tabs non validé sur device physique iOS.
+- TS type stubs NativeTabs.Trigger.Label/.Icon (15 erreurs pre-existing, upstream).
