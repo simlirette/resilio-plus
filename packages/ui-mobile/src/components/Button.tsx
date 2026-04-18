@@ -17,7 +17,7 @@ interface ButtonProps {
 
 /**
  * Button component. Design v2: height=54, radius=16, accent color.
- * Primary: Clinical Blue #3B74C9, 6px shadow bloom.
+ * Primary: Amber #B8552E (light) / #D97A52 (dark), 6px shadow bloom.
  */
 export function Button({ title, onPress, disabled = false, loading = false, variant = 'primary', style }: ButtonProps): React.JSX.Element {
   const { colorMode } = useTheme();
