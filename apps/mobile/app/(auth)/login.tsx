@@ -79,13 +79,13 @@ export default function LoginScreen(): React.JSX.Element {
         </Text>
 
         <View style={styles.footer}>
-          <Pressable onPress={() => router.push('/(auth)/forgot-password')}>
+          <Pressable onPress={() => router.push('/(auth)/forgot-password' as never)}>
             <Text variant="secondary" color={themeColors.textSecondary}>
               Mot de passe oublié
             </Text>
           </Pressable>
           <Text variant="secondary" color={themeColors.textMuted}>·</Text>
-          <Pressable onPress={() => router.push('/(auth)/signup')}>
+          <Pressable onPress={() => router.push('/(auth)/signup' as never)}>
             <Text variant="secondary" color={colors.accent}>
               Créer un compte
             </Text>
