@@ -1,52 +1,67 @@
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import { Tabs } from 'expo-router';
 import { colors } from '@resilio/design-tokens';
+import { IconComponent } from '@resilio/ui-mobile';
 
 /**
  * Tab bar layout — 4 tabs V1.
  * Accueil | Entraînement | Coach | Profil
- * Métriques = V2 (drill-down depuis Home via tap sur les anneaux).
- * Check-in = hors tab bar, accessible depuis Home via CTA → /check-in.
  *
- * iOS: UITabBarController with liquid glass (systemChromeMaterial blur).
- * Android: Material 3 bottom navigation.
- * Web: Radix UI tabs fallback (built into expo-router).
- *
- * Icons: SF Symbols (iOS).
- * Exception to Lucide-only rule: tab bar uses SF Symbols for native iOS integration.
+ * NativeTabs (SDK 55 only) replaced with standard expo-router Tabs for SDK 54 compat.
  */
 export default function TabsLayout() {
   return (
-    <NativeTabs
-      tintColor={colors.accent}
-      blurEffect="systemChromeMaterial"
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: 'rgba(255,255,255,0.45)',
+        tabBarStyle: {
+          backgroundColor: '#1A1816',
+          borderTopColor: 'rgba(255,255,255,0.08)',
+          borderTopWidth: 0.5,
+        },
+        tabBarLabelStyle: {
+          fontFamily: 'SpaceGrotesk_500Medium',
+          fontSize: 10,
+        },
+      }}
     >
-      <NativeTabs.Trigger name="index">
-        <NativeTabs.Trigger.Label>Accueil</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          sf={{ default: 'house', selected: 'house.fill' }}
-        />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="training">
-        <NativeTabs.Trigger.Label>Entraînement</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          sf={{ default: 'calendar', selected: 'calendar' }}
-        />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="chat">
-        <NativeTabs.Trigger.Label>Coach</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          sf={{ default: 'bolt', selected: 'bolt.fill' }}
-        />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="profile">
-        <NativeTabs.Trigger.Label>Profil</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          sf={{ default: 'person', selected: 'person.fill' }}
-        />
-      </NativeTabs.Trigger>
-    </NativeTabs>
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Accueil',
+          tabBarIcon: ({ color, size }) => (
+            <IconComponent name="Home" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="training"
+        options={{
+          title: 'Entraînement',
+          tabBarIcon: ({ color, size }) => (
+            <IconComponent name="Calendar" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="chat"
+        options={{
+          title: 'Coach',
+          tabBarIcon: ({ color, size }) => (
+            <IconComponent name="Energy" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profil',
+          tabBarIcon: ({ color, size }) => (
+            <IconComponent name="User" color={color} size={size} />
+          ),
+        }}
+      />
+    </Tabs>
   );
 }
