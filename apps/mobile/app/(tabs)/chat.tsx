@@ -631,13 +631,19 @@ interface QuestionBodyProps {
   setAnswer: (v: Answer) => void;
 }
 
+// Module-level constant — not a hook, safe here.
+const RANK_ROW_HEIGHT = 52;
+
 function QuestionBody({ t, q, answer, setAnswer }: QuestionBodyProps) {
-  // Rank order initialised from answer or default
+  // All hooks at top level — never inside conditionals (Rules of Hooks).
   const [rankOrder, setRankOrder] = useState<number[]>(
     q.type === 'rank' && answer
       ? (answer as RankAnswer).order
       : q.options.map((_, i) => i)
   );
+  // Drag state for rank type — always initialised regardless of q.type
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const dragY = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (q.type === 'rank') setAnswer({ order: rankOrder });
@@ -701,10 +707,6 @@ function QuestionBody({ t, q, answer, setAnswer }: QuestionBodyProps) {
   }
 
   if (q.type === 'rank') {
-    const ROW_HEIGHT = 52;
-    const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
-    const dragY = useRef(new Animated.Value(0)).current;
-
     const handleDragStart = (index: number) => {
       setDraggingIndex(index);
       void Haptics.impactAsync(ImpactFeedbackStyle.Light);
@@ -717,7 +719,7 @@ function QuestionBody({ t, q, answer, setAnswer }: QuestionBodyProps) {
     const handleDragEnd = (dy: number) => {
       const fromIdx = draggingIndex;
       if (fromIdx !== null) {
-        const slotsMoved = Math.round(dy / ROW_HEIGHT);
+        const slotsMoved = Math.round(dy / RANK_ROW_HEIGHT);
         if (slotsMoved !== 0) {
           const toIdx = Math.max(0, Math.min(rankOrder.length - 1, fromIdx + slotsMoved));
           if (fromIdx !== toIdx) {
