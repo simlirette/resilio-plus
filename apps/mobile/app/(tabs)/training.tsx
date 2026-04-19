@@ -474,14 +474,14 @@ function WeekBlock({ monday, byDate, isFirst, themeColors, accent }: {
 
   if (days.length === 0) return null;
 
-  const weekLabel = `SEM. DU ${monday.getDate()} ${monday.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '').toUpperCase()}`;
-  const summary = `${totalSessions} séance${totalSessions !== 1 ? 's' : ''} · ${fmtDur(totalVol)} · ${totalLoad} charge`;
+  const weekLabel = `SEMAINE DU ${monday.getDate()} ${monday.toLocaleDateString('fr-FR', { month: 'long' }).toUpperCase()}`;
+  const summary = `${totalSessions} SÉANCE${totalSessions !== 1 ? 'S' : ''} - ${fmtDur(totalVol).toUpperCase()} TOT. - ${totalLoad} CHARGE`;
 
   return (
     <View>
       <View style={[styles.weekHeader, isFirst && styles.weekHeaderFirst, { borderBottomColor: themeColors.border }]}>
-        <Text variant="label" color={themeColors.textMuted}>{weekLabel}</Text>
-        <Text variant="label" color={themeColors.textMuted}>{summary}</Text>
+        <Text variant="label" color={themeColors.foreground} style={styles.weekL1}>{weekLabel}</Text>
+        <Text variant="label" color={themeColors.textMuted} style={styles.weekL2}>{summary}</Text>
       </View>
       {days.map(({ dateKey, sessions, isToday }) => (
         <DayListRow key={dateKey} dateKey={dateKey} sessions={sessions} isToday={isToday} themeColors={themeColors} accent={accent} />
@@ -730,15 +730,25 @@ const styles = StyleSheet.create({
   listContent: { paddingBottom: 4 },
   listPad: { height: 48 },
   weekHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   weekHeaderFirst: { paddingTop: 14 },
+  weekL1: {
+    fontSize: 12,
+    fontFamily: 'SpaceGrotesk_600SemiBold',
+    letterSpacing: 0.8,
+    marginBottom: 2,
+  },
+  weekL2: {
+    fontSize: 11,
+    fontFamily: 'SpaceGrotesk_400Regular',
+    letterSpacing: 0.2,
+  },
   sessionRow: {
     flexDirection: 'row',
     alignItems: 'center',
