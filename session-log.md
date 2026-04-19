@@ -245,7 +245,7 @@ Goal: Downgrade Expo SDK 55→54 for Expo Go physical device compat.
 Decisions:
 - SDK 54 uses same react@19.2, react-native@0.83.4, reanimated@4.2.1 as SDK 55 — no ecosystem downgrade needed.
 - expo-constants@~17.0.0 pinned explicitly — expo-router v4 peerDep not auto-resolved by expo install --fix.
-- NativeTabs (expo-router/unstable-native-tabs) replaced with standard Tabs + IconComponent — API is SDK 55 only, doesn't exist in expo-router v4.
+- NativeTabs (expo-router/unstable-native-tabs) replaced with standard Tabs + IconComponent — API is SDK 55 only, doesn't exist in expo-router v4. [CORRECTED 2026-04-19: NativeTabs IS available in expo-router v6 SDK 54 via unstable-native-tabs — see commit 3b02531]
 Rejected:
 - React 18 downgrade — unnecessary, SDK 54 uses React 19.
 - reanimated 3.x downgrade — unnecessary, SDK 54 supports reanimated 4.x.
@@ -261,7 +261,7 @@ Decisions:
 - SDK 54 actual versions: react-native@0.81.5, expo-router@~6.0.23 (not v4 as initially assumed).
 Rejected:
 - Running expo install --fix before pnpm install — produces wrong version alignment.
-- NativeTabs for tab bar — SDK 55 only, not in expo-router v6.
+- NativeTabs for tab bar — SDK 55 only, not in expo-router v6. [CORRECTED 2026-04-19: this is wrong — NativeTabs available in SDK 54 expo-router v6 via unstable-native-tabs]
 Open:
 - P2 Onboarding or P3 Home Dashboard — next to implement.
 - Apple Sign In stub needs expo-apple-authentication integration.
@@ -278,3 +278,17 @@ Rejected:
 - Fade instead of slide — SPEC explicitly says slide horizontal.
 Open:
 - P3 Home Dashboard rework next.
+
+## 2026-04-19 [saved]
+Goal: P6 polish — 6 bugs fixed post-iPhone test.
+Decisions:
+- NativeTabs IS available SDK 54 via expo-router/unstable-native-tabs — prior "SDK 55 only" notes were wrong. Confirmed by build dir + commit e2d1810. `Label` + `Icon` are separate imports, children of `NativeTabs.Trigger` (not sub-components).
+- `calendar.fill` invalid in sf-symbols 2.2 — use `calendar.circle` / `calendar.circle.fill`.
+- Rank drag: PanResponder + Animated.Value translateY (native driver). Swap = Math.round(dy / ROW_HEIGHT). Haptics.Light pickup, Haptics.Medium drop (only on swap). Spring reset to 0 after release.
+- Ring value 52px (first iteration) — confirmed too large at 72px on device; 52-60px range auto-allowed without new plan.
+Rejected:
+- draggable-flatlist v4 for rank drag — depends on reanimated worklets, same crash pattern as P2 onboarding.
+- `NativeTabs.Trigger.Label` / `.Icon` as sub-components — doesn't exist in the type.
+Open:
+- Expo Go test: 6 polish bugs to validate on iPhone.
+- Suppression candidats: MetricRow, SessionCard, CognitiveLoadDial, ReadinessStatusBadge.
