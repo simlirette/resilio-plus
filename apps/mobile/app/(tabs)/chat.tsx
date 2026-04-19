@@ -551,7 +551,7 @@ function HITLSheet({ t, open, questions, onSubmit, onClose, isDark, insetBottom 
       <Animated.View
         style={[
           s.sheet,
-          { backgroundColor: t.bgElev, paddingBottom: insetBottom + 16, transform: [{ translateY: slideAnim }] },
+          { backgroundColor: t.bgElev, paddingBottom: insetBottom + TAB_BAR_HEIGHT + 16, transform: [{ translateY: slideAnim }] },
         ]}
         pointerEvents={open ? 'auto' : 'none'}
       >
