@@ -35,8 +35,14 @@ P1–P6 livrés. Branche chore/downgrade-sdk54 pushed. Prochains: tests Expo Go 
   - Bug 5: Rank drag PanResponder — GripDots ⋮⋮, translateY natif, swap multi-slot, Haptics Light/Medium
   - Bug 6: NativeTabs restauré (expo-router/unstable-native-tabs, SDK 54 OK, amber tintColor, SF Symbols)
 
+- **P6 Polish #2** (4 commits, tous poussés): ✅
+  - Bug 1: `sessionDiscipline lineHeight: 30` — clipping ascendeurs Space Grotesk 22px
+  - Bug 2: Recovery layout conditionnel — duration L2 sous titre quand `isRecovery`
+  - Bug 3: `InputBar paddingBottom = safeArea.bottom + 49 + 8` — input/chips au-dessus NativeTabs
+  - Bug 4: `useState`/`useRef` drag remontés au top de `QuestionBody` — fix "Rendered more hooks" crash
+
 ### À venir
-- **Tests Expo Go**: Valider P6 polish sur iPhone physique (6 bugs à valider)
+- **Tests Expo Go**: Valider P6 polish #2 sur iPhone (4 nouveaux bugs corrigés)
 - **Ajustement ring si besoin**: 52px = première itération, sous-commit 52-60px autorisé sans plan
 - **Décision suppression**: MetricRow, SessionCard, CognitiveLoadDial, ReadinessStatusBadge (voir docs/p6-home-plan.md)
 - **Today's Session (Mode A + B)**: route /session/live.tsx
