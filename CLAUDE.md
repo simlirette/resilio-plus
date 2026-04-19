@@ -320,7 +320,11 @@ resilio-plus/
 
 ---
 
-## Règles absolues frontend (8)
+## Règles absolues frontend (9)
+
+> **Direction visuelle active** (pivot 2026-04-17): light + dark obligatoires V1, fonds off-white (`#F5F5F2`) et warm charcoal (`#17171A`), accent amber/terracotta unique, sans-serif Space Grotesk. Inspiration Apple Health / Whoop 5.0.
+>
+> **LIRE AVANT TOUT TRAVAIL FRONTEND**: `frontend/UI-RULES.md` — contient la palette canonique, la typographie, les spacings, et les anti-patterns formels avec exemples.
 
 1. **Jamais d'import direct de `lucide-react`** en dehors de `packages/ui-web/`
 2. **Jamais d'import direct de `lucide-react-native`** en dehors de `packages/ui-mobile/`
@@ -331,6 +335,26 @@ resilio-plus/
 7. **Tests non négociables** pour `shared-logic` et `api-client`
 8. **Pas de logique métier dans les composants UI** — toujours dans `shared-logic` ou dans l'app
 9. **Pour toute session parallèle future, utiliser `git worktree add`** pour isoler les working trees. Ne jamais lancer 2+ sessions dans le même dossier local.
+
+### Anti-patterns récents (réintroduits plusieurs fois — voir détails + exemples dans `frontend/UI-RULES.md`)
+
+| Anti-pattern | Règle |
+|---|---|
+| `@import url()` pour fonts | Utiliser `next/font/google` (web) ou `expo-font` (mobile) |
+| Gradients sur cards | Fonds unis uniquement; gradient = anneaux/barres physiologiques seulement |
+| Couleurs sémantiques hors physio | Green/yellow/red réservés aux métriques (Readiness, Strain, HRV, Sleep) |
+| Fond photo paysage style Bevel | Fond uni `tokens.bg` uniquement |
+| Serif display / italic dramatique | Space Grotesk sans-serif exclusivement |
+| Palettes pastel | Warm greys canoniques; contraste ≥ 4.5:1 |
+| Dark bg `#08080e` clinique pur | Warm charcoal `#17171A` / `#161412` — pas de noir froid |
+| Valeurs hardcodées (couleurs, spacing) | Tout via `@resilio/design-tokens` |
+
+### Chemin canonique et commandes
+
+- Dépôt: `C:\Users\simon\resilio-plus` sur `main`
+- Backend tests: `poetry run pytest tests/ -v --tb=short` (2430 tests, 0 flakes — backend V1 FROZEN)
+- Frontend typecheck web: `pnpm --filter @resilio/web typecheck`
+- Frontend typecheck mobile: `cd apps/mobile ; pnpm typecheck`
 
 ---
 
