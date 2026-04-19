@@ -38,7 +38,7 @@ export function Circle({ value, size = 80, color, strokeWidth: strokeWidthProp, 
   // Value font scale: weight 300 for large rings (size >= 150), 500 for small
   const isLarge = size >= 150;
   const valueFontSize = isLarge ? size * 0.33 : size * 0.28;
-  const valueFontFamily = isLarge ? 'Inter_300Light' : 'Inter_500Medium';
+  const valueFontFamily = isLarge ? 'SpaceGrotesk_400Regular' : 'SpaceGrotesk_500Medium';
 
   return (
     <View style={styles.container}>

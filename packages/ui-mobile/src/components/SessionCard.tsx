@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
   sectionLabel: { textTransform: 'uppercase' },
   zoneBadge: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 4 },
   zoneText: { textTransform: 'uppercase' },
-  title: { fontFamily: 'Inter_500Medium', fontSize: 17, letterSpacing: -0.3, lineHeight: 21, marginBottom: 6 },
+  title: { fontFamily: 'SpaceGrotesk_500Medium', fontSize: 17, letterSpacing: -0.3, lineHeight: 21, marginBottom: 6 },
   meta: { marginBottom: 2 },
   restText: { marginTop: 2 },
   chevronCircle: {
