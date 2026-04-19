@@ -311,16 +311,7 @@ function CognitiveLoadBar({ value, label, context, colorMode }: CognitiveLoadBar
 
   return (
     <View>
-      {/* Header */}
-      <View style={s.cogHeader}>
-        <Text variant="label" color={themeColors.textMuted} style={s.cogTitle}>
-          CHARGE COGNITIVE
-        </Text>
-        <Text variant="label" color={themeColors.textMuted} style={[s.tabular, { fontSize: 11 }]}>
-          7j
-        </Text>
-      </View>
-      <Text variant="label" color={themeColors.textMuted} style={s.cogSub}>
+      <Text variant="label" color={themeColors.foreground} style={s.cogSub}>
         Charge allostatique
       </Text>
 
@@ -661,18 +652,6 @@ const s = StyleSheet.create({
 
   // Cognitive load bar
   cogCard: { padding: 18 },
-  cogHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-    marginBottom: 4,
-  },
-  cogTitle: {
-    fontSize: 10,
-    fontFamily: 'SpaceGrotesk_600SemiBold',
-    textTransform: 'uppercase',
-    letterSpacing: 1.4,
-  },
   cogSub: {
     fontSize: 13,
     marginBottom: 14,
