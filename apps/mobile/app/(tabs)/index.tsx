@@ -519,10 +519,10 @@ const s = StyleSheet.create({
     justifyContent: 'center',
   },
   ringValue: {
-    fontSize: 72,
+    fontSize: 52,
     fontFamily: 'SpaceGrotesk_500Medium',
-    letterSpacing: -3.5,
-    lineHeight: 78,
+    letterSpacing: -2.5,
+    lineHeight: 58,
     fontVariant: ['tabular-nums'],
   },
   ringLabel: {
