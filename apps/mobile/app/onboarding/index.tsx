@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
+  Animated,
+  Dimensions,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -9,12 +11,6 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import Animated, {
-  SlideInLeft,
-  SlideInRight,
-  SlideOutLeft,
-  SlideOutRight,
-} from 'react-native-reanimated';
 import { colors } from '@resilio/design-tokens';
 import {
   Button,
@@ -376,17 +372,35 @@ export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
 
   const [step, setStep] = useState(1);
-  const [direction, setDirection] = useState<'forward' | 'back'>('forward');
   const [data, setData] = useState<OnboardingData>(INITIAL_DATA);
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const { width } = Dimensions.get('window');
 
   function update(partial: Partial<OnboardingData>) {
     setData((d) => ({ ...d, ...partial }));
   }
 
+  function animateStep(newStep: number, dir: 'forward' | 'back') {
+    const outTo = dir === 'forward' ? -width : width;
+    const inFrom = dir === 'forward' ? width : -width;
+    Animated.timing(slideAnim, {
+      toValue: outTo,
+      duration: 220,
+      useNativeDriver: true,
+    }).start(() => {
+      setStep(newStep);
+      slideAnim.setValue(inFrom);
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 220,
+        useNativeDriver: true,
+      }).start();
+    });
+  }
+
   function goNext() {
     if (step < TOTAL_STEPS) {
-      setDirection('forward');
-      setStep((s) => s + 1);
+      animateStep(step + 1, 'forward');
     } else {
       router.replace('/(tabs)');
     }
@@ -394,8 +408,7 @@ export default function OnboardingScreen() {
 
   function goBack() {
     if (step > 1) {
-      setDirection('back');
-      setStep((s) => s - 1);
+      animateStep(step - 1, 'back');
     }
   }
 
@@ -409,9 +422,6 @@ export default function OnboardingScreen() {
   })();
 
   const meta = STEP_META[step - 1]!;
-  const entering = direction === 'forward' ? SlideInRight.duration(260) : SlideInLeft.duration(260);
-  const exiting  = direction === 'forward' ? SlideOutLeft.duration(260) : SlideOutRight.duration(260);
-
   const sharedProps = { data, onChange: update, themeColors, accent };
 
   return (
@@ -446,10 +456,7 @@ export default function OnboardingScreen() {
 
         {/* Animated step body */}
         <Animated.View
-          key={`step-${step}`}
-          entering={entering}
-          exiting={exiting}
-          style={styles.flex}
+          style={[styles.flex, { transform: [{ translateX: slideAnim }] }]}
         >
           <View style={styles.stepHeader}>
             <Text variant="label" color={themeColors.textMuted}>
