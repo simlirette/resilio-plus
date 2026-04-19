@@ -1,12 +1,14 @@
 // P5 Coach Chat — conversation + HITL bottom sheet
 // Expo Go SDK 54: no reanimated, no @gorhom, no draggable-flatlist
-// Sheet: Animated.Value translateY | Blur: expo-blur BlurView | Rank: ↑↓ buttons
+// Sheet: Animated.Value translateY | Blur: expo-blur BlurView | Rank: PanResponder drag
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
-  StyleSheet, Animated, KeyboardAvoidingView, Platform, Pressable,
+  StyleSheet, Animated, KeyboardAvoidingView, Platform, Pressable, PanResponder,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { ImpactFeedbackStyle } from 'expo-haptics';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Circle as SvgCircle } from 'react-native-svg';
@@ -590,7 +592,7 @@ function HITLSheet({ t, open, questions, onSubmit, onClose, isDark, insetBottom 
         <ScrollView style={s.sheetBody} contentContainerStyle={s.sheetBodyContent} bounces={false}>
           <QuestionBody t={t} q={q} answer={answer} setAnswer={setAnswer} />
           {q.type === 'rank' && (
-            <Text style={[s.rankHint, { color: t.textDim }]}>APPUIE ↑ ↓ POUR RÉORDONNER</Text>
+            <Text style={[s.rankHint, { color: t.textDim }]}>GLISSE POUR RÉORDONNER</Text>
           )}
         </ScrollView>
 
@@ -694,18 +696,43 @@ function QuestionBody({ t, q, answer, setAnswer }: QuestionBodyProps) {
   }
 
   if (q.type === 'rank') {
-    const moveUp = (i: number) => {
-      if (i === 0) return;
-      const next = [...rankOrder];
-      [next[i - 1], next[i]] = [next[i]!, next[i - 1]!];
-      setRankOrder(next);
+    const ROW_HEIGHT = 52;
+    const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+    const dragY = useRef(new Animated.Value(0)).current;
+
+    const handleDragStart = (index: number) => {
+      setDraggingIndex(index);
+      void Haptics.impactAsync(ImpactFeedbackStyle.Light);
     };
-    const moveDown = (i: number) => {
-      if (i === rankOrder.length - 1) return;
-      const next = [...rankOrder];
-      [next[i], next[i + 1]] = [next[i + 1]!, next[i]!];
-      setRankOrder(next);
+
+    const handleDragMove = (dy: number) => {
+      dragY.setValue(dy);
     };
+
+    const handleDragEnd = (dy: number) => {
+      const fromIdx = draggingIndex;
+      if (fromIdx !== null) {
+        const slotsMoved = Math.round(dy / ROW_HEIGHT);
+        if (slotsMoved !== 0) {
+          const toIdx = Math.max(0, Math.min(rankOrder.length - 1, fromIdx + slotsMoved));
+          if (fromIdx !== toIdx) {
+            const newRanks = [...rankOrder];
+            const [moved] = newRanks.splice(fromIdx, 1);
+            newRanks.splice(toIdx, 0, moved!);
+            setRankOrder(newRanks);
+            void Haptics.impactAsync(ImpactFeedbackStyle.Medium);
+          }
+        }
+      }
+      setDraggingIndex(null);
+      Animated.spring(dragY, {
+        toValue: 0,
+        useNativeDriver: true,
+        damping: 20,
+        stiffness: 300,
+      }).start();
+    };
+
     return (
       <View>
         {rankOrder.map((optIdx, i) => (
@@ -713,8 +740,11 @@ function QuestionBody({ t, q, answer, setAnswer }: QuestionBodyProps) {
             key={optIdx} t={t}
             index={i} total={rankOrder.length}
             label={q.options[optIdx] ?? ''}
-            onMoveUp={() => moveUp(i)}
-            onMoveDown={() => moveDown(i)}
+            isDragging={draggingIndex === i}
+            dragYValue={dragY}
+            onDragStart={handleDragStart}
+            onDragMove={handleDragMove}
+            onDragEnd={handleDragEnd}
           />
         ))}
       </View>
@@ -827,35 +857,69 @@ interface RankRowProps {
   index: number;
   total: number;
   label: string;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
+  isDragging: boolean;
+  dragYValue: Animated.Value;
+  onDragStart: (index: number) => void;
+  onDragMove: (dy: number) => void;
+  onDragEnd: (dy: number) => void;
 }
 
-function RankRow({ t, index, total, label, onMoveUp, onMoveDown }: RankRowProps) {
+function GripDots({ color }: { color: string }) {
   return (
-    <View style={[
+    <View style={{ flexDirection: 'row', gap: 3 }}>
+      {([0, 1] as const).map(col => (
+        <View key={col} style={{ gap: 4 }}>
+          {([0, 1, 2] as const).map(row => (
+            <View key={row} style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: color }} />
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function RankRow({ t, index, total, label, isDragging, dragYValue, onDragStart, onDragMove, onDragEnd }: RankRowProps) {
+  const panRef = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => {
+        onDragStart(index);
+      },
+      onPanResponderMove: (_, gs) => {
+        onDragMove(gs.dy);
+      },
+      onPanResponderRelease: (_, gs) => {
+        onDragEnd(gs.dy);
+      },
+    })
+  ).current;
+
+  const animatedStyle = isDragging ? {
+    transform: [{ translateY: dragYValue }],
+    zIndex: 10,
+    elevation: 4,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    opacity: 0.95,
+  } : {};
+
+  return (
+    <Animated.View style={[
       s.rankRow,
       { borderBottomWidth: index < total - 1 ? StyleSheet.hairlineWidth : 0, borderBottomColor: t.border },
+      animatedStyle,
     ]}>
       <View style={[s.numPill, { borderColor: t.borderStrong }]}>
         <Text style={[s.numText, { color: t.textMuted }]}>{index + 1}</Text>
       </View>
-      <Text style={[s.optionLabel, { color: t.text, flex: 1, fontFamily: 'SpaceGrotesk_400Regular' }]}>{label}</Text>
-      <View style={s.rankBtns}>
-        <TouchableOpacity
-          onPress={onMoveUp} activeOpacity={0.6} disabled={index === 0}
-          style={[s.rankBtn, { opacity: index === 0 ? 0.22 : 1 }]}
-        >
-          <Text style={[s.rankArrow, { color: t.textMuted }]}>↑</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={onMoveDown} activeOpacity={0.6} disabled={index === total - 1}
-          style={[s.rankBtn, { opacity: index === total - 1 ? 0.22 : 1 }]}
-        >
-          <Text style={[s.rankArrow, { color: t.textMuted }]}>↓</Text>
-        </TouchableOpacity>
+      <Text style={[s.optionLabel, { color: t.text, flex: 1, fontFamily: 'SpaceGrotesk_400Regular' }]} numberOfLines={2}>
+        {label}
+      </Text>
+      <View {...panRef.panHandlers} style={s.rankHandle} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+        <GripDots color={t.textMuted} />
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -1116,8 +1180,6 @@ const s = StyleSheet.create({
   otherInput: { flex: 1, fontSize: 15, letterSpacing: -0.1 },
 
   // Rank row
-  rankRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, paddingHorizontal: 4 },
-  rankBtns: { flexDirection: 'row', gap: 2 },
-  rankBtn: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
-  rankArrow: { fontSize: 17 },
+  rankRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, paddingHorizontal: 4, backgroundColor: 'transparent' },
+  rankHandle: { width: 24, height: 44, alignItems: 'center', justifyContent: 'center' },
 });
