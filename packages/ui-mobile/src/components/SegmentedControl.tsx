@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { colors } from '@resilio/design-tokens';
 import { useTheme } from '../theme/ThemeProvider';
 import { Text } from './Text';
 
@@ -7,6 +8,8 @@ interface SegmentedControlProps {
   options: string[];
   selected: number;
   onChange: (index: number) => void;
+  /** 'default': surface1 active pill | 'accent': accent bg active pill */
+  variant?: 'default' | 'accent';
 }
 
 /**
@@ -17,8 +20,10 @@ interface SegmentedControlProps {
  * Radius: 10px on container, 8px on active pill.
  * Height: 36px.
  */
-export function SegmentedControl({ options, selected, onChange }: SegmentedControlProps): React.JSX.Element {
-  const { colors: themeColors } = useTheme();
+export function SegmentedControl({ options, selected, onChange, variant = 'default' }: SegmentedControlProps): React.JSX.Element {
+  const { colorMode, colors: themeColors } = useTheme();
+  const isDark = colorMode === 'dark';
+  const accent = isDark ? colors.accentDark : colors.accent;
 
   return (
     <View style={[styles.container, { backgroundColor: themeColors.surface2 }]}>
@@ -30,14 +35,21 @@ export function SegmentedControl({ options, selected, onChange }: SegmentedContr
             onPress={() => onChange(i)}
             style={[
               styles.segment,
-              active && [styles.activeSegment, { backgroundColor: themeColors.surface1 }],
+              active && [
+                styles.activeSegment,
+                { backgroundColor: variant === 'accent' ? accent : themeColors.surface1 },
+              ],
             ]}
             accessibilityRole="tab"
             accessibilityState={{ selected: active }}
           >
             <Text
               variant="body"
-              color={themeColors.foreground}
+              color={
+                active && variant === 'accent'
+                  ? (isDark ? '#131210' : '#FFFFFF')
+                  : themeColors.foreground
+              }
               style={active ? [styles.label, styles.labelActive] : styles.label}
             >
               {option}
