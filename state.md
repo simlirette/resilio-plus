@@ -2,7 +2,7 @@
 _2026-04-19 — chore/downgrade-sdk54_
 
 ## Current Goal
-P1 Auth + P2 Onboarding + P3 Home Dashboard livrés. Prochain: P4 Training History.
+P1–P4 livrés. Prochain: P5 Coach Chat.
 
 ## Plan Reference
 `docs/ui-rework-plan.md` — plan complet.
@@ -23,13 +23,9 @@ P1 Auth + P2 Onboarding + P3 Home Dashboard livrés. Prochain: P4 Training Histo
 - **P2 Onboarding**: 5 étapes, SegmentedControl variant="accent" — Signup → /onboarding → /(tabs)
 - **Crash fix (Expo Go SDK 54)**: react-native-worklets Turbo Module absent du binaire. Suppression reanimated dans onboarding, remplacé par Animated.Value + translateX
 - **P3 Home Dashboard**: Readiness ring 216px + MetricRow + CognitiveLoadDial + SessionCard + CTA check-in. Fix Inter_* → SpaceGrotesk_* dans Circle + SessionCard ✅
+- **P4 Training History**: Calendrier (grille mois + discipline dots + nav) + Liste (semaines groupées + totaux) + Drawer détail jour (Modal slide-up, Durée/Charge/RPE/Distance). Stats semaine + delta vs S-1 ✅
 
 ### À venir
-- **P4**: Training History
-- **P5**: Coach Chat
-- **P5**: Coach Chat
-- **P6**: Today's Session (Mode A + B)
-- **P4**: Training History
 - **P5**: Coach Chat
 - **P6**: Today's Session (Mode A + B)
 
