@@ -389,10 +389,15 @@ interface InputBarProps {
   disabled?: boolean;
 }
 
+// Standard iOS tab bar height. useBottomTabBarHeight() throws with NativeTabs
+// (reads BottomTabBarHeightContext, not provided by native UITabBarController).
+const TAB_BAR_HEIGHT = 49;
+
 function InputBar({ t, value, onChange, onSend, disabled }: InputBarProps) {
+  const { bottom } = useSafeAreaInsets();
   const canSend = !disabled && value.trim().length > 0;
   return (
-    <View style={[s.inputWrap, { backgroundColor: t.bg, borderTopColor: t.border }]}>
+    <View style={[s.inputWrap, { backgroundColor: t.bg, borderTopColor: t.border, paddingBottom: bottom + TAB_BAR_HEIGHT + 8 }]}>
       {/* Quick reply chips */}
       <ScrollView
         horizontal showsHorizontalScrollIndicator={false}
