@@ -17,7 +17,7 @@ import {
   Settings, User, LogOut, LogIn, Activity, BarChart2, TrendingUp, TrendingDown,
   Clock, Zap, Heart, Target, Award, Dumbbell, Bike, Waves,
   Upload, Download, RefreshCw, Edit2, Save, Link2, ExternalLink,
-  MessageCircle, Home, type LucideProps,
+  MessageCircle, Home, Mail, type LucideProps,
 } from 'lucide-react-native';
 
 // ── Object pattern (backward compat with existing screens) ───────────────────
@@ -31,6 +31,7 @@ export const Icon = {
   Activity, Analytics: BarChart2, TrendingUp, TrendingDown, Clock,
   Energy: Zap, Heart, Target, Award, Lifting: Dumbbell, Biking: Bike, Swimming: Waves,
   Chat: MessageCircle,
+  Mail,
 } as const;
 
 export type IconName = keyof typeof Icon;

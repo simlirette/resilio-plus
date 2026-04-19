@@ -12,7 +12,7 @@ import { useRouter } from 'expo-router';
 import { colors } from '@resilio/design-tokens';
 import { Button, FloatingLabelInput, Text, useTheme } from '@resilio/ui-mobile';
 
-export default function LoginScreen() {
+export default function SignupScreen() {
   const router = useRouter();
   const { colorMode, colors: themeColors } = useTheme();
   const isDark = colorMode === 'dark';
@@ -20,18 +20,27 @@ export default function LoginScreen() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [confirmError, setConfirmError] = useState('');
 
-  async function handleLogin() {
+  async function handleSignup() {
     let valid = true;
     if (!email) { setEmailError('Email requis.'); valid = false; } else { setEmailError(''); }
     if (!password) { setPasswordError('Mot de passe requis.'); valid = false; } else { setPasswordError(''); }
+    if (!confirm) {
+      setConfirmError('Confirmation requise.'); valid = false;
+    } else if (confirm !== password) {
+      setConfirmError('Les mots de passe ne correspondent pas.'); valid = false;
+    } else {
+      setConfirmError('');
+    }
     if (!valid) return;
 
     setLoading(true);
-    // TODO: real auth call
+    // TODO: real signup call
     await new Promise((r) => setTimeout(r, 800));
     setLoading(false);
     router.replace('/(tabs)');
@@ -55,7 +64,7 @@ export default function LoginScreen() {
           </View>
 
           {/* Title */}
-          <Text variant="pageTitle" style={styles.title}>Connexion</Text>
+          <Text variant="pageTitle" style={styles.title}>Créer un compte</Text>
 
           {/* Inputs */}
           <View style={styles.inputs}>
@@ -75,51 +84,49 @@ export default function LoginScreen() {
               onChangeText={setPassword}
               secureTextEntry
               showToggle
-              autoComplete="current-password"
+              autoComplete="new-password"
               error={passwordError}
+            />
+            <FloatingLabelInput
+              label="Confirmer le mot de passe"
+              value={confirm}
+              onChangeText={setConfirm}
+              secureTextEntry
+              showToggle
+              autoComplete="new-password"
+              error={confirmError}
             />
           </View>
 
-          {/* Forgot password link */}
-          <Pressable
-            style={styles.forgotRow}
-            onPress={() => router.push('/(auth)/forgot-password')}
-            hitSlop={8}
-          >
-            <Text variant="secondary" color={accent}>Mot de passe oublié</Text>
-          </Pressable>
-
           {/* CTA */}
           <Button
-            title="Se connecter"
-            onPress={handleLogin}
+            title="Créer mon compte"
+            onPress={handleSignup}
             loading={loading}
             disabled={loading}
             style={styles.cta}
           />
 
-          {/* Separator */}
-          <View style={styles.separatorRow}>
-            <View style={[styles.line, { backgroundColor: themeColors.border }]} />
-            <Text variant="secondary" color={themeColors.textSecondary} style={styles.orText}>ou</Text>
-            <View style={[styles.line, { backgroundColor: themeColors.border }]} />
-          </View>
+          {/* Legal */}
+          <Text
+            variant="caption"
+            color={themeColors.textMuted}
+            style={styles.legal}
+          >
+            En créant un compte, tu acceptes nos{' '}
+            <Text variant="caption" color={accent}>Conditions d'utilisation</Text>
+            {' '}et notre{' '}
+            <Text variant="caption" color={accent}>Politique de confidentialité</Text>.
+          </Text>
 
-          {/* Apple Sign In */}
-          <Button
-            title="Continuer avec Apple"
-            onPress={() => {/* TODO: expo-apple-authentication */}}
-            variant="apple"
-          />
-
-          {/* Spacer pushes footer down */}
+          {/* Spacer */}
           <View style={styles.spacer} />
 
           {/* Footer */}
           <View style={styles.footer}>
-            <Text variant="secondary" color={themeColors.textSecondary}>Pas de compte ? </Text>
-            <Pressable onPress={() => router.push('/(auth)/signup')} hitSlop={8}>
-              <Text variant="secondary" color={accent}>Créer un compte</Text>
+            <Text variant="secondary" color={themeColors.textSecondary}>Déjà un compte ? </Text>
+            <Pressable onPress={() => router.back()} hitSlop={8}>
+              <Text variant="secondary" color={accent}>Se connecter</Text>
             </Pressable>
           </View>
         </ScrollView>
@@ -146,26 +153,15 @@ const styles = StyleSheet.create({
   },
   inputs: {
     gap: 14,
-    marginBottom: 10,
-  },
-  forgotRow: {
-    alignSelf: 'flex-end',
     marginBottom: 20,
   },
   cta: {
-    marginBottom: 20,
+    marginBottom: 12,
   },
-  separatorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  line: {
-    flex: 1,
-    height: StyleSheet.hairlineWidth,
-  },
-  orText: {
-    marginHorizontal: 12,
+  legal: {
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 8,
   },
   spacer: { flex: 1, minHeight: 32 },
   footer: {
