@@ -167,6 +167,17 @@ class FatigueScore:
 
 **Vague 1 Frontend complétée 2026-04-12 —** 4 sessions parallèles consolidées en 2 merges. Desktop (Tauri), Mobile (Expo), ESLint rules, hex cleanup, API client généré — tous livrés. Voir `FRONTEND_VAGUE1_POSTMORTEM.md`.
 
+**UI Mobile Rework P1–P6 complété 2026-04-19 (branche chore/downgrade-sdk54) —**
+- **SDK**: Expo SDK 54 (downgrade depuis SDK 55 — reanimated worklets absents du binaire Expo Go SDK 54, Turbo Module crash)
+- **Animations**: `Animated.Value` + `PanResponder` exclusivement (pas reanimated)
+- **Tab bar**: `expo-router/unstable-native-tabs` (NativeTabs, iOS liquid glass, SDK 54 compatible)
+- **Mocks**: `apps/mobile/src/mocks/` — toutes les pages utilisent des mocks locaux, pas de wiring backend
+- **Pages livrées (5)**: Auth (login/signup/forgot), Onboarding (5 steps), Home Dashboard (P6 rewrite), Training History, Coach Chat + HITL sheet
+- **Placeholders (5)**: Today's Session (`/session/live`), Metric Detail, Nutrition Log, Profile/Settings, Connectors
+- **NativeTabs API**: `Label` et `Icon` = imports séparés de `expo-router/unstable-native-tabs`, enfants de `NativeTabs.Trigger` (pas sous-composants)
+- **HITL drag**: PanResponder + `Animated.Value` translateY. Swap = `Math.round(dy / ROW_HEIGHT)`. Haptics.Light pickup, Haptics.Medium drop.
+- Voir `docs/CHANGELOG.md` pour scope complet.
+
 ---
 
 ## Running Coach Knowledge Base
