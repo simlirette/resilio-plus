@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "scheme": "resilio",
     "userInterfaceStyle": "automatic",
+    "sdkVersion": "54.0.0",
     "newArchEnabled": true,
     "splash": {
       "resizeMode": "contain",
