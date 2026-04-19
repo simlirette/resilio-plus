@@ -197,7 +197,7 @@ Rejected:
 Open:
 - `docs/backend/INTEGRATIONS.md.backup` still on disk — can delete once user confirms
 
-## 2026-04-17 [saved]
+## 2026-04-17 [saved] [superseded by 2026-04-18 — NativeTabs replaced, SDK 54 compat]
 Goal: FE-HOME-POLISH-NATIVETABS — 4 visual fixes + NativeTabs liquid glass migration
 Decisions:
 - MetricRow colors are now state-based (green→ok, yellow→warn, red→zoneRed) not hardcoded per metric type
@@ -239,3 +239,15 @@ Rejected:
 Open:
 - Tests Wave 1 non écrits (Button/FloatingLabelInput/HeroNumber/ProgressSegments/SegmentedControl)
 - Gate Expo Go Wave 1 non encore validé — continuer Wave 2 après "OK"
+
+## 2026-04-18 [saved]
+Goal: Downgrade Expo SDK 55→54 for Expo Go physical device compat.
+Decisions:
+- SDK 54 uses same react@19.2, react-native@0.83.4, reanimated@4.2.1 as SDK 55 — no ecosystem downgrade needed.
+- expo-constants@~17.0.0 pinned explicitly — expo-router v4 peerDep not auto-resolved by expo install --fix.
+- NativeTabs (expo-router/unstable-native-tabs) replaced with standard Tabs + IconComponent — API is SDK 55 only, doesn't exist in expo-router v4.
+Rejected:
+- React 18 downgrade — unnecessary, SDK 54 uses React 19.
+- reanimated 3.x downgrade — unnecessary, SDK 54 supports reanimated 4.x.
+Open:
+- Gate Expo Go Wave 1: user must test /_debug/text-showcase + /_debug/inputs-showcase on device.

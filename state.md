@@ -1,8 +1,8 @@
 # State — UI Mobile Rework
-_2026-04-18 — chore/color-purge-amber-canonical_
+_2026-04-18 — chore/downgrade-sdk54_
 
 ## Current Goal
-Implémenter les 6 écrans UI mobile pixel-perfect depuis docs/design/.
+Gate Wave 1: tester Space Grotesk + FloatingLabelInput sur Expo Go SDK 54 physique.
 
 ## Plan Reference
 `docs/ui-rework-plan.md` — plan complet.
@@ -17,9 +17,10 @@ Implémenter les 6 écrans UI mobile pixel-perfect depuis docs/design/.
 - W1-A: Text (Space Grotesk, toutes variantes, back-compat)
 - W1-B: FloatingLabelInput (float label animé, border focus, error inline)
 - W1-C/D/E/F: Button (4 variants), HeroNumber, ProgressSegments, SegmentedControl
+- **SDK downgrade**: Expo SDK 55→54 (expo-router v4, expo-constants pinned, NativeTabs→Tabs)
 
 ### En attente (gate utilisateur)
-**STOP — gate Wave 1**: utilisateur doit tester dans Expo Go:
+**STOP — gate Wave 1**: utilisateur doit tester dans Expo Go SDK 54:
 - `/_debug/text-showcase` → Space Grotesk + variantes hero + small-caps
 - `/_debug/inputs-showcase` → float label + border focus + error state
 Attendre "OK" avant Wave 2.
@@ -43,6 +44,8 @@ Attendre "OK" avant Wave 2.
 - Mode A→B: navigation push /session/live.tsx
 - Auth erreurs: inline sous input
 - zoneRed: #B64536 (terracotta, pas #ef4444 froid)
+- SDK 54: NativeTabs remplacé par Tabs standard (NativeTabs = API SDK 55 only)
+- SDK 54: react@19.2 + react-native@0.83.4 + reanimated@4.2.1 inchangés
 
 ## Open Issues
 - Tests Wave 1 non écrits (Button/FloatingLabelInput/HeroNumber/ProgressSegments/SegmentedControl)
