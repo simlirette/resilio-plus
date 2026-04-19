@@ -265,3 +265,16 @@ Rejected:
 Open:
 - P2 Onboarding or P3 Home Dashboard — next to implement.
 - Apple Sign In stub needs expo-apple-authentication integration.
+
+## 2026-04-19 [saved]
+Goal: P2 Onboarding — 5-step flow with slide animation.
+Decisions:
+- SlideInRight/SlideOutLeft reanimated layout animations on Animated.View key={step} — direction state drives forward/back variant.
+- SegmentedControl variant="accent" added for level selector (step 3) — accent bg on active pill.
+- CTA enabled logic per step: step1=firstName, step2=sports≥1, step3=all levels set, step4=objective≠-1.
+- /onboarding typed route not in generated types until expo start runs — use `as any` cast.
+Rejected:
+- Absolute positioning for CTA — flex layout + useSafeAreaInsets().bottom cleaner.
+- Fade instead of slide — SPEC explicitly says slide horizontal.
+Open:
+- P3 Home Dashboard rework next.
