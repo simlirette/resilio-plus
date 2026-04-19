@@ -320,3 +320,15 @@ Rejected:
 Open:
 - Awaiting user GO for .gitignore update → then Task 4 (CHANGELOG) → Task 5 (PR template + push).
 - Today's Session confirmed placeholder: route /session/live does not exist.
+
+## 2026-04-19 [saved]
+Goal: Merge prep chore/downgrade-sdk54 — all 5 tasks complete.
+Decisions:
+- Merge prep complete: .gitignore updated, CHANGELOG created, CLAUDE.md updated, PR template created, branch pushed.
+- web typecheck error (ThemeProvider.tsx L25 @ts-expect-error) = pre-existing on main, non-blocking.
+- pytest 2430 passed — confirmed frozen backend untouched by branch.
+- 6 TODO comments kept — all legitimate backend-wiring stubs, not debug artifacts.
+Rejected:
+- Removing TODO comments — backend wiring stubs are expected and documented.
+Open:
+- PR not yet created — user runs: gh pr create --base main --head chore/downgrade-sdk54 --title "feat(mobile): UI rework P1-P6 — 5 pages Expo SDK 54 (mocks only)" --body-file .github/pull_request_templates/ui-mobile-rework.md
