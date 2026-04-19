@@ -5,7 +5,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
-  StyleSheet, Animated, KeyboardAvoidingView, Platform, Pressable, PanResponder,
+  StyleSheet, Animated, KeyboardAvoidingView, Keyboard, Platform, Pressable, PanResponder,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { ImpactFeedbackStyle } from 'expo-haptics';
@@ -395,9 +395,20 @@ const TAB_BAR_HEIGHT = 49;
 
 function InputBar({ t, value, onChange, onSend, disabled }: InputBarProps) {
   const { bottom } = useSafeAreaInsets();
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const show = Keyboard.addListener(showEvent, () => setKeyboardOpen(true));
+    const hide = Keyboard.addListener(hideEvent, () => setKeyboardOpen(false));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
+
+  const pb = keyboardOpen ? bottom + 8 : bottom + TAB_BAR_HEIGHT + 8;
   const canSend = !disabled && value.trim().length > 0;
   return (
-    <View style={[s.inputWrap, { backgroundColor: t.bg, borderTopColor: t.border, paddingBottom: bottom + TAB_BAR_HEIGHT + 8 }]}>
+    <View style={[s.inputWrap, { backgroundColor: t.bg, borderTopColor: t.border, paddingBottom: pb }]}>
       {/* Quick reply chips */}
       <ScrollView
         horizontal showsHorizontalScrollIndicator={false}
