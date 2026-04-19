@@ -306,3 +306,17 @@ Rejected:
 Open:
 - User GO pending — no execution started yet.
 - Expo Go iPhone test for P6 Polish #3 not yet confirmed.
+
+## 2026-04-19 [saved]
+Goal: Execute merge-prep plan — paused at Task 3 Step 6 awaiting user GO.
+Decisions:
+- Health checks: mobile typecheck ✅, web typecheck ⚠️ pré-existant (ThemeProvider.tsx L25, not touched by branch), lint 37 warnings 0 errors (pré-existants), pytest unit 790 passed ✅.
+- 0 backend files in diff → pytest non-blocking per plan rule.
+- Cleanup scan CLEAN: 0 console.log, 6 TODO all legitimate (backend wiring stubs), 0 backup committed, 0 secrets.
+- Only proposal: add *.backup-* and .expo/ to .gitignore.
+Rejected:
+- Removing any TODO comments — all are legitimate backend-wiring stubs.
+- Blocking on web typecheck error — pre-existing on main, file not touched by branch.
+Open:
+- Awaiting user GO for .gitignore update → then Task 4 (CHANGELOG) → Task 5 (PR template + push).
+- Today's Session confirmed placeholder: route /session/live does not exist.
