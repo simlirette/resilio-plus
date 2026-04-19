@@ -405,7 +405,7 @@ function InputBar({ t, value, onChange, onSend, disabled }: InputBarProps) {
     return () => { show.remove(); hide.remove(); };
   }, []);
 
-  const pb = keyboardOpen ? bottom + 8 : bottom + TAB_BAR_HEIGHT + 8;
+  const pb = keyboardOpen ? 8 : bottom + TAB_BAR_HEIGHT + 8;
   const canSend = !disabled && value.trim().length > 0;
   return (
     <View style={[s.inputWrap, { backgroundColor: t.bg, borderTopColor: t.border, paddingBottom: pb }]}>
