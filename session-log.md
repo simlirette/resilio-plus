@@ -292,3 +292,17 @@ Rejected:
 Open:
 - Expo Go test: 6 polish bugs to validate on iPhone.
 - Suppression candidats: MetricRow, SessionCard, CognitiveLoadDial, ReadinessStatusBadge.
+
+## 2026-04-19 [saved]
+Goal: Write merge-prep plan for chore/downgrade-sdk54 → main.
+Decisions:
+- Plan at docs/superpowers-optimized/plans/2026-04-19-merge-prep-chore-downgrade-sdk54.md — 5 tasks, user awaits GO.
+- Workspace `pnpm -w typecheck` covers web only — mobile check: `cd apps/mobile ; pnpm typecheck` (separate step).
+- .backup-* files are untracked, not committed — Step 3 adds them to .gitignore, no deletion needed.
+- state.md had uncommitted changes — plan commits it in Task 1 Step 2 before any audit.
+Rejected:
+- gh pr create execution — display only, user merges manually on GitHub.
+- Auto-merge or squash — explicitly forbidden.
+Open:
+- User GO pending — no execution started yet.
+- Expo Go iPhone test for P6 Polish #3 not yet confirmed.

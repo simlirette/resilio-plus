@@ -41,8 +41,12 @@ P1–P6 livrés. Branche chore/downgrade-sdk54 pushed. Prochains: tests Expo Go 
   - Bug 3: `InputBar paddingBottom = safeArea.bottom + 49 + 8` — input/chips au-dessus NativeTabs
   - Bug 4: `useState`/`useRef` drag remontés au top de `QuestionBody` — fix "Rendered more hooks" crash
 
+- **P6 Polish #3** (4 commits, poussés): ✅
+  - Bug 1: `HITLSheet paddingBottom: insetBottom + TAB_BAR_HEIGHT + 16` — footer visible au-dessus NativeTabs
+  - Bug 2: InputBar collé clavier — `keyboardVerticalOffset={0}` (offset=103 surestimait), `pb=8` clavier ouvert (keyboard_height inclut déjà home indicator), `pb=bottom+49+8` fermé. Cross-platform listeners.
+
 ### À venir
-- **Tests Expo Go**: Valider P6 polish #2 sur iPhone (4 nouveaux bugs corrigés)
+- **Tests Expo Go**: Valider P6 polish #3 sur iPhone (2 bugs chat corrigés)
 - **Ajustement ring si besoin**: 52px = première itération, sous-commit 52-60px autorisé sans plan
 - **Décision suppression**: MetricRow, SessionCard, CognitiveLoadDial, ReadinessStatusBadge (voir docs/p6-home-plan.md)
 - **Today's Session (Mode A + B)**: route /session/live.tsx
