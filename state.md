@@ -2,7 +2,7 @@
 _2026-04-19 — chore/downgrade-sdk54_
 
 ## Current Goal
-P1 Auth + P2 Onboarding livrés. Prochain: P3 Home Dashboard rework.
+P1 Auth + P2 Onboarding livrés + crash fix. Prochain: P3 Home Dashboard rework.
 
 ## Plan Reference
 `docs/ui-rework-plan.md` — plan complet.
@@ -20,8 +20,8 @@ P1 Auth + P2 Onboarding livrés. Prochain: P3 Home Dashboard rework.
 - **SDK downgrade**: Expo SDK 55→54 (expo-router v6, RN 0.81.5, expo-constants pinned)
 - **P1 Auth**: login + signup + forgot-password (FloatingLabelInput + Button Wave 1)
   - Gate Wave 1 passé: app tourne sur iPhone ✅
-- **P2 Onboarding**: 5 étapes avec slide reanimated, SegmentedControl variant="accent"
-  - Signup → /onboarding → /(tabs)
+- **P2 Onboarding**: 5 étapes, SegmentedControl variant="accent" — Signup → /onboarding → /(tabs)
+- **Crash fix (Expo Go SDK 54)**: react-native-worklets Turbo Module absent du binaire. Suppression reanimated dans onboarding, remplacé par Animated.Value + translateX
 
 ### À venir
 - Wave 2: ReadinessRing, MetricStrip, SessionPrescriptionCard, PhaseRow, ExerciseRow, CalendarGrid, WeeklyMetricStrip, TrainingListRow, ChatBubble, QuickReplyChip
