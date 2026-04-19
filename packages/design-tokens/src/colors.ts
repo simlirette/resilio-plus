@@ -10,6 +10,8 @@ export const colors = {
   accent: '#B8552E',        // light mode
   accentDark: '#D97A52',    // dark mode
   accentDim: 'rgba(184,85,46,0.20)',
+  accentText: '#FAFAF7',     // text on accent bg (both modes)
+  accentTextDark: '#161412', // text on accent bg when dark mode accent is used
 
   // Legacy alias — keep so existing imports of colors.primary still compile
   primary: '#B8552E',
