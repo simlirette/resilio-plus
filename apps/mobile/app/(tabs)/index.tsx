@@ -218,19 +218,35 @@ function HomeSessionCard({ session, colorMode, onStart }: HomeSessionCardProps):
         </View>
 
         {/* Discipline + duration */}
-        <View style={s.sessionTitleRow}>
-          <Text
-            variant="body"
-            color={themeColors.foreground}
-            style={s.sessionDiscipline}
-            numberOfLines={1}
-          >
-            {session.discipline}
-          </Text>
-          <Text variant="body" color={themeColors.textMuted} style={[s.sessionDuration, s.tabular]}>
-            {session.duration}
-          </Text>
-        </View>
+        {isRecovery ? (
+          <View style={{ marginBottom: 8 }}>
+            <Text
+              variant="body"
+              color={themeColors.foreground}
+              style={s.sessionDiscipline}
+              numberOfLines={1}
+            >
+              {session.discipline}
+            </Text>
+            <Text variant="label" color={themeColors.textMuted} style={[s.tabular, { fontSize: 13, marginTop: 4 }]}>
+              {session.duration}
+            </Text>
+          </View>
+        ) : (
+          <View style={s.sessionTitleRow}>
+            <Text
+              variant="body"
+              color={themeColors.foreground}
+              style={s.sessionDiscipline}
+              numberOfLines={1}
+            >
+              {session.discipline}
+            </Text>
+            <Text variant="body" color={themeColors.textMuted} style={[s.sessionDuration, s.tabular]}>
+              {session.duration}
+            </Text>
+          </View>
+        )}
 
         {/* Brief */}
         <Text
