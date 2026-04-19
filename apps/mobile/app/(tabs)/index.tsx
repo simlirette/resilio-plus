@@ -165,8 +165,8 @@ function MetricsStrip({ nutrition, strain, sleep, colorMode }: MetricsStripProps
         <Text variant="body" color={sColor} style={s.stripValue}>
           {strain.displayValue}
         </Text>
-        <Text variant="label" color={themeColors.textMuted} style={[s.stripSub, { lineHeight: 15 }]}>
-          Fatigue{'\n'}musculaire
+        <Text variant="label" color={themeColors.textMuted} style={[s.stripSub, { lineHeight: 15 }]} numberOfLines={2}>
+          Fatigue musculaire
         </Text>
       </View>
 
