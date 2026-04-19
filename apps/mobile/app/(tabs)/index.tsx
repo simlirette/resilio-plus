@@ -598,6 +598,7 @@ const s = StyleSheet.create({
     fontSize: 22,
     fontFamily: 'SpaceGrotesk_500Medium',
     letterSpacing: -0.5,
+    lineHeight: 30,
     flex: 1,
   },
   sessionDuration: {
