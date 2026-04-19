@@ -82,6 +82,21 @@ Open:
 - Third test run was in background at session end — expected to show 2430 passed (consistent with runs 1 and 2).
 
 ## 2026-04-16 [saved]
+Goal: Session FE-MOBILE-1 — Expo SDK 55 + NativeWind v5 + Expo Router + ui-mobile base.
+Decisions:
+- NativeWind v5 babel: NO `jsxImportSource: "nativewind"` — v4 pattern, removed in v5 (task spec was outdated).
+- `withNativeWind(config)` no `{ input }` option — doesn't exist in v5 API.
+- `useSafeAreaInsets` hook instead of `SafeAreaView` component — React 19 JSX type incompatibility.
+- `Icon.tsx` is sole lucide-react-native importer; dual API: `Icon.Heart` (object) + `<IconComponent name>`.
+- SDK 53 = RN 0.79.6 / React 19.0; SDK 54 = RN 0.81.5; SDK 55 = RN 0.83.4 / React 19.2.4.
+Rejected:
+- `@types/react-native` — deprecated since RN 0.73, built-in types; remove from all packages.
+- `jsxImportSource: "nativewind"` in babel — NativeWind v5 breaks with it.
+Open:
+- Web build `@ts-expect-error ReactNode` fail (pre-existing on main — ThemeProvider web).
+- NativeWind v5 preview untested on real device — validate in FE-MOBILE-2.
+
+## 2026-04-16 [saved]
 Goal: Implement V3-X Apple Health XML import — streaming parser + daily aggregation + endpoint.
 Decisions:
 - SDNN (Apple Health) and RMSSD (Terra) stored in separate fields — `hrv_sdnn` vs `hrv_rmssd` — not interchangeable numerically.
