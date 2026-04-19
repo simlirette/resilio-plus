@@ -251,3 +251,17 @@ Rejected:
 - reanimated 3.x downgrade — unnecessary, SDK 54 supports reanimated 4.x.
 Open:
 - Gate Expo Go Wave 1: user must test /_debug/text-showcase + /_debug/inputs-showcase on device.
+
+## 2026-04-19 [saved]
+Goal: P1 Auth screens (login/signup/forgot-password) using Wave 1 primitives.
+Decisions:
+- FloatingLabelInput has no `style` prop — wrap in View for spacing (it extends TextInputProps with style omitted).
+- expo install --fix must run AFTER pnpm install with target SDK — running with old CLI version fixes for wrong SDK.
+- @types/react kept at ~19.2.0; expo wants ~19.1.x but 19.1 breaks react-native-svg class component types.
+- SDK 54 actual versions: react-native@0.81.5, expo-router@~6.0.23 (not v4 as initially assumed).
+Rejected:
+- Running expo install --fix before pnpm install — produces wrong version alignment.
+- NativeTabs for tab bar — SDK 55 only, not in expo-router v6.
+Open:
+- P2 Onboarding or P3 Home Dashboard — next to implement.
+- Apple Sign In stub needs expo-apple-authentication integration.
