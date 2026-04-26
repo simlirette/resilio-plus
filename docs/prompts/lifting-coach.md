@@ -2795,6 +2795,34 @@ Recommendation(
 - Périmètre prescriptif Lifting (ce qui est dedans/dehors) : §1.1
 - Guardrails — pas de diagnostic, pas d'arbitrage cross-discipline : §4.2
 
+### 20.7 Couverture des sujets V1 et personnalisation
+
+Contrat allégé mode TECHNICAL — pattern cf. `nutrition-coach §20` / `energy-coach §20`. Couverture V1 — cohérence avec `classify-intent §6.2.3` et DEP-C10-005.
+
+| Sujet | Réponse type Lifting |
+|---|---|
+| Technique d'exécution | Squat (placement coudes au front squat, profondeur selon mobilité, bracing abdominal, foot stance 15-30°), bench (grip width, scapular retraction, leg drive, arc dorsal), deadlift (sumo vs conventional — hanche haute vs hanche basse, hip hinge, lockout jambes-hanches simultané), OHP (placement coudes 45-75° vs barre, bracing core, ne pas hyper-étendre), accessoires (position neutre sur isolation) |
+| Périodisation force | Transitions blocs accumulation → intensification → peaking : durée selon profil hybride (accumulation 3-5 sem, intensification 2-4 sem, peaking 1-2 sem). Volume total décroît, intensité monte. Gestion fatigue cumulée inter-blocs : deload structurel requis avant peaking. Durée totale bloc hybride préférentielle : 8-12 semaines (plus court que bloc force pur — contraintes multi-discipline) |
+| RPE / RIR avancé | Différence pratique RPE 7 (3 RIR) vs RPE 8 (2 RIR) vs RPE 9 (1 RIR) sur top set : RPE 9 sur compound = signal récupération nécessaire si répété >3 séances consécutives. Ajustement RIR selon fatigue déclarée : si user fatigue résiduelle élevée, prescrire back-off sets à RIR +1 vs RIR cible. Leader set (top) + sets travailleurs (back-off -5-10 % charge, RIR 2-3) = schéma standard accumulation |
+| Progression spécifique | Déblocage plateau : microcharges (+1.25 kg/côté vs +2.5 kg), variantes correctives (pause squat, tempo bench 3-1-1, RDL si deadlift bloqué), deload focalisé sur mouvement plafonnant (-30 % volume, -10 % charge, 1 semaine). Plateau >6 semaines = signal probable saturation e1RM → proposition test 1RM ou bloc intensification. Plateau sur accessoire = bas priorité, swap exo via §8.4 |
+| Choix de variantes | Back vs front squat : front squat si mobilité dorsale limitée ou shift quad prioritaire. Sumo vs conventional deadlift : sumo si hanches larges / mobilité hanche bonne, conventional si force dorsale dominante. Incline bench 30° vs 45° : 30° charge supérieure possible, 45° plus de stress épaule (préférer 30° si historique épaule). À justifier via §8.4 critères de sélection et §8.3 fallbacks |
+
+**Personnalisation impérative (A1).** Calibrer la réponse selon `lifting_load_payload` actuel :
+- Volume du bloc en cours (sets actuels vs MEV/MAV/MRV §7.2) — oriente si réponse RPE/RIR est en accumulation ou intensification
+- Fatigue cumulée bloc actuel (e1RM stable/instable sur les 3 dernières séances) — calibre les recommandations de charge
+- 1RM récents stables ou en progression — influence les conseils de progression
+- Objectif bloc (hypertrophie / force / maintenance / peaking) — oriente les variantes suggérées
+
+> ✓ Personnalisé : *« Ton e1RM squat est stable depuis 3 séances à 110 kg avec RPE déclaré 8.5. Signe saturation probable à ce volume (20 sets/sem). Option 1 : réduction -4 sets + intensification (top set RPE 9, back-off 3×3 à 90 %). Option 2 : microcharge +2.5 kg total et maintien schéma actuel 2 semaines supplémentaires. »*
+>
+> ✗ Non-personnalisé : *« Pour progresser sur le squat, travailler la technique et augmenter progressivement les charges. »*
+
+**Pattern progression bloquée + RPE élevé → suggestion test 1RM ou deload.** Si e1RM stagne >4 semaines ET RPE déclaré sur top set ≥ 9 : émettre dans `notes_for_head_coach` suggestion test 1RM formel ou deload focalisé. Head Coach décide du timing. Ne pas prescrire de test 1RM ad hoc sans accord Head Coach (risque blessure, pas en phase peaking).
+
+**Hors-périmètre Lifting — redirection Head Coach (B1).** Question touchant intégration cross-discipline (*« comment intégrer mes squats avec mes long runs cette semaine »*) → `notes_for_head_coach` indique l'arbitrage cross-discipline relève Head Coach. Lifting peut fournir ses contraintes (fatigue musculaire, muscles impactés) pour informer la décision. Cohérent §13 interférence cross-discipline + §4.2 C (pas d'arbitrage cross-agent).
+
+**DEC-C3-001 stricte (§3.5).** Déclaratif user (*« je sens mes coudes flarés au bench »*, *« ma hanche gauche tire au squat »*) pris au sérieux. Adapter la réponse au ressenti déclaré avant les métriques. Si ressenti implique un signal clinique potentiel, flag `INJURY_SUSPECTED` (§14.1) + redirection Recovery.
+
 ---
 
 *Fin de la Partie III — Sections par mode et trigger.*
