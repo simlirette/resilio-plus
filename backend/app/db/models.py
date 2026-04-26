@@ -160,6 +160,9 @@ class AthleteModel(Base):
     apple_health_daily: Mapped[list["AppleHealthDailyModel"]] = relationship(
         "AppleHealthDailyModel", back_populates="athlete", cascade="all, delete-orphan"
     )
+    chat_messages: Mapped[list["ChatMessageModel"]] = relationship(
+        "ChatMessageModel", back_populates="athlete", cascade="all, delete-orphan"
+    )
 
 
 class TrainingPlanModel(Base):
@@ -473,3 +476,31 @@ class AppleHealthDailyModel(Base):
     )
 
     __table_args__ = (UniqueConstraint("athlete_id", "record_date"),)
+
+
+class ChatMessageModel(Base):
+    """Persisted chat turn message — user + assistant pairs from chat_turn graph.
+
+    Phase D (D4) — used by POST /chat/message and GET /chat/history.
+    """
+
+    __tablename__ = "chat_messages"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    athlete_id: Mapped[str] = mapped_column(String, ForeignKey("athletes.id"), nullable=False)
+    role: Mapped[str] = mapped_column(String, nullable=False)
+    """Either 'user' or 'assistant'."""
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    intent_decision: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    """Intent routing decision for the turn (null for user messages)."""
+    specialists_consulted: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    """JSON-serialized list of specialist names consulted (null for user messages)."""
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+    athlete: Mapped["AthleteModel"] = relationship(
+        "AthleteModel", back_populates="chat_messages"
+    )

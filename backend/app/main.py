@@ -22,6 +22,7 @@ from .routes.analytics import router as analytics_router
 from .routes.athletes import router as athletes_router
 from .routes.auth import router as auth_router
 from .routes.checkin import router as checkin_router
+from .routes.chat import router as chat_router
 from .routes.connectors import router as connectors_router
 from .routes.coordinator import router as coordinator_router
 from .routes.external_plan import router as external_plan_router
@@ -89,6 +90,7 @@ app.include_router(external_plan_router)
 app.include_router(strain_router)
 app.include_router(integrations_router)
 app.include_router(strava_router)
+app.include_router(chat_router)
 app.include_router(coordinator_router)
 app.include_router(admin_router)
 app.include_router(health_router)
