@@ -1302,9 +1302,9 @@ Décisions produit clés validées en brainstorming :
 
 `classify_intent` est un **composant LLM léger** invoqué directement par Head Coach (pas un node Coordinator ni un agent spécialiste). À formaliser dans A2 : positionnement architectural, latence cible < 500ms, modèle d'implémentation Haiku 4.5, invocation systématique sur trigger `CHAT_USER_FREE_MESSAGE` (et seulement celui-là — triggers structurés court-circuitent classify_intent).
 
-#### DEP-C10-002 — Phase C (head-coach C1) : orchestration routing chain multi-spécialistes
+#### DEP-C10-002 ✓ — Phase C (head-coach C1) : orchestration routing chain multi-spécialistes
 
-Head Coach doit savoir consommer `specialist_chain` (liste ordonnée 1-3 spécialistes) émis par classify_intent : exécuter consultations TECHNICAL en série (déclencher `CHAT_TECHNICAL_QUESTION_<specialist>` pour chaque), puis **synthétiser** les réponses spécialistes en un message unifié user-facing. Spec d'orchestration séquentielle + synthèse à back-fill dans `head-coach.md`. Cas particulier : si `specialist_chain` contient 1 seul élément, comportement = consultation unique habituelle.
+**Livré — Session Head Coach back-fills (2026-04-26).** Section `§10.1.2` ajoutée à `head-coach.md`. Chain à 1 élément = consultation unique. Chain ≥ 2 éléments : séquentiel avec contexte partagé (spécialiste N+1 reçoit réponse(s) des précédents), synthèse unifiée voix "je" (§1.3), flags traités après synthèse. Cap ≤ 3 éléments (classify-intent §7.2). Latence : typing indicator uniquement.
 
 #### DEP-C10-003 — Phase B (B3 v2) : contrats `IntentClassificationRequest` et `IntentClassification`
 
@@ -1312,9 +1312,9 @@ Formaliser dans B3 v2 :
 - **`IntentClassificationRequest`** (input) — `user_message`, `conversation_context_minimal` (last_head_coach_turn_summary, current_conversation_mode, journey_phase, last_3_intents), `user_profile_minimal` (primary_goal, disciplines_practiced, preferred_language, flag_clinical_context_active). Cf. `classify-intent §8`.
 - **`IntentClassification`** (output) — decision (5 enums), specialist_chain (Optional list[enum] 1-3), clinical_escalation_type (Optional enum tca_declared | self_harm_signal), clarification_axes (Optional list[str] 2-4), confidence (float 0-1), reasoning (str max 200 char), language_detected (fr | en | fr-en-mixed), clinical_context_active_acknowledged (bool). Cf. `classify-intent §9`.
 
-#### DEP-C10-004 — Phase C (head-coach C1) : génération options tappables depuis clarification_axes
+#### DEP-C10-004 ✓ — Phase C (head-coach C1) : génération options tappables depuis clarification_axes
 
-Head Coach doit savoir consommer `clarification_axes` (liste 2-4 axes ≤ 80 char) émis par classify_intent sur route `CLARIFICATION_NEEDED` : présenter ces axes comme **options tappables** dans le UI mobile + champ libre complémentaire pour réponse personnalisée user. Spec UX et formulation à back-fill dans `head-coach.md`.
+**Livré — Session Head Coach back-fills (2026-04-26).** Section `§10.1.3` ajoutée à `head-coach.md`. Intro 1 phrase référant au message ambigu user. N options tappables ordre conservé. Champ libre "Autre — préciser" toujours présent en dernière option. Re-soumission à classify_intent sur réponse user (`"réponse à clarification : <axe sélectionné>"`). `<contract_payload>null`.
 
 #### DEP-C10-005 ✓ — Phase C (lifting-coach C4) : §20 TECHNICAL Lifting
 
@@ -1336,13 +1336,9 @@ Head Coach doit savoir consommer `clarification_axes` (liste 2-4 axes ≤ 80 cha
 
 Le prompt système V1 contient ~62 exemples calibrés core (`classify-intent §11`). Catalogue étendu cible ~235 exemples maintenu **hors prompt** comme dataset d'eval V1 et corpus de fine-tuning éventuel V2. Phase D : produire le dataset complet (15 FR + 10 EN par catégorie pour `HEAD_COACH_DIRECT`, par spécialiste TECHNICAL × 6, par escalation × 2, pour `OUT_OF_SCOPE` et `CLARIFICATION_NEEDED`). Format : JSONL avec `user_message`, `expected_decision`, `expected_specialist_chain` / `expected_clinical_escalation_type` / `expected_clarification_axes`, `expected_language`, notes. Sert à : (a) eval automatisée précision V1 production, (b) fine-tuning Haiku éventuel V2 si précision few-shot insuffisante.
 
-#### DEP-C10-010 — Phase C (head-coach C1) + tous spécialistes : lecture metadata `clinical_context_active_acknowledged`
+#### DEP-C10-010 ✓ — Phase C (head-coach C1) + tous spécialistes : lecture metadata `clinical_context_active_acknowledged`
 
-Lorsque classify_intent émet `clinical_context_active_acknowledged: true` (le request contenait `flag_clinical_context_active != null` et le trieur en a tenu compte), Head Coach et le spécialiste désigné doivent :
-- **Head Coach** : adapter le wrapping de la réponse spécialiste pour ne pas reformuler de manière instrumentalisable (ex : pas de focus sur restrictions caloriques si flag tca actif)
-- **Spécialiste** : lire le flag dans son input enrichi et adapter sa réponse en aval (ex : Nutrition adapte selon `nutrition-coach §4.5 règle 2` — suspension prescriptions restrictives, ton prudent, redirection ressources si pertinent)
-
-À back-fill dans `head-coach.md` (consommation metadata) + chaque prompt spécialiste (gestion adaptative selon flag dans inputs TECHNICAL).
+**Livré (Head Coach) — Session Head Coach back-fills (2026-04-26).** Section `§10.1.4` ajoutée à `head-coach.md`. 3 flags couverts : `tca` (vocab restrictif nutrition interdit, formulations positives), `red_s` (même prudence nutrition + pas de mention déficit), `ots`/`nfor` (pas de vocab "passe au travers" / "corps va s'adapter"). Injection du flag dans payload spécialiste. Adaptation toujours invisible user. S'applique en superposition de toutes les routes. Spécialistes (nutrition-coach §4.5 règle 2, energy protective frame DEP-C9-003) : back-fill séparé si nécessaire en Phase D.
 
 ### Propagation des décisions cross-agents (statut après C10)
 
@@ -1380,7 +1376,25 @@ Phase C close avec C10. 10 livrables produits (C1-C10). Architecture conversatio
 - **2 spécialistes transversaux** : Nutrition (C8), Energy (C9)
 - **Composant gateway** : classify_intent (C10)
 
-Total dépendances ouvertes Phase C → autres phases : à consolider en Phase D init. ~~Notamment 4 back-fills `§20 TECHNICAL` (Lifting, Running, Swimming, Biking — DEP-C10-005 à DEP-C10-008) à exécuter avant implémentation Phase D pour viabilité du routage classify_intent V1 complet.~~ **Clôturé Session C-tardive (2026-04-26) — DEP-C10-005 à DEP-C10-008 tous livrés.** Phase C complète. Pré-requis Phase D (routage classify_intent V1 complet) satisfaits.
+Total dépendances ouvertes Phase C → autres phases : à consolider en Phase D init. ~~Notamment 4 back-fills `§20 TECHNICAL` (Lifting, Running, Swimming, Biking — DEP-C10-005 à DEP-C10-008) à exécuter avant implémentation Phase D pour viabilité du routage classify_intent V1 complet.~~ **Clôturé Session C-tardive (2026-04-26) — DEP-C10-005 à DEP-C10-008 tous livrés.** ~~DEP-C10-002, DEP-C10-004, DEP-C10-010 (back-fills Head Coach orchestration) à livrer.~~ **Clôturé Session Head Coach back-fills (2026-04-26) — DEP-C10-002, 004, 010 tous livrés.** Phase C complète. Toutes les dépendances Head Coach classify_intent satisfaites. Pré-requis Phase D complets.
+
+---
+
+### Session Head Coach back-fills (post-C10 ✓) — 2026-04-26
+
+**Objectif** : Back-fill des 3 comportements Head Coach requis par classify_intent (DEP-C10-002, DEP-C10-004, DEP-C10-010) — cohérence architecturale Phase C avant Phase D.
+
+**Décisions produit validées** :
+- **Décision 1** : Chain multi-spécialistes — fusion invisible (opacité §1.3), pas d'annonce de la chain à l'user.
+- **Décision 2** : Contexte partagé entre spécialistes — spécialiste N+1 reçoit réponse(s) des précédents pour cohérence inter-domaines.
+- **Décision 3** : Latence chain — typing indicator uniquement, aucun message texte intermédiaire.
+- **Décision 4** : Intro clarification — référer au message ambigu user (naturel conversationnel).
+- **Décision 5** : Champ libre "Autre — préciser" toujours présent, quelle que soit la liste d'axes.
+- **Décision 6** : Adaptation wrapping clinique — invisible user, 3 flags couverts (`tca`, `red_s`, `ots`/`nfor`).
+
+**Livrables** :
+- `head-coach.md` : §10.1 restructuré (étape 0 routing, tags injectés mis à jour) + §10.1.2 (DEP-C10-002) + §10.1.3 (DEP-C10-004) + §10.1.4 (DEP-C10-010) + §10.1.5 (escalation + out_of_scope) ajoutés
+- `DEPENDENCIES.md` : DEP-C10-002, 004, 010 marqués ✓, bilan Phase C mis à jour
 
 ---
 
