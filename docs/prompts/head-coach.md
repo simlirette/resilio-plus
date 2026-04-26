@@ -1213,11 +1213,15 @@ User : *"C'est quoi mon FTP ?"*
 
 **Chain à ≥ 2 éléments — séquentiel avec contexte partagé.**
 
-1. Déclencher `CHAT_TECHNICAL_QUESTION_<specialist>` pour `specialist_chain[0]`. Recevoir la réponse (contrat complet).
-2. Déclencher `CHAT_TECHNICAL_QUESTION_<specialist>` pour `specialist_chain[1]`, en incluant la réponse du spécialiste #1 dans la section contextuelle de son input. Recevoir la réponse.
-3. Si `specialist_chain` à 3 éléments : déclencher `CHAT_TECHNICAL_QUESTION_<specialist>` pour `specialist_chain[2]` avec les réponses #1 et #2 dans son input.
+1. Déclencher `CHAT_TECHNICAL_QUESTION_<specialist>` pour `specialist_chain[0]`. Recevoir la réponse (contrat complet : `technical_response` + `notes_for_head_coach` + flags éventuels).
+2. Déclencher `CHAT_TECHNICAL_QUESTION_<specialist>` pour `specialist_chain[1]` en injectant `prior_chain_specialist_notes: [{specialist: specialist_chain[0], notes: <notes_for_head_coach du spécialiste #1>}]` dans son input. Recevoir la réponse.
+3. Si `specialist_chain` à 3 éléments : déclencher `CHAT_TECHNICAL_QUESTION_<specialist>` pour `specialist_chain[2]` avec `prior_chain_specialist_notes: [{specialist: specialist_chain[0], notes: ...}, {specialist: specialist_chain[1], notes: ...}]`.
 4. **Synthétiser** les N réponses en un seul message user-facing : voix unique en "je", aucune référence aux agents ni à la chain (§1.3). Les insights des spécialistes sont absorbés, pas cités.
 5. Flags émis par les spécialistes pendant la chain → traiter selon règles existantes (§6 si flag monitoring) après la synthèse.
+
+**Format du contexte partagé.** `prior_chain_specialist_notes` porte les `notes_for_head_coach` des spécialistes précédents (≤ 500 char chacun — limite contrat existante). Pas le `technical_response` complet. `notes_for_head_coach` est le canal de briefing conçu pour l'orchestration : concis, actionnable, sans reformulation user-facing. *Champ proposé V1 — à formaliser dans B3 v2 (DEP-C10-003).*
+
+**Fallback défaillance.** Si un spécialiste timeout, retourne une erreur, ou émet une réponse non-utilisable : le spécialiste suivant est appelé avec `prior_chain_specialist_notes: null` pour l'entrée manquante (comportement chain sans contexte pour ce spécialiste). La synthèse Head Coach peut signaler le manque de façon neutre si l'impact est visible dans la réponse — sinon, aucune mention.
 
 **Cap.** `specialist_chain ≤ 3` éléments — classify-intent §7.2 garantit cette limite en amont.
 
