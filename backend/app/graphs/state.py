@@ -6,7 +6,7 @@ The DB session is passed via config["configurable"]["db"] — never stored in st
 """
 from __future__ import annotations
 
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal, NotRequired
 
 from langchain_core.messages import BaseMessage
 from langgraph.graph import add_messages
@@ -58,3 +58,20 @@ class AthleteCoachingState(TypedDict):
 
     messages: Annotated[list[BaseMessage], add_messages]
     """LangGraph message accumulator for debug/audit trail."""
+
+    # ── Phase D extensions (D1) ──────────────────────────────────────────────
+
+    generation_mode: NotRequired[Literal["baseline", "first_personalized", "block_regen"] | None]
+    """Plan generation mode — injected by CoordinatorService before invoking plan_generation.
+
+    - baseline: sous-max diagnostic plan (7–21j), mutes journey_phase → baseline_active
+    - first_personalized: full macrocycle post-baseline, mutes → steady_state
+    - block_regen: next-block regen only, keeps steady_state
+    """
+
+    active_plan: NotRequired[dict[str, Any] | None]
+    """Structured active plan summary produced by build_proposed_plan.
+
+    Contains blocks[], discipline_components, trade_offs_disclosed.
+    Replaces the flat proposed_plan_dict for Phase D plan generation.
+    """

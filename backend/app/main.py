@@ -36,6 +36,7 @@ from .routes.reviews import router as reviews_router
 from .routes.sessions import router as sessions_router
 from .routes.strain import router as strain_router
 from .routes.strava import router as strava_router
+from .routes.coordinator import router as coordinator_router
 from .routes.workflow import router as workflow_router
 
 
@@ -88,5 +89,6 @@ app.include_router(external_plan_router)
 app.include_router(strain_router)
 app.include_router(integrations_router)
 app.include_router(strava_router)
+app.include_router(coordinator_router)
 app.include_router(admin_router)
 app.include_router(health_router)

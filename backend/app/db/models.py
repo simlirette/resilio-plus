@@ -98,6 +98,27 @@ class AthleteModel(Base):
     available_days_json: Mapped[str] = mapped_column(Text)
     equipment_json: Mapped[str] = mapped_column(Text, default="[]")
 
+    # Phase D — CoordinatorService state machine (Alembic 0011)
+    journey_phase: Mapped[str] = mapped_column(String, default="signup")
+    """A2 macro state machine value. Allowed: signup, scope_selection, onboarding,
+    baseline_pending_confirmation, baseline_active, followup_transition, steady_state."""
+    recovery_takeover_active: Mapped[bool] = mapped_column(Boolean, default=False)
+    """True when recovery_takeover graph is the active overlay."""
+    onboarding_reentry_active: Mapped[bool] = mapped_column(Boolean, default=False)
+    """True when onboarding graph is active in partial re-entry mode."""
+    active_onboarding_thread_id: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True, default=None
+    )
+    """Thread ID for the persistent onboarding graph (format: {athlete_id}:onboarding:{uuid4})."""
+    active_recovery_thread_id: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True, default=None
+    )
+    """Thread ID for the persistent recovery_takeover graph."""
+    active_followup_thread_id: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True, default=None
+    )
+    """Thread ID for the persistent followup_transition graph."""
+
     # Relationships
     user: Mapped[Optional[UserModel]] = relationship(
         "UserModel", back_populates="athlete", uselist=False, cascade="all, delete-orphan"
