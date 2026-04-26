@@ -180,6 +180,88 @@ def _should_consult_lifting_for_session_log(
     return False
 
 
+# ─── Clinical escalation resources (§10.1.1) ─────────────────────────────────
+
+_CLINICAL_RESOURCES = {
+    "self_harm_signal": (
+        "Je t'encourage à contacter une ligne d'aide immédiatement. "
+        "Canada: 1-866-APPELLE (277-3553). "
+        "Ton bien-être passe avant tout entraînement."
+    ),
+    "tca_declared": (
+        "Ce sujet mérite un accompagnement spécialisé. "
+        "Consulte un professionnel de santé ou un médecin avant de reprendre "
+        "toute activité physique intense."
+    ),
+}
+_CLINICAL_FALLBACK = (
+    "Ce sujet dépasse le cadre de l'entraînement sportif. "
+    "Consulte un professionnel de santé."
+)
+
+
+# ─── Specialist chain helpers (D5) ───────────────────────────────────────────
+
+_NOTES_MAX_CHARS = 500  # prior_chain_specialist_notes cap per §10.1.2
+
+
+def _build_specialist_content(
+    view: HeadCoachView,
+    user_message: str,
+    prior_chain_notes: list[dict[str, str]] | None,
+    clinical_flag: str | None,
+) -> str:
+    """Build user-turn content for a specialist in the chain."""
+    lines = [f"Athlete context:\n{view.model_dump_json()}"]
+    if clinical_flag:
+        lines.append(f"clinical_context_flag: {clinical_flag}")
+    if prior_chain_notes:
+        notes_str = "; ".join(
+            f"{n['specialist']}: {n['notes'][:_NOTES_MAX_CHARS]}"
+            for n in prior_chain_notes
+        )
+        lines.append(f"prior_chain_specialist_notes: {notes_str}")
+    lines.append(f"\nUser: {user_message}")
+    return "\n".join(lines)
+
+
+def _invoke_specialist_chain(
+    specialist_chain_items: list[Any],
+    view: HeadCoachView,
+    user_message: str,
+    clinical_flag: str | None,
+) -> tuple[list[str], list[dict[str, str]]]:
+    """Invoke up to 3 specialists sequentially, passing prior notes forward.
+
+    Returns:
+        (specialist_names, accumulated_notes) where accumulated_notes contains
+        {specialist, notes} dicts for HC synthesis.
+    """
+    names: list[str] = []
+    accumulated_notes: list[dict[str, str]] = []
+
+    for item in specialist_chain_items[:3]:  # hard cap at 3
+        spec_name = item.specialist
+        prompt = _SPECIALIST_PROMPTS.get(
+            spec_name,
+            f"Tu es le {spec_name.title()} Coach de Resilio+.",
+        )
+        content = _build_specialist_content(
+            view=view,
+            user_message=user_message,
+            prior_chain_notes=accumulated_notes if accumulated_notes else None,
+            clinical_flag=clinical_flag,
+        )
+        response = _call_agent(system_prompt=prompt, user_content=content)
+        names.append(spec_name)
+        accumulated_notes.append({
+            "specialist": spec_name,
+            "notes": response[:_NOTES_MAX_CHARS],
+        })
+
+    return names, accumulated_notes
+
+
 # ─── Public entry point ───────────────────────────────────────────────────────
 
 def run_chat_turn(
@@ -192,22 +274,27 @@ def run_chat_turn(
 ) -> dict[str, Any]:
     """Execute one ephemeral chat_turn and return the result dict.
 
-    D4 routes:
-    - HEAD_COACH_DIRECT   → 1 LLM call (Head Coach)
-    - SPECIALIST_TECHNICAL (single) → 2 LLM calls (specialist + HC synthesis)
-    - handle_session_log RPE check → conditionally upgrades to Lifting consult
+    Routes (D4+D5):
+    - HEAD_COACH_DIRECT          → 1 LLM call (Head Coach)
+    - SPECIALIST_TECHNICAL chain → N specialist calls + 1 HC synthesis (max 4 LLM calls)
+    - CLINICAL_ESCALATION_IMMEDIATE → 0 LLM calls, hardcoded resources
+    - OUT_OF_SCOPE               → 1 LLM call (Head Coach bounded response)
+    - CLARIFICATION_NEEDED       → 1 LLM call (Head Coach intro) + tappable axes
+    - handle_session_log RPE     → conditionally upgrades to Lifting consult (DEP-C4-001)
 
     Returns:
         {
             "final_response": str,
             "intent_decision": str,
             "specialists_consulted": list[str],
+            "clarification_axes": list[str] | None,
             "thread_id": None,  # ephemeral — no persistent thread
         }
     """
     # 1. Load athlete + build view
     athlete = _get_athlete(athlete_id, db)
     view = build_head_coach_view(athlete)
+    clinical_flag: str | None = getattr(athlete, "clinical_context_flag", None)
 
     # 2. Classify intent
     from_request = build_classify_intent_request(
@@ -218,55 +305,62 @@ def run_chat_turn(
     )
     intent: IntentClassification = classify_intent(from_request)
 
-    # 3. Apply session_log RPE override (DEP-C4-001)
     specialists_consulted: list[str] = []
+    clarification_axes: list[str] | None = None
     final_response: str
 
-    # Determine if session_log RPE check upgrades to Lifting consultation
-    rpe_requires_lifting = _should_consult_lifting_for_session_log(session_log_context)
+    # 3. Route by intent decision
 
-    if intent.decision == "SPECIALIST_TECHNICAL" and intent.specialist_chain:
-        # D4 handles single specialist only; D5 handles chain
-        first_specialist = intent.specialist_chain[0].specialist
+    if intent.decision == "CLINICAL_ESCALATION_IMMEDIATE":
+        # Zero LLM calls — return hardcoded clinical resources
+        esc_type = intent.clinical_escalation_type or ""
+        final_response = _CLINICAL_RESOURCES.get(esc_type, _CLINICAL_FALLBACK)
 
-        # 4a. Invoke specialist
-        specialist_prompt = _SPECIALIST_PROMPTS.get(
-            first_specialist,
-            f"Tu es le {first_specialist.title()} Coach de Resilio+.",
-        )
-        specialist_response = _call_agent(
-            system_prompt=specialist_prompt,
-            user_content=f"Athlete context:\n{view.model_dump_json()}\n\nUser: {user_message}",
-        )
-        specialists_consulted.append(first_specialist)
-
-        # 4b. Head Coach synthesizes
+    elif intent.decision == "CLARIFICATION_NEEDED":
+        # Head Coach formulates intro phrase; axes passed through for tappable UI
+        clarification_axes = intent.clarification_axes or []
         hc_content = _format_head_coach_user_content(
             view=view,
             user_message=user_message,
-            specialist_notes=f"{first_specialist.title()} Coach:\n{specialist_response}",
         )
         final_response = _call_agent(
             system_prompt=HEAD_COACH_PROMPT,
-            user_content=hc_content,
+            user_content=hc_content + "\n\nDecision: CLARIFICATION_NEEDED. "
+            f"Generate a short intro phrase only (≤1 sentence). "
+            f"Axes: {clarification_axes}",
         )
 
-    elif rpe_requires_lifting:
-        # Session log RPE threshold exceeded → consult Lifting, HC synthesizes
-        rpe_ctx_str = json.dumps(session_log_context)
-        lifting_response = _call_agent(
-            system_prompt=LIFTING_COACH_PROMPT,
-            user_content=(
-                f"Athlete context:\n{view.model_dump_json()}\n\n"
-                f"User: {user_message}\nRPE context: {rpe_ctx_str}"
-            ),
-        )
-        specialists_consulted.append("lifting")
-
+    elif intent.decision == "OUT_OF_SCOPE":
         hc_content = _format_head_coach_user_content(
             view=view,
             user_message=user_message,
-            specialist_notes=f"Lifting Coach (RPE alert):\n{lifting_response}",
+        )
+        final_response = _call_agent(
+            system_prompt=HEAD_COACH_PROMPT,
+            user_content=hc_content + "\n\nDecision: OUT_OF_SCOPE. "
+            "Respond briefly: this topic is outside your coaching scope.",
+        )
+
+    elif intent.decision == "SPECIALIST_TECHNICAL" and intent.specialist_chain:
+        # Chain specialists sequentially (D5), inject clinical_flag if acknowledged
+        effective_flag = clinical_flag if intent.clinical_context_active_acknowledged else None
+
+        names, chain_notes = _invoke_specialist_chain(
+            specialist_chain_items=intent.specialist_chain,
+            view=view,
+            user_message=user_message,
+            clinical_flag=effective_flag,
+        )
+        specialists_consulted = names
+
+        # Head Coach synthesizes all specialist notes
+        all_notes = "\n".join(
+            f"{n['specialist'].title()} Coach:\n{n['notes']}" for n in chain_notes
+        )
+        hc_content = _format_head_coach_user_content(
+            view=view,
+            user_message=user_message,
+            specialist_notes=all_notes,
         )
         final_response = _call_agent(
             system_prompt=HEAD_COACH_PROMPT,
@@ -274,8 +368,27 @@ def run_chat_turn(
         )
 
     else:
-        # HEAD_COACH_DIRECT (or unrecognised D5+ routes defaulting to HC)
-        hc_content = _format_head_coach_user_content(view=view, user_message=user_message)
+        # HEAD_COACH_DIRECT (or fallback)
+        # Check session_log RPE override first (DEP-C4-001)
+        rpe_requires_lifting = _should_consult_lifting_for_session_log(session_log_context)
+        if rpe_requires_lifting:
+            rpe_ctx_str = json.dumps(session_log_context)
+            lifting_response = _call_agent(
+                system_prompt=LIFTING_COACH_PROMPT,
+                user_content=(
+                    f"Athlete context:\n{view.model_dump_json()}\n\n"
+                    f"User: {user_message}\nRPE context: {rpe_ctx_str}"
+                ),
+            )
+            specialists_consulted.append("lifting")
+            hc_content = _format_head_coach_user_content(
+                view=view,
+                user_message=user_message,
+                specialist_notes=f"Lifting Coach (RPE alert):\n{lifting_response}",
+            )
+        else:
+            hc_content = _format_head_coach_user_content(view=view, user_message=user_message)
+
         final_response = _call_agent(
             system_prompt=HEAD_COACH_PROMPT,
             user_content=hc_content,
@@ -295,5 +408,6 @@ def run_chat_turn(
         "final_response": final_response,
         "intent_decision": intent.decision,
         "specialists_consulted": specialists_consulted,
+        "clarification_axes": clarification_axes,
         "thread_id": None,
     }
