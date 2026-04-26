@@ -23,6 +23,7 @@ from .routes.athletes import router as athletes_router
 from .routes.auth import router as auth_router
 from .routes.checkin import router as checkin_router
 from .routes.connectors import router as connectors_router
+from .routes.coordinator import router as coordinator_router
 from .routes.external_plan import router as external_plan_router
 from .routes.food_search import router as food_search_router
 from .routes.health import router as health_router
@@ -36,7 +37,6 @@ from .routes.reviews import router as reviews_router
 from .routes.sessions import router as sessions_router
 from .routes.strain import router as strain_router
 from .routes.strava import router as strava_router
-from .routes.coordinator import router as coordinator_router
 from .routes.workflow import router as workflow_router
 
 
