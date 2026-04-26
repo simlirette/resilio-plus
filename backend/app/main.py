@@ -22,7 +22,9 @@ from .routes.analytics import router as analytics_router
 from .routes.athletes import router as athletes_router
 from .routes.auth import router as auth_router
 from .routes.checkin import router as checkin_router
+from .routes.chat import router as chat_router
 from .routes.connectors import router as connectors_router
+from .routes.coordinator import router as coordinator_router
 from .routes.external_plan import router as external_plan_router
 from .routes.food_search import router as food_search_router
 from .routes.health import router as health_router
@@ -30,6 +32,8 @@ from .routes.integrations import router as integrations_router
 from .routes.mode import router as mode_router
 from .routes.nutrition import router as nutrition_router
 from .routes.onboarding import router as onboarding_router
+from .routes.followup import router as followup_router
+from .routes.onboarding_d7 import router as onboarding_d7_router
 from .routes.plans import router as plans_router
 from .routes.recovery import router as recovery_router
 from .routes.reviews import router as reviews_router
@@ -88,5 +92,9 @@ app.include_router(external_plan_router)
 app.include_router(strain_router)
 app.include_router(integrations_router)
 app.include_router(strava_router)
+app.include_router(chat_router)
+app.include_router(onboarding_d7_router)
+app.include_router(followup_router)
+app.include_router(coordinator_router)
 app.include_router(admin_router)
 app.include_router(health_router)

@@ -231,6 +231,7 @@ out/
 # Resilio - LOCAL DATA (NEVER COMMIT)
 data/*
 !data/.gitkeep
+!data/classify_intent_eval.jsonl
 data_samples/
 config/secrets.local.yaml
 *.bak
@@ -257,6 +258,7 @@ scripts/*
 !scripts/start_dev.ps1
 !scripts/start_prod.sh
 !scripts/gen_apple_health_fixture.py
+!scripts/eval_classify_intent.py
 .worktrees/
 
 # AI assistant artifacts
