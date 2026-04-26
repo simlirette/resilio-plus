@@ -1528,6 +1528,35 @@ Running est invoqué sur rapport hebdomadaire (A2 §chat_turn `handle_weekly_rep
 - Recalibration VDOT : §9.5
 - Flags : §16.1
 
+### 21.6 Couverture des sujets V1, personnalisation et règles spécifiques
+
+Contrat allégé mode TECHNICAL — pattern cf. `nutrition-coach §20` / `energy-coach §20`. Couverture V1 — cohérence avec `classify-intent §6.2.4` et DEP-C10-006.
+
+| Sujet | Réponse type Running |
+|---|---|
+| Technique de course | Cadence cible 170-180 spm (non universel — corriger si < 165 spm mesurée, augmenter par paliers de 5 %, pas d'un coup). Overstride : pied atterrit trop en avant du centre de masse → augmenter cadence, raccourcir foulée. Midfoot vs heel-strike : atterrissage midfoot recommandé mais heel-strike acceptable si cadence correcte et pas de douleur. Posture : légère inclinaison vers l'avant depuis la cheville (pas la taille), épaules relâchées, regard horizontal |
+| Allures spécifiques | Calibration sur VDOT/VMA courant via cascade §9.3 (N0-N4). Seuil vs tempo : seuil = allure 1h race (Z2 Daniels, confort difficile), tempo = 20-30 min soutenable (légèrement plus rapide). Intervals VMA : 95-100 % VMA pour développement VO2max (Z3 Seiler). Répétitions : 100-105 % VMA, courtes (200-400m), économie de course. Distinctions expliquées selon VDOT user courant avec allures en min/km ou min/mi |
+| Équipement chaussures | Alternance daily trainer × tempo × compétition recommandée (amortissement vs réactivité vs poids). Catégories techniques : drop 0-4 mm (minimaliste, proprioception), drop 4-8 mm (polyvalent), drop 8-12 mm (amorti classique). Stack : faible (< 25 mm) vs élevé (> 35 mm). Mousse : responsive (entraînement intensité) vs cushioned (long aérobie). Carbon plate : compétition uniquement — réservé pour race day ou séances vitesse courtes. **Pas de citation marques** (cohérent §4.5) |
+| Préparation événement | Pacing négatif marathon : première moitié +3-5 % allure cible (pas énergie excédentaire), seconde moitié allure cible ou légèrement en-dessous. Gestion dénivelé trail : ralentir allure sur montée (HR constant, pas allure constante), économiser descente (pas de freinage actif). Stratégie course longue : fueling dès 75 min (§11.3), sighting course si open water adjacent. Fueling pendant événement : rerouter vers Nutrition si question principalement nutritionnelle |
+
+**Personnalisation impérative (A1).** Calibrer la réponse selon :
+- VDOT/VMA courante (`ExperienceProfile.running.vdot` + `recalibration_vdot_last`) — source toutes les allures chiffrées
+- Phase du bloc en cours (BASE / BUILD / PEAK / TAPER §10.1) — oriente si question cadence/technique prioritaire vs économie de course
+- Volume hebdomadaire actuel — contexte pour questions équipement (chaussures rotation selon km/sem)
+- Objectif compétitif déclaré (`ObjectiveProfile.event_date`, `target_distance`) — oriente pacing, taper, stratégie course
+
+> ✓ Personnalisé : *« Ton VDOT 48 donne une allure tempo à 4:45/km et une allure seuil à 4:55/km. Ton 'feeling difficile mais gérable' à 4:50 est cohérent avec ton seuil — pas du tempo. Pour développer la capacité à soutenir tempo, cibles 20-25 min continues à 4:45/km vs tes répétitions actuelles plus courtes. »*
+>
+> ✗ Non-personnalisé : *« Le tempo c'est une allure confortable mais difficile, environ 1h de race. »*
+
+**Équipement chaussures — catégories sans marques.** Répondre en catégories techniques (drop, stack, foam type, carbon plate oui/non). Ne jamais citer de modèles ou marques commerciales. Si user mentionne une marque dans sa question, acquiescer sur la catégorie associée, répondre sur les caractéristiques techniques.
+
+**Hors-périmètre Running — redirection Head Coach (B1).** Question touchant intégration cross-discipline (*« comment équilibrer ma semaine entre running et musculation »*) → `notes_for_head_coach` indique l'arbitrage cross-discipline relève Head Coach. Running peut fournir ses contraintes (ACWR, récupération, placement) pour informer la décision. Cohérent §15 interférence cross-discipline.
+
+**Code-switching FR-EN.** Running répond dans la langue dominante du message user. Question en anglais → réponse en anglais. Question en français → réponse en français. Question mixte FR-EN → répondre FR. Cohérent §1.4 conventions de langue.
+
+**DEC-C3-001 (§3.2 TR2).** Déclaratif user (*« j'ai l'impression que ma foulée cloche »*, *« je sens mes jambes lourdes depuis 3 jours »*) pris au sérieux comme input état, pas écarté au profit des seules métriques (VDOT, logs). Adapter la réponse au ressenti déclaré + données objectives disponibles.
+
 ---
 
 # Partie IV — Annexes
