@@ -1316,21 +1316,21 @@ Formaliser dans B3 v2 :
 
 Head Coach doit savoir consommer `clarification_axes` (liste 2-4 axes ≤ 80 char) émis par classify_intent sur route `CLARIFICATION_NEEDED` : présenter ces axes comme **options tappables** dans le UI mobile + champ libre complémentaire pour réponse personnalisée user. Spec UX et formulation à back-fill dans `head-coach.md`.
 
-#### DEP-C10-005 — Phase C (lifting-coach C4) : §20 TECHNICAL Lifting
+#### DEP-C10-005 ✓ — Phase C (lifting-coach C4) : §20 TECHNICAL Lifting
 
-Back-fill section `§20 Mode TECHNICAL (trigger CHAT_TECHNICAL_QUESTION_LIFTING)` dans `lifting-coach.md`. Périmètre anticipé V1 (cf. `classify-intent §6.2.3`) : technique d'exécution mouvement (squat, bench, deadlift, OHP, accessoires), périodisation force (accumulation/intensification/peaking), RPE/RIR avancé, progression spécifique sur mouvement plafonnant, choix de variantes contextuel. Convention §16.3 (variantes par mode) à étendre avec mode TECHNICAL.
+**Livré — Session C-tardive (2026-04-26).** Section `§20.7 Couverture des sujets V1 et personnalisation` ajoutée à `lifting-coach.md`. Couverture V1 complète : technique d'exécution (squat/bench/deadlift/OHP/accessoires), périodisation force (accumulation→intensification→peaking, durées hybrides), RPE/RIR avancé (leader set + back-off, ajustement fatigue), progression spécifique (microcharges, variantes correctives, seuil plateau >4 sem → test 1RM), choix variantes (back/front squat, sumo/conventional, incline bench). Personnalisation A1 selon `lifting_load_payload`. Redirection B1 Head Coach pour questions cross-discipline. DEC-C3-001 stricte propagée.
 
-#### DEP-C10-006 — Phase C (running-coach C5) : §20 TECHNICAL Running
+#### DEP-C10-006 ✓ — Phase C (running-coach C5) : §20 TECHNICAL Running
 
-Back-fill section `§20 Mode TECHNICAL (trigger CHAT_TECHNICAL_QUESTION_RUNNING)` dans `running-coach.md`. Périmètre anticipé V1 (cf. `classify-intent §6.2.4`) : technique de course (cadence, foulée, posture), allures spécifiques (calibration sur VMA, seuil, tempo, intervalles), équipement (chaussures, alternance, carbon plate), préparation événement (pacing, dénivelé, gestion course).
+**Livré — Session C-tardive (2026-04-26).** Section `§21.6 Couverture des sujets V1, personnalisation et règles spécifiques` ajoutée à `running-coach.md`. Couverture V1 complète : technique de course (cadence 170-180 spm, overstride, midfoot vs heel-strike, posture), allures spécifiques calibrées sur VDOT/VMA (seuil vs tempo, intervalles VMA, répétitions), équipement chaussures par catégories techniques (drop/stack/foam/carbon plate — sans marques), préparation événement (pacing négatif marathon, dénivelé trail, fueling). Personnalisation A1 selon VDOT courante. Redirection B1. Code-switching FR-EN.
 
-#### DEP-C10-007 — Phase C (swimming-coach C6) : §20 TECHNICAL Swimming
+#### DEP-C10-007 ✓ — Phase C (swimming-coach C6) : §20 TECHNICAL Swimming
 
-Back-fill section `§20 Mode TECHNICAL (trigger CHAT_TECHNICAL_QUESTION_SWIMMING)` dans `swimming-coach.md`. Périmètre anticipé V1 (cf. `classify-intent §6.2.5`) : technique nages (crawl, dos, brasse, papillon), drills correctifs spécifiques, planning séances piscine structurées, adaptations open water vs bassin.
+**Livré — Session C-tardive (2026-04-26).** Sections `§21.5 Couverture des sujets V1`, `§21.6 Personnalisation (A1) et règles spécifiques`, `§21.7 Exemple TECHNICAL` ajoutées à `swimming-coach.md`. Couverture V1 complète : technique crawl (catch EVF, traction, rotation hanches 60-75°, glissée), dos/brasse/papillon (timings spécifiques), drills correctifs (catch-up/single-arm/fingertip drag/kick on side, progression défaut→drill), planning séances piscine (structure échauffement/série/dénage, ratios TID par phase, 2km vs 4km), open water vs bassin (sighting, navigation, départ groupé). Personnalisation A1 selon CSS courante. Douleur épaule → flag Recovery + B1. Cohérence §3.3 RPE prime HR. DEC-C3-001 stricte.
 
-#### DEP-C10-008 — Phase C (biking-coach C7) : §20 TECHNICAL Biking
+#### DEP-C10-008 ✓ — Phase C (biking-coach C7) : §20 TECHNICAL Biking
 
-Back-fill section `§20 Mode TECHNICAL (trigger CHAT_TECHNICAL_QUESTION_BIKING)` dans `biking-coach.md`. Périmètre anticipé V1 (cf. `classify-intent §6.2.6`) : position fit / ajustements (selle, hauteur, recul, cintre), tests FTP (protocoles fiables, progression), cadence et pédalage (montée vs plat), équipement technique (plateaux, power meter, capteurs).
+**Livré — Session C-tardive (2026-04-26).** Section `§21.6 Couverture des sujets V1, personnalisation et règles spécifiques` ajoutée à `biking-coach.md`. Couverture V1 complète : position fit (selle hauteur/recul/inclinaison, cintre, cleat, diagnostic douleur genou interne/externe), tests FTP comparés (20 min × 95 %, ramp × 75 %, Kolie Moore direct — choix selon profil), cadence et pédalage (optimal plat/montée, pédalage circulaire, force basse cadence déconseillée général), équipement technique (plateaux compact/standard/CX par catégories, capteurs puissance mono/dual/moyeu — sans marques). Personnalisation A1 selon FTP actuelle + `aero_position_hours`. Douleur persistante → suggestion bike fit professionnel via B1. Interdiction comparaisons modèles commerciaux.
 
 #### DEP-C10-009 — Phase D (eval / fine-tuning) : catalogue exemples étendu hors prompt
 
@@ -1380,4 +1380,21 @@ Phase C close avec C10. 10 livrables produits (C1-C10). Architecture conversatio
 - **2 spécialistes transversaux** : Nutrition (C8), Energy (C9)
 - **Composant gateway** : classify_intent (C10)
 
-Total dépendances ouvertes Phase C → autres phases : à consolider en Phase D init. Notamment 4 back-fills `§20 TECHNICAL` (Lifting, Running, Swimming, Biking — DEP-C10-005 à DEP-C10-008) à exécuter avant implémentation Phase D pour viabilité du routage classify_intent V1 complet.
+Total dépendances ouvertes Phase C → autres phases : à consolider en Phase D init. ~~Notamment 4 back-fills `§20 TECHNICAL` (Lifting, Running, Swimming, Biking — DEP-C10-005 à DEP-C10-008) à exécuter avant implémentation Phase D pour viabilité du routage classify_intent V1 complet.~~ **Clôturé Session C-tardive (2026-04-26) — DEP-C10-005 à DEP-C10-008 tous livrés.** Phase C complète. Pré-requis Phase D (routage classify_intent V1 complet) satisfaits.
+
+---
+
+### Session C-tardive (post-C10 ✓) — 2026-04-26
+
+**Objectif** : Back-fill des 4 sections `§TECHNICAL` manquantes dans les prompts disciplines (DEP-C10-005 à DEP-C10-008), prérequis Phase D.
+
+**Décisions produit validées** :
+- **Décision A → A1** : personnalisation contextuelle forte — chaque discipline calibre sa réponse sur le payload actuel user (VDOT, FTP, CSS, `lifting_load_payload`). Pas de réponse encyclopédique générique.
+- **Décision B → B1** : questions hors-périmètre disciplinaire redirigées vers Head Coach via `notes_for_head_coach`. La discipline fournit ses contraintes, l'arbitrage cross-discipline appartient au Head Coach.
+
+**Livrables** :
+- `lifting-coach.md` : §20.7 ajouté (couverture V1 Lifting, personnalisation A1, B1, DEC-C3-001)
+- `running-coach.md` : §21.6 ajouté (couverture V1 Running, allures VDOT, équipement sans marques, B1, code-switching FR-EN)
+- `swimming-coach.md` : §21.5 + §21.6 + §21.7 ajoutés (couverture V1 Swimming, drills, open water, CSS personnalisation, épaule → Recovery, §3.3 RPE prime HR)
+- `biking-coach.md` : §21.6 ajouté (couverture V1 Biking, position fit, protocoles FTP comparés, bike fit pro via B1, sans marques)
+- `DEPENDENCIES.md` : DEP-C10-005 à 008 marqués ✓, phase C close
