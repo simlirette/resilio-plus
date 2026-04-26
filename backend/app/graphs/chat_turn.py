@@ -15,6 +15,10 @@ D5 extends this graph with:
   - OUT_OF_SCOPE
   - CLARIFICATION_NEEDED
   - CrossDisciplineInterferenceService (DEP-C4-004)
+
+D6 adds:
+  - run_injury_report() — CHAT_INJURY_REPORT: Recovery consulted, escalation detection
+    (DEP-C3-001)
 """
 from __future__ import annotations
 
@@ -409,5 +413,77 @@ def run_chat_turn(
         "intent_decision": intent.decision,
         "specialists_consulted": specialists_consulted,
         "clarification_axes": clarification_axes,
+        "thread_id": None,
+    }
+
+
+# ─── Injury report handler (DEP-C3-001) ──────────────────────────────────────
+
+def run_injury_report(
+    athlete_id: str,
+    user_message: str,
+    db: Any,
+) -> dict[str, Any]:
+    """Handle CHAT_INJURY_REPORT: consult Recovery Coach, detect escalation.
+
+    DEP-C3-001: Recovery Coach is always consulted for injury reports.
+    If response contains "action: escalate_to_takeover", sets takeover_requested=True
+    and requires injury_payload_draft; otherwise takeover_requested=False.
+
+    Args:
+        athlete_id: Athlete identifier.
+        user_message: User's injury report message.
+        db: SQLAlchemy session.
+
+    Returns:
+        {
+            "final_response": str,
+            "intent_decision": "CHAT_INJURY_REPORT",
+            "specialists_consulted": ["recovery"],
+            "takeover_requested": bool,
+            "thread_id": None,
+        }
+
+    Raises:
+        ValueError: If escalate_to_takeover is signalled but injury_payload_draft
+            is missing from the Recovery response (RA7).
+    """
+    athlete = _get_athlete(athlete_id, db)
+    view = build_head_coach_view(athlete)
+
+    # Always consult Recovery Coach for injury reports
+    content = (
+        f"Athlete context:\n{view.model_dump_json()}\n\n"
+        f"Injury report: {user_message}"
+    )
+    recovery_response = _call_agent(
+        system_prompt=RECOVERY_COACH_PROMPT,
+        user_content=content,
+    )
+
+    # Detect escalation signal in Recovery response
+    response_lower = recovery_response.lower()
+    escalate = "action: escalate_to_takeover" in response_lower
+    has_payload = "injury_payload_draft" in response_lower
+
+    if escalate and not has_payload:
+        raise ValueError(
+            "escalate_to_takeover requires injury_payload_draft in Recovery response"
+        )
+
+    _persist_messages(
+        athlete_id=athlete_id,
+        user_message=user_message,
+        assistant_response=recovery_response,
+        intent_decision="CHAT_INJURY_REPORT",
+        specialists_consulted=["recovery"],
+        db=db,
+    )
+
+    return {
+        "final_response": recovery_response,
+        "intent_decision": "CHAT_INJURY_REPORT",
+        "specialists_consulted": ["recovery"],
+        "takeover_requested": escalate,
         "thread_id": None,
     }
