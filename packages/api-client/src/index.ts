@@ -34,3 +34,11 @@ export type {
   ChatHistoryMessage,
   ChatHistoryResponse,
 } from './chat';
+
+// Onboarding API (Phase D)
+export { createOnboardingClient } from './onboarding';
+export type {
+  OnboardingStartRequest,
+  OnboardingRespondRequest,
+  OnboardingBlockResponse,
+} from './onboarding';
