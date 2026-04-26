@@ -129,8 +129,8 @@ class TestOnboardingRespond:
         assert "intro_response" in result["collected_data"]
         assert result["collected_data"]["intro_response"] == "coureur débutant"
 
-    def test_respond_to_bloc3_completes_d7_blocks(self):
-        """Completing blocks 1-3 → status completed after block 3 response."""
+    def test_respond_to_bloc3_is_still_in_progress(self):
+        """Completing blocks 1-3 → still in_progress (blocs 4-6 remain)."""
         from app.graphs.onboarding import run_onboarding_respond, run_onboarding_start
 
         athlete = _make_athlete()
@@ -154,7 +154,8 @@ class TestOnboardingRespond:
             M.return_value.messages.create.return_value = _mock_llm()
             result = run_onboarding_respond(thread_id, "finir un semi en 6 mois", db=db)
 
-        assert result["status"] == "completed"
+        assert result["status"] == "in_progress"
+        assert result["current_block"] == 4
 
     def test_invalid_thread_raises(self):
         """Unknown thread_id raises ValueError."""

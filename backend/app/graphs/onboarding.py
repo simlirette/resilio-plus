@@ -1,13 +1,22 @@
-"""Onboarding graph — Phase D (D7).
+"""Onboarding graph — Phase D (D7 + D8).
 
 HITL (Human-in-the-Loop) conversation graph for the onboarding journey phase.
-Thread state persisted in-memory (_thread_states dict) for D7; production-grade
+Thread state persisted in-memory (_thread_states dict); production-grade
 persistence can use SqliteSaver or a DB-backed table.
 
 Blocs 1-3 (D7):
   1 — Accueil + présentation Head Coach
   2 — Profil de base (âge, sexe, poids, taille) — interrupt HITL
   3 — Objectif principal + horizon — interrupt HITL
+
+Blocs 4-6 (D8):
+  4 — Historique sportif + disciplines actives — interrupt HITL
+  5 — Préférences entraînement (methodology_preferences) — DEP-C4-002
+  6 — Confirmation scope + lancement plan → handoff
+
+Injury mid-onboarding (D8, DEP-C3-003):
+  suspend_onboarding_for_injury() — stores suspended block
+  resume_onboarding_after_recovery() — resumes at suspended block
 
 Thread ID format: ``{athlete_id}:onboarding:{uuid4}``
 Stored on ``AthleteModel.active_onboarding_thread_id``.
@@ -31,8 +40,8 @@ from ..schemas.head_coach_view import HeadCoachView
 _MODEL_CHAT = "claude-sonnet-4-6"
 _MAX_TOKENS = 1024
 
-# D7 covers blocs 1-3; D8 will extend to 6
-_MAX_BLOCK_D7 = 3
+# Total onboarding blocks (D7: 1-3, D8: 4-6)
+_MAX_BLOCK = 6
 
 
 # ─── Thread state ─────────────────────────────────────────────────────────────
@@ -68,6 +77,19 @@ _BLOCK_INSTRUCTIONS: dict[int, str] = {
         "Demande l'objectif principal de l'athlète et l'horizon temporel "
         "(ex: finir un semi-marathon en 6 mois). Sois précis et direct."
     ),
+    4: (
+        "Collecte l'historique sportif et les disciplines actives de l'athlète : "
+        "années de pratique, compétitions passées, sports actuellement pratiqués."
+    ),
+    5: (
+        "Recueille les préférences d'entraînement : méthodologie (ex: DUP, linéaire), "
+        "fréquence souhaitée par discipline, contraintes horaires. "
+        "Si l'athlète fait de la musculation, demande les préférences de périodisation."
+    ),
+    6: (
+        "Présente un résumé du scope convenu (disciplines, objectif, méthodologie). "
+        "Demande confirmation avant de lancer la génération du plan de base."
+    ),
 }
 
 # Key used to store each block's response in collected_data
@@ -75,6 +97,9 @@ _BLOCK_DATA_KEYS: dict[int, str] = {
     1: "intro_response",
     2: "basic_profile",
     3: "goal_and_horizon",
+    4: "sport_history",
+    5: "methodology_preferences",
+    6: "scope_confirmation",
 }
 
 
@@ -222,14 +247,18 @@ def run_onboarding_respond(
 
     next_block = state.current_block + 1
 
-    if next_block > _MAX_BLOCK_D7:
+    if next_block > _MAX_BLOCK:
+        # Handoff: bloc 6 confirmed → transition to baseline_pending_confirmation
         state.status = "completed"
         state.current_block = next_block
+        athlete.journey_phase = "baseline_pending_confirmation"
+        db.commit()
         return {
             "thread_id": thread_id,
             "current_block": next_block,
             "question": None,
             "status": "completed",
+            "journey_phase": "baseline_pending_confirmation",
             "collected_data": dict(state.collected_data),
         }
 
@@ -243,3 +272,74 @@ def run_onboarding_respond(
         "status": "in_progress",
         "collected_data": dict(state.collected_data),
     }
+
+
+# ─── Injury mid-onboarding (DEP-C3-003) ──────────────────────────────────────
+
+
+def suspend_onboarding_for_injury(thread_id: str, db: Any) -> None:
+    """Suspend current onboarding session due to an injury event.
+
+    Stores the current block number on the athlete record as
+    ``suspended_onboarding_block`` so recovery_takeover can hand back
+    control to the correct block afterward (DEP-C3-003).
+
+    Args:
+        thread_id: Active onboarding thread identifier.
+        db: SQLAlchemy session.
+    """
+    if thread_id not in _thread_states:
+        return  # thread not found — no-op
+
+    state = _thread_states[thread_id]
+    athlete = _get_athlete(state.athlete_id, db)
+    # suspended_onboarding_block may not be a DB column yet — set via object attr
+    object.__setattr__(athlete, "suspended_onboarding_block", state.current_block)
+    state.status = "suspended"
+    db.commit()
+
+
+def resume_onboarding_after_recovery(
+    athlete_id: str,
+    db: Any,
+) -> dict[str, Any] | None:
+    """Resume a suspended onboarding session after a recovery takeover.
+
+    Called by CoordinatorService when ``previous_journey_phase == "onboarding"``.
+    If ``suspended_onboarding_block`` is set, resumes at that block.
+    If not set (injury happened from another phase), returns None — caller
+    should route to baseline_pending_confirmation instead.
+
+    Args:
+        athlete_id: Athlete identifier.
+        db: SQLAlchemy session.
+
+    Returns:
+        Block response dict if resumed, or None if no suspended block.
+    """
+    athlete = _get_athlete(athlete_id, db)
+    suspended_block: int | None = getattr(athlete, "suspended_onboarding_block", None)
+
+    if suspended_block is None:
+        return None
+
+    thread_id: str | None = getattr(athlete, "active_onboarding_thread_id", None)
+
+    if thread_id and thread_id in _thread_states:
+        state = _thread_states[thread_id]
+        state.current_block = suspended_block
+        state.status = "in_progress"
+        object.__setattr__(athlete, "suspended_onboarding_block", None)
+        db.commit()
+
+        view = build_head_coach_view(athlete)
+        question = _block_question(suspended_block, view)
+        return {
+            "thread_id": thread_id,
+            "current_block": suspended_block,
+            "question": question,
+            "status": "in_progress",
+            "collected_data": dict(state.collected_data),
+        }
+
+    return None
