@@ -82,6 +82,21 @@ Open:
 - Third test run was in background at session end — expected to show 2430 passed (consistent with runs 1 and 2).
 
 ## 2026-04-16 [saved]
+Goal: Session FE-MOBILE-1 — Expo SDK 55 + NativeWind v5 + Expo Router + ui-mobile base.
+Decisions:
+- NativeWind v5 babel: NO `jsxImportSource: "nativewind"` — v4 pattern, removed in v5 (task spec was outdated).
+- `withNativeWind(config)` no `{ input }` option — doesn't exist in v5 API.
+- `useSafeAreaInsets` hook instead of `SafeAreaView` component — React 19 JSX type incompatibility.
+- `Icon.tsx` is sole lucide-react-native importer; dual API: `Icon.Heart` (object) + `<IconComponent name>`.
+- SDK 53 = RN 0.79.6 / React 19.0; SDK 54 = RN 0.81.5; SDK 55 = RN 0.83.4 / React 19.2.4.
+Rejected:
+- `@types/react-native` — deprecated since RN 0.73, built-in types; remove from all packages.
+- `jsxImportSource: "nativewind"` in babel — NativeWind v5 breaks with it.
+Open:
+- Web build `@ts-expect-error ReactNode` fail (pre-existing on main — ThemeProvider web).
+- NativeWind v5 preview untested on real device — validate in FE-MOBILE-2.
+
+## 2026-04-16 [saved]
 Goal: Implement V3-X Apple Health XML import — streaming parser + daily aggregation + endpoint.
 Decisions:
 - SDNN (Apple Health) and RMSSD (Terra) stored in separate fields — `hrv_sdnn` vs `hrv_rmssd` — not interchangeable numerically.
@@ -196,3 +211,139 @@ Rejected:
 - Prose summary of EXERCISE_MUSCLE_MAP — verbatim copy only (drift risk, same rule as previous sessions)
 Open:
 - `docs/backend/INTEGRATIONS.md.backup` still on disk — can delete once user confirms
+
+## 2026-04-17 [saved] [superseded by 2026-04-18 — NativeTabs replaced, SDK 54 compat]
+Goal: FE-HOME-POLISH-NATIVETABS — 4 visual fixes + NativeTabs liquid glass migration
+Decisions:
+- MetricRow colors are now state-based (green→ok, yellow→warn, red→zoneRed) not hardcoded per metric type
+- Label 'Récup.' renamed to 'Strain' — technical sport science term preserved in English per design decision
+- SessionCard: removed blue sport label row (separate accent-colored text), merged duration+zone into one meta line, zone badge now extracts 'Z1' from 'Zone 1 (60–74%)'
+- Mock stubs French titles: 'Easy Run Z1' → 'Course facile', 'Muscu — Upper Pull' → 'Musculation haut du corps'
+- NativeTabs migration: expo-router/unstable-native-tabs with SF Symbols + built-in web Radix UI fallback — no Platform.OS branch needed
+- Fix 4 (light mode) SKIPPED: ThemeProvider already uses useColorScheme() correctly
+- SF Symbols for tab bar: house/house.fill, heart/heart.fill, bolt/bolt.fill, person/person.fill
+Rejected:
+- Platform.OS fallback for web — not needed, NativeTabsView.web.js handles this inside expo-router
+Open:
+- NativeTabs not validated on physical iOS device — liquid glass blur effect untested on real hardware
+
+## 2026-04-18 [saved]
+Goal: COLOR-PURGE — amber canonical replaces blue+mauve in packages/ and apps/mobile/
+Decisions:
+- design-tokens/colors.ts: top-level accent/primary = #B8552E; shadcn.dark primary/ring = #D97A52; shadcn.light = #B8552E; RGB channels updated
+- brand/logo.tsx PRIMARY and BRAND.md: all #5b5fef refs → #B8552E; dark bg corrected #08080e → #131210
+- app.json splash backgroundColor → #131210 (warm near-black), not amber — surface not accent
+- UI-RULES-MOBILE.md deleted; frontend/UI-RULES.md is sole source of truth for design rules
+Rejected:
+- amber splash backgroundColor (#B8552E) — flash de marque incohérent, transition douce vers dark UI préférée
+Open:
+- apps/web/ still has #5b5fef (globals.css + energy/cycle) — hors scope, traitement séparé
+
+## 2026-04-18 [saved]
+Goal: UI mobile rework — Wave 1 primitives livréss, gate Expo Go en attente
+Decisions:
+- Lime (#C8FF4D) supprimé définitivement — amber (#B8552E/#D97A52) pour tous les CTAs y compris session
+- Space Grotesk 400/500/600/700 remplace Inter — _layout.tsx + typography.ts corrigés
+- Dark bg unifié #131210 pour V1 — variations contextuelles (#17171A, #161412, etc.) abandonnées
+- Tab bar 4 onglets: Accueil|Entraînement|Coach|Profil. Check-in hors tab → /check-in
+- zoneRed: #B64536 (terracotta, cohérent amber) remplace #ef4444 (rouge froid)
+- physio tokens ajoutés: physio.green/yellow/red light+dark — sémantique physiologique stricte
+Rejected:
+- 5e tab Métriques (V1) — drill-down depuis Home via tap anneau
+- Fond dark multi-valeurs — trop de complexité tokens pour V1
+Open:
+- Tests Wave 1 non écrits (Button/FloatingLabelInput/HeroNumber/ProgressSegments/SegmentedControl)
+- Gate Expo Go Wave 1 non encore validé — continuer Wave 2 après "OK"
+
+## 2026-04-18 [saved]
+Goal: Downgrade Expo SDK 55→54 for Expo Go physical device compat.
+Decisions:
+- SDK 54 uses same react@19.2, react-native@0.83.4, reanimated@4.2.1 as SDK 55 — no ecosystem downgrade needed.
+- expo-constants@~17.0.0 pinned explicitly — expo-router v4 peerDep not auto-resolved by expo install --fix.
+- NativeTabs (expo-router/unstable-native-tabs) replaced with standard Tabs + IconComponent — API is SDK 55 only, doesn't exist in expo-router v4. [CORRECTED 2026-04-19: NativeTabs IS available in expo-router v6 SDK 54 via unstable-native-tabs — see commit 3b02531]
+Rejected:
+- React 18 downgrade — unnecessary, SDK 54 uses React 19.
+- reanimated 3.x downgrade — unnecessary, SDK 54 supports reanimated 4.x.
+Open:
+- Gate Expo Go Wave 1: user must test /_debug/text-showcase + /_debug/inputs-showcase on device.
+
+## 2026-04-19 [saved]
+Goal: P1 Auth screens (login/signup/forgot-password) using Wave 1 primitives.
+Decisions:
+- FloatingLabelInput has no `style` prop — wrap in View for spacing (it extends TextInputProps with style omitted).
+- expo install --fix must run AFTER pnpm install with target SDK — running with old CLI version fixes for wrong SDK.
+- @types/react kept at ~19.2.0; expo wants ~19.1.x but 19.1 breaks react-native-svg class component types.
+- SDK 54 actual versions: react-native@0.81.5, expo-router@~6.0.23 (not v4 as initially assumed).
+Rejected:
+- Running expo install --fix before pnpm install — produces wrong version alignment.
+- NativeTabs for tab bar — SDK 55 only, not in expo-router v6. [CORRECTED 2026-04-19: this is wrong — NativeTabs available in SDK 54 expo-router v6 via unstable-native-tabs]
+Open:
+- P2 Onboarding or P3 Home Dashboard — next to implement.
+- Apple Sign In stub needs expo-apple-authentication integration.
+
+## 2026-04-19 [saved]
+Goal: P2 Onboarding — 5-step flow with slide animation.
+Decisions:
+- SlideInRight/SlideOutLeft reanimated layout animations on Animated.View key={step} — direction state drives forward/back variant.
+- SegmentedControl variant="accent" added for level selector (step 3) — accent bg on active pill.
+- CTA enabled logic per step: step1=firstName, step2=sports≥1, step3=all levels set, step4=objective≠-1.
+- /onboarding typed route not in generated types until expo start runs — use `as any` cast.
+Rejected:
+- Absolute positioning for CTA — flex layout + useSafeAreaInsets().bottom cleaner.
+- Fade instead of slide — SPEC explicitly says slide horizontal.
+Open:
+- P3 Home Dashboard rework next.
+
+## 2026-04-19 [saved]
+Goal: P6 polish — 6 bugs fixed post-iPhone test.
+Decisions:
+- NativeTabs IS available SDK 54 via expo-router/unstable-native-tabs — prior "SDK 55 only" notes were wrong. Confirmed by build dir + commit e2d1810. `Label` + `Icon` are separate imports, children of `NativeTabs.Trigger` (not sub-components).
+- `calendar.fill` invalid in sf-symbols 2.2 — use `calendar.circle` / `calendar.circle.fill`.
+- Rank drag: PanResponder + Animated.Value translateY (native driver). Swap = Math.round(dy / ROW_HEIGHT). Haptics.Light pickup, Haptics.Medium drop (only on swap). Spring reset to 0 after release.
+- Ring value 52px (first iteration) — confirmed too large at 72px on device; 52-60px range auto-allowed without new plan.
+Rejected:
+- draggable-flatlist v4 for rank drag — depends on reanimated worklets, same crash pattern as P2 onboarding.
+- `NativeTabs.Trigger.Label` / `.Icon` as sub-components — doesn't exist in the type.
+Open:
+- Expo Go test: 6 polish bugs to validate on iPhone.
+- Suppression candidats: MetricRow, SessionCard, CognitiveLoadDial, ReadinessStatusBadge.
+
+## 2026-04-19 [saved]
+Goal: Write merge-prep plan for chore/downgrade-sdk54 → main.
+Decisions:
+- Plan at docs/superpowers-optimized/plans/2026-04-19-merge-prep-chore-downgrade-sdk54.md — 5 tasks, user awaits GO.
+- Workspace `pnpm -w typecheck` covers web only — mobile check: `cd apps/mobile ; pnpm typecheck` (separate step).
+- .backup-* files are untracked, not committed — Step 3 adds them to .gitignore, no deletion needed.
+- state.md had uncommitted changes — plan commits it in Task 1 Step 2 before any audit.
+Rejected:
+- gh pr create execution — display only, user merges manually on GitHub.
+- Auto-merge or squash — explicitly forbidden.
+Open:
+- User GO pending — no execution started yet.
+- Expo Go iPhone test for P6 Polish #3 not yet confirmed.
+
+## 2026-04-19 [saved]
+Goal: Execute merge-prep plan — paused at Task 3 Step 6 awaiting user GO.
+Decisions:
+- Health checks: mobile typecheck ✅, web typecheck ⚠️ pré-existant (ThemeProvider.tsx L25, not touched by branch), lint 37 warnings 0 errors (pré-existants), pytest unit 790 passed ✅.
+- 0 backend files in diff → pytest non-blocking per plan rule.
+- Cleanup scan CLEAN: 0 console.log, 6 TODO all legitimate (backend wiring stubs), 0 backup committed, 0 secrets.
+- Only proposal: add *.backup-* and .expo/ to .gitignore.
+Rejected:
+- Removing any TODO comments — all are legitimate backend-wiring stubs.
+- Blocking on web typecheck error — pre-existing on main, file not touched by branch.
+Open:
+- Awaiting user GO for .gitignore update → then Task 4 (CHANGELOG) → Task 5 (PR template + push).
+- Today's Session confirmed placeholder: route /session/live does not exist.
+
+## 2026-04-19 [saved]
+Goal: Merge prep chore/downgrade-sdk54 — all 5 tasks complete.
+Decisions:
+- Merge prep complete: .gitignore updated, CHANGELOG created, CLAUDE.md updated, PR template created, branch pushed.
+- web typecheck error (ThemeProvider.tsx L25 @ts-expect-error) = pre-existing on main, non-blocking.
+- pytest 2430 passed — confirmed frozen backend untouched by branch.
+- 6 TODO comments kept — all legitimate backend-wiring stubs, not debug artifacts.
+Rejected:
+- Removing TODO comments — backend wiring stubs are expected and documented.
+Open:
+- PR not yet created — user runs: gh pr create --base main --head chore/downgrade-sdk54 --title "feat(mobile): UI rework P1-P6 — 5 pages Expo SDK 54 (mocks only)" --body-file .github/pull_request_templates/ui-mobile-rework.md

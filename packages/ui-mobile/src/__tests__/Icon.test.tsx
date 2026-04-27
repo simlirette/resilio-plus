@@ -9,7 +9,7 @@ describe('Icon (object pattern)', () => {
   });
 
   it('renders Icon.Activity without crash', () => {
-    const { getByTestId } = render(<Icon.Activity size={16} color="#5b5fef" />);
+    const { getByTestId } = render(<Icon.Activity size={16} color="#B8552E" />);
     expect(getByTestId('mock-icon')).toBeTruthy();
   });
 

@@ -88,7 +88,7 @@ export const mockHomeDataGreen: HomeData = {
   todaysSessions: [
     {
       sport: 'running',
-      title: 'Easy Run Z1',
+      title: 'Course facile',
       duration_min: 45,
       zone: 'Zone 1 (60–74% FCmax)',
       is_rest_day: false,
@@ -126,7 +126,7 @@ export const mockHomeDataYellow: HomeData = {
   todaysSessions: [
     {
       sport: 'lifting',
-      title: 'Muscu — Upper Pull',
+      title: 'Musculation haut du corps',
       duration_min: 50,
       zone: 'MEV — volume modéré',
       is_rest_day: false,

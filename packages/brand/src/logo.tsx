@@ -15,13 +15,13 @@ const sizeMap: Record<LogoSize, { fontSize: string; lineHeight: string }> = {
   lg: { fontSize: '1.25rem', lineHeight: '1.75rem' },    // text-xl
 };
 
-const PRIMARY = '#5b5fef';
+const PRIMARY = '#B8552E';
 const WORDMARK_DARK = '#eeeef4';
 const WORDMARK_LIGHT = '#0f0f18';
 
 /**
  * Resilio+ wordmark component (React / web).
- * "RESILIO" in foreground color, "+" in primary accent (#5b5fef).
+ * "RESILIO" in foreground color, "+" in primary accent (#B8552E).
  */
 export function Logo({ size = 'md', mode = 'dark', className }: LogoProps) {
   const { fontSize, lineHeight } = sizeMap[size];

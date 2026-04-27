@@ -1,60 +1,42 @@
-import { Tabs } from 'expo-router';
-import { useTheme, Icon } from '@resilio/ui-mobile';
+import { NativeTabs, Label, Icon } from 'expo-router/unstable-native-tabs';
 import { colors } from '@resilio/design-tokens';
 
+/**
+ * Tab bar layout using NativeTabs (expo-router/unstable-native-tabs).
+ * iOS: UITabBarController with liquid glass (systemChromeMaterial blur).
+ * Android: Material 3 bottom navigation.
+ * Web: Radix UI tabs fallback (built into expo-router).
+ *
+ * SF Symbols: tab bar only (exception to Lucide-only rule — native iOS integration).
+ * Label + Icon are children of NativeTabs.Trigger (not sub-components).
+ * tintColor: colors.accent (amber). Confirmed on SDK 54 (see commit e2d1810).
+ * 0 hex inline: all colors via design-tokens.
+ */
 export default function TabsLayout() {
-  const { colorMode } = useTheme();
-  const themeColors = colorMode === 'dark' ? colors.dark : colors.light;
-
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: {
-          backgroundColor: themeColors.surface1,
-          borderTopColor: themeColors.border,
-          borderTopWidth: 1,
-        },
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: themeColors.textMuted,
-      }}
+    <NativeTabs
+      tintColor={colors.accent}
+      blurEffect="systemChromeMaterial"
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Accueil',
-          tabBarIcon: ({ color, size }: { color: string; size: number }) => (
-            <Icon.Activity color={color} size={size} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="check-in"
-        options={{
-          title: 'Check-in',
-          tabBarIcon: ({ color, size }: { color: string; size: number }) => (
-            <Icon.Heart color={color} size={size} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="chat"
-        options={{
-          title: 'Coach',
-          tabBarIcon: ({ color, size }: { color: string; size: number }) => (
-            <Icon.Energy color={color} size={size} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profil',
-          tabBarIcon: ({ color, size }: { color: string; size: number }) => (
-            <Icon.User color={color} size={size} />
-          ),
-        }}
-      />
-    </Tabs>
+      <NativeTabs.Trigger name="index">
+        <Label>Accueil</Label>
+        <Icon sf={{ default: 'house', selected: 'house.fill' }} />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="training">
+        <Label>Entraînement</Label>
+        <Icon sf={{ default: 'calendar.circle', selected: 'calendar.circle.fill' }} />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="chat">
+        <Label>Coach</Label>
+        <Icon sf={{ default: 'message', selected: 'message.fill' }} />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="profile">
+        <Label>Profil</Label>
+        <Icon sf={{ default: 'person', selected: 'person.fill' }} />
+      </NativeTabs.Trigger>
+    </NativeTabs>
   );
 }

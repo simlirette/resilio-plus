@@ -5,7 +5,6 @@ import { Text } from './Text';
 import { IconComponent } from '../Icon';
 import type { IconName } from '../Icon';
 import { useTheme } from '../theme/ThemeProvider';
-import { colors } from '@resilio/design-tokens';
 
 /**
  * Sport types must match WorkoutSlotStub.sport from apps/mobile/src/mocks/athlete-home-stub.ts
@@ -41,15 +40,11 @@ function SportIcon({ sport, color }: { sport: SportType; color: string }): React
   return <IconComponent name={name} size={16} color={color} />;
 }
 
-function sportLabel(sport: SportType): string {
-  switch (sport) {
-    case 'running':  return 'Course';
-    case 'lifting':  return 'Musculation';
-    case 'swimming': return 'Natation';
-    case 'cycling':  return 'Vélo';
-    case 'rest':     return 'Repos';
-    default:         return 'Séance';
-  }
+/** Extract short zone badge: "Zone 1 (60–74% FCmax)" → "Z1", "MEV — volume modéré" → "MEV" */
+function zoneBadge(zone: string): string {
+  const match = zone.match(/[Zz]one\s+(\d+)/);
+  if (match) return `Z${match[1]}`;
+  return zone.split(/[\s—]+/)[0] ?? zone.substring(0, 5);
 }
 
 export function SessionCard({ session }: SessionCardProps): React.JSX.Element {
@@ -93,24 +88,17 @@ export function SessionCard({ session }: SessionCardProps): React.JSX.Element {
       <View style={styles.row}>
         {/* Left content */}
         <View style={styles.leftContent}>
-          {/* Label row: SÉANCE DU JOUR + zone badge */}
+          {/* Label row: icon + SÉANCE DU JOUR + zone badge */}
           <View style={styles.labelRow}>
+            <SportIcon sport={session.sport} color={themeColors.textMuted} />
             <Text variant="label" color={themeColors.textMuted} style={styles.sectionLabel}>
               Séance du jour
             </Text>
             <View style={[styles.zoneBadge, { backgroundColor: themeColors.surface2 }]}>
               <Text variant="label" color={themeColors.textSecondary} style={styles.zoneText}>
-                {session.zone.split(' ')[0]}
+                {zoneBadge(session.zone)}
               </Text>
             </View>
-          </View>
-
-          {/* Sport label */}
-          <View style={styles.sportRow}>
-            <SportIcon sport={session.sport} color={themeColors.textMuted} />
-            <Text variant="caption" color={colors.accent} style={styles.sportLabelText}>
-              {sportLabel(session.sport)}
-            </Text>
           </View>
 
           {/* Session title */}
@@ -118,12 +106,9 @@ export function SessionCard({ session }: SessionCardProps): React.JSX.Element {
             {session.title}
           </Text>
 
-          {/* Duration + zone details */}
-          <Text variant="secondary" color={themeColors.textSecondary} style={styles.details}>
-            {session.duration_min} min
-          </Text>
-          <Text variant="secondary" color={themeColors.textSecondary} numberOfLines={1}>
-            {session.zone}
+          {/* Meta: duration · zone on one line */}
+          <Text variant="secondary" color={themeColors.textSecondary} numberOfLines={1} style={styles.meta}>
+            {session.duration_min} min · {session.zone}
           </Text>
         </View>
 
@@ -144,10 +129,8 @@ const styles = StyleSheet.create({
   sectionLabel: { textTransform: 'uppercase' },
   zoneBadge: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 4 },
   zoneText: { textTransform: 'uppercase' },
-  sportRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
-  sportLabelText: { fontFamily: 'Inter_600SemiBold', fontSize: 12, letterSpacing: 0.1, color: colors.accent },
-  title: { fontFamily: 'Inter_500Medium', fontSize: 17, letterSpacing: -0.3, lineHeight: 21, marginBottom: 6 },
-  details: { marginBottom: 2 },
+  title: { fontFamily: 'SpaceGrotesk_500Medium', fontSize: 17, letterSpacing: -0.3, lineHeight: 21, marginBottom: 6 },
+  meta: { marginBottom: 2 },
   restText: { marginTop: 2 },
   chevronCircle: {
     width: 36, height: 36, borderRadius: 18,

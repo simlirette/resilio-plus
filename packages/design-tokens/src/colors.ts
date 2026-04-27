@@ -6,14 +6,25 @@
  */
 
 export const colors = {
-  // ── Accent (default: Clinical Blue) ─────────────────────────────────────
-  accent: '#3B74C9',
-  accentDim: 'rgba(59,116,201,0.20)',
+  // ── Accent (Amber/Terracotta — canonical) ───────────────────────────────
+  accent: '#B8552E',        // light mode
+  accentDark: '#D97A52',    // dark mode
+  accentDim: 'rgba(184,85,46,0.20)',
+  accentText: '#FAFAF7',     // text on accent bg (both modes)
+  accentTextDark: '#161412', // text on accent bg when dark mode accent is used
 
   // Legacy alias — keep so existing imports of colors.primary still compile
-  primary: '#3B74C9',
+  primary: '#B8552E',
   primaryForeground: '#ffffff',
-  primaryDim: 'rgba(59,116,201,0.15)',
+  primaryDim: 'rgba(184,85,46,0.15)',
+
+  // ── Physiological semantic (Readiness / Strain / Sleep ONLY) ────────────
+  // Never use these on UI chrome (buttons, cards, labels unrelated to physio)
+  physio: {
+    green:  { light: '#3F8A4A', dark: '#8FCB82' },
+    yellow: { light: '#B8863A', dark: '#E8C86A' },  // light = amber reused
+    red:    { light: '#B64536', dark: '#E27A6F' },
+  },
 
   // ── Semantic status ──────────────────────────────────────────────────────
   // Zone colors (legacy aliases for training-zone logic — not for UI chrome)
@@ -21,16 +32,16 @@ export const colors = {
   zoneGreenBg: 'rgba(107,146,89,0.12)',
   zoneYellow: '#B8863A',
   zoneYellowBg: 'rgba(184,134,58,0.12)',
-  zoneRed: '#ef4444',
-  zoneRedBg: 'rgba(239,68,68,0.10)',
-  zoneCritical: '#dc2626',
+  zoneRed: '#B64536',               // terracotta warm (was #ef4444 cold red)
+  zoneRedBg: 'rgba(182,69,54,0.10)',
+  zoneCritical: '#9C3020',
 
   // RGB channels for alpha variants
-  primaryRgb: '59, 116, 201',
+  primaryRgb: '184, 85, 46',
   zoneGreenRgb: '107, 146, 89',
   zoneYellowRgb: '184, 134, 58',
-  zoneRedRgb: '239, 68, 68',
-  zoneCriticalRgb: '220, 38, 38',
+  zoneRedRgb: '182, 69, 54',
+  zoneCriticalRgb: '156, 48, 32',
   phaseLutealRgb: '129, 140, 248',
 
   // ── Cycle phase colors ───────────────────────────────────────────────────
@@ -85,14 +96,14 @@ export const colors = {
       muted: '#232120',
       mutedForeground: 'rgba(237,233,226,0.38)',
       border: 'rgba(237,233,226,0.08)',
-      primary: '#3B74C9',
+      primary: '#D97A52',
       primaryForeground: '#ffffff',
       secondary: '#232120',
       secondaryForeground: 'rgba(237,233,226,0.62)',
       destructive: '#ef4444',
       destructiveForeground: '#ffffff',
       input: '#232120',
-      ring: '#3B74C9',
+      ring: '#D97A52',
     },
     light: {
       background: '#F7F4EE',
@@ -102,14 +113,14 @@ export const colors = {
       muted: '#F3EFE8',
       mutedForeground: 'rgba(43,40,36,0.38)',
       border: 'rgba(43,40,36,0.08)',
-      primary: '#3B74C9',
+      primary: '#B8552E',
       primaryForeground: '#ffffff',
       secondary: '#F3EFE8',
       secondaryForeground: 'rgba(43,40,36,0.62)',
       destructive: '#ef4444',
       destructiveForeground: '#ffffff',
       input: '#F3EFE8',
-      ring: '#3B74C9',
+      ring: '#B8552E',
     },
   },
 } as const;

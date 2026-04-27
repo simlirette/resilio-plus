@@ -14,7 +14,7 @@ This package mirrors `@resilio/ui-web` for React Native. It provides:
 
 ```tsx
 import { Icon } from '@resilio/ui-mobile';
-// <Icon.DarkMode size={24} color="#5b5fef" />
+// <Icon.DarkMode size={24} color="#B8552E" />
 ```
 
 ## What's missing

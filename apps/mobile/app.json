@@ -4,24 +4,19 @@
     "slug": "resilio-plus",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "scheme": "resilio",
     "userInterfaceStyle": "automatic",
+    "sdkVersion": "54.0.0",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#5b5fef"
+      "backgroundColor": "#131210"
     },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.resilio.plus"
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#5b5fef"
-      },
       "package": "com.resilio.plus"
     },
     "web": {
@@ -39,8 +34,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#5b5fef",
-          "image": "./assets/splash.png",
+          "backgroundColor": "#131210",
           "resizeMode": "contain"
         }
       ],

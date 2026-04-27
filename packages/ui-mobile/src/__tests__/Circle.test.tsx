@@ -48,7 +48,7 @@ describe('Circle', () => {
 
   it('renders without label (no crash)', () => {
     expect(() =>
-      renderWithTheme(<Circle value={60} color="#5b5fef" />)
+      renderWithTheme(<Circle value={60} color="#B8552E" />)
     ).not.toThrow();
   });
 

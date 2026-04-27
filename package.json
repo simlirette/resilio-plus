@@ -25,5 +25,13 @@
     "concurrently": "^9.0.0",
     "wait-on": "^8.0.0"
   },
+  "pnpm": {
+    "overrides": {
+      "lightningcss": "1.28.2",
+      "react": "19.1.0",
+      "react-dom": "19.1.0",
+      "react-native-svg": "15.12.1"
+    }
+  },
   "packageManager": "pnpm@10.33.0"
 }

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resilio+ — Head Coach chat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; font-family: 'Space Grotesk', -apple-system, system-ui, sans-serif; }
+  body {
+    min-height: 100vh;
+    background: #E8E4DC;
+    background:
+      radial-gradient(1200px 700px at 50% 40%, #EFEBE2 0%, #DDD7CC 100%);
+    display: flex; align-items: center; justify-content: center;
+    padding: 40px 24px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .stage {
+    display: flex; gap: 56px; align-items: center; justify-content: center;
+    flex-wrap: wrap;
+  }
+  .frame-label {
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: #6B645A;
+    font-weight: 500;
+    margin-bottom: 14px;
+  }
+  @keyframes coachDot {
+    0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+    30% { opacity: 0.9; transform: translateY(-2px); }
+  }
+
+  /* Tweaks panel */
+  .tweaks {
+    position: fixed; right: 16px; bottom: 16px;
+    background: #FBFBF9;
+    border: 1px solid rgba(40,32,20,0.14);
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    z-index: 100;
+    display: none;
+    min-width: 200px;
+  }
+  .tweaks.active { display: block; }
+  .tweaks-title {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1.2px;
+    color: #6B645A; margin-bottom: 10px;
+  }
+  .tweak-label {
+    font-size: 11px; color: #6B645A;
+    margin: 10px 0 6px; letter-spacing: 0.3px;
+  }
+  .tweak-row { display: flex; gap: 6px; }
+  .tweak-btn {
+    flex: 1;
+    background: #fff;
+    border: 1px solid rgba(40,32,20,0.12);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-family: inherit;
+    font-size: 12px;
+    color: #1A1612;
+    cursor: pointer;
+    text-transform: capitalize;
+  }
+  .tweak-btn.on {
+    background: #B8552E;
+    border-color: #B8552E;
+    color: #FBFBF9;
+  }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+  <div class="tweaks" id="tweaks">
+    <div class="tweaks-title">Tweaks</div>
+    <div class="tweak-label">Mode</div>
+    <div class="tweak-row" id="mode-row">
+      <button class="tweak-btn" data-mode="light">light</button>
+      <button class="tweak-btn" data-mode="dark">dark</button>
+      <button class="tweak-btn" data-mode="both">both</button>
+    </div>
+    <div class="tweak-label">Scénario</div>
+    <div class="tweak-row" id="scen-row">
+      <button class="tweak-btn" data-scen="hrv">HRV</button>
+      <button class="tweak-btn" data-scen="week">Semaine</button>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="ios-frame.jsx"></script>
+  <script type="text/babel" src="hitl-sheet.jsx"></script>
+  <script type="text/babel" src="coach-chat.jsx"></script>
+  <script type="text/babel">
+    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "mode": "both",
+      "scenario": "hrv"
+    }/*EDITMODE-END*/;
+
+    // Phone frame (no nav bar, no keyboard — chat provides its own)
+    function Phone({ dark, children }) {
+      return (
+        <div data-screen-label={dark ? 'Chat Dark' : 'Chat Light'}>
+          <IOSDevice width={390} height={844} dark={dark}>
+            <div style={{
+              position: 'absolute', inset: 0,
+              paddingTop: 54, // status bar height
+              display: 'flex', flexDirection: 'column',
+            }}>
+              {children}
+            </div>
+          </IOSDevice>
+        </div>
+      );
+    }
+
+    function App() {
+      const [mode, setMode] = React.useState(TWEAK_DEFAULTS.mode || 'both');
+      const [scenario, setScenario] = React.useState(TWEAK_DEFAULTS.scenario || 'hrv');
+      const [tweaksOpen, setTweaksOpen] = React.useState(false);
+
+      // key bumps force re-mount so scenario toggle resets chat state
+      const [keyBump, setKeyBump] = React.useState(0);
+
+      React.useEffect(() => {
+        const onMsg = (e) => {
+          const d = e.data || {};
+          if (d.type === '__activate_edit_mode') setTweaksOpen(true);
+          if (d.type === '__deactivate_edit_mode') setTweaksOpen(false);
+        };
+        window.addEventListener('message', onMsg);
+        window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+        return () => window.removeEventListener('message', onMsg);
+      }, []);
+
+      React.useEffect(() => {
+        const panel = document.getElementById('tweaks');
+        if (panel) panel.classList.toggle('active', tweaksOpen);
+
+        // button states
+        document.querySelectorAll('#mode-row .tweak-btn').forEach(b => {
+          b.classList.toggle('on', b.dataset.mode === mode);
+          b.onclick = () => {
+            setMode(b.dataset.mode);
+            window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { mode: b.dataset.mode } }, '*');
+          };
+        });
+        document.querySelectorAll('#scen-row .tweak-btn').forEach(b => {
+          b.classList.toggle('on', b.dataset.scen === scenario);
+          b.onclick = () => {
+            setScenario(b.dataset.scen);
+            setKeyBump(k => k + 1);
+            window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { scenario: b.dataset.scen } }, '*');
+          };
+        });
+      }, [tweaksOpen, mode, scenario]);
+
+      const frames = [];
+      if (mode === 'light' || mode === 'both') {
+        frames.push(
+          <div key="light">
+            <div className="frame-label" style={{ color: '#6B645A' }}>Light</div>
+            <Phone dark={false}>
+              <CoachChat key={'l' + keyBump + scenario} dark={false} initialScenario={scenario} />
+            </Phone>
+          </div>
+        );
+      }
+      if (mode === 'dark' || mode === 'both') {
+        frames.push(
+          <div key="dark">
+            <div className="frame-label" style={{ color: '#6B645A' }}>Dark</div>
+            <Phone dark={true}>
+              <CoachChat key={'d' + keyBump + scenario} dark={true} initialScenario={scenario} />
+            </Phone>
+          </div>
+        );
+      }
+
+      return <div className="stage">{frames}</div>;
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

@@ -10,10 +10,10 @@ module.exports = {
     extend: {
       colors: {
         // Source: @resilio/design-tokens/src/colors.ts v2
-        // Accent
-        accent: '#3B74C9',
-        primary: '#3B74C9',
-        'primary-dim': 'rgba(59,116,201,0.15)',
+        // Accent (Amber/Terracotta — canonical, light mode value)
+        accent: '#B8552E',
+        primary: '#B8552E',
+        'primary-dim': 'rgba(184,85,46,0.15)',
         // Semantic zone (training logic — not UI chrome)
         'zone-green': '#6B9259',
         'zone-yellow': '#B8863A',

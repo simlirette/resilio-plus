@@ -263,3 +263,7 @@ scripts/*
 context-snapshot.json
 session-log.md
 state.md
+
+# Dev session backup files
+*.backup-*
+.expo/

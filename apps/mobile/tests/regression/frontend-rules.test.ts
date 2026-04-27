@@ -64,7 +64,7 @@ describe('Rule 3 — No hardcoded hex in apps/mobile/app/**/*.tsx', () => {
   const screenFiles = collectFiles(MOBILE_APP).filter((f) => f.endsWith('.tsx'));
   const HEX_PATTERN = /#[0-9a-fA-F]{3,8}/;
   // Acceptable: hex in comments, in string literals for testing, in known UI-RULES reference
-  // NOT acceptable: color="#fff", color="#5b5fef", '#08080e' in style objects
+  // NOT acceptable: color="#fff", color="#3B74C9", '#08080e' in style objects
 
   it('warns on hardcoded hex in screen files (informational)', () => {
     const violations: { file: string; line: number; content: string }[] = [];
