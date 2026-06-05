@@ -84,26 +84,21 @@ class GoogleCalendarSettings(BaseModel):
     calendar_name: str = "Resilio Training"
     sync_weeks_ahead: int = 2
 
-    # Default start times by workout type (HH:MM local)
-    default_times: dict = Field(
+    # Start time per day of week (0=Mon … 6=Sun). "allday" = all-day event.
+    # am=09:00  pm=13:00  soir=19:00
+    day_times: dict = Field(
         default_factory=lambda: {
-            "easy": "06:30",
-            "tempo": "06:30",
-            "intervals": "06:30",
-            "fartlek": "06:30",
-            "strides": "06:30",
-            "long_run_weekday": "06:30",
-            "long_run_weekend": "08:00",
-            "race": "08:00",
-            "rest": "allday",
-            "legs": "18:00",
-            "upper": "18:00",
-            "chest_back": "18:00",
-            "arms": "18:00",
+            "0": "19:00",   # Monday   — soir
+            "1": "19:00",   # Tuesday  — soir
+            "2": "19:00",   # Wednesday — soir
+            "3": "allday",  # Thursday  — all-day
+            "4": "19:00",   # Friday   — soir
+            "5": "allday",  # Saturday  — all-day
+            "6": "allday",  # Sunday   — all-day
         }
     )
 
-    # Reminder minutes before event (0 = no reminder)
+    # Reminder minutes before timed events (all-day events: no popup)
     reminders: dict = Field(
         default_factory=lambda: {
             "easy": 30,

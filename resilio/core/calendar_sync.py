@@ -189,6 +189,49 @@ def _strength_title(sess: StrengthSession) -> str:
     return f"🏋️ {label}"
 
 
+def _day_time(day_of_week: int, settings: GoogleCalendarSettings) -> str:
+    """Return start time string or 'allday' for the given weekday (0=Mon)."""
+    return settings.day_times.get(str(day_of_week), "19:00")
+
+
+def _allday_event(summary: str, description: str, event_date: date, uid: str) -> dict:
+    return {
+        "summary": summary,
+        "description": description,
+        "start": {"date": event_date.isoformat()},
+        "end": {"date": (event_date + timedelta(days=1)).isoformat()},
+        "reminders": {"useDefault": False, "overrides": []},
+        "extendedProperties": {
+            "private": {"resilio_managed": MANAGED_MARKER, "resilio_uid": uid}
+        },
+    }
+
+
+def _timed_event(
+    summary: str,
+    description: str,
+    event_date: date,
+    start_time: str,
+    duration_min: int,
+    reminder_min: int,
+    uid: str,
+    timezone: str,
+    tz_offset: str,
+) -> dict:
+    end_dt = datetime.strptime(start_time, "%H:%M") + timedelta(minutes=duration_min)
+    end_time = end_dt.strftime("%H:%M")
+    return {
+        "summary": summary,
+        "description": description,
+        "start": {"dateTime": _rfc3339(event_date, start_time, tz_offset), "timeZone": timezone},
+        "end": {"dateTime": _rfc3339(event_date, end_time, tz_offset), "timeZone": timezone},
+        "reminders": {"useDefault": False, "overrides": _reminder_override(reminder_min)},
+        "extendedProperties": {
+            "private": {"resilio_managed": MANAGED_MARKER, "resilio_uid": uid}
+        },
+    }
+
+
 def build_run_event(
     workout: WorkoutPrescription,
     week: WeekPlan,
@@ -198,48 +241,23 @@ def build_run_event(
     """Build Google Calendar event dict for a run workout."""
     wtype = getattr(workout.workout_type, "value", workout.workout_type)
     uid = _resilio_uid(workout.date, wtype, workout.week_number)
+    summary = _run_title(workout)
+    description = _run_description(workout)
 
+    # REST always all-day; all other runs follow day_times
     if wtype == WorkoutType.REST.value:
-        # All-day event
-        return {
-            "summary": _run_title(workout),
-            "description": _run_description(workout),
-            "start": {"date": workout.date.isoformat()},
-            "end": {"date": (workout.date + timedelta(days=1)).isoformat()},
-            "reminders": {"useDefault": False, "overrides": []},
-            "extendedProperties": {
-                "private": {"resilio_managed": MANAGED_MARKER, "resilio_uid": uid}
-            },
-        }
+        return _allday_event(summary, description, workout.date, uid)
 
-    # Timed event
-    is_weekend = workout.date.weekday() >= 5  # Sat=5, Sun=6
-    if wtype == WorkoutType.LONG_RUN.value:
-        time_key = "long_run_weekend" if is_weekend else "long_run_weekday"
-    else:
-        time_key = wtype
-    start_time = settings.default_times.get(time_key, "06:30")
+    start_time = _day_time(workout.day_of_week, settings)
+    if start_time == "allday":
+        return _allday_event(summary, description, workout.date, uid)
 
-    # Estimate duration from workout
-    duration_min = workout.duration_minutes or 30
-    end_dt = datetime.strptime(start_time, "%H:%M") + timedelta(minutes=duration_min)
-    end_time = end_dt.strftime("%H:%M")
+    reminder_key = "long_run" if wtype == WorkoutType.LONG_RUN.value else wtype
+    reminder_min = settings.reminders.get(reminder_key, settings.reminders.get("easy", 30))
+    duration_min = workout.duration_minutes or 45
 
-    reminder_key = wtype if wtype in settings.reminders else (
-        "long_run" if wtype == WorkoutType.LONG_RUN.value else "easy"
-    )
-    reminder_min = settings.reminders.get(reminder_key, 30)
-
-    return {
-        "summary": _run_title(workout),
-        "description": _run_description(workout),
-        "start": {"dateTime": _rfc3339(workout.date, start_time, tz_offset), "timeZone": settings.timezone},
-        "end": {"dateTime": _rfc3339(workout.date, end_time, tz_offset), "timeZone": settings.timezone},
-        "reminders": {"useDefault": False, "overrides": _reminder_override(reminder_min)},
-        "extendedProperties": {
-            "private": {"resilio_managed": MANAGED_MARKER, "resilio_uid": uid}
-        },
-    }
+    return _timed_event(summary, description, workout.date, start_time,
+                        duration_min, reminder_min, uid, settings.timezone, tz_offset)
 
 
 def build_strength_event(
@@ -250,22 +268,16 @@ def build_strength_event(
     """Build Google Calendar event dict for a strength session."""
     stype = getattr(sess.session_type, "value", sess.session_type)
     uid = _resilio_uid(sess.date, stype, sess.week_number)
+    summary = _strength_title(sess)
+    description = "Voir Hevy pour le détail"
 
-    start_time = sess.time_of_day or settings.default_times.get(stype, "18:00")
-    end_dt = datetime.strptime(start_time, "%H:%M") + timedelta(minutes=sess.duration_minutes)
-    end_time = end_dt.strftime("%H:%M")
+    start_time = _day_time(sess.day_of_week, settings)
+    if start_time == "allday":
+        return _allday_event(summary, description, sess.date, uid)
+
     reminder_min = settings.reminders.get("strength", 30)
-
-    return {
-        "summary": _strength_title(sess),
-        "description": "Voir Hevy pour le détail",
-        "start": {"dateTime": _rfc3339(sess.date, start_time, tz_offset), "timeZone": settings.timezone},
-        "end": {"dateTime": _rfc3339(sess.date, end_time, tz_offset), "timeZone": settings.timezone},
-        "reminders": {"useDefault": False, "overrides": _reminder_override(reminder_min)},
-        "extendedProperties": {
-            "private": {"resilio_managed": MANAGED_MARKER, "resilio_uid": uid}
-        },
-    }
+    return _timed_event(summary, description, sess.date, start_time,
+                        sess.duration_minutes, reminder_min, uid, settings.timezone, tz_offset)
 
 
 def _event_fingerprint(event: dict) -> str:

@@ -132,18 +132,20 @@ class TestRunEventMapping:
         assert props["resilio_managed"] == "1"
         assert props["resilio_uid"].startswith("resilio-")
 
-    def test_long_run_weekend_time(self):
-        # Sunday = dow 6 → weekend time
+    def test_long_run_sunday_allday(self):
+        # Sunday (dow=6) → allday per day_times
         w = _workout("long_run", 6, 15.0)
         ev = build_run_event(w, _week([w]), SETTINGS)
-        start_time = ev["start"]["dateTime"].split("T")[1][:5]
-        assert start_time == SETTINGS.default_times["long_run_weekend"]
+        assert "date" in ev["start"]
+        assert "dateTime" not in ev["start"]
 
-    def test_long_run_weekday_time(self):
-        w = _workout("long_run", 0, 15.0)  # Monday
+    def test_easy_monday_timed(self):
+        # Monday (dow=0) → 19:00 timed event
+        w = _workout("easy", 0, 8.0)
         ev = build_run_event(w, _week([w]), SETTINGS)
+        assert "dateTime" in ev["start"]
         start_time = ev["start"]["dateTime"].split("T")[1][:5]
-        assert start_time == SETTINGS.default_times["long_run_weekday"]
+        assert start_time == "19:00"
 
 
 # ============================================================
@@ -177,11 +179,20 @@ class TestStrengthEventMapping:
         assert props["resilio_managed"] == "1"
         assert "arms" in props["resilio_uid"]
 
-    def test_default_evening_time(self):
+    def test_wednesday_evening_time(self):
+        # Wednesday (dow=2) → 19:00 timed
         s = _strength("upper", 2)
         ev = build_strength_event(s, SETTINGS)
+        assert "dateTime" in ev["start"]
         start_time = ev["start"]["dateTime"].split("T")[1][:5]
-        assert start_time == "18:00"
+        assert start_time == "19:00"
+
+    def test_saturday_allday(self):
+        # Saturday (dow=5) → all-day
+        s = _strength("chest_back", 5)
+        ev = build_strength_event(s, SETTINGS)
+        assert "date" in ev["start"]
+        assert "dateTime" not in ev["start"]
 
 
 # ============================================================
