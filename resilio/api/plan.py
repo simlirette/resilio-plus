@@ -926,6 +926,10 @@ def populate_plan_workouts(weeks_data: list[dict]) -> Union[MasterPlan, PlanErro
     for new_week in validated_weeks:
         existing_idx = next((i for i, w in enumerate(plan.weeks) if w.week_number == new_week.week_number), None)
         if existing_idx is not None:
+            # Preserve previously scheduled strength sessions when a run-only
+            # update omits them (run regeneration must not wipe the gym schedule)
+            if not new_week.strength_sessions and plan.weeks[existing_idx].strength_sessions:
+                new_week.strength_sessions = plan.weeks[existing_idx].strength_sessions
             plan.weeks[existing_idx] = new_week
         else:
             plan.weeks.append(new_week)

@@ -44,6 +44,8 @@ from resilio.schemas.plan import (
     WorkoutPrescription,
     WeekPlan,
     MasterPlan,
+    GuardrailViolation,
+    StrengthType,
 )
 from resilio.core.guardrails.volume import validate_workout_minimums
 from resilio.core.paths import (
@@ -1443,6 +1445,79 @@ def validate_week(
                 message=f"Week {week_plan.week_number}: {min_violation.message}",
                 suggestion=min_violation.recommendation
             ))
+
+    return violations
+
+
+def validate_strength_placement(
+    week_plan: WeekPlan,
+) -> list["GuardrailViolation"]:
+    """
+    Validate strength session placement against running load (detection-only).
+
+    Lower-body lifts (legs) compromise running quality and long runs if placed
+    the day before. Detects, never enforces — the AI Coach decides.
+
+    Checks (lower-body fatigue → next-day running):
+    - LEGS the day immediately before a long run, intervals, or strides session
+    - LEGS sharing the same calendar day as any run (no legs + run same day)
+
+    Args:
+        week_plan: Week to validate (uses workouts + strength_sessions)
+
+    Returns:
+        List of detected violations (severity "warning")
+    """
+    violations: list[GuardrailViolation] = []
+
+    # Run types that carry meaningful lower-body load the morning after a lift
+    sensitive = {WorkoutType.LONG_RUN.value, WorkoutType.INTERVALS.value, WorkoutType.STRIDES.value}
+    run_by_day: dict[int, WorkoutPrescription] = {
+        w.day_of_week: w for w in week_plan.workouts
+    }
+
+    for sess in week_plan.strength_sessions:
+        # Normalize enum/string (use_enum_values dumps to str)
+        stype = getattr(sess.session_type, "value", sess.session_type)
+        if stype != StrengthType.LEGS.value:
+            continue
+        day_name = _get_day_name(sess.day_of_week)
+
+        # Same-day legs + run
+        same_day_run = run_by_day.get(sess.day_of_week)
+        if same_day_run is not None:
+            rtype = getattr(same_day_run.workout_type, "value", same_day_run.workout_type)
+            violations.append(GuardrailViolation(
+                rule="legs_same_day_as_run",
+                week=week_plan.week_number,
+                severity="warning",
+                actual=sess.day_of_week,
+                target=-1,
+                message=(
+                    f"Week {week_plan.week_number}: legs lift shares "
+                    f"{day_name} with a {rtype} run"
+                ),
+                suggestion="Move legs to a non-run day to protect lower-body recovery",
+            ))
+
+        # Legs immediately before a long/quality run (handles Sun→Mon wrap)
+        next_day = (sess.day_of_week + 1) % 7
+        next_run = run_by_day.get(next_day)
+        if next_run is not None:
+            next_type = getattr(next_run.workout_type, "value", next_run.workout_type)
+            if next_type in sensitive:
+                violations.append(GuardrailViolation(
+                    rule="legs_before_quality_run",
+                    week=week_plan.week_number,
+                    severity="warning",
+                    actual=sess.day_of_week,
+                    target=next_day,
+                    message=(
+                        f"Week {week_plan.week_number}: legs lift on {day_name} is "
+                        f"the day before a {next_type} run ({_get_day_name(next_day)})"
+                    ),
+                    suggestion="Place legs ≥48h before long/quality runs to keep legs fresh",
+                ))
 
     return violations
 

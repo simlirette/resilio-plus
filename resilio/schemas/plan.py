@@ -62,6 +62,17 @@ class IntensityZone(str, Enum):
     ZONE_5 = "zone_5"  # VO2max: 90-95% max HR
 
 
+class StrengthType(str, Enum):
+    """Strength/gym session classifications (executed in Hevy, planned here)."""
+
+    LEGS = "legs"              # Lower-body day (impacts running lower-body load)
+    UPPER = "upper"            # Upper-body compound day
+    CHEST_BACK = "chest_back"  # Push/pull compound day
+    ARMS = "arms"              # Isolation day (low systemic cost)
+    CORE = "core"              # Core / mobility
+    OTHER = "other"            # Any other strength focus
+
+
 # ============================================================
 # TOOLKIT MODELS (Phase 5: Toolkit Paradigm)
 # ============================================================
@@ -381,6 +392,54 @@ class WorkoutStructureHints(BaseModel):
     model_config = ConfigDict(use_enum_values=True)
 
 
+class StrengthSession(BaseModel):
+    """
+    A planned strength/gym session (executed in Hevy).
+
+    Strength sessions live alongside running ``workouts`` but in a separate
+    list so they never collide with run-day validation (a gym session can
+    share a calendar day with an easy run) and never count toward running
+    ``target_volume_km``. The AI Coach assigns the day; Python only validates
+    placement (e.g. legs not adjacent to a long run / quality day).
+
+    Detail of the lifts themselves lives in Hevy — this is the schedule layer
+    only (what type, which day, when), suitable for pushing to a calendar.
+    """
+
+    # ============================================================
+    # REQUIRED: AI Coach assigns the schedule
+    # ============================================================
+
+    date: date
+    day_of_week: int = Field(..., ge=0, le=6, description="Day of week (0=Monday, 6=Sunday)")
+    session_type: StrengthType = Field(..., description="Strength session classification")
+    week_number: int = Field(..., ge=1, description="Week number in plan (1-indexed)")
+
+    # ============================================================
+    # OPTIONAL: scheduling + execution context
+    # ============================================================
+
+    time_of_day: Optional[str] = Field(
+        default="18:00",
+        description="Local start time HH:MM (default evening; lifts run PM with ≥4h gap to runs)",
+    )
+    duration_minutes: int = Field(default=60, gt=0, description="Planned session length")
+    key_session: bool = Field(default=False, description="Coach marks a priority lift")
+    source_tool: str = Field(default="hevy", description="Where the lift is executed/detailed")
+    notes: Optional[str] = Field(None, description="Coach notes (placement rationale, cues)")
+
+    # Identity (auto-generated)
+    id: str = Field(default_factory=lambda: f"s_{uuid.uuid4().hex[:8]}")
+
+    # Execution tracking
+    status: str = Field("scheduled", description="scheduled | completed | skipped")
+
+    model_config = ConfigDict(
+        use_enum_values=True,
+        populate_by_name=True,
+    )
+
+
 class WeekPlan(BaseModel):
     """
     Single week's training plan with explicit workout specifications.
@@ -414,6 +473,12 @@ class WeekPlan(BaseModel):
     workouts: list[WorkoutPrescription] = Field(
         ...,
         description="Explicit workouts designed by AI Coach using hints + athlete state"
+    )
+
+    # Strength/gym sessions (optional - executed in Hevy, scheduled here)
+    strength_sessions: list[StrengthSession] = Field(
+        default_factory=list,
+        description="Planned strength/gym sessions (separate from runs; no running volume impact)"
     )
 
     # Metadata

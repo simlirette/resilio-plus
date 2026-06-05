@@ -74,6 +74,51 @@ class SystemSettings(BaseModel):
     metrics_stale_hours: int = 24
 
 
+class GoogleCalendarSettings(BaseModel):
+    """Google Calendar sync configuration."""
+
+    credentials_path: str = "credentials.json"
+    token_path: str = "data/google_calendar/token.json"
+    state_path: str = "data/google_calendar/state.json"
+    timezone: str = "America/Toronto"
+    calendar_name: str = "Resilio Training"
+    sync_weeks_ahead: int = 2
+
+    # Default start times by workout type (HH:MM local)
+    default_times: dict = Field(
+        default_factory=lambda: {
+            "easy": "06:30",
+            "tempo": "06:30",
+            "intervals": "06:30",
+            "fartlek": "06:30",
+            "strides": "06:30",
+            "long_run_weekday": "06:30",
+            "long_run_weekend": "08:00",
+            "race": "08:00",
+            "rest": "allday",
+            "legs": "18:00",
+            "upper": "18:00",
+            "chest_back": "18:00",
+            "arms": "18:00",
+        }
+    )
+
+    # Reminder minutes before event (0 = no reminder)
+    reminders: dict = Field(
+        default_factory=lambda: {
+            "easy": 30,
+            "tempo": 30,
+            "intervals": 30,
+            "fartlek": 30,
+            "strides": 30,
+            "long_run": 60,
+            "race": 60,
+            "rest": 0,
+            "strength": 30,
+        }
+    )
+
+
 class Settings(BaseModel):
     """Complete settings configuration."""
 
@@ -81,6 +126,7 @@ class Settings(BaseModel):
     strava: StravaSettings = Field(default_factory=StravaSettings)
     training_defaults: TrainingDefaults = Field(default_factory=TrainingDefaults)
     system: SystemSettings = Field(default_factory=SystemSettings)
+    google_calendar: GoogleCalendarSettings = Field(default_factory=GoogleCalendarSettings)
 
 
 # ============================================================

@@ -84,6 +84,25 @@ poetry run resilio plan show
 | `is_recovery_week` | bool | Is this a recovery week? | `false` |
 | `notes` | string | Week-level notes | `"Base Phase Week 1"` |
 | `workout_pattern` | object | Workout structure (see below) | See below |
+| `strength_sessions` | array | Optional gym/lift sessions (executed in Hevy) | See below |
+
+**Strength sessions (gym / lifts):**
+
+Strength sessions live in a separate `strength_sessions` array on the week —
+NOT in `workouts` (so a lift can share a day with a run and never counts toward
+running `target_volume_km`). Each entry: `date`, `day_of_week` (0=Mon),
+`session_type` (`legs` | `upper` | `chest_back` | `arms` | `core` | `other`),
+optional `time_of_day` (`"18:00"`), `duration_minutes` (default 60),
+`source_tool` (default `"hevy"`), `notes`.
+
+If you OMIT `strength_sessions` on a week that already has them, the existing
+schedule is preserved (run regeneration never wipes the gym). Only send the
+array when you intend to change the gym schedule.
+
+**Placement rule (validated by `validate_strength_placement`, detection-only):**
+keep `legs` ≥48h before any long run, intervals, or strides session, and never
+on the same day as a run. Current athlete v4 skeleton: Tue=legs, Wed=upper,
+Thu=arms, Sat=chest/back.
 
 **Multi-Sport Note:**
 

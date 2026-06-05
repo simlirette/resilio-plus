@@ -247,6 +247,9 @@ config/secrets.local.yaml
 *.db
 *.sqlite
 data/resilio.db
+# Google Calendar OAuth (NEVER COMMIT)
+credentials.json
+data/google_calendar/
 
 # Documentation build artifacts
 docs/artifacts/
