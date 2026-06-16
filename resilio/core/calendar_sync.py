@@ -418,7 +418,7 @@ class PlanToCalendarSync:
             if uid:
                 remote_by_uid[uid] = ev
 
-        # Insert / patch
+        # Insert / patch (delete+insert when allday↔timed format changes)
         for uid, desired_ev in desired.items():
             if uid not in remote_by_uid:
                 try:
@@ -430,10 +430,19 @@ class PlanToCalendarSync:
             else:
                 remote_ev = remote_by_uid[uid]
                 if _event_fingerprint(desired_ev) != _event_fingerprint(remote_ev):
+                    # Google rejects patch when allday↔timed format changes → delete+insert
+                    remote_is_allday = "date" in remote_ev.get("start", {}) and "dateTime" not in remote_ev.get("start", {})
+                    desired_is_allday = "date" in desired_ev.get("start", {}) and "dateTime" not in desired_ev.get("start", {})
+                    format_changed = remote_is_allday != desired_is_allday
                     try:
-                        self._client.patch_event(cal_id, remote_ev["id"], desired_ev)  # type: ignore[attr-defined]
+                        if format_changed:
+                            self._client.delete_event(cal_id, remote_ev["id"])  # type: ignore[attr-defined]
+                            self._client.create_event(cal_id, desired_ev)  # type: ignore[attr-defined]
+                            logger.info("Replaced (format change): %s", uid)
+                        else:
+                            self._client.patch_event(cal_id, remote_ev["id"], desired_ev)  # type: ignore[attr-defined]
+                            logger.info("Patched: %s", uid)
                         report.patched += 1
-                        logger.info("Patched: %s", uid)
                     except Exception as exc:
                         report.errors.append(f"patch {uid}: {exc}")
                 else:
