@@ -189,9 +189,14 @@ def _strength_title(sess: StrengthSession) -> str:
     return f"🏋️ {label}"
 
 
-def _day_time(day_of_week: int, settings: GoogleCalendarSettings) -> str:
-    """Return start time string or 'allday' for the given weekday (0=Mon)."""
-    return settings.day_times.get(str(day_of_week), "19:00")
+def _run_day_time(day_of_week: int, settings: GoogleCalendarSettings) -> str:
+    """Return run start time for the given weekday (0=Mon)."""
+    return settings.run_day_times.get(str(day_of_week), "09:00")
+
+
+def _strength_day_time(day_of_week: int, settings: GoogleCalendarSettings) -> str:
+    """Return strength start time for the given weekday (0=Mon)."""
+    return settings.strength_day_times.get(str(day_of_week), "15:00")
 
 
 def _allday_event(summary: str, description: str, event_date: date, uid: str) -> dict:
@@ -244,13 +249,10 @@ def build_run_event(
     summary = _run_title(workout)
     description = _run_description(workout)
 
-    # REST always all-day; all other runs follow day_times
     if wtype == WorkoutType.REST.value:
         return _allday_event(summary, description, workout.date, uid)
 
-    start_time = _day_time(workout.day_of_week, settings)
-    if start_time == "allday":
-        return _allday_event(summary, description, workout.date, uid)
+    start_time = _run_day_time(workout.day_of_week, settings)
 
     reminder_key = "long_run" if wtype == WorkoutType.LONG_RUN.value else wtype
     reminder_min = settings.reminders.get(reminder_key, settings.reminders.get("easy", 30))
@@ -271,10 +273,7 @@ def build_strength_event(
     summary = _strength_title(sess)
     description = "Voir Hevy pour le détail"
 
-    start_time = _day_time(sess.day_of_week, settings)
-    if start_time == "allday":
-        return _allday_event(summary, description, sess.date, uid)
-
+    start_time = _strength_day_time(sess.day_of_week, settings)
     reminder_min = settings.reminders.get("strength", 30)
     return _timed_event(summary, description, sess.date, start_time,
                         sess.duration_minutes, reminder_min, uid, settings.timezone, tz_offset)

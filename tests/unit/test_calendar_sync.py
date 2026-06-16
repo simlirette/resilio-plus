@@ -44,7 +44,14 @@ from resilio.schemas.plan import (
 # FIXTURES
 # ============================================================
 
-MONDAY = date(2026, 6, 8)  # known Monday
+from datetime import date as _date_cls
+
+def _next_monday() -> date:
+    today = _date_cls.today()
+    days_ahead = (7 - today.weekday()) % 7 or 7
+    return today + timedelta(days=days_ahead)
+
+MONDAY = _next_monday()
 SETTINGS = GoogleCalendarSettings()
 
 
@@ -132,20 +139,25 @@ class TestRunEventMapping:
         assert props["resilio_managed"] == "1"
         assert props["resilio_uid"].startswith("resilio-")
 
-    def test_long_run_sunday_allday(self):
-        # Sunday (dow=6) → allday per day_times
+    def test_long_run_sunday_morning(self):
+        # Sunday (dow=6) → 09:00 timed run
         w = _workout("long_run", 6, 15.0)
         ev = build_run_event(w, _week([w]), SETTINGS)
-        assert "date" in ev["start"]
-        assert "dateTime" not in ev["start"]
+        assert "dateTime" in ev["start"]
+        assert ev["start"]["dateTime"].split("T")[1][:5] == "09:00"
 
-    def test_easy_monday_timed(self):
-        # Monday (dow=0) → 19:00 timed event
-        w = _workout("easy", 0, 8.0)
+    def test_easy_thursday_morning(self):
+        # Thursday (dow=3) → 09:00 timed run
+        w = _workout("easy", 3, 8.0)
         ev = build_run_event(w, _week([w]), SETTINGS)
         assert "dateTime" in ev["start"]
-        start_time = ev["start"]["dateTime"].split("T")[1][:5]
-        assert start_time == "19:00"
+        assert ev["start"]["dateTime"].split("T")[1][:5] == "09:00"
+
+    def test_easy_monday_evening(self):
+        # Monday (dow=0) → 19:00
+        w = _workout("easy", 0, 8.0)
+        ev = build_run_event(w, _week([w]), SETTINGS)
+        assert ev["start"]["dateTime"].split("T")[1][:5] == "19:00"
 
 
 # ============================================================
@@ -184,15 +196,21 @@ class TestStrengthEventMapping:
         s = _strength("upper", 2)
         ev = build_strength_event(s, SETTINGS)
         assert "dateTime" in ev["start"]
-        start_time = ev["start"]["dateTime"].split("T")[1][:5]
-        assert start_time == "19:00"
+        assert ev["start"]["dateTime"].split("T")[1][:5] == "19:00"
 
-    def test_saturday_allday(self):
-        # Saturday (dow=5) → all-day
+    def test_saturday_afternoon_time(self):
+        # Saturday (dow=5) → 15:00 timed
         s = _strength("chest_back", 5)
         ev = build_strength_event(s, SETTINGS)
-        assert "date" in ev["start"]
-        assert "dateTime" not in ev["start"]
+        assert "dateTime" in ev["start"]
+        assert ev["start"]["dateTime"].split("T")[1][:5] == "15:00"
+
+    def test_thursday_afternoon_time(self):
+        # Thursday (dow=3) → 15:00 timed (arms after morning run)
+        s = _strength("arms", 3)
+        ev = build_strength_event(s, SETTINGS)
+        assert "dateTime" in ev["start"]
+        assert ev["start"]["dateTime"].split("T")[1][:5] == "15:00"
 
 
 # ============================================================

@@ -84,17 +84,29 @@ class GoogleCalendarSettings(BaseModel):
     calendar_name: str = "Resilio Training"
     sync_weeks_ahead: int = 2
 
-    # Start time per day of week (0=Mon … 6=Sun). "allday" = all-day event.
-    # am=09:00  pm=13:00  soir=19:00
-    day_times: dict = Field(
+    # Run start time per day of week (0=Mon … 6=Sun).
+    run_day_times: dict = Field(
         default_factory=lambda: {
-            "0": "19:00",   # Monday   — soir
-            "1": "19:00",   # Tuesday  — soir
-            "2": "19:00",   # Wednesday — soir
-            "3": "allday",  # Thursday  — all-day
-            "4": "19:00",   # Friday   — soir
-            "5": "allday",  # Saturday  — all-day
-            "6": "allday",  # Sunday   — all-day
+            "0": "19:00",  # Monday    — soir (no run planned)
+            "1": "19:00",  # Tuesday   — soir (no run planned)
+            "2": "19:00",  # Wednesday — soir (no run planned)
+            "3": "09:00",  # Thursday  — matin
+            "4": "19:00",  # Friday    — soir (no run planned)
+            "5": "09:00",  # Saturday  — matin
+            "6": "09:00",  # Sunday    — matin (long run)
+        }
+    )
+
+    # Strength/gym start time per day of week (0=Mon … 6=Sun).
+    strength_day_times: dict = Field(
+        default_factory=lambda: {
+            "0": "19:00",  # Monday    — soir (hockey)
+            "1": "19:00",  # Tuesday   — soir (legs)
+            "2": "19:00",  # Wednesday — soir (upper)
+            "3": "15:00",  # Thursday  — pm (arms)
+            "4": "19:00",  # Friday    — soir
+            "5": "15:00",  # Saturday  — pm (chest/back)
+            "6": "19:00",  # Sunday    — soir
         }
     )
 
