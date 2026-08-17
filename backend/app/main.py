@@ -28,6 +28,7 @@ from .routes.food_search import router as food_search_router
 from .routes.health import router as health_router
 from .routes.integrations import router as integrations_router
 from .routes.mode import router as mode_router
+from .routes.mobile import router as mobile_router
 from .routes.nutrition import router as nutrition_router
 from .routes.onboarding import router as onboarding_router
 from .routes.plans import router as plans_router
@@ -83,6 +84,7 @@ app.include_router(analytics_router)
 app.include_router(food_search_router)
 app.include_router(workflow_router)
 app.include_router(mode_router)
+app.include_router(mobile_router)
 app.include_router(checkin_router)
 app.include_router(external_plan_router)
 app.include_router(strain_router)

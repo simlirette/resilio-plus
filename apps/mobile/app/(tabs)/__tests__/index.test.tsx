@@ -10,6 +10,7 @@ import { ThemeProvider } from '@resilio/ui-mobile';
 // Mock expo-router
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  useFocusEffect: (effect: () => void | (() => void)) => effect(),
 }));
 
 // Mock expo-haptics
@@ -97,7 +98,7 @@ describe('HomeScreen', () => {
 
   it('renders without crashing (green scenario)', () => {
     const { getByText } = renderHome();
-    expect(getByText('Bonjour,')).toBeTruthy();
+    expect(getByText('Bonjour, Simon-Olivier')).toBeTruthy();
   });
 
   it('does NOT show rest banner when readiness >= 50 (green scenario)', () => {
@@ -135,11 +136,11 @@ describe('HomeScreen', () => {
 
   it('renders greeting text', () => {
     const { getByText } = renderHome();
-    expect(getByText('Résumé de coaching du jour')).toBeTruthy();
+    expect(getByText('Bonjour, Simon-Olivier')).toBeTruthy();
   });
 
   it('renders charge allostatique label', () => {
     const { getByText } = renderHome();
-    expect(getByText('Charge allostatique')).toBeTruthy();
+    expect(getByText('CHARGE ALLOSTATIQUE')).toBeTruthy();
   });
 });

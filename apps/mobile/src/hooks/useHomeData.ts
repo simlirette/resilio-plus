@@ -1,41 +1,55 @@
-import { useState, useCallback } from 'react';
-import { mockHomeData } from '../mocks/athlete-home-stub';
+import { useState, useCallback, useEffect } from 'react';
+import { useAuth } from '../auth/AuthProvider';
 import type { HomeData } from '../types/home';
 
 interface UseHomeDataResult {
-  data: HomeData;
+  data: HomeData | null;
   loading: boolean;
+  error: string | null;
   refresh: () => Promise<void>;
-  lastRefreshedAt: Date;
+  lastRefreshedAt: Date | null;
 }
 
-/**
- * Placeholder hook for FE-MOBILE-2.
- * Returns mock data from `athlete-home-stub.ts`.
- *
- * To test different scenarios during development, change the import below:
- *   - mockHomeDataGreen  → readiness: 82 (green, one running session)
- *   - mockHomeDataYellow → readiness: 61 (yellow, one lifting session)
- *   - mockHomeDataRestDay → readiness: 72 (green, no session — rest day)
- *
- * REPLACED with real API call in Session FE-MOBILE-BACKEND-WIRING.
- * Drop-in contract: same return shape, same loading/refresh interface.
- */
 export function useHomeData(): UseHomeDataResult {
-  const [lastRefreshedAt, setLastRefreshedAt] = useState<Date>(new Date());
+  const { apiRequest, status } = useAuth();
+  const [data, setData] = useState<HomeData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
 
   const refresh = useCallback(async (): Promise<void> => {
+    if (status !== 'authenticated') {
+      setData(null);
+      setError(null);
+      return;
+    }
+
     setLoading(true);
-    // Simulate async fetch — real API call goes here in FE-MOBILE-BACKEND-WIRING
-    await new Promise<void>((resolve) => setTimeout(resolve, 500));
-    setLastRefreshedAt(new Date());
-    setLoading(false);
-  }, []);
+    setError(null);
+    try {
+      const nextData = await apiRequest<HomeData>('/mobile/home');
+      setData(nextData);
+      setLastRefreshedAt(new Date());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Accueil indisponible.');
+    } finally {
+      setLoading(false);
+    }
+  }, [apiRequest, status]);
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      void refresh();
+    } else if (status === 'unauthenticated') {
+      setData(null);
+      setError(null);
+    }
+  }, [refresh, status]);
 
   return {
-    data: mockHomeData,
-    loading,
+    data,
+    loading: loading || (status === 'authenticated' && data === null && error === null),
+    error,
     refresh,
     lastRefreshedAt,
   };

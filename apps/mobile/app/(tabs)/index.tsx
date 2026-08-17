@@ -24,14 +24,14 @@
  * │     [ Check-in quotidien ]         │  ← Button primary, px 20
  * └────────────────────────────────────┘
  *
- * Data source: useHomeData() → mockHomeData (FE-MOBILE-2)
+ * Data source: useHomeData() → GET /mobile/home
  * StyleSheet exception: contentContainerStyle on ScrollView (NativeWind cannot
  * target contentContainerStyle). All other styles use StyleSheet.
  */
 import React, { useCallback } from 'react';
 import { View, ScrollView, RefreshControl, StyleSheet } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import {
   Screen,
   Text,
@@ -39,14 +39,13 @@ import {
   Card,
   Button,
   CognitiveLoadDial,
-  MetricRow,
   ReadinessStatusBadge,
   SessionCard,
   useTheme,
 } from '@resilio/ui-mobile';
 import { colors } from '@resilio/design-tokens';
 import { useHomeData } from '../../src/hooks/useHomeData';
-import type { WorkoutSlotStub } from '../../src/types/home';
+import type { MetricState, MetricStatus, WorkoutSlotStub } from '../../src/types/home';
 import type { WorkoutSlotForCard } from '@resilio/ui-mobile';
 
 function mapSession(s: WorkoutSlotStub): WorkoutSlotForCard {
@@ -59,10 +58,27 @@ function mapSession(s: WorkoutSlotStub): WorkoutSlotForCard {
   };
 }
 
+function knownState(state: MetricState): 'green' | 'yellow' | 'red' {
+  return state === 'unknown' ? 'yellow' : state;
+}
+
+function statusLabel(status: MetricStatus): string {
+  switch (status) {
+    case 'measured':
+      return 'Mesure';
+    case 'estimated':
+      return 'Estime';
+    case 'unavailable':
+      return 'En attente';
+    default:
+      return 'En attente';
+  }
+}
+
 export default function HomeScreen(): React.JSX.Element {
   const router = useRouter();
   const { colors: themeColors, colorMode } = useTheme();
-  const { data, loading, refresh } = useHomeData();
+  const { data, loading, error, refresh } = useHomeData();
 
   const handleRefresh = useCallback(async () => {
     await refresh();
@@ -73,8 +89,34 @@ export default function HomeScreen(): React.JSX.Element {
     router.push('/(tabs)/check-in');
   }, [router]);
 
+  useFocusEffect(
+    useCallback(() => {
+      void refresh();
+    }, [refresh])
+  );
+
+  if (!data) {
+    return (
+      <Screen>
+        <View style={styles.centerState}>
+          <Card style={styles.stateCard}>
+            <Text variant="title" color={themeColors.foreground}>
+              {loading ? 'Chargement' : 'Accueil indisponible'}
+            </Text>
+            <Text variant="body" color={themeColors.textSecondary} style={styles.stateText}>
+              {error ?? 'Synchronisation avec le backend en cours.'}
+            </Text>
+            {error ? (
+              <Button title="Reessayer" onPress={refresh} variant="secondary" style={styles.stateButton} />
+            ) : null}
+          </Card>
+        </View>
+      </Screen>
+    );
+  }
+
   const readiness = data.readiness.value;
-  const showRestBanner = readiness < 50;
+  const showRestBanner = readiness !== null && readiness < 50;
 
   const todaySession = data.todaysSessions?.[0] ?? null;
 
@@ -129,30 +171,60 @@ export default function HomeScreen(): React.JSX.Element {
         )}
 
         {/* ── Readiness ring (dominant) ──────────────────────────────────────── */}
-        <View
-          style={styles.readinessSection}
-          accessibilityLabel={`Score de forme : ${readiness} sur 100`}
-        >
-          <Circle
-            value={readiness}
-            size={216}
-            strokeWidth={10}
-            color={colors.accent}
-            innerLabel="Readiness"
-          />
-          <View style={styles.badgeContainer}>
-            <ReadinessStatusBadge value={readiness} />
+        {readiness !== null ? (
+          <View
+            style={styles.readinessSection}
+            accessibilityLabel={`Score de forme : ${readiness} sur 100`}
+          >
+            <Circle
+              value={readiness}
+              size={216}
+              strokeWidth={10}
+              color={colors.accent}
+              innerLabel="Readiness"
+            />
+            <View style={styles.badgeContainer}>
+              <ReadinessStatusBadge value={readiness} />
+            </View>
           </View>
-        </View>
+        ) : (
+          <View style={styles.cardRow}>
+            <Card style={styles.stateCard}>
+              <Text variant="label" color={themeColors.textMuted}>READINESS</Text>
+              <Text variant="body" color={themeColors.textSecondary} style={styles.stateText}>
+                Check-in requis pour calculer ton etat du jour.
+              </Text>
+              <Button title="Check-in quotidien" onPress={handleCheckin} style={styles.stateButton} />
+            </Card>
+          </View>
+        )}
 
         {/* ── Row 3 metric rings ──────────────────────────────────────────────── */}
         <View style={styles.cardRow}>
           <Card style={styles.metricCard}>
-            <MetricRow
-              nutrition={data.nutrition}
-              strain={data.strain}
-              sleep={data.sleep}
-            />
+            <View style={styles.signalRow}>
+              <Text variant="caption" color={themeColors.textSecondary}>Nutrition</Text>
+              <Text variant="body" color={themeColors.foreground}>
+                {data.nutrition.calories_target ? `${data.nutrition.calories_target} kcal cible` : 'En attente'}
+              </Text>
+              <Text variant="caption" color={themeColors.textMuted}>{statusLabel(data.nutrition.status)}</Text>
+            </View>
+            <View style={[styles.signalDivider, { backgroundColor: themeColors.border }]} />
+            <View style={styles.signalRow}>
+              <Text variant="caption" color={themeColors.textSecondary}>Récup.</Text>
+              <Text variant="body" color={themeColors.foreground}>
+                {data.strain.value !== null ? `${Math.round(data.strain.value)} / 100` : 'Connecteurs requis'}
+              </Text>
+              <Text variant="caption" color={themeColors.textMuted}>{statusLabel(data.strain.status)}</Text>
+            </View>
+            <View style={[styles.signalDivider, { backgroundColor: themeColors.border }]} />
+            <View style={styles.signalRow}>
+              <Text variant="caption" color={themeColors.textSecondary}>Sommeil</Text>
+              <Text variant="body" color={themeColors.foreground}>
+                {data.sleep.sleep_hours !== null ? `${data.sleep.sleep_hours} h` : 'Connecteur requis'}
+              </Text>
+              <Text variant="caption" color={themeColors.textMuted}>{statusLabel(data.sleep.status)}</Text>
+            </View>
           </Card>
         </View>
 
@@ -177,11 +249,19 @@ export default function HomeScreen(): React.JSX.Element {
                   Stress cumulé 7 jours.
                 </Text>
               </View>
-              <CognitiveLoadDial
-                value={data.cognitiveLoad.value}
-                state={data.cognitiveLoad.state}
-                size={160}
-              />
+              {data.cognitiveLoad.value !== null ? (
+                <CognitiveLoadDial
+                  value={data.cognitiveLoad.value}
+                  state={knownState(data.cognitiveLoad.state)}
+                  size={160}
+                />
+              ) : (
+                <View style={styles.allostaticPending}>
+                  <Text variant="body" color={themeColors.textSecondary}>
+                    Check-in requis
+                  </Text>
+                </View>
+              )}
             </View>
             {/* 0 / 50 / 100 legend */}
             <View style={styles.legend}>
@@ -213,6 +293,14 @@ export default function HomeScreen(): React.JSX.Element {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { paddingBottom: 48 },
+  centerState: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  stateCard: { padding: 20 },
+  stateText: { marginTop: 10 },
+  stateButton: { marginTop: 18 },
 
   greetingSection: {
     paddingHorizontal: 24,
@@ -241,13 +329,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 16,
   },
-  metricCard: { paddingHorizontal: 4, paddingVertical: 2 },
+  metricCard: { paddingHorizontal: 18, paddingVertical: 16 },
+  signalRow: {
+    minHeight: 46,
+    justifyContent: 'center',
+  },
+  signalDivider: { height: 0.5, marginVertical: 8 },
 
   allostaticCard: { padding: 20 },
   allostaticRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
   allostaticLeft: { flex: 1, paddingRight: 12, justifyContent: 'flex-start' },
   allostaticLabel: { textTransform: 'uppercase', marginBottom: 6 },
   allostaticDesc: { fontSize: 13, lineHeight: 18, letterSpacing: -0.05 },
+  allostaticPending: {
+    width: 160,
+    height: 160,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 
   legend: {
     flexDirection: 'row',

@@ -8,7 +8,6 @@
 /** @type {import('jest').Config} */
 module.exports = {
   preset: 'jest-expo',
-  setupFilesAfterFramework: [],
   setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
   testMatch: [
     '**/app/**/__tests__/**/*.test.{ts,tsx}',

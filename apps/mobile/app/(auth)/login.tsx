@@ -10,9 +10,11 @@ import {
 import { useRouter } from 'expo-router';
 import { Button, Card, Input, useTheme } from '@resilio/ui-mobile';
 import { colors } from '@resilio/design-tokens';
+import { useAuth } from '../../src/auth/AuthProvider';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { login } = useAuth();
   const { colorMode } = useTheme();
   const themeColors = colorMode === 'dark' ? colors.dark : colors.light;
 
@@ -28,9 +30,14 @@ export default function LoginScreen() {
     }
     setError('');
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setLoading(false);
-    router.replace('/(tabs)');
+    try {
+      await login(email.trim(), password);
+      router.replace('/(tabs)');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Connexion impossible.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -71,9 +78,10 @@ export default function LoginScreen() {
             <Text style={[styles.error, { color: colors.zoneRed }]}>{error}</Text>
           ) : null}
           <Button
-            title={loading ? 'Connexion…' : 'Se connecter'}
+            title="Se connecter"
             onPress={handleLogin}
             disabled={loading}
+            loading={loading}
             style={{ marginTop: 24 }}
           />
         </Card>

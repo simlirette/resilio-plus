@@ -222,6 +222,7 @@ __marimo__/
 node_modules/
 packages/*/node_modules/
 apps/*/node_modules/
+/.expo/
 pnpm-debug.log*
 
 # Next.js

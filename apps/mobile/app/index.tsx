@@ -1,6 +1,12 @@
 import { Redirect } from 'expo-router';
+import { useAuth } from '../src/auth/AuthProvider';
 
 export default function Index() {
-  // No auth implemented yet — redirect directly to login
-  return <Redirect href="/(auth)/login" />;
+  const { status } = useAuth();
+
+  if (status === 'loading') {
+    return null;
+  }
+
+  return <Redirect href={status === 'authenticated' ? '/(tabs)' : '/(auth)/login'} />;
 }

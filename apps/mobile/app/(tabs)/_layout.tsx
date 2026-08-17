@@ -1,10 +1,20 @@
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
 import { useTheme, Icon } from '@resilio/ui-mobile';
 import { colors } from '@resilio/design-tokens';
+import { useAuth } from '../../src/auth/AuthProvider';
 
 export default function TabsLayout() {
   const { colorMode } = useTheme();
+  const { status } = useAuth();
   const themeColors = colorMode === 'dark' ? colors.dark : colors.light;
+
+  if (status === 'loading') {
+    return null;
+  }
+
+  if (status === 'unauthenticated') {
+    return <Redirect href="/(auth)/login" />;
+  }
 
   return (
     <Tabs
