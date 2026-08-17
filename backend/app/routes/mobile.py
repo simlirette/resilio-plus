@@ -117,7 +117,7 @@ def _acwr_status(acwr: float | None) -> AcwrStatus:
 def _sport_for_mobile(sport: Sport) -> str:
     if sport == Sport.BIKING:
         return "cycling"
-    return sport.value
+    return str(sport.value)
 
 
 def _day_type_from_slots(slots: list[WorkoutSlot]) -> DayType:
@@ -278,4 +278,3 @@ def get_mobile_home(current_athlete_id: AuthedId, db: DB) -> MobileHomeResponse:
             sessions="measured" if plan else "unavailable",
         ),
     )
-
