@@ -25,3 +25,20 @@ export {
 
 // Re-export generated OpenAPI types
 export type { paths, operations, components } from './generated/api';
+
+// Chat API (Phase D)
+export { createChatClient } from './chat';
+export type {
+  ChatMessageRequest,
+  ChatMessageResponse,
+  ChatHistoryMessage,
+  ChatHistoryResponse,
+} from './chat';
+
+// Onboarding API (Phase D)
+export { createOnboardingClient } from './onboarding';
+export type {
+  OnboardingStartRequest,
+  OnboardingRespondRequest,
+  OnboardingBlockResponse,
+} from './onboarding';
