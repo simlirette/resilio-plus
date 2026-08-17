@@ -46,6 +46,15 @@ Read these before writing a single line.
 8. **`freeze_time` is incompatible with Pydantic v2 datetime.date schema generation** in this repo.
    For time-dependent tests use a far-future fixed date window or a module-level `patch`, never
    `freeze_time` around Pydantic model construction.
+9. **Migration numbering: verify, never assume.** Before writing any Alembic revision, run
+   `alembic heads` and `ls alembic/versions/` and chain `down_revision` from the **actual** head.
+   Any migration number written in this brief is indicative only and may be stale — at time of
+   writing `0011` and `0012` are already taken by the Phase D branch, so T1's migration is `0013`
+   and T5's is `0014` **unless the tree says otherwise**. A duplicate revision id forks the
+   `down_revision` graph and breaks every migration downstream.
+10. **This brief was written from reading the repo, not from running it.** Where a stated path,
+    signature, table name, or number does not match the code, **the code wins** — correct it, and
+    say so in your report. Do not bend the code to match the brief.
 
 ---
 
@@ -170,7 +179,7 @@ Build the abstraction **before** the Telegram specifics, so SMS/WhatsApp can slo
 - `notification_service.py` — `NotificationService.send(athlete_id, text, buttons=None)`; resolves athlete → channel + external_id, chunks to `max_message_length()`, logs to `outbound_messages`.
 - `chunking.py` — split on paragraph boundaries first, then sentence, then hard-cut. Never split inside a code block or a bullet line.
 
-**New DB tables (Alembic 0012):**
+**New DB tables (Alembic — see migration-numbering rule below):**
 
 ```
 messaging_identities(id, athlete_id FK, channel, external_id, verified_at, created_at)
@@ -229,7 +238,7 @@ The existing graphs interrupt and wait for approve/revise. Wire that to inline k
 
 **New: `backend/app/messaging/approvals.py`**
 
-- Table (Alembic 0012, same migration): `pending_approvals(token PK, athlete_id FK, thread_id, kind, payload_json, created_at, expires_at, resolved_at, resolution)`.
+- Table (same migration as T1): `pending_approvals(token PK, athlete_id FK, thread_id, kind, payload_json, created_at, expires_at, resolved_at, resolution)`.
 - `token` is a 16-char `secrets.token_urlsafe` slice. **Telegram `callback_data` is capped at 64
   bytes** — never put a thread_id or JSON in it; put the token and look the rest up.
 - `create_approval(athlete_id, thread_id, kind) -> token`
@@ -316,7 +325,7 @@ links are issued, assert the deep-link token is single-use and expires.
 - Timezone: new `timezone` column on `athletes` (IANA string, default `America/Montreal`). All event
   times are athlete-local; send `timeZone` explicitly on every event — never rely on server tz.
 
-**New DB (Alembic 0013):**
+**New DB (next migration after T1's):**
 ```
 google_calendar_credentials(athlete_id PK/FK, refresh_token_enc, calendar_id, scope,
                             connected_at, last_sync_at)
