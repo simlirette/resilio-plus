@@ -3,7 +3,10 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
+
+if TYPE_CHECKING:
+    from sentry_sdk.types import Event
 
 from .correlation import get_correlation_id
 from .pii_filter import scrub_value
@@ -11,10 +14,10 @@ from .pii_filter import scrub_value
 logger = logging.getLogger("app.observability.sentry")
 
 
-def _sentry_pii_scrubber(event: dict[str, Any], hint: dict[str, Any]) -> dict[str, Any] | None:
+def _sentry_pii_scrubber(event: Event, hint: dict[str, Any]) -> Event | None:
     """Scrub PII from Sentry event payloads before send."""
     # Top-level scrubbing of sensitive keys
-    event = scrub_value(event)
+    event = cast("Event", scrub_value(event))
     # Tag with correlation ID
     event.setdefault("tags", {})
     if isinstance(event["tags"], dict):
