@@ -504,3 +504,70 @@ class ChatMessageModel(Base):
     athlete: Mapped["AthleteModel"] = relationship(
         "AthleteModel", back_populates="chat_messages"
     )
+
+
+class MessagingIdentityModel(Base):
+    """An athlete's verified address on an external messaging channel."""
+
+    __tablename__ = "messaging_identities"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    athlete_id: Mapped[str] = mapped_column(
+        String, ForeignKey("athletes.id"), nullable=False, index=True
+    )
+    channel: Mapped[str] = mapped_column(String, nullable=False)
+    external_id: Mapped[str] = mapped_column(String, nullable=False)
+    verified_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "channel",
+            "external_id",
+            name="uq_messaging_identities_channel_external_id",
+        ),
+    )
+
+
+class MessagingLinkCodeModel(Base):
+    """A short-lived code used to link a messaging identity to an athlete."""
+
+    __tablename__ = "messaging_link_codes"
+
+    code: Mapped[str] = mapped_column(String, primary_key=True)
+    athlete_id: Mapped[str] = mapped_column(
+        String, ForeignKey("athletes.id"), nullable=False
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    consumed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+
+class OutboundMessageModel(Base):
+    """A message accepted by an external messaging provider for delivery."""
+
+    __tablename__ = "outbound_messages"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    athlete_id: Mapped[str] = mapped_column(
+        String, ForeignKey("athletes.id"), nullable=False
+    )
+    channel: Mapped[str] = mapped_column(String, nullable=False)
+    external_id: Mapped[str] = mapped_column(String, nullable=False)
+    provider_message_id: Mapped[str] = mapped_column(String, nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    kind: Mapped[str] = mapped_column(String, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
