@@ -90,7 +90,8 @@ Read these before writing a single line.
 
    Both areas are outside V4 scope, and fixing them would mean editing V1-FROZEN tests, which
    constraint 1 forbids. **Your gate is: exactly these 3 failures and no others, with the passing
-   count at 2616 or higher.** A 4th failure means you broke something — stop and fix it.
+   count at 2693 or higher** (2616 was the pre-T1 baseline; T1 added 77 messaging tests).
+   A 4th failure means you broke something — stop and fix it.
 5. **Atomic conventional commits**, one per logical task: `feat(telegram):`, `feat(gcal):`,
    `feat(jobs):`, `chore(freeze):`, `test(...)`, `docs(...)`.
 6. **No new stack.** LangGraph + FastAPI + SQLAlchemy 2 (sync, psycopg2) + APScheduler + Pydantic v2.

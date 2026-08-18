@@ -49,7 +49,7 @@ was on cell 139 with 55M cumulative input tokens. A fresh session per package
 is the fix.
 
 GATE for T2 — exactly this, no better and no worse:
-  pytest : 3 failed, >=2616 passed   <- those 3 are PRE-EXISTING (Apple Health
+  pytest : 3 failed, >=2693 passed   <- those 3 are PRE-EXISTING (Apple Health
                                         date drift x2, get_repo_root env). Do
                                         NOT fix or chase them. A 4th failure
                                         means you broke something.
