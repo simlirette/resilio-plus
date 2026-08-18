@@ -149,20 +149,28 @@ Execute in order. Each ends with a green invariant run and a commit.
 
 ---
 
-### T0 — Land Phase D on `main`
+### T0 — Land Phase D on `main` — ✅ **ALREADY COMPLETE (2026-08-18). SKIP THIS. START AT T1.**
 
-**Why first:** everything below depends on `CoordinatorService`, and it does not exist on `main`.
+Do not redo any of this. It is on `main` already:
 
-- Commit the uncommitted `apps/mobile` work-in-progress on `main` **first** so nothing is lost
-  (`feat(mobile): WIP snapshot before V4 freeze`).
-- Merge `feat/phase-d-d1-coordinator` → `main` (rebase or merge commit, your call — prefer a merge
-  commit, the branch is 17 clean commits).
-- Resolve conflicts against the mobile WIP and `backend/app/main.py` router registration.
-- Verify all four invariants. Phase D added routes must be registered in `backend/app/main.py`.
-- Remove the worktree once merged: `git worktree remove .worktrees/phase-d-session-1`.
+| Commit | What |
+|---|---|
+| `9b04fc7` | `feat(mobile): WIP snapshot before V4 freeze` — the uncommitted mobile work was saved first |
+| `3ad665d` | `feat(coordinator): merge Phase D conversational layer` — the 17-commit branch merged |
+| `dd22081` | `fix(coordinator): sort merged router imports` — ruff |
+| `1ad1678` | `fix(mobile): type sport serialization` — mypy |
+| `b169365` | `fix(observability): align Sentry callback typing` — mypy |
 
-**Done when:** `main` has `coordinator_service.py`, `chat_turn.py`, `onboarding.py`,
-`monitoring_service.py`, and the full suite is green.
+Also done: the `.worktrees/phase-d-session-1` worktree is removed. The branches
+`feat/phase-d-d1-coordinator` and `docs/v4-text-coach` are fully merged into `main` and kept only
+as backup refs — you may ignore or delete them.
+
+`main` now contains `coordinator_service.py`, `chat_turn.py`, `onboarding.py`,
+`classify_intent_service.py`, `monitoring_service.py`, and the Phase D routes registered in
+`backend/app/main.py`.
+
+**Before starting T1**, run the bounded invariant gate once to confirm your baseline, and record the
+numbers. If anything is red, fix that first — you inherit it, so do not build on top of it.
 
 ---
 
