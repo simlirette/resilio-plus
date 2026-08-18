@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from typing import Any, Protocol
 
 from sqlalchemy import select, update
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from ..db.models import MessagingIdentityModel, MessagingLinkCodeModel
@@ -42,6 +42,13 @@ class UnknownMessagingChannelError(ValueError):
         super().__init__(f"Unknown messaging channel: {channel}")
 
 
+class MessagingDeliveryError(RuntimeError):
+    """Raised when an inbound response cannot be delivered safely."""
+
+    def __init__(self) -> None:
+        super().__init__("Unable to deliver messaging response")
+
+
 class InvalidLinkCodeError(ValueError):
     """Raised for every unusable link code without disclosing its state."""
 
@@ -50,14 +57,14 @@ class InvalidLinkCodeError(ValueError):
 
 
 class MessagingTransactionError(RuntimeError):
-    """Raised when link redemption cannot own a clean transaction."""
+    """Raised when a gateway operation cannot own a clean transaction."""
 
     def __init__(self) -> None:
-        super().__init__("Messaging identity linking requires a clean database session")
+        super().__init__("Messaging operation requires a clean database session")
 
 
 class MessagingPersistenceError(RuntimeError):
-    """Raised when an unexpected identity persistence failure is hidden."""
+    """Raised when an unexpected gateway database failure is hidden."""
 
     def __init__(self) -> None:
         super().__init__("Unable to persist messaging identity")
@@ -87,32 +94,39 @@ class MessagingGateway:
 
     def resolve_athlete(self, channel: str, external_id: str) -> str | None:
         """Return the athlete for an exact verified external identity."""
+        self._require_clean_session()
         self._get_channel(channel)
-        return self._db.scalar(
-            select(MessagingIdentityModel.athlete_id).where(
-                MessagingIdentityModel.channel == channel,
-                MessagingIdentityModel.external_id == external_id,
-                MessagingIdentityModel.verified_at.is_not(None),
-            )
-        )
+        return self._resolve_verified_athlete(channel, external_id)
 
     def handle_inbound(self, channel: str, external_id: str, text: str) -> None:
         """Dispatch known senders' text and send any user-facing graph output."""
+        self._require_clean_session()
         messaging_channel = self._get_channel(channel)
-        athlete_id = self.resolve_athlete(channel, external_id)
+        athlete_id = self._resolve_verified_athlete(channel, external_id)
         if athlete_id is None:
-            instruction = messaging_channel.format(
-                "Send your link code here to connect this chat to your Resilio account."
-            )
-            messaging_channel.send(external_id, instruction)
+            try:
+                instruction = messaging_channel.format(
+                    "Send your link code here to connect this chat to your Resilio account."
+                )
+                messaging_channel.send(external_id, instruction)
+            except Exception:
+                raise MessagingDeliveryError from None
             return
 
-        result = self._coordinator.dispatch(
-            athlete_id,
-            "chat",
-            {"message": text},
-            self._db,
-        )
+        try:
+            result = self._coordinator.dispatch(
+                athlete_id,
+                "chat",
+                {"message": text},
+                self._db,
+            )
+            self._db.commit()
+        except SQLAlchemyError:
+            self._db.rollback()
+            raise MessagingPersistenceError from None
+        except Exception:
+            self._db.rollback()
+            raise
         response = self._render_response(getattr(result, "output", None))
         if response is not None:
             self._notifier.send(athlete_id, response)
@@ -123,9 +137,8 @@ class MessagingGateway:
         The injected session must not already have an active transaction. This
         method owns its transaction so it cannot commit or roll back caller work.
         """
+        self._require_clean_session()
         self._get_channel(channel)
-        if self._db.in_transaction():
-            raise MessagingTransactionError
 
         try:
             with self._db.begin():
@@ -171,14 +184,35 @@ class MessagingGateway:
                         raise InvalidLinkCodeError from None
 
             return athlete_id
-        except IntegrityError:
+        except SQLAlchemyError:
             raise MessagingPersistenceError from None
 
-    def _get_channel(self, channel: str) -> MessagingChannel:
+    def _resolve_verified_athlete(self, channel: str, external_id: str) -> str | None:
         try:
-            return self._channels[channel]
-        except KeyError:
+            with self._db.begin():
+                return self._db.scalar(
+                    select(MessagingIdentityModel.athlete_id).where(
+                        MessagingIdentityModel.channel == channel,
+                        MessagingIdentityModel.external_id == external_id,
+                        MessagingIdentityModel.verified_at.is_not(None),
+                    )
+                )
+        except SQLAlchemyError:
+            raise MessagingPersistenceError from None
+
+    def _require_clean_session(self) -> None:
+        if self._db.in_transaction():
+            raise MessagingTransactionError
+
+    def _get_channel(self, channel: str) -> MessagingChannel:
+        messaging_channel = self._channels.get(channel)
+        if (
+            messaging_channel is None
+            or not isinstance(messaging_channel, MessagingChannel)
+            or messaging_channel.name != channel
+        ):
             raise UnknownMessagingChannelError(channel) from None
+        return messaging_channel
 
     @staticmethod
     def _render_response(output: object) -> str | None:

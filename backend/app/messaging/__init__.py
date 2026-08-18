@@ -4,6 +4,7 @@ from .base import Button, MessagingChannel
 from .chunking import chunk_message
 from .gateway import (
     InvalidLinkCodeError,
+    MessagingDeliveryError,
     MessagingGateway,
     MessagingPersistenceError,
     MessagingTransactionError,
@@ -25,6 +26,7 @@ __all__ = [
     "EmptyNotificationError",
     "InvalidLinkCodeError",
     "MessagingChannel",
+    "MessagingDeliveryError",
     "MessagingGateway",
     "MessagingIdentityNotFoundError",
     "MessagingPersistenceError",

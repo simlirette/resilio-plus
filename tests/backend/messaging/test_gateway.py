@@ -1,24 +1,34 @@
 from __future__ import annotations
 
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from queue import Queue
+from threading import Barrier
 from types import SimpleNamespace
 from typing import Any
 
 import pytest
+from app.db.database import Base
 from app.db.models import (
     AthleteModel,
     MessagingIdentityModel,
     MessagingLinkCodeModel,
+    OutboundMessageModel,
 )
 from app.messaging import (
     InvalidLinkCodeError,
+    MessagingDeliveryError,
     MessagingGateway,
     MessagingPersistenceError,
     MessagingTransactionError,
+    NotificationDeliveryError,
+    NotificationService,
     UnknownMessagingChannelError,
 )
-from sqlalchemy import func, select
+from sqlalchemy import create_engine, event, func, select
+from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import Session
 
 NOW = datetime(2026, 8, 18, 16, 0, tzinfo=timezone.utc)
@@ -77,6 +87,69 @@ class RecordingNotifier:
         buttons: list[Any] | None = None,
     ) -> None:
         self.calls.append((athlete_id, text, buttons))
+
+
+class FailingChannel(RecordingChannel):
+    def __init__(self, *, fail_format: bool = False, fail_send: bool = False) -> None:
+        super().__init__()
+        self._fail_format = fail_format
+        self._fail_send = fail_send
+
+    def send(self, external_id: str, text: str) -> str:
+        if self._fail_send:
+            raise RuntimeError("provider failure with secret destination")
+        return super().send(external_id, text)
+
+    def format(self, text: str) -> str:
+        if self._fail_format:
+            raise RuntimeError("formatter failure with secret content")
+        return super().format(text)
+
+
+class DatabaseFailingCoordinator(RecordingCoordinator):
+    def dispatch(
+        self,
+        athlete_id: str,
+        event_type: str,
+        payload: dict[str, str],
+        db: Session,
+    ) -> SimpleNamespace:
+        db.execute(select(1))
+        raise IntegrityError(
+            "DISPATCH SECRET-SQL",
+            {"athlete": athlete_id, "message": payload["message"]},
+            RuntimeError("database dispatch secret"),
+        )
+
+
+class ExplodingCoordinator(RecordingCoordinator):
+    def dispatch(
+        self,
+        athlete_id: str,
+        event_type: str,
+        payload: dict[str, str],
+        db: Session,
+    ) -> SimpleNamespace:
+        db.execute(select(1))
+        raise RuntimeError("coordinator bug")
+
+
+class CommitThenQueryCoordinator(RecordingCoordinator):
+    def dispatch(
+        self,
+        athlete_id: str,
+        event_type: str,
+        payload: dict[str, str],
+        db: Session,
+    ) -> SimpleNamespace:
+        self.calls.append((athlete_id, event_type, payload, db))
+        db.execute(select(1))
+        db.commit()
+        db.execute(select(1))
+        return SimpleNamespace(
+            output={"final_response": "Committed coordinator reply"},
+            pending=False,
+        )
 
 
 def _gateway(
@@ -158,6 +231,49 @@ def _add_athlete(db_session: Session, athlete_id: str) -> str:
     return athlete_id
 
 
+def test_messaging_delivery_error_is_public() -> None:
+    import app.messaging as messaging
+
+    assert "MessagingDeliveryError" in messaging.__all__
+    assert messaging.MessagingDeliveryError is MessagingDeliveryError
+
+
+@pytest.mark.parametrize("operation", ["resolve", "handle"])
+def test_inbound_entrypoints_reject_caller_transaction_before_database_touch(
+    db_session: Session,
+    athlete_id: str,
+    monkeypatch: pytest.MonkeyPatch,
+    operation: str,
+) -> None:
+    _add_identity(db_session, athlete_id)
+    athlete = db_session.get(AthleteModel, athlete_id)
+    assert athlete is not None
+    athlete.name = "Pending caller-owned athlete"
+    gateway, channel, coordinator, notifier = _gateway(db_session)
+
+    def forbidden_database_touch(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("gateway touched caller-owned transaction")
+
+    for method_name in ("scalar", "execute", "flush", "commit", "rollback"):
+        monkeypatch.setattr(db_session, method_name, forbidden_database_touch)
+
+    with pytest.raises(
+        MessagingTransactionError,
+        match="Messaging operation requires a clean database session",
+    ):
+        if operation == "resolve":
+            gateway.resolve_athlete("telegram", "chat-123")
+        else:
+            gateway.handle_inbound("telegram", "chat-123", "hello")
+
+    assert db_session.in_transaction()
+    assert athlete in db_session.dirty
+    assert athlete.name == "Pending caller-owned athlete"
+    assert channel.sent == []
+    assert coordinator.calls == []
+    assert notifier.calls == []
+
+
 def test_unknown_identity_sends_formatted_link_instruction_without_side_effects(
     db_session: Session,
 ) -> None:
@@ -165,6 +281,7 @@ def test_unknown_identity_sends_formatted_link_instruction_without_side_effects(
 
     gateway.handle_inbound("telegram", "unknown-chat", "hello")
 
+    assert not db_session.in_transaction()
     assert len(channel.sent) == 1
     assert channel.sent[0][0] == "unknown-chat"
     assert channel.sent[0][1].startswith("formatted:")
@@ -186,8 +303,11 @@ def test_resolve_athlete_matches_exact_verified_channel_and_external_id(
     _add_identity(db_session, athlete_id, channel="telegram", external_id="same-id")
 
     assert gateway.resolve_athlete("telegram", "same-id") == athlete_id
+    assert not db_session.in_transaction()
     assert gateway.resolve_athlete("telegram", "other-id") is None
+    assert not db_session.in_transaction()
     assert gateway.resolve_athlete("sms", "same-id") is None
+    assert not db_session.in_transaction()
 
 
 @pytest.mark.parametrize(
@@ -208,6 +328,7 @@ def test_known_identity_dispatches_exact_chat_event_and_sends_real_text_output(
 
     gateway.handle_inbound("telegram", "chat-123", "My legs feel good")
 
+    assert not db_session.in_transaction()
     assert coordinator.calls == [
         (athlete_id, "chat", {"message": "My legs feel good"}, db_session)
     ]
@@ -226,6 +347,7 @@ def test_known_identity_does_not_fabricate_text_for_pending_or_internal_output(
 
     gateway.handle_inbound("telegram", "chat-123", "hello")
 
+    assert not db_session.in_transaction()
     assert len(coordinator.calls) == 1
     assert notifier.calls == []
 
@@ -238,10 +360,219 @@ def test_unknown_channel_raises_without_dispatch_send_or_database_mutation(
     with pytest.raises(UnknownMessagingChannelError, match="signal"):
         gateway.handle_inbound("signal", "external", "hello")
 
+    assert not db_session.in_transaction()
     assert channel.sent == []
     assert coordinator.calls == []
     assert notifier.calls == []
     assert db_session.scalar(select(func.count()).select_from(MessagingIdentityModel)) == 0
+
+
+def test_misregistered_channel_cannot_consume_code_or_create_identity(
+    db_session: Session,
+    athlete_id: str,
+) -> None:
+    _add_link_code(db_session, athlete_id, code="MISREGISTERED-CODE")
+    gateway = MessagingGateway(
+        db_session,
+        {"telegram": RecordingChannel("sms")},
+        coordinator=RecordingCoordinator(),
+        notifier=RecordingNotifier(),
+        clock=lambda: NOW,
+    )
+
+    with pytest.raises(UnknownMessagingChannelError, match="telegram"):
+        gateway.link_identity("telegram", "chat-123", "MISREGISTERED-CODE")
+
+    assert not db_session.in_transaction()
+    with db_session.begin():
+        link_code = db_session.get(MessagingLinkCodeModel, "MISREGISTERED-CODE")
+        identity_count = db_session.scalar(
+            select(func.count()).select_from(MessagingIdentityModel)
+        )
+        assert link_code is not None
+        assert link_code.consumed_at is None
+        assert identity_count == 0
+
+
+def test_gateway_closes_dispatch_before_real_notification_service_audits_reply(
+    sqlite_engine: Any,
+    db_session: Session,
+    athlete_id: str,
+) -> None:
+    _add_identity(db_session, athlete_id)
+    channel = RecordingChannel()
+    coordinator = RecordingCoordinator({"final_response": "Your plan is ready."})
+    notifier = NotificationService(db_session, {"telegram": channel})
+    gateway = MessagingGateway(
+        db_session,
+        {"telegram": channel},
+        coordinator=coordinator,
+        notifier=notifier,
+        clock=lambda: NOW,
+    )
+
+    gateway.handle_inbound("telegram", "chat-123", "Build my week")
+
+    assert not db_session.in_transaction()
+    assert channel.sent == [
+        ("chat-123", "formatted:Your plan is ready."),
+    ]
+    with Session(sqlite_engine) as verification_session:
+        audit = verification_session.scalar(select(OutboundMessageModel))
+        assert audit is not None
+        assert audit.athlete_id == athlete_id
+        assert audit.provider_message_id == "provider-message-id"
+        assert audit.body == "formatted:Your plan is ready."
+        assert audit.kind == "notification"
+
+
+def test_dispatch_allows_coordinator_to_commit_then_continue_database_work(
+    db_session: Session,
+    athlete_id: str,
+) -> None:
+    _add_identity(db_session, athlete_id)
+    channel = RecordingChannel()
+    coordinator = CommitThenQueryCoordinator()
+    notifier = RecordingNotifier()
+    gateway = MessagingGateway(
+        db_session,
+        {"telegram": channel},
+        coordinator=coordinator,
+        notifier=notifier,
+        clock=lambda: NOW,
+    )
+
+    gateway.handle_inbound("telegram", "chat-123", "hello")
+
+    assert coordinator.calls == [
+        (athlete_id, "chat", {"message": "hello"}, db_session),
+    ]
+    assert notifier.calls == [(athlete_id, "Committed coordinator reply", None)]
+    assert not db_session.in_transaction()
+
+
+def test_real_notification_provider_failure_leaves_gateway_session_clean(
+    db_session: Session,
+    athlete_id: str,
+) -> None:
+    _add_identity(db_session, athlete_id)
+    channel = FailingChannel(fail_send=True)
+    coordinator = RecordingCoordinator({"final_response": "Secret coaching reply"})
+    notifier = NotificationService(db_session, {"telegram": channel})
+    gateway = MessagingGateway(
+        db_session,
+        {"telegram": channel},
+        coordinator=coordinator,
+        notifier=notifier,
+        clock=lambda: NOW,
+    )
+
+    with pytest.raises(NotificationDeliveryError):
+        gateway.handle_inbound("telegram", "chat-123", "hello")
+
+    assert not db_session.in_transaction()
+
+
+@pytest.mark.parametrize(
+    ("fail_format", "fail_send"),
+    [(True, False), (False, True)],
+    ids=["format", "send"],
+)
+def test_unknown_identity_delivery_failures_are_sanitized_and_leave_session_clean(
+    db_session: Session,
+    fail_format: bool,
+    fail_send: bool,
+) -> None:
+    channel = FailingChannel(fail_format=fail_format, fail_send=fail_send)
+    gateway = MessagingGateway(
+        db_session,
+        {"telegram": channel},
+        coordinator=RecordingCoordinator(),
+        notifier=RecordingNotifier(),
+        clock=lambda: NOW,
+    )
+
+    with pytest.raises(MessagingDeliveryError) as caught:
+        gateway.handle_inbound("telegram", "secret-external-id", "secret text")
+
+    assert str(caught.value) == "Unable to deliver messaging response"
+    assert caught.value.__suppress_context__
+    assert "secret" not in str(caught.value).lower()
+    assert not db_session.in_transaction()
+
+
+def test_identity_lookup_database_failure_is_sanitized_and_leaves_session_clean(
+    db_session: Session,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    gateway, channel, coordinator, notifier = _gateway(db_session)
+    real_execute = db_session.execute
+
+    def fail_lookup(*_args: object, **_kwargs: object) -> None:
+        real_execute(select(1))
+        raise IntegrityError(
+            "LOOKUP SECRET-SQL",
+            {"external_id": "secret-external-id"},
+            RuntimeError("database lookup secret"),
+        )
+
+    monkeypatch.setattr(db_session, "scalar", fail_lookup)
+
+    with pytest.raises(MessagingPersistenceError) as caught:
+        gateway.resolve_athlete("telegram", "secret-external-id")
+
+    assert caught.value.__suppress_context__
+    assert "secret" not in str(caught.value).lower()
+    assert not db_session.in_transaction()
+    assert channel.sent == []
+    assert coordinator.calls == []
+    assert notifier.calls == []
+
+
+def test_dispatch_database_failure_is_sanitized_and_leaves_session_clean(
+    db_session: Session,
+    athlete_id: str,
+) -> None:
+    _add_identity(db_session, athlete_id)
+    channel = RecordingChannel()
+    notifier = RecordingNotifier()
+    gateway = MessagingGateway(
+        db_session,
+        {"telegram": channel},
+        coordinator=DatabaseFailingCoordinator(),
+        notifier=notifier,
+        clock=lambda: NOW,
+    )
+
+    with pytest.raises(MessagingPersistenceError) as caught:
+        gateway.handle_inbound("telegram", "chat-123", "secret chat text")
+
+    assert caught.value.__suppress_context__
+    assert "secret" not in str(caught.value).lower()
+    assert not db_session.in_transaction()
+    assert notifier.calls == []
+
+
+def test_non_database_coordinator_failure_reraises_only_after_rollback(
+    db_session: Session,
+    athlete_id: str,
+) -> None:
+    _add_identity(db_session, athlete_id)
+    channel = RecordingChannel()
+    notifier = RecordingNotifier()
+    gateway = MessagingGateway(
+        db_session,
+        {"telegram": channel},
+        coordinator=ExplodingCoordinator(),
+        notifier=notifier,
+        clock=lambda: NOW,
+    )
+
+    with pytest.raises(RuntimeError, match="coordinator bug"):
+        gateway.handle_inbound("telegram", "chat-123", "hello")
+
+    assert not db_session.in_transaction()
+    assert notifier.calls == []
 
 
 def test_valid_link_code_is_consumed_and_creates_uuid_identity(
@@ -416,4 +747,139 @@ def test_unrelated_identity_constraint_failure_is_sanitized_and_rolls_back_claim
     link_code = db_session.get(MessagingLinkCodeModel, "ROLLBACK-CODE")
     assert link_code is not None
     assert link_code.consumed_at is None
-    assert gateway.resolve_athlete("telegram", "new-chat") is None
+    assert (
+        db_session.scalar(
+            select(MessagingIdentityModel.athlete_id).where(
+                MessagingIdentityModel.channel == "telegram",
+                MessagingIdentityModel.external_id == "new-chat",
+            )
+        )
+        is None
+    )
+
+
+def test_link_claim_database_failure_is_sanitized_and_leaves_session_clean(
+    sqlite_engine: Any,
+    db_session: Session,
+    athlete_id: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _add_link_code(db_session, athlete_id, code="DATABASE-FAILURE-CODE")
+    gateway, _, _, _ = _gateway(db_session)
+
+    def fail_claim(*_args: object, **_kwargs: object) -> None:
+        raise OperationalError(
+            "UPDATE messaging_link_codes SECRET-SQL",
+            {"code": "DATABASE-FAILURE-CODE"},
+            RuntimeError("driver failure with secret details"),
+        )
+
+    monkeypatch.setattr(db_session, "execute", fail_claim)
+
+    with pytest.raises(MessagingPersistenceError) as caught:
+        gateway.link_identity(
+            "telegram",
+            "secret-external-id",
+            "DATABASE-FAILURE-CODE",
+        )
+
+    assert caught.value.__suppress_context__
+    assert "secret" not in str(caught.value).lower()
+    assert not db_session.in_transaction()
+    with Session(sqlite_engine) as verification_session:
+        link_code = verification_session.get(
+            MessagingLinkCodeModel,
+            "DATABASE-FAILURE-CODE",
+        )
+        identity_count = verification_session.scalar(
+            select(func.count()).select_from(MessagingIdentityModel)
+        )
+        assert link_code is not None
+        assert link_code.consumed_at is None
+        assert identity_count == 0
+
+
+def test_two_sessions_redeeming_the_same_link_code_have_exactly_one_winner(
+    tmp_path: Path,
+) -> None:
+    database_path = tmp_path / "messaging-link-race.sqlite3"
+    engine = create_engine(
+        f"sqlite:///{database_path.as_posix()}",
+        connect_args={"check_same_thread": False, "timeout": 30},
+    )
+
+    @event.listens_for(engine, "connect")
+    def configure_sqlite(dbapi_connection: Any, _connection_record: Any) -> None:
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
+    Base.metadata.create_all(engine)
+    try:
+        with Session(engine) as seed_session:
+            race_athlete_id = _add_athlete(seed_session, "race-athlete")
+            _add_link_code(seed_session, race_athlete_id, code="RACE-CODE")
+
+        barrier = Barrier(2)
+        outcomes: Queue[tuple[str, str]] = Queue()
+        connection_ids: Queue[int] = Queue()
+
+        def redeem(external_id: str) -> None:
+            with Session(engine) as session:
+                def synchronized_now() -> datetime:
+                    driver_connection = session.connection().connection.driver_connection
+                    connection_ids.put(id(driver_connection))
+                    barrier.wait(timeout=10)
+                    return NOW
+
+                gateway = MessagingGateway(
+                    session,
+                    {"telegram": RecordingChannel()},
+                    coordinator=RecordingCoordinator(),
+                    notifier=RecordingNotifier(),
+                    clock=synchronized_now,
+                )
+                try:
+                    linked_athlete_id = gateway.link_identity(
+                        "telegram",
+                        external_id,
+                        "RACE-CODE",
+                    )
+                except InvalidLinkCodeError as exc:
+                    outcomes.put(("invalid", str(exc)))
+                else:
+                    outcomes.put(("linked", linked_athlete_id))
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            futures = [
+                executor.submit(redeem, "race-chat-1"),
+                executor.submit(redeem, "race-chat-2"),
+            ]
+            for future in futures:
+                future.result(timeout=30)
+
+        results = [outcomes.get_nowait(), outcomes.get_nowait()]
+        worker_connection_ids = [
+            connection_ids.get_nowait(),
+            connection_ids.get_nowait(),
+        ]
+        assert len(set(worker_connection_ids)) == 2
+        assert sorted(result[0] for result in results) == ["invalid", "linked"]
+        assert ("invalid", "Invalid or expired link code") in results
+        assert ("linked", race_athlete_id) in results
+
+        with Session(engine) as verification_session:
+            identities = verification_session.scalars(
+                select(MessagingIdentityModel)
+            ).all()
+            link_code = verification_session.get(
+                MessagingLinkCodeModel,
+                "RACE-CODE",
+            )
+            assert len(identities) == 1
+            assert identities[0].athlete_id == race_athlete_id
+            assert link_code is not None
+            assert link_code.consumed_at is not None
+    finally:
+        Base.metadata.drop_all(engine)
+        engine.dispose()
