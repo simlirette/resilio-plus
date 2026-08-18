@@ -27,15 +27,27 @@ Read these before writing a single line.
    mypy/ruff config, or the existing agent prompts in `backend/app/agents/prompts.py`.
 2. **`resilio/` is read-only.** Legacy CLI. Never touch it.
 3. **TDD is mandatory.** Red → green → refactor. Every new module gets tests written first.
-4. **Invariants must pass after every task** (all four, every time):
+4. **Invariants must pass before each work package is considered done.**
+
+   **Never run these in the foreground with unbounded output.** The full suite is 2430 tests and
+   mypy covers 131 files; streaming that through the tool wedges it. Always redirect to a file and
+   read only the tail:
+
+   ```bash
+   # during a package — fast, scoped to what you touched
+   PYTEST="C:/Users/simon/AppData/Local/pypoetry/Cache/virtualenvs/resilio-8kDCl3fk-py3.13/Scripts/pytest.exe"
+   "$PYTEST" tests/backend/messaging -q --tb=line > /tmp/pt.txt 2>&1; tail -20 /tmp/pt.txt
+
+   # end of a package — full gate, still bounded
+   "$PYTEST" tests/ -q --tb=line -p no:cacheprovider > /tmp/pytest.txt 2>&1; tail -30 /tmp/pytest.txt
+   python -m mypy backend/app/ --config-file pyproject.toml > /tmp/mypy.txt 2>&1; tail -20 /tmp/mypy.txt
+   python -m ruff check backend/ > /tmp/ruff.txt 2>&1; tail -20 /tmp/ruff.txt
+   poetry install > /tmp/poetry.txt 2>&1; tail -5 /tmp/poetry.txt
    ```
-   pytest tests/                                                    # >= 2430 passing, 0 new failures
-   python -m mypy backend/app/ --config-file pyproject.toml         # 0 errors
-   python -m ruff check backend/                                    # 0 violations
-   poetry install                                                   # must succeed
-   ```
-   Windows pytest path:
-   `C:\Users\simon\AppData\Local\pypoetry\Cache\virtualenvs\resilio-8kDCl3fk-py3.13\Scripts\pytest.exe`
+
+   Rules: run the **scoped** suite while iterating, the **full** suite once at the end of each
+   package — not after every edit. Never `cat` a whole result file; always `tail`. If a run exceeds
+   ~10 minutes, kill it and re-run scoped rather than waiting.
 5. **Atomic conventional commits**, one per logical task: `feat(telegram):`, `feat(gcal):`,
    `feat(jobs):`, `chore(freeze):`, `test(...)`, `docs(...)`.
 6. **No new stack.** LangGraph + FastAPI + SQLAlchemy 2 (sync, psycopg2) + APScheduler + Pydantic v2.
