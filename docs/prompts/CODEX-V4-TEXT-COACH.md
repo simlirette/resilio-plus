@@ -48,6 +48,28 @@ Read these before writing a single line.
    Rules: run the **scoped** suite while iterating, the **full** suite once at the end of each
    package — not after every edit. Never `cat` a whole result file; always `tail`. If a run exceeds
    ~10 minutes, kill it and re-run scoped rather than waiting.
+
+   **Measured baseline on `main` @ `18c34b8` (2026-08-18, full run 15m43s):**
+
+   ```
+   3 failed, 2616 passed, 16 skipped
+   mypy: Success — no issues found in 159 source files
+   ruff: 0 violations
+   ```
+
+   **These 3 failures are PRE-EXISTING and are NOT yours. Do not fix them, do not chase them, and
+   do not treat them as a regression you caused.** Verified: the Phase D merge touched none of the
+   files involved (0 commits against each path).
+
+   | Test | Cause |
+   |---|---|
+   | `test_apple_health_endpoint.py::TestValidImport::test_minimal_valid_imports_one_day` | Date drift — fixtures dated 2026-04-14/15 vs date-relative import logic |
+   | `test_apple_health_endpoint.py::TestValidImport::test_multi_day_imports_seven_days` | Same |
+   | `test_config.py::TestGetRepoRoot::test_get_repo_root_raises_when_not_in_repo` | Environmental — `get_repo_root()` resolves a repo where the test expects none |
+
+   Both areas are outside V4 scope, and fixing them would mean editing V1-FROZEN tests, which
+   constraint 1 forbids. **Your gate is: exactly these 3 failures and no others, with the passing
+   count at 2616 or higher.** A 4th failure means you broke something — stop and fix it.
 5. **Atomic conventional commits**, one per logical task: `feat(telegram):`, `feat(gcal):`,
    `feat(jobs):`, `chore(freeze):`, `test(...)`, `docs(...)`.
 6. **No new stack.** LangGraph + FastAPI + SQLAlchemy 2 (sync, psycopg2) + APScheduler + Pydantic v2.
