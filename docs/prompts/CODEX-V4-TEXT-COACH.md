@@ -46,8 +46,29 @@ Read these before writing a single line.
    ```
 
    Rules: run the **scoped** suite while iterating, the **full** suite once at the end of each
-   package — not after every edit. Never `cat` a whole result file; always `tail`. If a run exceeds
-   ~10 minutes, kill it and re-run scoped rather than waiting.
+   package — not after every edit. Never `cat` a whole result file; always `tail`.
+
+   **NEVER hold a live code-mode cell open waiting on a long command.** This is what killed the
+   two previous sessions. The observed failure is: launch the full suite as a cell, then call
+   `wait(cell_id=N, yield_time_ms=50000)` repeatedly for 15+ minutes, and the Node code-mode host
+   dies mid-wait — `"code-mode host closed its stdout"`. When that host dies you lose the ability
+   to execute *any* tool and the session is over. Codex logs nothing, because the failure is in the
+   child process.
+
+   Instead, **detach and poll the file**:
+
+   ```bash
+   # launch fully detached — the command returns immediately
+   nohup "$PYTEST" tests/ -q --tb=line -p no:cacheprovider > /tmp/pytest.txt 2>&1 &
+   echo "launched"
+
+   # then, in SEPARATE short calls minutes apart, check the file — never a long wait:
+   tail -5 /tmp/pytest.txt
+   ```
+
+   Each poll must be its own quick command that returns in under a second. Do useful work between
+   polls (write the next test, read a file) rather than blocking. A run over ~20 minutes is a
+   problem to investigate, not to wait out.
 
    **Measured baseline on `main` @ `18c34b8` (2026-08-18, full run 15m43s):**
 
@@ -140,7 +161,7 @@ followup_transition → steady_state`
         │  (webhook in prod, long-poll in dev)
         ▼
    TelegramChannel  ──────┐
-        │                 │  implements MessagingChannel (send / send_with_buttons / chunk / escape)
+        │                 │  implements MessagingChannel (send / send_with_buttons / max_message_length / format)
         ▼                 │
    MessagingGateway  ◄────┘        resolves telegram chat_id → athlete_id via messaging_identities
         │
@@ -455,6 +476,10 @@ buttons, resolves the approve token, and asserts the calendar service was called
 ## HOW TO WORK
 
 - **One work package at a time.** Do not start T2 before T1's invariants are green and committed.
+- **Stop and hand back at the end of every package.** Do not roll straight into the next one. Long
+  sessions accumulate code-mode cells and host memory — the session that died was on cell 139 with
+  55M cumulative input tokens. Finishing a package, committing, and letting the operator start a
+  fresh session resets that. Say plainly which package is done and which is next.
 - **Tests first, always.** If you cannot write the test, you do not understand the requirement yet —
   stop and say so rather than guessing.
 - **Report honestly.** If a step is blocked (e.g. Terra's Garmin flow needs a live account, or
