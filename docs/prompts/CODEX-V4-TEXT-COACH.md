@@ -83,9 +83,9 @@ Read these before writing a single line.
 9. **Migration numbering: verify, never assume.** Before writing any Alembic revision, run
    `alembic heads` and `ls alembic/versions/` and chain `down_revision` from the **actual** head.
    Any migration number written in this brief is indicative only and may be stale — at time of
-   writing `0011` and `0012` are already taken by the Phase D branch, so T1's migration is `0013`
-   and T5's is `0014` **unless the tree says otherwise**. A duplicate revision id forks the
-   `down_revision` graph and breaks every migration downstream.
+   writing `0011` and `0012` are already taken by the Phase D branch, so T1 starts at `0013`.
+   Every later package must inspect the tree and use the successor of the then-current head. A
+   duplicate revision id forks the `down_revision` graph and breaks every migration downstream.
 10. **This brief was written from reading the repo, not from running it.** Where a stated path,
     signature, table name, or number does not match the code, **the code wins** — correct it, and
     say so in your report. Do not bend the code to match the brief.
@@ -109,14 +109,16 @@ Read these before writing a single line.
 | Observability: JSON logs, `correlation_id`, PII filter, `track_agent_call`, metrics | `backend/app/observability/` |
 | Plan schema — `TrainingPlan`, `WorkoutSlot(id, date, sport, workout_type, duration_min, fatigue_score, notes)` | `backend/app/schemas/plan.py` |
 
-### The conversational layer — **ON AN UNMERGED BRANCH**
+### The conversational layer — merged, with coordinator invocation still stubbed
 
-Branch `feat/phase-d-d1-coordinator` (worktree at `.worktrees/phase-d-session-1`) contains **17
-commits, Phase D sessions D1→D15, complete**:
+The Phase D graph modules and routes are on `main`. However, the live
+`CoordinatorService._invoke_graph()` is still the D1 stub that returns `None`, and chat in the
+`signup` / `scope_selection` phases resolves no graph. Treat graph invocation as unfinished
+integration work despite the graph modules being present:
 
 | Thing | Path | What it does |
 |---|---|---|
-| `CoordinatorService` | `backend/app/services/coordinator_service.py` | **Single entry point.** `dispatch(athlete_id, event_type, payload, db) -> DispatchResult`. `event_type ∈ {"chat","system_silent","system_proactive","system_injury"}`. Routes by `journey_phase` + overlays to the right graph, manages thread lifecycle, validates phase transitions. |
+| `CoordinatorService` | `backend/app/services/coordinator_service.py` | **Single routing entry point.** `dispatch(athlete_id, event_type, payload, db) -> DispatchResult`. `event_type ∈ {"chat","system_silent","system_proactive","system_injury"}`. It selects a graph by `journey_phase` + overlays, manages thread lifecycle, and validates phase transitions, but `_invoke_graph()` currently returns `None`. `signup` / `scope_selection` chat selects no graph. Existing graph runners expose `final_response` (`chat_turn`) or `question` (onboarding/follow-up/recovery), not one universal response key. |
 | `chat_turn` graph | `backend/app/graphs/chat_turn.py` | Free-form message → intent → Head Coach direct / specialist chain (max 3) / clinical escalation / clarification. |
 | `classify_intent` | `backend/app/services/classify_intent_service.py` | Haiku 4.5 gateway, <500ms SLA, fr/en/mixed detection. |
 | `onboarding` graph | `backend/app/graphs/onboarding.py` | Blocs 1–6 with HITL interrupts, handoff, mid-onboarding injury handling. **This is the "first communication" flow — profile, goals, connectors, plan overview.** |
@@ -142,9 +144,9 @@ followup_transition → steady_state`
         ▼                 │
    MessagingGateway  ◄────┘        resolves telegram chat_id → athlete_id via messaging_identities
         │
-        ├─ inbound  ──►  CoordinatorService.dispatch(...)   ← EXISTS, in-process, no HTTP, no JWT
+        ├─ inbound  ──►  CoordinatorService.dispatch(...)   ← EXISTS as router; no HTTP, no JWT
         │                       │
-        │                       └─► onboarding / chat_turn / plan_generation / recovery_takeover
+        │                       └─► graph invocation wiring is still required
         │
         └─ outbound ◄──  NotificationService.send(athlete_id, text, buttons=[...])
                                 ▲
@@ -215,7 +217,7 @@ Build the abstraction **before** the Telegram specifics, so SMS/WhatsApp can slo
   Plus `Button(label: str, token: str)` — `token` is an opaque short id, never raw data.
 - `gateway.py` — `MessagingGateway`:
   - `resolve_athlete(channel: str, external_id: str) -> str | None`
-  - `handle_inbound(channel, external_id, text) -> None` → `CoordinatorService.dispatch(event_type="chat", payload={"message": text})`, then sends the graph output back out.
+  - `handle_inbound(channel, external_id, text) -> None` → `CoordinatorService.dispatch(event_type="chat", payload={"message": text})`, then sends a recognized user-facing result (`final_response`, otherwise `question`) when present. It does not fabricate a reply while the coordinator returns `output=None`.
   - `link_identity(channel, external_id, link_code) -> str` — one-time code flow.
   - Unknown `external_id` → replies with an instruction to send their link code. **Never** auto-creates an athlete.
 - `notification_service.py` — `NotificationService.send(athlete_id, text, buttons=None)`; resolves athlete → channel + external_id, chunks to `max_message_length()`, logs to `outbound_messages`.
@@ -280,7 +282,7 @@ The existing graphs interrupt and wait for approve/revise. Wire that to inline k
 
 **New: `backend/app/messaging/approvals.py`**
 
-- Table (same migration as T1): `pending_approvals(token PK, athlete_id FK, thread_id, kind, payload_json, created_at, expires_at, resolved_at, resolution)`.
+- Table (a new successor migration when T3 begins; do not amend T1's committed revision): `pending_approvals(token PK, athlete_id FK, thread_id, kind, payload_json, created_at, expires_at, resolved_at, resolution)`.
 - `token` is a 16-char `secrets.token_urlsafe` slice. **Telegram `callback_data` is capped at 64
   bytes** — never put a thread_id or JSON in it; put the token and look the rest up.
 - `create_approval(athlete_id, thread_id, kind) -> token`
@@ -367,7 +369,7 @@ links are issued, assert the deep-link token is single-use and expires.
 - Timezone: new `timezone` column on `athletes` (IANA string, default `America/Montreal`). All event
   times are athlete-local; send `timeZone` explicitly on every event — never rely on server tz.
 
-**New DB (next migration after T1's):**
+**New DB (next migration after the actual Alembic head when T5 begins):**
 ```
 google_calendar_credentials(athlete_id PK/FK, refresh_token_enc, calendar_id, scope,
                             connected_at, last_sync_at)
