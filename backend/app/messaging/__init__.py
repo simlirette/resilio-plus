@@ -10,14 +10,30 @@ from .gateway import (
     NotificationSender,
     UnknownMessagingChannelError,
 )
+from .notification_service import (
+    EmptyNotificationError,
+    MessagingIdentityNotFoundError,
+    NotificationDeliveryError,
+    NotificationFormattingError,
+    NotificationPersistenceError,
+    NotificationService,
+    NotificationTransactionError,
+)
 
 __all__ = [
     "Button",
+    "EmptyNotificationError",
     "InvalidLinkCodeError",
     "MessagingChannel",
     "MessagingGateway",
+    "MessagingIdentityNotFoundError",
     "MessagingPersistenceError",
     "MessagingTransactionError",
+    "NotificationDeliveryError",
+    "NotificationFormattingError",
+    "NotificationPersistenceError",
+    "NotificationService",
+    "NotificationTransactionError",
     "NotificationSender",
     "UnknownMessagingChannelError",
     "chunk_message",
