@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from threading import Event
 
 import httpx
 import pytest
@@ -112,6 +113,38 @@ def test_get_updates_sends_long_poll_offset_and_returns_updates(telegram_api) ->
 
     assert result == updates
     assert route.calls.last.request.content == b'{"timeout":10,"offset":40}'
+
+
+def test_get_updates_rate_limit_wait_is_interrupted_by_stop_event(telegram_api) -> None:
+    stop_event = Event()
+
+    def rate_limited(_request: httpx.Request) -> httpx.Response:
+        stop_event.set()
+        return httpx.Response(
+            429,
+            json={
+                "ok": False,
+                "error_code": 429,
+                "parameters": {"retry_after": 60},
+            },
+        )
+
+    route = telegram_api.post("/botbot-token/getUpdates").mock(
+        side_effect=rate_limited
+    )
+    client = TelegramBotClient(
+        "bot-token",
+        sleeper=lambda _delay: (_ for _ in ()).throw(
+            AssertionError("polling retry must use the stop event")
+        ),
+    )
+    try:
+        updates = client.get_updates(stop_event=stop_event)
+    finally:
+        client.close()
+
+    assert updates == []
+    assert route.call_count == 1
 
 
 def test_send_chat_action_posts_typing_before_long_work(telegram_api) -> None:

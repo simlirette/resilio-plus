@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import os
-import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from threading import Event, Thread
@@ -21,10 +20,13 @@ class PollingHandle:
     join_timeout: float = 16.0
 
     def stop(self, timeout: float | None = None) -> None:
+        deadline = self.join_timeout if timeout is None else timeout
         self.stop_event.set()
-        self.thread.join(
-            timeout=self.join_timeout if timeout is None else timeout,
-        )
+        self.thread.join(timeout=deadline)
+        if self.thread.is_alive():
+            raise TimeoutError(
+                f"Telegram polling thread did not stop within {deadline:g} seconds"
+            )
 
 
 class _PollingClient(Protocol):
@@ -33,6 +35,7 @@ class _PollingClient(Protocol):
         *,
         offset: int | None = None,
         timeout: int = 10,
+        stop_event: Event | None = None,
     ) -> list[dict[str, Any]]: ...
 
 
@@ -42,25 +45,36 @@ def run_polling_loop(
     *,
     stop_event: Event,
     poll_timeout: int = 10,
-    sleeper: Callable[[float], None] = time.sleep,
+    waiter: Callable[[float], bool] | None = None,
 ) -> None:
     """Long-poll Telegram until shutdown, advancing after successful processing."""
     offset: int | None = None
+    wait_for_stop = stop_event.wait if waiter is None else waiter
     while not stop_event.is_set():
         try:
-            updates = client.get_updates(offset=offset, timeout=poll_timeout)
+            updates = client.get_updates(
+                offset=offset,
+                timeout=poll_timeout,
+                stop_event=stop_event,
+            )
         except TelegramAPIError:
             logger.warning("telegram_polling_request_failed")
-            sleeper(1.0)
+            if wait_for_stop(1.0):
+                return
             continue
+        if stop_event.is_set():
+            return
         for update in updates:
+            if stop_event.is_set():
+                return
             try:
                 process_update(update)
             except Exception:
                 # Update payloads and downstream exception strings can contain
                 # athlete text, so keep this operational signal deliberately terse.
                 logger.warning("telegram_update_processing_failed")
-                sleeper(1.0)
+                if wait_for_stop(1.0):
+                    return
                 break
             update_id = update.get("update_id")
             if isinstance(update_id, int) and not isinstance(update_id, bool):

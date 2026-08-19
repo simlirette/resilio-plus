@@ -5,6 +5,7 @@ import math
 import re
 import time
 from collections.abc import Callable
+from threading import Event
 from typing import Any, cast
 
 import httpx
@@ -31,6 +32,10 @@ logging.getLogger("httpx").addFilter(_TelegramTokenLogFilter())
 
 class TelegramAPIError(RuntimeError):
     """Raised when Telegram rejects a Bot API operation."""
+
+
+class _TelegramRequestCancelledError(RuntimeError):
+    """Internal signal used to stop a polling request between retries."""
 
 
 class TelegramBotClient:
@@ -96,11 +101,19 @@ class TelegramBotClient:
         *,
         offset: int | None = None,
         timeout: int = 10,
+        stop_event: Event | None = None,
     ) -> list[dict[str, Any]]:
         payload: dict[str, Any] = {"timeout": timeout}
         if offset is not None:
             payload["offset"] = offset
-        result = self._request("getUpdates", payload)
+        try:
+            result = self._request(
+                "getUpdates",
+                payload,
+                stop_event=stop_event,
+            )
+        except _TelegramRequestCancelledError:
+            return []
         if not isinstance(result, list) or not all(isinstance(item, dict) for item in result):
             raise TelegramAPIError("Telegram getUpdates returned an invalid result")
         return [cast(dict[str, Any], dict(item)) for item in result]
@@ -114,8 +127,16 @@ class TelegramBotClient:
             raise TelegramAPIError("Telegram sendChatAction returned an invalid result")
         return result
 
-    def _request(self, method: str, payload: dict[str, Any]) -> object:
+    def _request(
+        self,
+        method: str,
+        payload: dict[str, Any],
+        *,
+        stop_event: Event | None = None,
+    ) -> object:
         for attempt in range(_MAX_ATTEMPTS):
+            if stop_event is not None and stop_event.is_set():
+                raise _TelegramRequestCancelledError
             response: httpx.Response | None
             try:
                 response = self._client.post(
@@ -138,7 +159,12 @@ class TelegramBotClient:
             if (
                 response.status_code == 429 or envelope_rate_limited
             ) and attempt < _MAX_ATTEMPTS - 1:
-                self._sleeper(_retry_after(body, response))
+                delay = _retry_after(body, response)
+                if stop_event is not None:
+                    if stop_event.wait(delay):
+                        raise _TelegramRequestCancelledError
+                else:
+                    self._sleeper(delay)
                 continue
             if response.is_error or not isinstance(body, dict) or body.get("ok") is not True:
                 raise TelegramAPIError(f"Telegram {method} failed")

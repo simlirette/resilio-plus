@@ -55,10 +55,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         polling_handle = start_polling_from_env()
         yield
     finally:
-        if polling_handle is not None:
-            polling_handle.stop()
-        close_telegram_runtime()
-        scheduler.shutdown(wait=False)
+        try:
+            if polling_handle is not None:
+                polling_handle.stop()
+        except BaseException:
+            # A live polling worker may still be using the shared httpx client.
+            # Surface the shutdown failure without closing resources under it.
+            raise
+        else:
+            close_telegram_runtime()
+        finally:
+            scheduler.shutdown(wait=False)
 
 
 app = FastAPI(title="Resilio Plus API", version="0.1.0", lifespan=lifespan)
