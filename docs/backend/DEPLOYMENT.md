@@ -100,6 +100,18 @@ curl -fsS http://localhost:8000/ready/deep      # → DB + Anthropic status
 | `SENTRY_ENVIRONMENT` | no | `development` | Sentry environment tag. |
 | `SENTRY_RELEASE` | no | — | Sentry release tag. |
 | `SENTRY_TRACES_SAMPLE_RATE` | no | `0.0` | Sentry tracing sample rate. |
+| `PUBLIC_BASE_URL` | **yes (V4)** | `http://localhost:8000` | Origin the athlete's phone can reach. Every connect link is built from it — a wrong value produces links that go nowhere. |
+| `TELEGRAM_BOT_TOKEN` | **yes (V4)** | — | BotFather token. Without it the text coach never starts. |
+| `TELEGRAM_MODE` | V4 | `polling` | `polling` or `webhook`. |
+| `TELEGRAM_WEBHOOK_SECRET` | webhook mode | — | Shared secret Telegram echoes in `X-Telegram-Bot-Api-Secret-Token`. |
+| `TELEGRAM_BOOTSTRAP_CHAT_ID` | no | — | Private chat id auto-linked to `ADMIN_ATHLETE_ID` on first message. |
+| `GOOGLE_CLIENT_ID` | calendar | — | OAuth client id (Web application). |
+| `GOOGLE_CLIENT_SECRET` | calendar | — | OAuth client secret. |
+| `GOOGLE_REDIRECT_URI` | calendar | `.../integrations/link/callback/google` | Must match the Cloud Console entry exactly. |
+| `GOOGLE_ENCRYPTION_KEY` | calendar | — | Fernet key for the refresh token. Losing it makes the stored Google token unreadable. |
+| `GOOGLE_CALENDAR_ENABLED` | no | `true` | Set `false` to resolve approvals without writing any events. |
+| `DAILY_REMINDER_ENABLED` | no | `false` | Opt-in 06:30-local message listing the day's sessions. |
+| `TERRA_WIDGET_URL` | no | — | If set, the Terra connect link redirects to the hosted widget. |
 
 Any variable marked "**yes**" missing at boot will cause either a startup failure or a runtime failure at first use. Populate `.env` from `.env.example` before running.
 
@@ -182,6 +194,16 @@ Back up the `postgres_data` and `checkpoint_data` Docker volumes on a schedule.
 - [ ] `/ready` returns 200 once the DB is reachable.
 - [ ] Alembic migrations ran to head on first boot (check entrypoint logs).
 - [ ] Backup schedule in place for Postgres + `/app/runtime` volume.
+- [ ] **V4** `PUBLIC_BASE_URL` is the externally reachable origin, not `localhost`.
+- [ ] **V4** `STRAVA_REDIRECT_URI` and `GOOGLE_REDIRECT_URI` point at
+      `/integrations/link/callback/{strava,google}` and match the provider consoles.
+- [ ] **V4** `GOOGLE_ENCRYPTION_KEY` generated and stored alongside `STRAVA_ENCRYPTION_KEY`.
+- [ ] **V4** In webhook mode: `WEB_CONCURRENCY=1` (update dedupe is process-local),
+      and `setWebhook` registered — verify with `getWebhookInfo`.
+- [ ] **V4** Each athlete's `timezone` and `weekly_cycle_day` / `weekly_cycle_hour`
+      set before the first Sunday, otherwise they get the defaults (Sunday 18:00
+      America/Montreal).
+- [ ] **V4** `scripts/smoke_test_v4.py` run green against the deployed instance.
 
 ---
 
@@ -201,6 +223,8 @@ Back up the `postgres_data` and `checkpoint_data` Docker volumes on a schedule.
 ---
 
 ## 8. References
+
+- `docs/backend/TELEGRAM-COACH.md` — V4 setup runbook (BotFather, Google Cloud, troubleshooting)
 
 - Spec: `docs/superpowers/specs/2026-04-16-backend-deployment-design.md`
 - Plan: `docs/superpowers/plans/2026-04-16-backend-deployment.md`
