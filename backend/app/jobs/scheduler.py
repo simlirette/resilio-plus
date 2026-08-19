@@ -8,7 +8,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from ..db.database import SessionLocal
 from .cleanup_jobs import run_cleanup_job_runs
 from .compute_jobs import run_daily_snapshot, run_energy_patterns
-from .registry import restore_all_jobs
+from .registry import restore_all_jobs, restore_weekly_cycles
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +62,7 @@ def setup_scheduler() -> BackgroundScheduler:
     try:
         with SessionLocal() as db:
             restore_all_jobs(scheduler, db)
+            restore_weekly_cycles(scheduler, db)
     except Exception as exc:  # pragma: no cover
         logger.warning("Could not restore per-athlete jobs on startup (DB unavailable): %s", exc)
 

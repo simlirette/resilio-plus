@@ -237,9 +237,11 @@ def _callback_external_id(callback: Mapping[str, Any]) -> str | None:
     return str(chat_id)
 
 
-def _resolve_weekly_cycle() -> Callable[[str, Session], None] | None:
-    """Manual weekly-cycle trigger — V4-T6 supplies the implementation."""
-    return None
+def _resolve_weekly_cycle() -> Callable[[str, Session], object] | None:
+    """Manual weekly-cycle trigger behind ``/plan``."""
+    from ...jobs.weekly_jobs import run_weekly_cycle_now
+
+    return run_weekly_cycle_now
 
 
 def _resolve_calendar_pusher() -> CalendarPusher | None:

@@ -69,7 +69,7 @@ class CommandRouter:
         db: Session,
         *,
         notifier: NotificationSender,
-        weekly_cycle: Callable[[str, Session], None] | None = None,
+        weekly_cycle: Callable[[str, Session], object] | None = None,
     ) -> None:
         self._db = db
         self._notifier = notifier

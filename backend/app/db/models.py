@@ -103,6 +103,10 @@ class AthleteModel(Base):
     """IANA timezone; every calendar event is written in the athlete's local time."""
     preferred_session_hour_json: Mapped[str] = mapped_column(Text, default="{}")
     """JSON map of sport -> preferred local start hour, e.g. {"running": 6}."""
+    weekly_cycle_day: Mapped[int] = mapped_column(Integer, default=6)
+    """Weekday the weekly coaching cycle runs; 0=Monday … 6=Sunday (Alembic 0017)."""
+    weekly_cycle_hour: Mapped[int] = mapped_column(Integer, default=18)
+    """Local hour the weekly coaching cycle runs."""
 
     # Phase D — CoordinatorService state machine (Alembic 0011)
     journey_phase: Mapped[str] = mapped_column(String, default="signup")

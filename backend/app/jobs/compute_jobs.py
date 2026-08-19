@@ -20,40 +20,48 @@ from .runner import run_job
 logger = logging.getLogger(__name__)
 
 
+def snapshot_athlete(athlete_id: str, db: Session) -> None:
+    """Compute readiness + strain for one athlete and upsert today's snapshot.
+
+    Does not commit — the caller owns the transaction boundary.
+    """
+    today = date.today()
+    data = fetch_connector_data(athlete_id, db)
+    readiness = compute_readiness(
+        [data["terra_health"]] if data["terra_health"] else [],
+    )
+    strain = compute_muscle_strain(
+        data["strava_activities"],
+        data["hevy_workouts"],
+    )
+
+    existing = (
+        db.query(AthleteStateSnapshotModel)
+        .filter_by(athlete_id=athlete_id, snapshot_date=today)
+        .first()
+    )
+    if existing:
+        existing.readiness = readiness
+        existing.strain_json = json.dumps(strain.model_dump())
+    else:
+        db.add(
+            AthleteStateSnapshotModel(
+                id=str(uuid.uuid4()),
+                athlete_id=athlete_id,
+                snapshot_date=today,
+                readiness=readiness,
+                strain_json=json.dumps(strain.model_dump()),
+            )
+        )
+
+
 def _snapshot_all_athletes(db: Session) -> None:
     """Compute readiness + strain for all athletes and upsert snapshots."""
     athletes = db.query(AthleteModel).all()
-    today = date.today()
 
     for athlete in athletes:
         try:
-            data = fetch_connector_data(athlete.id, db)
-            readiness = compute_readiness(
-                [data["terra_health"]] if data["terra_health"] else [],
-            )
-            strain = compute_muscle_strain(
-                data["strava_activities"],
-                data["hevy_workouts"],
-            )
-
-            existing = (
-                db.query(AthleteStateSnapshotModel)
-                .filter_by(athlete_id=athlete.id, snapshot_date=today)
-                .first()
-            )
-            if existing:
-                existing.readiness = readiness
-                existing.strain_json = json.dumps(strain.model_dump())
-            else:
-                db.add(
-                    AthleteStateSnapshotModel(
-                        id=str(uuid.uuid4()),
-                        athlete_id=athlete.id,
-                        snapshot_date=today,
-                        readiness=readiness,
-                        strain_json=json.dumps(strain.model_dump()),
-                    )
-                )
+            snapshot_athlete(athlete.id, db)
         except Exception:
             logger.warning("Snapshot failed for athlete %s", athlete.id, exc_info=True)
 
