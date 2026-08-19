@@ -33,6 +33,7 @@ from .routes.followup import router as followup_router
 from .routes.food_search import router as food_search_router
 from .routes.health import router as health_router
 from .routes.integrations import router as integrations_router
+from .routes.link import router as link_router
 from .routes.mobile import router as mobile_router
 from .routes.mode import router as mode_router
 from .routes.nutrition import router as nutrition_router
@@ -107,6 +108,7 @@ app.include_router(mobile_router)
 app.include_router(checkin_router)
 app.include_router(external_plan_router)
 app.include_router(strain_router)
+app.include_router(link_router)  # MUST precede integrations_router (path overlap)
 app.include_router(integrations_router)
 app.include_router(telegram_router)
 app.include_router(strava_router)

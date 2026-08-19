@@ -602,3 +602,26 @@ class PendingApprovalModel(Base):
         DateTime(timezone=True), nullable=True
     )
     resolution: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+
+class DeepLinkTokenModel(Base):
+    """A single-use link that hands an athlete into a provider's auth flow."""
+
+    __tablename__ = "deep_link_tokens"
+
+    token: Mapped[str] = mapped_column(String, primary_key=True)
+    athlete_id: Mapped[str] = mapped_column(
+        String, ForeignKey("athletes.id"), nullable=False, index=True
+    )
+    provider: Mapped[str] = mapped_column(String, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    consumed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
