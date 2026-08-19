@@ -28,6 +28,10 @@ _BLOCKLIST_FIELDS = frozenset(
 
 _REDACTED = "***"
 _MAX_DEPTH = 5
+_TELEGRAM_BOT_URL = re.compile(
+    r"(https://api\.telegram\.org/bot)[^/\s?]+",
+    re.IGNORECASE,
+)
 
 # Order matters: more specific patterns first so they win.
 _REGEX_PATTERNS: tuple[re.Pattern[str], ...] = (
@@ -44,7 +48,7 @@ def _is_blocklisted(field_name: str) -> bool:
 
 def scrub_string(s: str) -> str:
     """Apply all regex scrubbers to a string."""
-    out = s
+    out = _TELEGRAM_BOT_URL.sub(r"\1***", s)
     for pattern in _REGEX_PATTERNS:
         out = pattern.sub(_REDACTED, out)
     return out
@@ -52,6 +56,8 @@ def scrub_string(s: str) -> str:
 
 def scrub_value(value: Any, _depth: int = 0) -> Any:
     """Return a copy of value with PII scrubbed. Dicts/lists recursed up to depth 5."""
+    if isinstance(value, str):
+        return scrub_string(value)
     if _depth >= _MAX_DEPTH:
         return value
     if isinstance(value, dict):
@@ -63,8 +69,6 @@ def scrub_value(value: Any, _depth: int = 0) -> Any:
         return [scrub_value(item, _depth + 1) for item in value]
     if isinstance(value, tuple):
         return tuple(scrub_value(item, _depth + 1) for item in value)
-    if isinstance(value, str):
-        return scrub_string(value)
     return value
 
 

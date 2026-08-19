@@ -48,7 +48,9 @@ def init_sentry() -> None:
         release=os.getenv("SENTRY_RELEASE") or None,
         traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.0")),
         send_default_pii=False,
+        include_local_variables=False,
         before_send=_sentry_pii_scrubber,
+        before_send_transaction=_sentry_pii_scrubber,
         integrations=[
             FastApiIntegration(),
             StarletteIntegration(),
