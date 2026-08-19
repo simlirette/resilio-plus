@@ -13,6 +13,9 @@
 2. [Strava — OAuth V2](#2-strava--oauth-v2)
 3. [Nutrition — Lookup Service](#3-nutrition--lookup-service)
 4. [Apple Health — XML Import](#4-apple-health--xml-import)
+5. [Telegram — Coach texte](#5-telegram--coach-texte)
+6. [Google Calendar — Écriture du plan](#6-google-calendar--écriture-du-plan)
+7. [Deep links — Connexion depuis un téléphone](#7-deep-links--connexion-depuis-un-téléphone)
 
 ---
 
@@ -496,7 +499,79 @@ same `ConnectorCredentialModel.extra_json` for backward compatibility.
 
 ---
 
-## 5. Tableau récapitulatif
+## 5. Telegram — Coach texte
+
+> Source : `backend/app/integrations/telegram/` + `backend/app/messaging/`
+> Runbook complet (BotFather, webhook, bootstrap) : `docs/backend/TELEGRAM-COACH.md`
+
+Transport channel-neutral : `MessagingChannel` (protocol) → `TelegramChannel`.
+Le reste du backend ne connaît que le protocol, donc un adaptateur SMS/WhatsApp
+se branche sans toucher au coaching.
+
+| Élément | Détail |
+|---|---|
+| Format | `parse_mode="HTML"` — MarkdownV2 est un nid à bugs avec du texte LLM. `format()` traduit un sous-ensemble markdown (`**gras**`, `*italique*`, `` `code` ``, puces) et `html.escape()` le reste |
+| Limite message | 4096 caractères ; `chunking.py` coupe sur paragraphe → phrase → dur, jamais dans une puce ou un bloc de code |
+| Livraison | webhook (`POST /integrations/telegram/webhook`, authentifié par `X-Telegram-Bot-Api-Secret-Token`) ou long-polling en dev (`TELEGRAM_MODE=polling`) |
+| Dédupe | LRU en mémoire sur `update_id` — **process-local** : en webhook, `WEB_CONCURRENCY=1` |
+| Identité | `messaging_identities(channel, external_id)` unique. Un `external_id` inconnu reçoit une consigne d'envoyer son code de liaison ; **jamais** de création d'athlète automatique |
+| Boutons | `callback_data` plafonné à 64 octets → on n'y met que `ap:{token}:{a\|v\|r}` ; tout le reste est relu côté serveur |
+| Audit | Chaque message accepté par le provider est journalisé dans `outbound_messages` |
+
+Le webhook répond 200 immédiatement et traite en `BackgroundTask` (Telegram
+retente sur réponse lente, et un tour LangGraph prend des secondes).
+
+---
+
+## 6. Google Calendar — Écriture du plan
+
+> Source : `backend/app/integrations/google_calendar/`
+
+**Scope : `https://www.googleapis.com/auth/calendar.app.created`** — Resilio peut
+créer un agenda secondaire et gérer les événements **des agendas qu'il a créés**,
+rien d'autre. Supprimer l'agenda « Resilio Training » supprime toute l'empreinte
+de l'intégration.
+
+| Élément | Détail |
+|---|---|
+| OAuth | `oauth_service.py` calqué sur Strava : `state` CSRF stocké en base, refresh token chiffré Fernet (`GOOGLE_ENCRYPTION_KEY`), refresh auto |
+| Client | `client.py` httpx : backoff exponentiel plafonné à 60 s sur 429 / 5xx / 403 `rateLimitExceeded` ; un 403 de permission échoue tout de suite ; 401 → un seul retry avec un token rafraîchi |
+| Idempotence | `calendar_events` unique `(athlete_id, slot_id)` + hash de contenu → re-pousser une semaine identique fait **zéro** écriture API |
+| Suppression | Une séance retirée du plan voit son événement supprimé, mais le nettoyage est borné aux semaines lundi-dimanche couvertes par le plan poussé — les autres semaines ne sont jamais touchées |
+| Survie DB | `extendedProperties.private.resilio_slot_id` sur chaque événement |
+| Heure | Heure locale de l'athlète (`athletes.timezone`) + `timeZone` explicite → une séance de 07:00 reste à 07:00 au changement d'heure. Heure par sport : `athletes.preferred_session_hour_json`, défaut 07:00 |
+| Rendu | Titre `{emoji} {type} — {métrique}`, description = prescription + résumé `FatigueScore` + raison du Head Coach, rappel popup 120 min, `colorId` stable par sport |
+
+Tables : `google_calendar_credentials` (PK `athlete_id`), `calendar_events`
+(migration 0016). Colonnes ajoutées sur `athletes` : `timezone`,
+`preferred_session_hour_json`.
+
+---
+
+## 7. Deep links — Connexion depuis un téléphone
+
+> Source : `backend/app/services/deep_link_service.py`, `backend/app/routes/link.py`
+
+L'athlète n'a pas de session web : le lien **est** l'identité. Jeton opaque à
+usage unique, TTL 2 h, table `deep_link_tokens` (migration 0015).
+
+| Provider | `GET /integrations/link/{token}` |
+|---|---|
+| `strava` | 302 vers l'autorisation Strava → retour sur `/integrations/link/callback/strava` |
+| `google` | 302 vers le consentement Google → retour sur `/integrations/link/callback/google` |
+| `hevy` | Page à un champ pour coller la clé API |
+| `terra` | 302 vers `TERRA_WIDGET_URL` si défini, sinon page à un champ pour l'identifiant Terra |
+
+Après succès : job de sync enregistré, `CoordinatorService.dispatch(..., "system_silent",
+{"connector_connected": provider})`, message de confirmation à l'athlète, et une
+page « Done — go back to Telegram ».
+
+**Ces routes sont volontairement non authentifiées** : le jeton à usage unique est
+le secret, même modèle de confiance que le secret du webhook Telegram.
+
+---
+
+## 8. Tableau récapitulatif
 
 | Intégration | Transport | Auth | Table DB | Sync |
 |-------------|-----------|------|----------|------|
@@ -507,3 +582,5 @@ same `ConnectorCredentialModel.extra_json` for backward compatibility.
 | FCÉN | CSV local | N/A | `food_cache` (permanent) | Bootstrap manuel |
 | Terra | SDK | API key | N/A (lu via connecteur) | Polling APScheduler |
 | Apple Health | XML Upload | JWT Bearer | `apple_health_daily` | Manuel (import, feature-flagged) |
+| Telegram | Bot API (webhook ou polling) | Token bot + secret webhook | `messaging_identities`, `messaging_link_codes`, `outbound_messages`, `pending_approvals` | Temps réel (entrant), cron hebdo (sortant) |
+| Google Calendar | HTTP REST | OAuth 2.0 `calendar.app.created` + Fernet | `google_calendar_credentials`, `calendar_events` | À l'approbation du plan |

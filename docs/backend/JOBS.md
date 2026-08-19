@@ -13,6 +13,14 @@ Created when athlete connects a provider, removed on disconnect.
 | `strava_sync_{id}` | Every 1h | Incremental Strava activity sync via `integrations.strava.sync_service.sync()` |
 | `hevy_sync_{id}` | Every 6h | Hevy workout sync via `SyncService.sync_hevy()` |
 | `terra_sync_{id}` | Every 6h | Terra HRV/sleep sync via `SyncService.sync_terra()` |
+| `weekly_cycle_{id}` | `weekly_cycle_day` / `weekly_cycle_hour` in the athlete's `timezone` (default Sunday 18:00) | The V4 weekly coaching cycle: force-sync every provider → snapshot → generate next week → text it with approve/change/skip buttons. `misfire_grace_time=7200` so a redeploy delays the week instead of skipping it. |
+| `daily_reminder_{id}` | 06:30 athlete-local | Texts today's sessions. No-op unless `DAILY_REMINDER_ENABLED=true`. |
+
+Provider sync jobs are registered when a provider is connected
+(`register_athlete_jobs`). The weekly cycle belongs to the *athlete*, not to a
+provider, so it is registered separately (`register_weekly_cycle`) and restored
+for every athlete at startup by `restore_weekly_cycles()` — an athlete with no
+connectors still gets planned for.
 
 ### Global Jobs
 
