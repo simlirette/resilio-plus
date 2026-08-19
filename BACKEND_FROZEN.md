@@ -47,6 +47,38 @@ Toute modification après ce gel **doit**:
 
 ---
 
+## Modifications Post-Gel Effectuées
+
+### V4 — Text-Native Coach (2026-08-19)
+
+**Justification explicite:** `docs/GOAL-V4-TEXT-COACH.md` — le backend était fini,
+les clients ne l'étaient pas. V4 ajoute le transport (Telegram) et l'automatisation
+(cycle hebdo + Google Calendar) autour du moteur gelé.
+
+**Nature:** additive only. Aucun fichier de `backend/app/agents/`, aucun test
+existant, aucune config mypy/ruff n'a été touché.
+
+| Ajouté | Où |
+|---|---|
+| Messaging channel-neutral | `backend/app/messaging/` |
+| Canal Telegram | `backend/app/integrations/telegram/` |
+| Google Calendar | `backend/app/integrations/google_calendar/` |
+| Deep links providers | `backend/app/services/deep_link_service.py`, `backend/app/routes/link.py` |
+| Invocation des graphes (opt-in) | `backend/app/services/graph_invoker.py` |
+| Cycle hebdomadaire + rappel quotidien | `backend/app/jobs/weekly_jobs.py` |
+| Migrations | Alembic 0013 → 0017 |
+
+**Modifications de fichiers existants** (toutes additives) :
+`db/models.py` (nouvelles tables + colonnes), `services/coordinator_service.py`
+(paramètres `graph_invoker` / `auto_advance_signup`, défaut = comportement
+inchangé), `jobs/compute_jobs.py` (extraction de `snapshot_athlete`,
+comportement identique), `jobs/registry.py` + `jobs/scheduler.py` (nouveaux
+jobs), `main.py` (nouveau router).
+
+**Limites connues consignées:** `docs/V1.1-BACKLOG.md` §11–16.
+
+---
+
 ## Modifications INTERDITES Post-Gel
 
 - Refactoring opportuniste ("ce serait plus propre si...")

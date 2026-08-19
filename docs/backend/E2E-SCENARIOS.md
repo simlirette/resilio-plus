@@ -21,6 +21,20 @@ Tests in `tests/e2e/test_scenario_*.py`. Each file is an independent scenario wi
 | 7 | RED-S veto cap=0.0 | `test_scenario_07_reds_veto.py` | CoachingService | all final sessions `duration_min=1` |
 | 8 | Luteal phase → adjusted plan | `test_scenario_08_luteal_phase.py` | HeadCoach.build_week() | notes reference "luteal", readiness valid |
 
+### V4 — text coach (2026-08-19)
+
+| # | Name | File | Layer | Key assertion |
+|---|---|---|---|---|
+| V4-1 | Weekly cycle → buttons → approve → calendar | `test_v4_weekly_cycle.py` | weekly job + ApprovalService + CalendarSyncService | 2 events created with athlete-local 07:00 starts |
+| V4-2 | Re-running the same week | `test_v4_weekly_cycle.py` | same | updates in place, no duplicate events or rows |
+| V4-3 | Plain-language revision | `test_v4_weekly_cycle.py` | gateway → revise path | revised week re-texted with a fresh token, dropped session absent |
+| V4-4 | Session removed next week | `test_v4_weekly_cycle.py` | calendar prune | `deleted == 1`, the surviving event untouched |
+| V4-5 | Skip the week | `test_v4_weekly_cycle.py` | ApprovalService | zero calendar writes, approval resolved `reject` |
+| V4-6 | Onboarding driven only by text | `tests/backend/messaging/test_onboarding_over_text.py` | gateway + live coordinator | phase walks `signup → onboarding → baseline_pending_confirmation`, ends on a proposal with three buttons |
+
+Only the LLM (the coaching graph) and the Google API are faked in these; the
+approval store, revision latch, calendar reconciler and event bodies are real.
+
 ---
 
 ## Common Pattern (S1–S7)
