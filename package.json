@@ -2,6 +2,10 @@
   "name": "resilio-plus-monorepo",
   "private": true,
   "scripts": {
+    "typecheck": "pnpm --filter @resilio/api-client --filter @resilio/shared-logic typecheck",
+    "test": "pnpm --filter @resilio/api-client --filter @resilio/shared-logic test",
+    "build": "echo \"[frozen] web/mobile/desktop are frozen for V4 — use build:web, build:mobile or build:desktop\"",
+    "dev": "echo \"[frozen] web/mobile/desktop are frozen for V4 — use dev:web, dev:mobile or dev:desktop\"",
     "dev:web": "pnpm --filter @resilio/web dev",
     "dev:desktop": "concurrently -n \"next,tauri\" -c \"cyan,green\" \"pnpm dev:web\" \"wait-on tcp:3000 && pnpm --filter @resilio/desktop dev\"",
     "dev:mobile": "pnpm --filter @resilio/mobile dev",
@@ -12,14 +16,14 @@
     "build:mobile:ios": "pnpm --filter @resilio/mobile build:ios",
     "build:mobile:ios:preview": "cd apps/mobile && eas build --platform ios --profile preview",
     "build:mobile:ios:production": "cd apps/mobile && eas build --platform ios --profile production",
-    "typecheck": "pnpm --filter @resilio/web typecheck",
     "typecheck:mobile": "cd apps/mobile && npx tsc --noEmit",
-    "lint": "pnpm --filter @resilio/web lint",
     "test:mobile": "pnpm --filter @resilio/ui-mobile test",
     "test:mobile:watch": "pnpm --filter @resilio/ui-mobile test:watch",
     "test:mobile:regression": "pnpm --filter @resilio/mobile test:regression",
     "test:mobile:app": "pnpm --filter @resilio/mobile test:app",
-    "preview:mobile-web": "pnpm --filter @resilio/mobile preview-web"
+    "preview:mobile-web": "pnpm --filter @resilio/mobile preview-web",
+    "typecheck:web": "pnpm --filter @resilio/web typecheck",
+    "lint:web": "pnpm --filter @resilio/web lint"
   },
   "devDependencies": {
     "concurrently": "^9.0.0",

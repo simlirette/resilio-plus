@@ -1,5 +1,8 @@
 # Resilio+ Mobile TestFlight MVP
 
+> **PAUSED 2026-08-19** — mobile is frozen for Resilio V4. This plan is kept,
+> not abandoned: see `docs/GOAL-V4-TEXT-COACH.md` and `apps/mobile/FROZEN.md`.
+
 Date: 2026-04-26
 
 This document is the short source of truth for turning the Expo scaffold into a
