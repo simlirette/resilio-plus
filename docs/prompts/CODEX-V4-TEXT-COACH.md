@@ -78,7 +78,7 @@ Read these before writing a single line.
    ruff: 0 violations
    ```
 
-   **These 3 failures are PRE-EXISTING and are NOT yours. Do not fix them, do not chase them, and
+   **These 4 failures are PRE-EXISTING and are NOT yours. Do not fix them, do not chase them, and
    do not treat them as a regression you caused.** Verified: the Phase D merge touched none of the
    files involved (0 commits against each path).
 
@@ -87,11 +87,14 @@ Read these before writing a single line.
    | `test_apple_health_endpoint.py::TestValidImport::test_minimal_valid_imports_one_day` | Date drift — fixtures dated 2026-04-14/15 vs date-relative import logic |
    | `test_apple_health_endpoint.py::TestValidImport::test_multi_day_imports_seven_days` | Same |
    | `test_config.py::TestGetRepoRoot::test_get_repo_root_raises_when_not_in_repo` | Environmental — `get_repo_root()` resolves a repo where the test expects none |
+   | `test_vdot_continuity.py::TestBreakDetection::test_high_continuity_no_breaks` | Date drift — on 2026-08-19 the 60-day window begins Saturday; the partial Monday-Sunday week contains no in-window run and is counted as a 7-day break |
 
-   Both areas are outside V4 scope, and fixing them would mean editing V1-FROZEN tests, which
-   constraint 1 forbids. **Your gate is: exactly these 3 failures and no others, with the passing
-   count at 2693 or higher** (2616 was the pre-T1 baseline; T1 added 77 messaging tests).
-   A 4th failure means you broke something — stop and fix it.
+   All four are outside V4 scope, and fixing them would mean editing V1-FROZEN tests or the
+   read-only legacy CLI, which constraints 1 and 2 forbid. **Your gate is: exactly these 4 failures
+   and no others, with the passing count at 2692 or higher** (2616 was the pre-T1 baseline; T1 added
+   77 messaging tests; the newly date-drifting VDOT assertion removes one pass).
+   A 5th failure means something else is wrong — stop and investigate it. A transient Windows
+   SQLite cleanup lock is not an accepted baseline failure; it must be absent from the final run.
 5. **Atomic conventional commits**, one per logical task: `feat(telegram):`, `feat(gcal):`,
    `feat(jobs):`, `chore(freeze):`, `test(...)`, `docs(...)`.
 6. **No new stack.** LangGraph + FastAPI + SQLAlchemy 2 (sync, psycopg2) + APScheduler + Pydantic v2.
@@ -266,15 +269,19 @@ chunking at exactly the boundary, chunking a 12 000-char plan, athlete with no i
 **New: `backend/app/integrations/telegram/`**
 
 - `client.py` — thin `httpx` wrapper over Bot API: `sendMessage`, `answerCallbackQuery`,
-  `setWebhook`, `getUpdates`. Retries on 429 honouring `retry_after`. Timeout 15s.
+  `setWebhook`, `getUpdates`. Retries only explicit 429s, honouring `retry_after` with a 60-second
+  maximum backoff. Timeout 15s.
 - `channel.py` — `TelegramChannel(MessagingChannel)`. **Use `parse_mode="HTML"`, not MarkdownV2** —
   MarkdownV2 escaping is a bug farm and LLM output is full of `.`, `-`, `!`, `(`. Implement
   `format()` as markdown-subset → HTML (`**b**`, `*i*`, `` `code` ``, bullet lines) with
   `html.escape()` on everything else. `max_message_length() == 4096`.
+- `runtime.py` — shared update processor for webhook and polling deliveries. Only private chats may
+  enter identity linking or coordinator dispatch; callback queries are acknowledged before an
+  optional handler seam that T3 wires.
 - `webhook.py` — `POST /integrations/telegram/webhook`:
   - Validates the `X-Telegram-Bot-Api-Secret-Token` header against `TELEGRAM_WEBHOOK_SECRET`. Reject
     with 403 otherwise. **This endpoint is unauthenticated by design** — the secret token *is* the auth.
-  - Handles `message` (→ `gateway.handle_inbound`) and `callback_query` (→ T3).
+  - Hands accepted `message` and `callback_query` updates to the shared runtime processor.
   - **Returns 200 immediately and processes in a `BackgroundTask`.** Telegram retries on slow
     responses and LangGraph turns take seconds.
   - Deduplicates on `update_id` (in-memory LRU of 1000 is sufficient at this scale).
@@ -287,7 +294,7 @@ chunking at exactly the boundary, chunking a 12 000-char plan, athlete with no i
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_MODE=polling            # polling | webhook
 TELEGRAM_WEBHOOK_SECRET=
-TELEGRAM_BOOTSTRAP_CHAT_ID=      # optional: auto-link this chat_id to ADMIN_ATHLETE_ID on first message
+TELEGRAM_BOOTSTRAP_CHAT_ID=      # optional: auto-link this private chat_id to ADMIN_ATHLETE_ID
 ```
 
 **Tests:** mock the Bot API with `respx` scoped to `https://api.telegram.org`. **Do not** patch

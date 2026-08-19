@@ -15,7 +15,8 @@ T2 adds only the Telegram transport around the channel-neutral messaging core de
 - a synchronous, 15-second `httpx` Bot API client;
 - an HTML `MessagingChannel` adapter with a 4,096-character limit;
 - an unauthenticated webhook authenticated by Telegram's secret-token header;
-- background update processing, process-local update deduplication, and a typing action;
+- private-chat-only background update processing, process-local update deduplication, and a typing
+  action;
 - a stoppable daemon long-poller for local development;
 - lazy environment-based runtime composition and FastAPI lifespan wiring.
 
@@ -27,6 +28,7 @@ weekly automation, and deployment automation remain later work packages.
 ```text
 Telegram webhook or poller
   -> validate/dedupe update
+  -> reject non-private identity traffic
   -> fresh SessionLocal for that update
   -> TelegramUpdateProcessor
   -> MessagingGateway.handle_inbound("telegram", chat_id, text)
@@ -43,9 +45,10 @@ share the same synchronous update processor, and each update owns a fresh SQLAlc
 
 The client supports `sendMessage`, `answerCallbackQuery`, `setWebhook`, `getUpdates`, and
 `sendChatAction`. It retries only explicit Telegram 429 responses and sleeps for
-`parameters.retry_after`; ambiguous transport and 5xx failures are not retried because retrying a
-possibly accepted `sendMessage` can duplicate athlete-facing messages. Provider errors are
-translated to sanitized exceptions so the bot token embedded in the request URL is never exposed.
+`parameters.retry_after`, capped at 60 seconds; ambiguous transport and 5xx failures are not retried
+because retrying a possibly accepted `sendMessage` can duplicate athlete-facing messages. Provider
+errors are translated to sanitized exceptions so the bot token embedded in the request URL is never
+exposed.
 
 ## Formatting and Buttons
 
@@ -59,7 +62,8 @@ Inline callback data is validated as 1-64 UTF-8 bytes; it contains opaque tokens
 Normal unknown senders may redeem a one-time T1 link code. For the locked single-athlete deployment,
 `TELEGRAM_BOOTSTRAP_CHAT_ID` may also be linked idempotently to the existing
 `ADMIN_ATHLETE_ID` on its first message. This path never creates an athlete and never reassigns an
-existing messaging identity.
+existing messaging identity. Only a Telegram chat whose type is `private` can enter linking,
+bootstrap, coordinator dispatch, or the future T3 callback-handler seam.
 
 ## Configuration
 
@@ -70,18 +74,32 @@ existing messaging identity.
 - `TELEGRAM_BOOTSTRAP_CHAT_ID`: optional single-athlete bootstrap chat identifier.
 
 Configuration is read lazily. Importing the application remains safe for existing tests and
-deployments where Telegram is not enabled.
+deployments where Telegram is not enabled. The Windows development launcher passes `.env` to
+Uvicorn so the documented polling configuration is loaded without manual environment exports.
 
 ## Security and Reliability
 
 - The webhook compares the secret header in constant time and has no JWT dependency by design.
 - Incoming `update_id` values are recorded under a lock in a 1,000-entry LRU before background work
   is scheduled.
-- Bot tokens, chat identifiers, callback identifiers, and message bodies are not logged.
+- Bot tokens, chat identifiers, callback identifiers, and message bodies are not logged. Bot API
+  URLs are also scrubbed from Sentry error events and HTTP spans, and Sentry frame locals are
+  disabled.
+- Callback acknowledgement is best-effort and cannot suppress the later T3 callback-handler seam.
+- Group, supergroup, channel, and malformed chat payloads are ignored before identity resolution;
+  callback spinners are still acknowledged, but non-private callbacks never reach the T3 seam.
 - Polling has an explicit stop event and bounded shutdown; it is intended for a single local process.
-- The in-memory LRU is process-local. Production V4 must use webhook mode and a single worker if
-  cross-worker duplicate processing is unacceptable; durable/cross-process deduplication is outside
-  the expressly approved T2 design.
+  Its offset advances only after processing succeeds, so a failed local update is retried after a
+  bounded backoff.
+- The in-memory LRU is process-local. Production V4 must use webhook mode with one worker; T8 owns
+  that deployment setting. Durable/cross-process deduplication is outside the expressly approved T2
+  design.
+
+The expressly approved webhook `BackgroundTask` plus in-memory LRU is not a durable inbox. A process
+crash after HTTP 200 can lose an accepted update, while a restart or second worker can reprocess one.
+Likewise, local polling provides at-least-once redelivery but cannot make partially completed gateway
+effects exactly-once. Durable ordered delivery would require a schema-backed inbox and belongs to a
+separate reliability work package rather than this no-migration T2 transport.
 
 ## Verification
 
@@ -89,6 +107,7 @@ New tests use `respx.mock(base_url="https://api.telegram.org")`, never a global 
 `httpx.Client`. They cover client payloads and 429 delays, HTML escaping and formatting, the 4,096
 limit, button encoding, webhook secret rejection, background scheduling, update deduplication,
 typing-before-dispatch, identity bootstrap/link-code redemption, polling offsets, and lifecycle
-startup/shutdown.
+startup/shutdown. They also prove that non-private messages cannot link or dispatch and that
+non-private callbacks are acknowledged without crossing the identity boundary.
 
 T2 has no database schema change and therefore no Alembic revision.
