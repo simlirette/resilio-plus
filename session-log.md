@@ -196,3 +196,18 @@ Rejected:
 - Prose summary of EXERCISE_MUSCLE_MAP — verbatim copy only (drift risk, same rule as previous sessions)
 Open:
 - `docs/backend/INTEGRATIONS.md.backup` still on disk — can delete once user confirms
+
+## 2026-08-19 [saved] — V4 T1 + T2 text-coach transport
+Goal: Preserve the completed V4 messaging core (T1) and Telegram channel (T2) before handing back at the T2 boundary.
+Decisions:
+- T1 shipped the channel-agnostic messaging core: identity/link-code resolution, inbound coordinator dispatch, outbound notification logging, and safe long-message chunking; 77 messaging tests were merged and verified on `main`.
+- T2 uses Telegram `parse_mode="HTML"`, not MarkdownV2, with escaped markdown-subset formatting and Telegram's 4096-character message limit.
+- Webhook `update_id` deduplication is an in-memory LRU and therefore process-local by design; durable or multi-worker deduplication is outside T2.
+- `callback_query` is acknowledged and routed through an optional `callback_handler` seam intentionally left `None`; T3 will plug approval-token handling into that seam.
+- Bot API retries apply only to explicit HTTP 429 responses, honour `retry_after`, and cap backoff at 60 seconds.
+- This branch survived two separate interruptions: a Codex code-mode-cell wedge while waiting on a long gate, then a Claude Code app update mid-T2. Small atomic commits are the recovery strategy.
+- Resilio Sync was found replacing uncommitted `session-log.md` content with a stale 29-line Phase D copy. HEAD's 198-line history was restored before this entry; future unexpected tracked-file regressions must be diffed against HEAD and reapplied before commit.
+Rejected:
+- MarkdownV2 formatting, persistent dedupe in T2, and implementing callback approvals before T3.
+Open:
+- Finish the T2 pre/post-commit invariant gates and atomic commits, then stop; T3 is next and must begin in a fresh package.
