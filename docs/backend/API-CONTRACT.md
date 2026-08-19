@@ -29,7 +29,8 @@
 19. [Recherche alimentaire](#recherche-alimentaire)
 20. [Admin](#admin)
 21. [Health probes](#health-probes)
-22. [Codes d'erreur de référence](#codes-derreur-de-référence)
+22. [Text coach — Telegram & deep links (V4)](#text-coach--telegram--deep-links-v4)
+23. [Codes d'erreur de référence](#codes-derreur-de-référence)
 
 ---
 
@@ -1610,6 +1611,32 @@ Deep readiness — vérifie DB + connectivité Anthropic API (httpx).
 **Response 200** : `{ "status": "ready", "db": "ok", "anthropic": "ok" }`
 
 **Response 503** : `{ "status": "degraded", "db": "...", "anthropic": "..." }`
+
+---
+
+## Text coach — Telegram & deep links (V4)
+
+> Ces routes ne sont **pas** destinées à un frontend. Elles servent Telegram et
+> le navigateur du téléphone de l'athlète. Runbook : `docs/backend/TELEGRAM-COACH.md`.
+
+**Elles sont volontairement non authentifiées** (pas de JWT) : le secret est
+soit l'en-tête partagé avec Telegram, soit un jeton opaque à usage unique.
+Aucune ne prend de `athlete_id` en entrée — l'identité vient toujours du côté
+serveur (identité de chat vérifiée, ou jeton).
+
+| Méthode | Path | Auth | Réponse |
+|---|---|---|---|
+| `POST` | `/integrations/telegram/webhook` | En-tête `X-Telegram-Bot-Api-Secret-Token` == `TELEGRAM_WEBHOOK_SECRET` | `200 {"ok": true}` immédiat, traitement en tâche de fond. `403` si le secret ne correspond pas |
+| `GET` | `/integrations/link/{token}` | Jeton usage unique | `302` vers le provider (Strava, Google, widget Terra) ou `200` HTML (formulaire de clé). `410` si consommé/expiré/inconnu |
+| `POST` | `/integrations/link/{token}` | Jeton usage unique | `200` HTML « Done — go back to Telegram ». `410` si consommé/expiré. Champs form : `api_key` (Hevy) ou `terra_user_id` (Terra) |
+| `GET` | `/integrations/link/callback/strava?code=&state=` | `state` CSRF | `200` HTML de confirmation. `410` si `state` invalide, `502` si l'échange de jeton échoue |
+| `GET` | `/integrations/link/callback/google?code=&state=` | `state` CSRF | `200` HTML de confirmation. `410` si `state` invalide, `502` si l'échange échoue, `503` si Google n'est pas configuré |
+
+Après un callback réussi : job de sync enregistré, `system_silent` dispatché au
+coordinator, message de confirmation envoyé à l'athlète.
+
+Les jetons de lien sont émis par `/connect` dans le chat (voir
+`app.services.deep_link_service.issue_connector_links`), TTL 2 h, usage unique.
 
 ---
 
