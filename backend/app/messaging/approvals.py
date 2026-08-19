@@ -225,9 +225,10 @@ def resolve(
                     PendingApprovalModel.resolved_at.is_(None),
                 )
                 .values(resolved_at=now, resolution=resolution)
+                .returning(PendingApprovalModel.token)
                 .execution_options(synchronize_session=False)
-            ).rowcount
-            if claimed != 1:
+            ).scalar_one_or_none()
+            if claimed is None:
                 raise AlreadyResolvedApprovalError
     except SQLAlchemyError:
         raise ApprovalPersistenceError from None

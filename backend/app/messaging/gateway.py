@@ -25,6 +25,27 @@ class NotificationSender(Protocol):
     ) -> object: ...
 
 
+class RevisionRouter(Protocol):
+    """Structural subset of ApprovalService used for free-text revisions."""
+
+    def take_pending_revision_token(
+        self,
+        *,
+        channel: str,
+        external_id: str,
+    ) -> str | None: ...
+
+    def handle_revision_text(
+        self,
+        *,
+        athlete_id: str,
+        channel: str,
+        external_id: str,
+        token: str,
+        text: str,
+    ) -> object: ...
+
+
 class _CoordinatorDispatcher(Protocol):
     def dispatch(
         self,
@@ -84,12 +105,14 @@ class MessagingGateway:
         *,
         coordinator: _CoordinatorDispatcher = coordinator_service,
         notifier: NotificationSender,
+        approvals: RevisionRouter | None = None,
         clock: Callable[[], datetime] = _utcnow,
     ) -> None:
         self._db = db
         self._channels = dict(channels)
         self._coordinator = coordinator
         self._notifier = notifier
+        self._approvals = approvals
         self._clock = clock
 
     def resolve_athlete(self, channel: str, external_id: str) -> str | None:
@@ -112,6 +135,21 @@ class MessagingGateway:
             except Exception:
                 raise MessagingDeliveryError from None
             return
+
+        if self._approvals is not None:
+            pending_token = self._approvals.take_pending_revision_token(
+                channel=channel,
+                external_id=external_id,
+            )
+            if pending_token is not None:
+                self._approvals.handle_revision_text(
+                    athlete_id=athlete_id,
+                    channel=channel,
+                    external_id=external_id,
+                    token=pending_token,
+                    text=text,
+                )
+                return
 
         try:
             result = self._coordinator.dispatch(

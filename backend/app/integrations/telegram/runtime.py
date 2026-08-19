@@ -15,6 +15,8 @@ from sqlalchemy.orm import Session
 
 from ...db.database import SessionLocal
 from ...db.models import AthleteModel, MessagingIdentityModel
+from ...messaging.approval_service import ApprovalService, CalendarPusher
+from ...messaging.approvals import ApprovalOwnershipError, parse_callback
 from ...messaging.gateway import InvalidLinkCodeError, MessagingGateway
 from ...messaging.notification_service import NotificationService
 from .channel import TelegramChannel
@@ -178,6 +180,68 @@ class TelegramUpdateProcessor:
                 raise
 
 
+def build_approval_callback_handler(
+    approval_factory: Callable[[Session], ApprovalService],
+) -> Callable[[Mapping[str, Any], Session], None]:
+    """Map a Telegram callback_query onto the approval it names.
+
+    The chat is the identity: the athlete is resolved from the verified
+    messaging identity, never from anything inside ``callback_data``.
+    """
+
+    def handle(callback: Mapping[str, Any], db: Session) -> None:
+        data = callback.get("data")
+        if not isinstance(data, str):
+            return
+        parsed = parse_callback(data)
+        if parsed is None:
+            return
+        token, resolution = parsed
+
+        external_id = _callback_external_id(callback)
+        if external_id is None:
+            return
+
+        athlete_id = db.scalar(
+            select(MessagingIdentityModel.athlete_id).where(
+                MessagingIdentityModel.channel == "telegram",
+                MessagingIdentityModel.external_id == external_id,
+                MessagingIdentityModel.verified_at.is_not(None),
+            )
+        )
+        if athlete_id is None:
+            return
+
+        try:
+            approval_factory(db).handle_button(
+                athlete_id=athlete_id,
+                channel="telegram",
+                external_id=external_id,
+                token=token,
+                resolution=resolution,
+            )
+        except ApprovalOwnershipError:
+            logger.warning("telegram_approval_forbidden")
+
+    return handle
+
+
+def _callback_external_id(callback: Mapping[str, Any]) -> str | None:
+    message = callback.get("message")
+    chat = message.get("chat") if isinstance(message, dict) else None
+    chat_id = chat.get("id") if isinstance(chat, dict) else None
+    if isinstance(chat_id, bool) or not isinstance(chat_id, (int, str)):
+        return None
+    return str(chat_id)
+
+
+def _resolve_calendar_pusher() -> CalendarPusher | None:
+    """Calendar seam — V4-T5 supplies the Google Calendar implementation."""
+    from ...messaging.calendar_hook import get_calendar_pusher
+
+    return get_calendar_pusher()
+
+
 def build_telegram_runtime() -> TelegramRuntime:
     token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
     if not token:
@@ -189,12 +253,20 @@ def build_telegram_runtime() -> TelegramRuntime:
     channel = TelegramChannel(client)
     channels = {channel.name: channel}
 
+    def approval_factory(db: Session) -> ApprovalService:
+        return ApprovalService(
+            db,
+            notifier=NotificationService(db, channels),
+            calendar_pusher=_resolve_calendar_pusher(),
+        )
+
     def gateway_factory(db: Session) -> MessagingGateway:
         notifier = NotificationService(db, channels)
         return MessagingGateway(
             db,
             channels,
             notifier=notifier,
+            approvals=approval_factory(db),
         )
 
     def session_factory() -> Session:
@@ -208,6 +280,7 @@ def build_telegram_runtime() -> TelegramRuntime:
         gateway_factory=gateway_factory,
         bootstrap_chat_id=bootstrap_chat_id,
         admin_athlete_id=admin_athlete_id,
+        callback_handler=build_approval_callback_handler(approval_factory),
     )
     return TelegramRuntime(
         client=client,
