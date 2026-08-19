@@ -237,6 +237,20 @@ The Running Coach has the richest existing knowledge base.
 
 ## Testing Gotchas
 
+- **`db_session` resolves to PostgreSQL unless a nearer conftest defines it:** the
+  root `tests/conftest.py` `db_session` fixture is the live-PG one and **skips**
+  when Postgres is not running. Sub-trees with their own conftest
+  (`tests/backend/messaging/`, `services/`, `integrations/`) shadow it with an
+  in-memory SQLite session. `tests/backend/jobs/` has no conftest — a new test
+  there that just asks for `db_session` will silently skip, not run. Define a
+  module-level `db_session` fixture in the test file (see
+  `tests/backend/jobs/test_weekly_jobs.py`) rather than adding a package
+  conftest, which would change how the existing job tests resolve.
+- **Transaction discipline in the messaging layer:** `MessagingGateway`,
+  `NotificationService` and `app.messaging.approvals` each own their unit of
+  work and *refuse* a session that is already in a transaction. Any read before
+  them (`db.get`, `db.query`) autobegins one — commit or roll back before
+  handing the session over. This is what `weekly_jobs._settle()` exists for.
 - **Mocking httpx in FastAPI tests:** `TestClient` extends `httpx.Client`, so `patch.object(httpx.Client, "get", ...)` intercepts the TestClient's own ASGI dispatch. Use `respx.mock(base_url="https://api.example.com")` to scope the patch to the real external URL. Example: `tests/backend/api/test_health.py::test_ready_deep_all_green`.
 
 ---
