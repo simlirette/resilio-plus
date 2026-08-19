@@ -123,7 +123,7 @@ class TelegramUpdateProcessor:
                 try:
                     gateway.link_identity("telegram", external_id, text.strip())
                 except InvalidLinkCodeError:
-                    gateway.handle_inbound("telegram", external_id, text)
+                    self._deliver_inbound(gateway, external_id, text)
                 else:
                     confirmation = self._channel.format("Telegram connected to Resilio.")
                     self._channel.send(external_id, confirmation)
@@ -133,7 +133,37 @@ class TelegramUpdateProcessor:
                 self._channel.send_typing(external_id)
             except Exception:
                 logger.warning("telegram_typing_action_failed")
+            self._deliver_inbound(gateway, external_id, text)
+
+    def _deliver_inbound(
+        self,
+        gateway: _InboundGateway,
+        external_id: str,
+        text: str,
+    ) -> None:
+        """Hand the message to the coach; answer the athlete if that fails.
+
+        Swallowing the failure here is deliberate. Letting it escape would leave
+        the polling loop retrying the same update at the same offset forever
+        against a deterministically failing message, and the athlete would see
+        nothing either way.
+        """
+        try:
             gateway.handle_inbound("telegram", external_id, text)
+        except Exception:
+            # Update payloads and downstream exception strings carry athlete
+            # text, so keep this operational signal terse.
+            logger.warning("telegram_inbound_failed")
+            try:
+                self._channel.send(
+                    external_id,
+                    self._channel.format(
+                        "Something broke on my side and I could not answer that. "
+                        "Try again in a moment."
+                    ),
+                )
+            except Exception:
+                logger.warning("telegram_inbound_failure_notice_failed")
 
     def _ensure_bootstrap_identity(self, db: Session, external_id: str) -> None:
         if (

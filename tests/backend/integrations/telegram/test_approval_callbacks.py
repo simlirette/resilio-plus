@@ -161,3 +161,64 @@ def test_cross_athlete_denial_does_not_escape_the_handler(
     handler(_callback(encode_callback("abcdefghijklmnop", "approve")), db_session)
 
     assert len(service.calls) == 1
+
+
+class ExplodingGateway:
+    def __init__(self) -> None:
+        self.calls: list[str] = []
+
+    def resolve_athlete(self, channel: str, external_id: str) -> str | None:
+        return "athlete-cb"
+
+    def link_identity(self, channel: str, external_id: str, link_code: str) -> str:
+        raise AssertionError("known senders must not enter the link flow")
+
+    def handle_inbound(self, channel: str, external_id: str, text: str) -> None:
+        self.calls.append(text)
+        raise RuntimeError("graph unavailable")
+
+
+class RecordingChannel:
+    name = "telegram"
+
+    def __init__(self) -> None:
+        self.sent: list[str] = []
+
+    def send(self, external_id: str, text: str) -> str:
+        self.sent.append(text)
+        return "m1"
+
+    def send_typing(self, external_id: str) -> None:
+        return None
+
+    def answer_callback_query(self, callback_query_id: str) -> None:
+        return None
+
+    def format(self, text: str) -> str:
+        return text
+
+
+def test_a_failing_inbound_answers_the_athlete_and_does_not_escape() -> None:
+    from contextlib import nullcontext
+
+    from app.integrations.telegram.runtime import TelegramUpdateProcessor
+
+    channel = RecordingChannel()
+    gateway = ExplodingGateway()
+    processor = TelegramUpdateProcessor(
+        channel=channel,  # type: ignore[arg-type]
+        session_factory=lambda: nullcontext(object()),  # type: ignore[arg-type]
+        gateway_factory=lambda _db: gateway,
+    )
+
+    processor.process_update(
+        {
+            "message": {
+                "chat": {"id": 4242, "type": "private"},
+                "text": "how did last week go?",
+            }
+        }
+    )
+
+    assert gateway.calls == ["how did last week go?"]
+    assert "could not answer" in channel.sent[-1]
