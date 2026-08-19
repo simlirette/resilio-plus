@@ -87,7 +87,10 @@ class FatigueScore:
 | `backend/app/integrations/strava/` | Strava OAuth V2: `oauth_service.py` (Fernet encryption), `activity_mapper.py`, `sync_service.py` (incremental) | V3-R |
 | `backend/app/integrations/nutrition/` | USDA + OFF + FCÉN clients + unified cache-first search service | V3-P |
 | `backend/app/integrations/apple_health/` | XML streaming parser + daily aggregator + DB importer | V3-X |
-| `backend/app/jobs/` | APScheduler background jobs: `runner.py` (timeout wrapper + correlation_id + metrics), `registry.py` (per-athlete), `sync_jobs.py`, `compute_jobs.py`, `cleanup_jobs.py`, `scheduler.py` (global cron), `models.py` (`JobRunModel` + `AthleteStateSnapshotModel`) | V3-S |
+| `backend/app/messaging/` | Channel-neutral text coach: `base.py` (MessagingChannel + Button), `gateway.py` (identity, inbound routing, revision latch, plan hand-off), `notification_service.py`, `chunking.py`, `approvals.py` (tokens + callback codec), `approval_service.py`, `plan_renderer.py`, `commands.py`, `calendar_hook.py`, `outbound.py` | V4-T1/T3/T4 |
+| `backend/app/integrations/telegram/` | Bot client, HTML channel, webhook + polling, shared update runtime, approval callbacks | V4-T2/T3 |
+| `backend/app/integrations/google_calendar/` | OAuth (`calendar.app.created`, Fernet), httpx client, `event_builder.py` (DST-safe local times), `calendar_sync_service.py` (idempotent push) | V4-T5 |
+| `backend/app/jobs/` | APScheduler background jobs: `runner.py` (timeout wrapper + correlation_id + metrics), `registry.py` (per-athlete), `sync_jobs.py`, `compute_jobs.py`, `cleanup_jobs.py`, `scheduler.py` (global cron), `models.py` (`JobRunModel` + `AthleteStateSnapshotModel`) | V3-S | Weekly cycle + daily reminder live in `weekly_jobs.py` (V4-T6).
 | `backend/app/observability/` | JSON logging + PII filter + correlation ContextVars + in-memory metrics + conditional Sentry: `pii_filter.py`, `correlation.py` (ContextVar + middleware), `logging_config.py` (dictConfig), `metrics.py` (`Metrics` singleton + `MetricsMiddleware` + `track_agent_call`), `sentry.py` (conditional init) | V3-U |
 | `backend/app/core/energy_patterns.py` | Pure functions: `detect_heavy_legs`, `detect_chronic_stress`, `detect_persistent_divergence`, `detect_reds_signal`, `detect_energy_patterns(db)` | V3-S (extracted from deleted `sync_scheduler.py`) |
 | `frontend/src/app/` | Next.js pages: login, onboarding, dashboard, plan, review, session/[id], history | Phase 4-8 |
@@ -136,6 +139,15 @@ class FatigueScore:
 | V3-W | Tech Debt Cleanup — mypy --strict 0 errors (131 files), ruff 0 violations; SQLAlchemy Mapped[T] migration (`jobs/models.py` + all DB models), circular import fix (`models/schemas.py` re-export shim), 3rd-party stubs (`types-python-dateutil`), mypy overrides for LangGraph/APScheduler, `Self` type for BaseConnector, `Callable[..., dict[str, Any]]` for log_node, `AsyncGenerator[None, None]` for lifespan, N806/N817/F841/E501 ruff fixes, `.pre-commit-config.yaml` (ruff + mypy hooks), `docs/backend/TYPING-CONVENTIONS.md` | ✅ Complete (2026-04-16) |
 | V3-X | Apple Health XML Import — streaming lxml.iterparse, `apple_health_daily` table (Alembic 0010), `AthleteMetrics.hrv_sdnn`, `POST /integrations/apple-health/import` (feature-flagged), 10 synthetic fixtures, SDNN/RMSSD separation documented | ✅ Complete (2026-04-16) |
 | V1-FROZEN | Backend Final Audit + Freeze — 2430 tests (0 flakes), mypy 0 errors, ruff clean, security audit, 2 flakes fixed, `BACKEND_FROZEN.md`, `backend/CONTRACT.md`, `docs/backend-audit-2026-04-17.md`, `docs/backend-security-audit-2026-04-17.md` | ✅ FROZEN (2026-04-17) |
+| V4-T0..T2 | Text coach transport — messaging core (channel-agnostic gateway, link codes, chunking, outbound audit) + Telegram channel (HTML formatting, webhook + polling, 429 retries, deterministic shutdown), Alembic 0013 | ✅ Complete (2026-08-19) |
+| V4-T3 | Approvals over text — `pending_approvals` (Alembic 0014), ownership-first single-use `resolve()`, 64-byte callback codec, revision latch on the identity row, `ApprovalService` resuming the parked plan thread | ✅ Complete (2026-08-19) |
+| V4-T4 | Onboarding over text — `DefaultGraphInvoker` (coordinator finally runs graphs, opt-in), single-use provider deep links (Alembic 0015) + `/integrations/link/*` routes, slash commands (`/connect`, `/status`, `/plan`, `/help`) | ✅ Complete (2026-08-19) |
+| V4-T5 | Google Calendar — `calendar.app.created` OAuth with Fernet tokens, httpx client with backoff + 401 refresh, DST-safe athlete-local events, idempotent `push_week` (Alembic 0016) | ✅ Complete (2026-08-19) |
+| V4-T6 | Weekly automation — per-athlete cron in the athlete's timezone (Alembic 0017), 2h misfire grace, sync → snapshot → generate → text with buttons, opt-in daily reminder | ✅ Complete (2026-08-19) |
+| V4-T7 | Frontend freeze — `FROZEN.md` in web/mobile/desktop, frozen apps off the default build/dev/typecheck scripts, mobile TestFlight plan bannered as paused | ✅ Complete (2026-08-19) |
+| V4-T8 | Deploy + smoke — `docs/backend/TELEGRAM-COACH.md` runbook, `scripts/smoke_test_v4.py`, V4 variables documented | ✅ Complete (2026-08-19) |
+
+**Dernière phase complétée (2026-08-19) :** V4 livré — Resilio est un coach qui texte. L'athlète parle au Head Coach sur Telegram; une fois par semaine, sans rien demander, il reçoit la semaine à venir avec le raisonnement et trois boutons; répondre « trop de volume mercredi » en langage naturel produit une semaine révisée; approuver écrit chaque séance dans un agenda Google dédié « Resilio Training » (idempotent — re-pousser met à jour au lieu de dupliquer). Points d'attention: `CoordinatorService` n'invoque les graphes que si on lui injecte un `graph_invoker` (le singleton par défaut reste inerte pour que les tests de routage ne fassent pas d'appel LLM — voir `build_live_coordinator()`); le cycle hebdo demande `plan_generation` explicitement au lieu de passer par le routage par phase (en `steady_state` un événement proactif irait sur `chat_turn`); l'état d'onboarding du graphe Phase D reste en mémoire process, donc un redémarrage en plein onboarding repart au bloc 1. Runbook complet: `docs/backend/TELEGRAM-COACH.md`.
 
 **Dernières phases complétées (2026-04-16) :** V3-X livré — Apple Health XML import. Parser streaming lxml.iterparse O(1) mémoire (>100MB supporté). 5 types HK ciblés: HRV SDNN, Sleep (iOS 15/16 compat), RHR, Body Mass, Active Energy. Agrégation quotidienne; sleep attribuée à end_date (réveil); InBed/Awake exclus. Nouveau champ AthleteMetrics.hrv_sdnn (SDNN ≠ RMSSD Terra — champs séparés). Table apple_health_daily + Alembic 0010. Feature flag APPLE_HEALTH_ENABLED=false. 10 fixtures synthétiques. WARNING: non-validé sur device réel.
 
@@ -288,11 +300,16 @@ Never increase total weekly load >10% in one step (applies across ALL sports com
 - **Apple Health XML Plan**: `docs/superpowers/plans/2026-04-16-apple-health-xml.md`
 - **Deployment Spec**: `docs/superpowers/specs/2026-04-16-backend-deployment-design.md`
 - **Deployment Plan**: `docs/superpowers/plans/2026-04-16-backend-deployment.md`
+- **V4 Goal — Text-Native Coach**: `docs/GOAL-V4-TEXT-COACH.md` — le pourquoi + décisions verrouillées
+- **Telegram Coach Runbook**: `docs/backend/TELEGRAM-COACH.md` — BotFather, webhook, Google Cloud OAuth, link codes, cycle hebdo manuel, troubleshooting
+- **V4 Execution Brief**: `docs/prompts/CODEX-V4-TEXT-COACH.md` — les 9 work packages
 - **Master V2 (archivé)**: `docs/archive/resilio-master-v2_archived_2026-04-12.md`
 
 ---
 
 ## Workspace Structure (Monorepo pnpm — Session 0, 2026-04-12)
+
+> **Gelé depuis V4 (2026-08-19).** `apps/web`, `apps/mobile` et `apps/desktop` sont figés — voir le `FROZEN.md` de chacun. Ils sortent des scripts racine `build` / `dev` / `typecheck` mais restent accessibles via `build:web`, `dev:mobile`, `typecheck:web`, etc., et restent dans `pnpm-workspace.yaml` (les retirer casserait `pnpm install`). `packages/api-client` et `packages/shared-logic` restent maintenus.
 
 ```
 resilio-plus/
