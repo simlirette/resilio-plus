@@ -224,6 +224,10 @@ def build_approval_callback_handler(
             )
         except ApprovalOwnershipError:
             logger.warning("telegram_approval_forbidden")
+        except Exception:
+            # One bad approval must not take down the polling loop or leave a
+            # webhook background task raising into the void.
+            logger.warning("telegram_approval_failed", exc_info=True)
 
     return handle
 

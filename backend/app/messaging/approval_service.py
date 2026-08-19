@@ -236,7 +236,17 @@ class ApprovalService:
         ) as exc:
             return self._ignore(athlete_id, exc)
 
-        revised = self._resume(approval.thread_id, approved=False, feedback=text)
+        try:
+            revised = self._resume(approval.thread_id, approved=False, feedback=text)
+        except Exception:
+            logger.warning("approval_revise_failed", exc_info=True)
+            return self._finish(
+                athlete_id,
+                "error",
+                "I could not rework that week just now. Ask me to rebuild it "
+                "with /plan and I will start from a clean slate.",
+            )
+
         new_token = self.send_plan_for_approval(
             athlete_id=athlete_id,
             thread_id=approval.thread_id,
@@ -289,7 +299,18 @@ class ApprovalService:
         thread_id: str,
         kind: str,
     ) -> ApprovalOutcome:
-        final_plan = self._resume(thread_id, approved=True, feedback=None)
+        try:
+            final_plan = self._resume(thread_id, approved=True, feedback=None)
+        except Exception:
+            # The token is spent, but the graph thread is still parked, so the
+            # honest recovery is to tell them and let /plan rebuild the week.
+            logger.warning("approval_finalise_failed", exc_info=True)
+            return self._finish(
+                athlete_id,
+                "error",
+                "I could not finalise that week. Nothing was written to your "
+                "calendar. Ask me to rebuild it with /plan.",
+            )
 
         if self._calendar_pusher is None:
             return self._finish(
@@ -299,7 +320,20 @@ class ApprovalService:
                 "written — connect Google Calendar and I will push it there.",
             )
 
-        report = dict(self._calendar_pusher(athlete_id, final_plan or {}, self._db))
+        try:
+            report = dict(self._calendar_pusher(athlete_id, final_plan or {}, self._db))
+        except Exception:
+            # The week itself is approved and saved; only the calendar write
+            # failed. Say exactly that rather than implying the plan is lost.
+            logger.warning("approval_calendar_push_failed", exc_info=True)
+            return self._finish(
+                athlete_id,
+                "approve",
+                "Plan approved and saved, but I could not write it to your "
+                "calendar. Reconnect Google Calendar with /connect and approve "
+                "the next week to resync.",
+            )
+
         summary = (
             f"Plan approved and written to your Resilio Training calendar — "
             f"{report.get('created', 0)} created, {report.get('updated', 0)} updated, "

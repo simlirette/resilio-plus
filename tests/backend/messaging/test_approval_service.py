@@ -487,3 +487,112 @@ class TestReject:
         assert calendar.calls == []
         row = db_session.get(PendingApprovalModel, token)
         assert row is not None and row.resolution == "reject"
+
+
+class ExplodingCoaching(FakeCoaching):
+    def resume_plan(
+        self,
+        thread_id: str,
+        approved: bool,
+        feedback: str | None,
+        db: Session,
+    ) -> dict[str, Any] | None:
+        self.calls.append((thread_id, approved, feedback))
+        raise RuntimeError("graph unavailable")
+
+
+class ExplodingCalendar(FakeCalendar):
+    def __call__(
+        self, athlete_id: str, plan: dict[str, Any], db: Session
+    ) -> dict[str, int]:
+        self.calls.append((athlete_id, plan))
+        raise RuntimeError("google unavailable")
+
+
+class TestFailuresAreVisible:
+    def test_a_failing_graph_tells_the_athlete_instead_of_raising(
+        self, db_session: Session, athlete_id: str, identity: str
+    ) -> None:
+        notifier = FakeNotifier()
+        coaching = ExplodingCoaching()
+        service = build_service(db_session, notifier=notifier, coaching=coaching)
+        token = service.send_plan_for_approval(
+            athlete_id=athlete_id,
+            thread_id="thread-1",
+            kind="weekly_plan",
+            plan=PLAN,
+        )
+
+        outcome = service.handle_button(
+            athlete_id=athlete_id,
+            channel="telegram",
+            external_id=identity,
+            token=token,
+            resolution="approve",
+        )
+
+        assert outcome.resolution == "error"
+        assert "/plan" in notifier.last_text
+        assert "calendar" in notifier.last_text.lower()
+
+    def test_a_failing_calendar_says_the_plan_is_still_saved(
+        self, db_session: Session, athlete_id: str, identity: str
+    ) -> None:
+        notifier = FakeNotifier()
+        coaching = FakeCoaching()
+        service = build_service(
+            db_session,
+            notifier=notifier,
+            coaching=coaching,
+            calendar=ExplodingCalendar(),
+        )
+        token = service.send_plan_for_approval(
+            athlete_id=athlete_id,
+            thread_id="thread-1",
+            kind="weekly_plan",
+            plan=PLAN,
+        )
+
+        outcome = service.handle_button(
+            athlete_id=athlete_id,
+            channel="telegram",
+            external_id=identity,
+            token=token,
+            resolution="approve",
+        )
+
+        assert outcome.resolution == "approve"
+        assert outcome.calendar is None
+        assert "approved and saved" in notifier.last_text
+        assert coaching.calls == [("thread-1", True, None)]
+
+    def test_a_failing_revision_tells_the_athlete(
+        self, db_session: Session, athlete_id: str, identity: str
+    ) -> None:
+        notifier = FakeNotifier()
+        coaching = ExplodingCoaching()
+        service = build_service(db_session, notifier=notifier, coaching=coaching)
+        token = service.send_plan_for_approval(
+            athlete_id=athlete_id,
+            thread_id="thread-1",
+            kind="weekly_plan",
+            plan=PLAN,
+        )
+        service.handle_button(
+            athlete_id=athlete_id,
+            channel="telegram",
+            external_id=identity,
+            token=token,
+            resolution="revise",
+        )
+
+        outcome = service.handle_revision_text(
+            athlete_id=athlete_id,
+            channel="telegram",
+            external_id=identity,
+            token=token,
+            text="less volume",
+        )
+
+        assert outcome.resolution == "error"
+        assert "/plan" in notifier.last_text
