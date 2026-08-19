@@ -17,8 +17,10 @@ from ...db.database import SessionLocal
 from ...db.models import AthleteModel, MessagingIdentityModel
 from ...messaging.approval_service import ApprovalService, CalendarPusher
 from ...messaging.approvals import ApprovalOwnershipError, parse_callback
+from ...messaging.commands import CommandRouter
 from ...messaging.gateway import InvalidLinkCodeError, MessagingGateway
 from ...messaging.notification_service import NotificationService
+from ...services.graph_invoker import build_live_coordinator
 from .channel import TelegramChannel
 from .client import TelegramBotClient
 
@@ -235,6 +237,11 @@ def _callback_external_id(callback: Mapping[str, Any]) -> str | None:
     return str(chat_id)
 
 
+def _resolve_weekly_cycle() -> Callable[[str, Session], None] | None:
+    """Manual weekly-cycle trigger — V4-T6 supplies the implementation."""
+    return None
+
+
 def _resolve_calendar_pusher() -> CalendarPusher | None:
     """Calendar seam — V4-T5 supplies the Google Calendar implementation."""
     from ...messaging.calendar_hook import get_calendar_pusher
@@ -265,8 +272,14 @@ def build_telegram_runtime() -> TelegramRuntime:
         return MessagingGateway(
             db,
             channels,
+            coordinator=build_live_coordinator(),
             notifier=notifier,
             approvals=approval_factory(db),
+            commands=CommandRouter(
+                db,
+                notifier=notifier,
+                weekly_cycle=_resolve_weekly_cycle(),
+            ),
         )
 
     def session_factory() -> Session:

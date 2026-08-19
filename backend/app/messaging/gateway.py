@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime, timezone
 from typing import Any, Protocol
 
@@ -25,8 +25,8 @@ class NotificationSender(Protocol):
     ) -> object: ...
 
 
-class RevisionRouter(Protocol):
-    """Structural subset of ApprovalService used for free-text revisions."""
+class ApprovalRouter(Protocol):
+    """Structural subset of ApprovalService used by the gateway."""
 
     def take_pending_revision_token(
         self,
@@ -34,6 +34,17 @@ class RevisionRouter(Protocol):
         channel: str,
         external_id: str,
     ) -> str | None: ...
+
+    def send_plan_for_approval(
+        self,
+        *,
+        athlete_id: str,
+        thread_id: str,
+        kind: str = ...,
+        plan: Mapping[str, Any] | None,
+        degraded_sources: Sequence[str] | None = ...,
+        payload: dict[str, Any] | None = ...,
+    ) -> str: ...
 
     def handle_revision_text(
         self,
@@ -44,6 +55,12 @@ class RevisionRouter(Protocol):
         token: str,
         text: str,
     ) -> object: ...
+
+
+class CommandHandler(Protocol):
+    """Structural subset of CommandRouter used by the gateway."""
+
+    def handle(self, athlete_id: str, text: str) -> object: ...
 
 
 class _CoordinatorDispatcher(Protocol):
@@ -105,7 +122,8 @@ class MessagingGateway:
         *,
         coordinator: _CoordinatorDispatcher = coordinator_service,
         notifier: NotificationSender,
-        approvals: RevisionRouter | None = None,
+        approvals: ApprovalRouter | None = None,
+        commands: CommandHandler | None = None,
         clock: Callable[[], datetime] = _utcnow,
     ) -> None:
         self._db = db
@@ -113,6 +131,7 @@ class MessagingGateway:
         self._coordinator = coordinator
         self._notifier = notifier
         self._approvals = approvals
+        self._commands = commands
         self._clock = clock
 
     def resolve_athlete(self, channel: str, external_id: str) -> str | None:
@@ -135,6 +154,11 @@ class MessagingGateway:
             except Exception:
                 raise MessagingDeliveryError from None
             return
+
+        if self._commands is not None and text.strip().startswith("/"):
+            outcome = self._commands.handle(athlete_id, text)
+            if getattr(outcome, "handled", False):
+                return
 
         if self._approvals is not None:
             pending_token = self._approvals.take_pending_revision_token(
@@ -165,9 +189,29 @@ class MessagingGateway:
         except Exception:
             self._db.rollback()
             raise
-        response = self._render_response(getattr(result, "output", None))
+        output = getattr(result, "output", None)
+        response = self._render_response(output)
         if response is not None:
             self._notifier.send(athlete_id, response)
+        self._maybe_send_plan_for_approval(athlete_id, output)
+
+    def _maybe_send_plan_for_approval(
+        self,
+        athlete_id: str,
+        output: object,
+    ) -> None:
+        """A graph that produced a week hands it over as buttons, not as text."""
+        if self._approvals is None or not isinstance(output, dict):
+            return
+        plan = output.get("plan_proposal")
+        thread_id = output.get("plan_thread_id")
+        if plan is None or not isinstance(thread_id, str) or not thread_id:
+            return
+        self._approvals.send_plan_for_approval(
+            athlete_id=athlete_id,
+            thread_id=thread_id,
+            plan=plan,
+        )
 
     def link_identity(self, channel: str, external_id: str, link_code: str) -> str:
         """Atomically redeem a code using a clean, dedicated unit-of-work session.
