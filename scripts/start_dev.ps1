@@ -14,4 +14,4 @@ $env:PYTHONPATH = "backend"
 poetry run alembic upgrade head
 
 Write-Host "[dev] starting uvicorn on http://localhost:8000 ..."
-poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+poetry run uvicorn app.main:app --env-file .env --host 0.0.0.0 --port 8000 --reload
