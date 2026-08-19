@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Protocol
 
 from sqlalchemy.orm import Session
 
@@ -53,6 +53,19 @@ PERSISTENT_THREAD_FIELDS: dict[str, str] = {
 }
 
 
+class GraphInvoker(Protocol):
+    """Runs the graph the coordinator selected and returns its output."""
+
+    def invoke(
+        self,
+        graph_name: str,
+        athlete_id: str,
+        thread_id: str,
+        payload: dict[str, Any],
+        db: Session,
+    ) -> dict[str, Any] | None: ...
+
+
 @dataclass
 class DispatchResult:
     """Result of a CoordinatorService.dispatch() call."""
@@ -85,8 +98,16 @@ class CoordinatorService:
     pending=True. Le graphe plan_generation est accessible via coaching_service (D4+).
     """
 
-    def __init__(self, *, coaching_service: Any = None) -> None:
+    def __init__(
+        self,
+        *,
+        coaching_service: Any = None,
+        graph_invoker: GraphInvoker | None = None,
+        auto_advance_signup: bool = False,
+    ) -> None:
         self._coaching_service = coaching_service
+        self._graph_invoker = graph_invoker
+        self._auto_advance_signup = auto_advance_signup
 
     def dispatch(
         self,
@@ -117,6 +138,9 @@ class CoordinatorService:
         if event_type == "system_injury":
             athlete.recovery_takeover_active = True
             db.commit()
+
+        if event_type == "chat":
+            self._maybe_open_onboarding(athlete, db)
 
         graph_name = self._resolve_graph(athlete, event_type)
 
@@ -159,6 +183,19 @@ class CoordinatorService:
         db.commit()
 
     # ─── Internal ─────────────────────────────────────────────────────────────
+
+    def _maybe_open_onboarding(self, athlete: AthleteModel, db: Session) -> None:
+        """Walk a brand-new athlete from signup into onboarding on first contact.
+
+        Off by default: only surfaces that own the whole conversation (the text
+        coach) should decide that a first message means "start onboarding".
+        """
+        if not self._auto_advance_signup:
+            return
+        if athlete.journey_phase == "signup":
+            self.advance_journey_phase(athlete.id, "scope_selection", db)
+        if athlete.journey_phase == "scope_selection":
+            self.advance_journey_phase(athlete.id, "onboarding", db)
 
     def _resolve_graph(self, athlete: AthleteModel, event_type: str) -> str | None:
         """Determine which graph to invoke. Returns graph name or None."""
@@ -228,11 +265,20 @@ class CoordinatorService:
     ) -> dict[str, Any] | None:
         """Invoke the target graph and return its output.
 
-        D1: all graphs except plan_generation return None (pending=True).
-        Integration with coaching_service for plan_generation is deferred to D4.
+        Without an injected ``graph_invoker`` this returns None (pending=True),
+        which is what routing unit tests exercise. Live surfaces build the
+        coordinator with an invoker — see
+        :func:`app.services.graph_invoker.build_live_coordinator`.
         """
-        # All graphs are stubs in D1 — implementations added in D3-D10
-        return None
+        if self._graph_invoker is None:
+            return None
+        return self._graph_invoker.invoke(
+            graph_name,
+            athlete_id,
+            thread_id,
+            payload,
+            db,
+        )
 
 
 # ─── Module-level singleton ───────────────────────────────────────────────────
