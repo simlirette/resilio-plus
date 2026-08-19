@@ -218,7 +218,7 @@ The Running Coach has the richest existing knowledge base.
 4. **Frequent atomic commits** — one commit per logical task
 5. **Verify invariants after every task**:
    - `poetry install` must succeed
-   - `pytest tests/` must pass (≥2430 passing — état V1-FROZEN 2026-04-17; 0 flakes; 16 skipped = db_integration marker requiring live PG)
+   - `pytest tests/` must pass (≥2987 passing — état V4 2026-08-19; 16 skipped = db_integration marker requiring live PG; 4 échecs pré-existants attendus et hors scope: 2× `test_apple_health_endpoint.py::TestValidImport` et `test_vdot_continuity.py::test_high_continuity_no_breaks` (dérive de date), `test_config.py::test_get_repo_root_raises_when_not_in_repo` (environnemental). Un 5e échec = régression réelle.)
    - `python -m mypy backend/app/ --config-file pyproject.toml` must show 0 errors
    - `python -m ruff check backend/` must show 0 violations
    - `npx tsc --noEmit` (frontend) must have no errors
