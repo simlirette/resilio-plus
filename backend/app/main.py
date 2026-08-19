@@ -14,6 +14,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from .integrations.telegram.polling import start_polling_from_env
+from .integrations.telegram.runtime import close_telegram_runtime
+from .integrations.telegram.webhook import router as telegram_router
 from .jobs.scheduler import setup_scheduler
 from .observability.correlation import CorrelationIdMiddleware
 from .observability.metrics import MetricsMiddleware
@@ -47,9 +50,14 @@ from .routes.workflow import router as workflow_router
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     scheduler = setup_scheduler()
+    polling_handle = None
     try:
+        polling_handle = start_polling_from_env()
         yield
     finally:
+        if polling_handle is not None:
+            polling_handle.stop()
+        close_telegram_runtime()
         scheduler.shutdown(wait=False)
 
 
@@ -93,6 +101,7 @@ app.include_router(checkin_router)
 app.include_router(external_plan_router)
 app.include_router(strain_router)
 app.include_router(integrations_router)
+app.include_router(telegram_router)
 app.include_router(strava_router)
 app.include_router(chat_router)
 app.include_router(onboarding_d7_router)
