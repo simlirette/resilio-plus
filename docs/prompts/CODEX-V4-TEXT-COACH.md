@@ -270,7 +270,7 @@ chunking at exactly the boundary, chunking a 12 000-char plan, athlete with no i
 
 - `client.py` — thin `httpx` wrapper over Bot API: `sendMessage`, `answerCallbackQuery`,
   `setWebhook`, `getUpdates`. Retries only explicit 429s, honouring `retry_after` with a 60-second
-  maximum backoff. Timeout 15s.
+  maximum backoff. A polling stop event interrupts `getUpdates` retry waits. Timeout 15s.
 - `channel.py` — `TelegramChannel(MessagingChannel)`. **Use `parse_mode="HTML"`, not MarkdownV2** —
   MarkdownV2 escaping is a bug farm and LLM output is full of `.`, `-`, `!`, `(`. Implement
   `format()` as markdown-subset → HTML (`**b**`, `*i*`, `` `code` ``, bullet lines) with
@@ -286,7 +286,9 @@ chunking at exactly the boundary, chunking a 12 000-char plan, athlete with no i
     responses and LangGraph turns take seconds.
   - Deduplicates on `update_id` (in-memory LRU of 1000 is sufficient at this scale).
 - `polling.py` — `run_polling_loop()` for local dev: `getUpdates` long-poll in a daemon thread,
-  started from the FastAPI lifespan when `TELEGRAM_MODE=polling`.
+  started from the FastAPI lifespan when `TELEGRAM_MODE=polling`. Check the stop event after every
+  long poll and before every update, use interruptible failure backoffs, and surface a missed shutdown
+  deadline instead of closing the shared client beneath a live worker.
 - Send a "typing…" chat action before long operations — a 20-second silent gap reads as broken.
 
 **Env vars (add to `.env.example`):**
@@ -301,7 +303,8 @@ TELEGRAM_BOOTSTRAP_CHAT_ID=      # optional: auto-link this private chat_id to A
 `httpx.Client` globally — `TestClient` subclasses it and you will intercept your own ASGI dispatch
 (this exact trap is documented in `CLAUDE.md` → Testing Gotchas). Cover: HTML escaping of a message
 containing `<`, `&`, and an em-dash; 4096-char chunking; 429 retry; bad secret token → 403; duplicate
-`update_id` ignored.
+`update_id` ignored; webhook secret/body removal from Sentry; interruptible polling retries and
+deadline-safe shutdown.
 
 ---
 

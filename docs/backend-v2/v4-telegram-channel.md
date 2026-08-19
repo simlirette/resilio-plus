@@ -83,14 +83,16 @@ Uvicorn so the documented polling configuration is loaded without manual environ
 - Incoming `update_id` values are recorded under a lock in a 1,000-entry LRU before background work
   is scheduled.
 - Bot tokens, chat identifiers, callback identifiers, and message bodies are not logged. Bot API
-  URLs are also scrubbed from Sentry error events and HTTP spans, and Sentry frame locals are
-  disabled.
+  URLs and the webhook secret header are scrubbed from Sentry error events and HTTP spans; Telegram
+  webhook request bodies are removed entirely, and Sentry frame locals are disabled.
 - Callback acknowledgement is best-effort and cannot suppress the later T3 callback-handler seam.
 - Group, supergroup, channel, and malformed chat payloads are ignored before identity resolution;
   callback spinners are still acknowledged, but non-private callbacks never reach the T3 seam.
 - Polling has an explicit stop event and bounded shutdown; it is intended for a single local process.
-  Its offset advances only after processing succeeds, so a failed local update is retried after a
-  bounded backoff.
+  The loop checks cancellation after every long poll and before every update, while request retries
+  and failure backoffs wait interruptibly on the same event. Shutdown raises if the worker misses its
+  deadline, and the shared client is closed only after the worker has stopped. Its offset advances
+  only after processing succeeds, so a failed local update is retried after a bounded backoff.
 - The in-memory LRU is process-local. Production V4 must use webhook mode with one worker; T8 owns
   that deployment setting. Durable/cross-process deduplication is outside the expressly approved T2
   design.
@@ -108,6 +110,8 @@ New tests use `respx.mock(base_url="https://api.telegram.org")`, never a global 
 limit, button encoding, webhook secret rejection, background scheduling, update deduplication,
 typing-before-dispatch, identity bootstrap/link-code redemption, polling offsets, and lifecycle
 startup/shutdown. They also prove that non-private messages cannot link or dispatch and that
-non-private callbacks are acknowledged without crossing the identity boundary.
+non-private callbacks are acknowledged without crossing the identity boundary. Regression tests
+cover webhook secret/body removal from realistic Sentry events, cancellation during a 60-second 429
+delay, no post-stop batch processing, and explicit shutdown-deadline failure.
 
 T2 has no database schema change and therefore no Alembic revision.
