@@ -527,6 +527,11 @@ class MessagingIdentityModel(Base):
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
     )
+    awaiting_revision_for_token: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True, default=None
+    )
+    """Short-lived latch: the next free-text message routes to this approval's
+    revise path instead of the coordinator (V4-T3)."""
 
     __table_args__ = (
         UniqueConstraint(
@@ -571,3 +576,29 @@ class OutboundMessageModel(Base):
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
     )
+
+
+class PendingApprovalModel(Base):
+    """A tokenized approval awaiting an athlete decision over a messaging channel."""
+
+    __tablename__ = "pending_approvals"
+
+    token: Mapped[str] = mapped_column(String, primary_key=True)
+    athlete_id: Mapped[str] = mapped_column(
+        String, ForeignKey("athletes.id"), nullable=False, index=True
+    )
+    thread_id: Mapped[str] = mapped_column(String, nullable=False)
+    kind: Mapped[str] = mapped_column(String, nullable=False)
+    payload_json: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    resolved_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    resolution: Mapped[Optional[str]] = mapped_column(String, nullable=True)
