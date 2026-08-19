@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 import os
 from typing import TYPE_CHECKING, Any, cast
+from urllib.parse import urlsplit
 
 if TYPE_CHECKING:
     from sentry_sdk.types import Event
@@ -12,12 +13,31 @@ from .correlation import get_correlation_id
 from .pii_filter import scrub_value
 
 logger = logging.getLogger("app.observability.sentry")
+_TELEGRAM_WEBHOOK_PATH = "/integrations/telegram/webhook"
+
+
+def _drop_telegram_webhook_body(event: Event) -> None:
+    request = event.get("request")
+    if not isinstance(request, dict):
+        return
+    url = request.get("url")
+    if not isinstance(url, str):
+        return
+    try:
+        path = urlsplit(url).path.rstrip("/")
+    except ValueError:
+        return
+    if path == _TELEGRAM_WEBHOOK_PATH:
+        request.pop("data", None)
 
 
 def _sentry_pii_scrubber(event: Event, hint: dict[str, Any]) -> Event | None:
     """Scrub PII from Sentry event payloads before send."""
     # Top-level scrubbing of sensitive keys
     event = cast("Event", scrub_value(event))
+    # Starlette captures parsed JSON request bodies even when default PII capture
+    # is disabled. Telegram updates contain athlete text and stable identifiers.
+    _drop_telegram_webhook_body(event)
     # Tag with correlation ID
     event.setdefault("tags", {})
     if isinstance(event["tags"], dict):

@@ -22,6 +22,8 @@ _BLOCKLIST_FIELDS = frozenset(
         "jwt",
         "bearer",
         "client_secret",
+        "secret_token",
+        "x-telegram-bot-api-secret-token",
         "cookie",
     }
 )
