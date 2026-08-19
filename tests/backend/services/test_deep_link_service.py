@@ -74,10 +74,10 @@ class TestIssue:
             db_session, athlete_id=athlete_id, clock=_clock()
         )
 
-        assert set(links) == {"strava", "hevy", "terra"}
+        assert set(links) == {"strava", "hevy", "terra", "google"}
         for url in links.values():
             assert url.startswith("https://coach.example.com/integrations/link/")
-        assert len(set(links.values())) == 3
+        assert len(set(links.values())) == 4
 
     def test_link_url_uses_the_public_base(
         self, monkeypatch: pytest.MonkeyPatch

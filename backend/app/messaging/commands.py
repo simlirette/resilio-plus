@@ -16,7 +16,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from ..db.models import AthleteModel, ConnectorCredentialModel
-from ..services.deep_link_service import issue_connector_links
+from ..services.deep_link_service import connector_links_message
 from .base import Button
 
 logger = logging.getLogger(__name__)
@@ -117,7 +117,13 @@ class CommandRouter:
 
     def _connect(self, athlete_id: str) -> CommandOutcome:
         try:
-            links = issue_connector_links(self._db, athlete_id=athlete_id)
+            # /connect always offers every provider — the athlete may want to
+            # reconnect one that is already linked.
+            message = connector_links_message(
+                self._db,
+                athlete_id=athlete_id,
+                providers=list(_PROVIDER_LABEL),
+            )
         except SQLAlchemyError:
             logger.warning("connect_links_failed", exc_info=True)
             return self._reply(
@@ -125,14 +131,11 @@ class CommandRouter:
                 "I could not mint connection links just now — try again shortly.",
                 athlete_id,
             )
-
-        lines = ["**Connect your data**", ""]
-        for provider, url in links.items():
-            label = _PROVIDER_LABEL.get(provider, provider)
-            lines.append(f"- {label}: {url}")
-        lines.append("")
-        lines.append("Each link works once and expires in two hours.")
-        return self._reply("connect", "\n".join(lines), athlete_id)
+        if message is None:
+            return self._reply(
+                "connect", "Everything is already connected.", athlete_id
+            )
+        return self._reply("connect", message, athlete_id)
 
     def _status(self, athlete_id: str) -> CommandOutcome:
         athlete = self._db.get(AthleteModel, athlete_id)

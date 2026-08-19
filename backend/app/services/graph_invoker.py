@@ -24,10 +24,16 @@ from sqlalchemy.orm import Session
 from ..db.models import AthleteModel, ChatMessageModel
 from .athlete_profile import athlete_profile_dict
 from .coordinator_service import CoordinatorService
+from .deep_link_service import connector_links_message
 
 logger = logging.getLogger(__name__)
 
 _RECENT_INTENT_LIMIT = 3
+
+# Onboarding block after which the coach offers the data connections. Blocks
+# 1-3 collect who the athlete is and what they are training for; asking for
+# Strava before that is asking a stranger for their keys.
+_CONNECTOR_INVITE_BLOCK = 4
 
 
 class PlanCreator(Protocol):
@@ -105,6 +111,9 @@ class DefaultGraphInvoker:
                 result = None
         if result is None:
             result = run_onboarding_start(athlete_id, db)
+
+        if result.get("current_block") == _CONNECTOR_INVITE_BLOCK:
+            result = _with_connector_invitation(result, athlete_id, db)
 
         if result.get("status") == "completed":
             proposal = self._propose_plan(athlete_id, db)
@@ -214,6 +223,32 @@ def recent_intents(athlete_id: str, db: Session) -> list[str]:
         .all()
     )
     return [row[0] for row in reversed(rows) if row[0]]
+
+
+def _with_connector_invitation(
+    result: dict[str, Any],
+    athlete_id: str,
+    db: Session,
+) -> dict[str, Any]:
+    """Append tappable connect links to an onboarding question.
+
+    Best-effort: a failure to mint links must not sink the onboarding turn.
+    """
+    question = result.get("question")
+    if not isinstance(question, str) or not question.strip():
+        return result
+    try:
+        invitation = connector_links_message(
+            db,
+            athlete_id=athlete_id,
+            heading="**While you are here — connect your data**",
+        )
+    except Exception:
+        logger.warning("onboarding_connector_links_failed", exc_info=True)
+        return result
+    if invitation is None:
+        return result
+    return {**result, "question": f"{question}\n\n{invitation}"}
 
 
 def _message_of(payload: dict[str, Any]) -> str | None:

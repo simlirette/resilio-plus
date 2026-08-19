@@ -280,3 +280,102 @@ class TestLiveCoordinator:
         athlete = db_session.get(AthleteModel, athlete_id)
         assert athlete is not None
         assert athlete.journey_phase == "signup"
+
+
+class TestConnectorInvitation:
+    def _scripted(self, monkeypatch: pytest.MonkeyPatch, block: int) -> None:
+        monkeypatch.setattr(
+            "app.graphs.onboarding.run_onboarding_respond",
+            lambda thread_id, message, db: {
+                "thread_id": thread_id,
+                "current_block": block,
+                "question": "Sport history?",
+                "status": "in_progress",
+            },
+        )
+
+    def test_links_are_offered_once_goals_are_collected(
+        self,
+        db_session: Session,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.setenv("PUBLIC_BASE_URL", "https://coach.example.com")
+        athlete_id = make_athlete(db_session, journey_phase="onboarding")
+        self._scripted(monkeypatch, block=4)
+
+        output = DefaultGraphInvoker().invoke(
+            "onboarding", athlete_id, "thread-1", {"message": "half in June"}, db_session
+        )
+
+        assert output is not None
+        question = output["question"]
+        assert question.startswith("Sport history?")
+        assert question.count("https://coach.example.com/integrations/link/") == 4
+
+    def test_no_links_on_other_blocks(
+        self,
+        db_session: Session,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        athlete_id = make_athlete(db_session, journey_phase="onboarding")
+        self._scripted(monkeypatch, block=3)
+
+        output = DefaultGraphInvoker().invoke(
+            "onboarding", athlete_id, "thread-1", {"message": "x"}, db_session
+        )
+
+        assert output is not None
+        assert output["question"] == "Sport history?"
+
+    def test_already_connected_providers_are_not_re_offered(
+        self,
+        db_session: Session,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        import uuid as _uuid
+
+        from app.db.models import ConnectorCredentialModel
+
+        monkeypatch.setenv("PUBLIC_BASE_URL", "https://coach.example.com")
+        athlete_id = make_athlete(db_session, journey_phase="onboarding")
+        for provider in ("strava", "hevy", "terra"):
+            db_session.add(
+                ConnectorCredentialModel(
+                    id=str(_uuid.uuid4()),
+                    athlete_id=athlete_id,
+                    provider=provider,
+                    extra_json="{}",
+                )
+            )
+        db_session.commit()
+        self._scripted(monkeypatch, block=4)
+
+        output = DefaultGraphInvoker().invoke(
+            "onboarding", athlete_id, "thread-1", {"message": "x"}, db_session
+        )
+
+        assert output is not None
+        assert output["question"].count("integrations/link/") == 1
+        assert "Google Calendar" in output["question"]
+
+    def test_a_link_failure_does_not_sink_the_turn(
+        self,
+        db_session: Session,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        athlete_id = make_athlete(db_session, journey_phase="onboarding")
+        self._scripted(monkeypatch, block=4)
+
+        def boom(*args: Any, **kwargs: Any) -> str:
+            raise RuntimeError("db down")
+
+        monkeypatch.setattr(
+            "app.services.graph_invoker.connector_links_message", boom
+        )
+
+        output = DefaultGraphInvoker().invoke(
+            "onboarding", athlete_id, "thread-1", {"message": "x"}, db_session
+        )
+
+        assert output is not None
+        assert output["question"] == "Sport history?"

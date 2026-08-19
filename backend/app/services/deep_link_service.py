@@ -12,13 +12,24 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import update
+from sqlalchemy import select, update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from ..db.models import DeepLinkTokenModel
+from ..db.models import (
+    ConnectorCredentialModel,
+    DeepLinkTokenModel,
+    GoogleCalendarCredentialModel,
+)
 
 SUPPORTED_PROVIDERS: tuple[str, ...] = ("strava", "hevy", "terra", "google")
+
+PROVIDER_LABELS: dict[str, str] = {
+    "strava": "Strava",
+    "hevy": "Hevy",
+    "terra": "Terra",
+    "google": "Google Calendar",
+}
 
 DEFAULT_TTL = timedelta(hours=2)
 TOKEN_LENGTH = 24
@@ -192,3 +203,57 @@ def consume_link(
             return link
     except SQLAlchemyError:
         raise DeepLinkPersistenceError from None
+
+
+def settle(db: Session) -> None:
+    """Close a transaction an earlier read autobegan.
+
+    ``issue_link`` opens its own unit of work, so callers coming from a graph
+    turn (which leaves a read transaction open) must hand over a clean session.
+    """
+    if db.in_transaction():
+        db.commit()
+
+
+def pending_providers(db: Session, athlete_id: str) -> list[str]:
+    """Providers the athlete has not connected yet, in a stable order."""
+    settle(db)
+    with db.begin():
+        connected = set(
+            db.scalars(
+                select(ConnectorCredentialModel.provider).where(
+                    ConnectorCredentialModel.athlete_id == athlete_id
+                )
+            ).all()
+        )
+        if db.get(GoogleCalendarCredentialModel, athlete_id) is not None:
+            connected.add("google")
+    return [p for p in SUPPORTED_PROVIDERS if p not in connected]
+
+
+def connector_links_message(
+    db: Session,
+    *,
+    athlete_id: str,
+    providers: Iterable[str] | None = None,
+    heading: str = "**Connect your data**",
+) -> str | None:
+    """Return the chat text offering one tappable link per provider.
+
+    None when there is nothing left to connect, so callers can stay quiet
+    instead of sending an empty invitation.
+    """
+    if providers is None:
+        targets = pending_providers(db, athlete_id)
+    else:
+        targets = list(providers)
+        settle(db)
+    if not targets:
+        return None
+    links = issue_connector_links(db, athlete_id=athlete_id, providers=targets)
+    lines = [heading, ""]
+    for provider, url in links.items():
+        lines.append(f"- {PROVIDER_LABELS.get(provider, provider)}: {url}")
+    lines.append("")
+    lines.append("Each link works once and expires in two hours.")
+    return "\n".join(lines)
