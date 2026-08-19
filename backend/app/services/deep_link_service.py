@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 
 from ..db.models import DeepLinkTokenModel
 
-SUPPORTED_PROVIDERS: tuple[str, ...] = ("strava", "hevy", "terra")
+SUPPORTED_PROVIDERS: tuple[str, ...] = ("strava", "hevy", "terra", "google")
 
 DEFAULT_TTL = timedelta(hours=2)
 TOKEN_LENGTH = 24

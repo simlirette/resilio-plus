@@ -98,6 +98,12 @@ class AthleteModel(Base):
     available_days_json: Mapped[str] = mapped_column(Text)
     equipment_json: Mapped[str] = mapped_column(Text, default="[]")
 
+    # V4 — scheduling preferences for calendar writes (Alembic 0016)
+    timezone: Mapped[str] = mapped_column(String, default="America/Montreal")
+    """IANA timezone; every calendar event is written in the athlete's local time."""
+    preferred_session_hour_json: Mapped[str] = mapped_column(Text, default="{}")
+    """JSON map of sport -> preferred local start hour, e.g. {"running": 6}."""
+
     # Phase D — CoordinatorService state machine (Alembic 0011)
     journey_phase: Mapped[str] = mapped_column(String, default="signup")
     """A2 macro state machine value. Allowed: signup, scope_selection, onboarding,
@@ -624,4 +630,55 @@ class DeepLinkTokenModel(Base):
     )
     consumed_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
+    )
+
+
+class GoogleCalendarCredentialModel(Base):
+    """OAuth credentials plus the secondary calendar Resilio owns."""
+
+    __tablename__ = "google_calendar_credentials"
+
+    athlete_id: Mapped[str] = mapped_column(
+        String, ForeignKey("athletes.id"), primary_key=True
+    )
+    refresh_token_enc: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    access_token_enc: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    expires_at: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    calendar_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    scope: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    state: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    connected_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_sync_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+
+class CalendarEventModel(Base):
+    """Mapping from one planned workout slot to the Google event that shows it."""
+
+    __tablename__ = "calendar_events"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    athlete_id: Mapped[str] = mapped_column(
+        String, ForeignKey("athletes.id"), nullable=False, index=True
+    )
+    slot_id: Mapped[str] = mapped_column(String, nullable=False)
+    slot_date: Mapped[date] = mapped_column(Date, nullable=False)
+    gcal_event_id: Mapped[str] = mapped_column(String, nullable=False)
+    content_hash: Mapped[str] = mapped_column(String, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+    __table_args__ = (
+        UniqueConstraint("athlete_id", "slot_id", name="uq_calendar_events_athlete_slot"),
     )

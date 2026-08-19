@@ -23,7 +23,12 @@ logger = logging.getLogger(__name__)
 
 COMMAND_PREFIX = "/"
 
-_PROVIDER_LABEL = {"strava": "Strava", "hevy": "Hevy", "terra": "Terra"}
+_PROVIDER_LABEL = {
+    "strava": "Strava",
+    "hevy": "Hevy",
+    "terra": "Terra",
+    "google": "Google Calendar",
+}
 
 _HELP = (
     "**What I understand**\n"

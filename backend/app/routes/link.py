@@ -26,6 +26,12 @@ from sqlalchemy.orm import Session
 
 from ..db.models import ConnectorCredentialModel
 from ..dependencies import get_db
+from ..integrations.google_calendar.oauth_service import (
+    GoogleCalendarConfigurationError,
+    InvalidOAuthStateError,
+)
+from ..integrations.google_calendar.oauth_service import callback as google_oauth_callback
+from ..integrations.google_calendar.oauth_service import connect as google_oauth_connect
 from ..integrations.strava.oauth_service import callback as strava_oauth_callback
 from ..integrations.strava.oauth_service import connect as strava_oauth_connect
 from ..jobs.registry import register_athlete_jobs
@@ -44,7 +50,12 @@ router = APIRouter(prefix="/integrations/link", tags=["link"])
 
 DB = Annotated[Session, Depends(get_db)]
 
-_PROVIDER_LABEL = {"strava": "Strava", "hevy": "Hevy", "terra": "Terra"}
+_PROVIDER_LABEL = {
+    "strava": "Strava",
+    "hevy": "Hevy",
+    "terra": "Terra",
+    "google": "Google Calendar",
+}
 
 _KEY_FIELD = {"hevy": "api_key", "terra": "terra_user_id"}
 
@@ -189,6 +200,22 @@ def strava_callback(code: str, state: str, db: DB) -> HTMLResponse:
     return _done_page("strava")
 
 
+@router.get("/callback/google", response_class=HTMLResponse)
+def google_callback(code: str, state: str, db: DB) -> HTMLResponse:
+    """Google OAuth return leg — finish the exchange, then send them back."""
+    try:
+        result = google_oauth_callback(code=code, state=state, db=db)
+    except InvalidOAuthStateError:
+        return _dead_link_page()
+    except GoogleCalendarConfigurationError:
+        raise HTTPException(status_code=503, detail="Google Calendar is not configured")
+    except _httpx.HTTPStatusError:
+        raise HTTPException(status_code=502, detail="Google token exchange failed")
+
+    _after_connect(db, result["athlete_id"], "google")
+    return _done_page("google")
+
+
 @router.get("/{token}")
 def open_link(token: str, db: DB) -> Any:
     """Resolve a deep link and hand the athlete to the provider."""
@@ -200,6 +227,16 @@ def open_link(token: str, db: DB) -> Any:
     if link.provider == "strava":
         consume_link(db, token=token)
         auth_url = strava_oauth_connect(link.athlete_id, db)["auth_url"]
+        return RedirectResponse(auth_url, status_code=302)
+
+    if link.provider == "google":
+        consume_link(db, token=token)
+        try:
+            auth_url = google_oauth_connect(link.athlete_id, db)["auth_url"]
+        except GoogleCalendarConfigurationError:
+            raise HTTPException(
+                status_code=503, detail="Google Calendar is not configured"
+            )
         return RedirectResponse(auth_url, status_code=302)
 
     if link.provider == "terra":

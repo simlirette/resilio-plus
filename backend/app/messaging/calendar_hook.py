@@ -23,9 +23,14 @@ def calendar_enabled() -> bool:
 def get_calendar_pusher() -> CalendarPusher | None:
     """Return the configured calendar push callable, or None when unavailable.
 
-    V4-T5 (Google Calendar) supplies the implementation; until then every
-    approval reports that no calendar is connected.
+    Returns None rather than raising when the integration is switched off, so
+    an approval still resolves and the athlete is told plainly that nothing was
+    written.
     """
     if not calendar_enabled():
         return None
-    return None
+    from ..integrations.google_calendar.calendar_sync_service import (
+        push_week_for_athlete,
+    )
+
+    return push_week_for_athlete
