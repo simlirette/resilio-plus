@@ -260,6 +260,9 @@ scripts/*
 !scripts/start_prod.sh
 !scripts/gen_apple_health_fixture.py
 !scripts/eval_classify_intent.py
+!scripts/bootstrap_v4.py
+!scripts/start_coach.ps1
+!scripts/smoke_test_v4.py
 .worktrees/
 
 # AI assistant artifacts
