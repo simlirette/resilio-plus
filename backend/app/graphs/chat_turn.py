@@ -143,14 +143,13 @@ def _format_head_coach_user_content(
     user_message: str,
     specialist_notes: str | None = None,
 ) -> str:
-    """Build user-turn content for Head Coach (direct or synthesis)."""
-    lines = [
-        f"athlete_id: {view.athlete_id}",
-        f"journey_phase: {view.journey_phase}",
-        f"sports: {view.sports}",
-        f"hours_per_week: {view.hours_per_week}",
-        f"coaching_mode: {view.coaching_mode}",
-    ]
+    """Build user-turn content for Head Coach (direct or synthesis).
+
+    The whole view goes in. The previous version listed five fields, so the
+    Head Coach could not refer to the plan it had just written, the athlete's
+    race, their ACWR, or what they had actually done this week.
+    """
+    lines = [f"Athlete context:\n{view.model_dump_json(exclude_none=True)}"]
     if specialist_notes:
         lines.append(f"\nSpecialist notes:\n{specialist_notes}")
     lines.append(f"\nUser message: {user_message}")
@@ -297,7 +296,9 @@ def run_chat_turn(
     """
     # 1. Load athlete + build view
     athlete = _get_athlete(athlete_id, db)
-    view = build_head_coach_view(athlete)
+    # Pass db: without it the coach answers knowing only sports and weekly
+    # hours - no plan, no ACWR, no idea what the athlete actually did.
+    view = build_head_coach_view(athlete, db)
     clinical_flag: str | None = getattr(athlete, "clinical_context_flag", None)
 
     # 2. Classify intent

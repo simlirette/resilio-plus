@@ -1,20 +1,27 @@
-"""HeadCoachView schema — Phase D (D4).
+"""HeadCoachView schema — the context every coaching turn is answered from.
 
-Minimal athlete context consumed by Head Coach during chat_turn invocations.
-Expanded in D6 with Recovery and Energy view integration.
+Originally six fields, with `active_plan_summary` hardcoded to None behind a
+"D6" TODO. That meant the Head Coach replied to "my legs are wrecked" knowing
+only that the athlete runs and lifts eight hours a week — not their age, their
+VDOT, their race, this week's plan, or what they had actually done.
+
+Everything added here is the sort of thing a human coach would have in front of
+them before answering. Fields stay optional so a caller without a database
+session, or one whose database is unavailable, still gets a usable view.
 """
 from __future__ import annotations
 
+from datetime import date
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 
 class HeadCoachView(BaseModel):
-    """Athlete context snapshot for Head Coach chat responses.
+    """Athlete context snapshot for Head Coach and specialist chat responses.
 
     Built by head_coach_view_builder.build_head_coach_view().
-    Consumed by chat_turn graph nodes invoke_head_coach and synthesize_response.
+    Consumed by chat_turn, onboarding, followup_transition and recovery_takeover.
     """
 
     athlete_id: str
@@ -31,3 +38,31 @@ class HeadCoachView(BaseModel):
 
     # Clinical context flag (propagated from athlete record)
     clinical_context_flag: str | None = None
+
+    # ─── Physiology ──────────────────────────────────────────────────────────
+    age: int | None = None
+    sex: str | None = None
+    weight_kg: float | None = None
+    height_cm: float | None = None
+
+    # ─── Fitness markers the specialists prescribe from ──────────────────────
+    vdot: float | None = None
+    ftp_watts: int | None = None
+    css_per_100m: float | None = None
+    max_hr: int | None = None
+    resting_hr: int | None = None
+
+    # ─── Goal ────────────────────────────────────────────────────────────────
+    goals: list[str] = Field(default_factory=list)
+    target_race_date: date | None = None
+    weeks_to_race: int | None = None
+
+    # ─── Current training state ──────────────────────────────────────────────
+    acwr_ratio: float | None = None
+    acwr_status: str | None = None
+    readiness: float | None = None
+    muscle_strain: dict[str, float] = Field(default_factory=dict)
+    """Per-muscle-group strain 0-100; 85+ is the red zone."""
+
+    recent_sessions: list[dict[str, Any]] = Field(default_factory=list)
+    """What the athlete actually did lately, newest first, capped."""
