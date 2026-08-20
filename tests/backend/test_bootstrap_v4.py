@@ -651,3 +651,57 @@ class TestFernetKeyValidation:
         monkeypatch.setenv("GOOGLE_ENCRYPTION_KEY", "nope")
 
         assert "GOOGLE_ENCRYPTION_KEY" in bootstrap.check_config()
+
+
+class TestMissingBase64Padding:
+    """The trailing '=' is the easiest character to lose when copying a key.
+
+    Seen live on 2026-08-20: a correct key pasted 43 characters long. The
+    generic "not a valid Fernet key" message sent the operator off to
+    regenerate a key that was already right.
+    """
+
+    def _valid(self) -> str:
+        from cryptography.fernet import Fernet
+
+        return Fernet.generate_key().decode()
+
+    def test_a_key_missing_only_its_padding_says_exactly_that(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        monkeypatch.delenv("STRAVA_ENCRYPTION_KEY", raising=False)
+        truncated = self._valid().rstrip("=")
+        monkeypatch.setenv("GOOGLE_ENCRYPTION_KEY", truncated)
+
+        problems = bootstrap._check_fernet_keys()
+
+        assert problems == ["GOOGLE_ENCRYPTION_KEY"]
+        out = capsys.readouterr().out
+        assert "missing its trailing '='" in out
+        assert "Add a single '='" in out
+        assert "not a passphrase" not in out
+
+    def test_a_genuinely_wrong_key_still_gets_the_general_advice(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        monkeypatch.delenv("STRAVA_ENCRYPTION_KEY", raising=False)
+        monkeypatch.setenv("GOOGLE_ENCRYPTION_KEY", "my-passphrase")
+
+        bootstrap._check_fernet_keys()
+
+        out = capsys.readouterr().out
+        assert "not a passphrase" in out
+        assert "missing its trailing" not in out
+
+    def test_the_padded_key_itself_passes(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.delenv("STRAVA_ENCRYPTION_KEY", raising=False)
+        monkeypatch.setenv("GOOGLE_ENCRYPTION_KEY", self._valid())
+
+        assert bootstrap._check_fernet_keys() == []
+
+    def test_accepts_fernet_helper_is_honest(self) -> None:
+        assert bootstrap._accepts_fernet(self._valid()) is True
+        assert bootstrap._accepts_fernet("nope") is False
+        assert bootstrap._accepts_fernet("") is False

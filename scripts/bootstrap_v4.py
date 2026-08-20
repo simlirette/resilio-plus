@@ -136,24 +136,42 @@ def check_config() -> list[str]:
 FERNET_KEYS = ("STRAVA_ENCRYPTION_KEY", "GOOGLE_ENCRYPTION_KEY")
 
 
+def _accepts_fernet(value: str) -> bool:
+    from cryptography.fernet import Fernet
+
+    try:
+        Fernet(value.encode())
+    except Exception:
+        return False
+    return True
+
+
 def _check_fernet_keys() -> list[str]:
     """A key of the wrong shape passes every other check and fails at use.
 
     It fails *after* the OAuth round trip succeeds, as a 500, with the
     authorization code already spent - so validate the shape up front.
     """
-    from cryptography.fernet import Fernet
-
     problems: list[str] = []
     notes: list[str] = []
     for name in FERNET_KEYS:
         if not _is_set(name):
             continue
         value = os.environ[name].strip()
-        try:
-            Fernet(value.encode())
-        except Exception:
-            problems.append(name)
+        if _accepts_fernet(value):
+            continue
+        problems.append(name)
+        # A base64 key ends in '=' padding, the single easiest character to lose
+        # when copying. Check that before saying anything more general.
+        if _accepts_fernet(value + "="):
+            notes.append(
+                f"  [ BAD  ] {name} is missing its trailing '=' ({len(value)} "
+                "chars, needs 44).\n"
+                "            A Fernet key ends in '=' padding and it is easy "
+                "to lose when copying.\n"
+                f"            Add a single '=' to the end of the {name} line."
+            )
+        else:
             notes.append(
                 f"  [ BAD  ] {name} is not a valid Fernet key ({len(value)} "
                 "chars; it must be exactly 44 url-safe base64\n"
