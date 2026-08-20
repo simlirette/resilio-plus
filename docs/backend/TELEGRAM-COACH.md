@@ -17,6 +17,14 @@ connection, and both OAuth providers accept a loopback redirect, so the whole
 thing runs locally. Total: about fifteen minutes, most of it in BotFather and
 the Google console.
 
+Useful checks at any point:
+
+```bash
+poetry run python scripts/bootstrap_v4.py --check            # what is missing
+poetry run python scripts/bootstrap_v4.py --verify-telegram  # is the bot token live
+poetry run python scripts/bootstrap_v4.py --verify-google    # is the calendar wired
+```
+
 ### 0.1 Get the two secrets you cannot generate
 
 1. **Telegram bot token** — message [@BotFather](https://t.me/BotFather), `/newbot`,
@@ -73,6 +81,53 @@ one-time link code. Message your bot with **just that code**. The coach replies
 The numbers you pass are what the coach plans from — age, sex, weight and
 weekly hours drive VDOT, macros and load. Re-run the script with different
 flags to correct them; it updates in place.
+
+### 0.5b Google Calendar, without touching Telegram
+
+Google is the only step with real console work. Do it once:
+
+1. [console.cloud.google.com](https://console.cloud.google.com) -> create a project.
+2. **APIs & Services -> Library** -> enable **Google Calendar API**.
+3. **OAuth consent screen** -> **External** -> app name + your email ->
+   **Audience -> Test users -> Add users** -> add your own Google address.
+   Leave it in *Testing*. Publishing needs a review; you do not need it.
+4. **Credentials -> Create credentials -> OAuth client ID -> Web application**.
+   Under **Authorized redirect URIs** add exactly:
+
+   ```
+   http://127.0.0.1:8000/integrations/link/callback/google
+   ```
+
+5. Copy the client id and secret into `.env`, plus a fresh key:
+
+   ```bash
+   poetry run python scripts/bootstrap_v4.py --keys GOOGLE_ENCRYPTION_KEY
+   ```
+
+   ```
+   GOOGLE_CLIENT_ID=<from the console>
+   GOOGLE_CLIENT_SECRET=<from the console>
+   GOOGLE_ENCRYPTION_KEY=<from the command above>
+   GOOGLE_REDIRECT_URI=http://127.0.0.1:8000/integrations/link/callback/google
+   ```
+
+6. With the backend running, authorise and confirm:
+
+   ```bash
+   poetry run python scripts/bootstrap_v4.py --verify-google
+   ```
+
+   It prints a consent URL - open it **in this machine's browser**, approve,
+   and land on the "go back to Telegram" page. Run the same command again; it
+   should answer:
+
+   ```
+   [  ok  ] Google Calendar is connected and reachable.
+            Calendar: 'Resilio Training' (...)
+   ```
+
+`Test users` is the step people miss: without your address listed there, Google
+answers `access_blocked` and the consent screen never appears.
 
 ### 0.6 Connect your data
 

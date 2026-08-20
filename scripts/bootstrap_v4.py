@@ -206,6 +206,88 @@ def print_keys(names: list[str] | None = None) -> int:
     return EXIT_OK
 
 
+GOOGLE_VARS = (
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "GOOGLE_ENCRYPTION_KEY",
+    "GOOGLE_REDIRECT_URI",
+)
+
+
+def verify_google() -> int:
+    """Report Google Calendar status, and hand over the consent URL if needed.
+
+    Three outcomes: not configured (says which variables are missing), configured
+    but not authorised (prints the URL to open), or connected (confirms the
+    calendar exists by touching the API).
+    """
+    missing = [name for name in GOOGLE_VARS if not _is_set(name)]
+    if missing:
+        base = os.getenv("PUBLIC_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+        print("[MISSING] Google Calendar is not configured yet:")
+        for name in missing:
+            print(f"  - {name}")
+        print()
+        print("  GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET come from the Google")
+        print("  Cloud Console (OAuth client, type: Web application).")
+        print("  GOOGLE_ENCRYPTION_KEY:")
+        print("      poetry run python scripts/bootstrap_v4.py --keys GOOGLE_ENCRYPTION_KEY")
+        print("  GOOGLE_REDIRECT_URI must be exactly:")
+        print(f"      {base}/integrations/link/callback/google")
+        return EXIT_BLOCKED
+
+    if not check_database() or not tables_ready():
+        return EXIT_BLOCKED
+
+    from app.db.database import SessionLocal
+    from app.db.models import AthleteModel
+    from app.integrations.google_calendar import oauth_service
+
+    with SessionLocal() as db:
+        athlete = db.query(AthleteModel).order_by(AthleteModel.id).first()
+        if athlete is None:
+            print("[MISSING] No athlete yet - run this script with no flags first.")
+            return EXIT_BLOCKED
+        athlete_id = athlete.id
+
+        if not oauth_service.is_connected(athlete_id, db):
+            try:
+                auth_url = oauth_service.connect(athlete_id, db)["auth_url"]
+            except Exception as exc:
+                print(f"[FAIL] Could not build the consent URL: {type(exc).__name__}")
+                return EXIT_BLOCKED
+            print("Google Calendar is configured but not authorised yet.")
+            print()
+            print("1. Make sure the backend is running (.\\scripts\\start_coach.ps1).")
+            print("2. Open this URL in a browser ON THIS MACHINE - the callback")
+            print("   comes back to a loopback address only this machine can reach:")
+            print()
+            print(f"   {auth_url}")
+            print()
+            print("3. Approve, land on the 'go back to Telegram' page, then re-run")
+            print("   this command to confirm.")
+            return EXIT_BLOCKED
+
+    # Connected: prove it by touching the API.
+    from app.integrations.google_calendar.calendar_sync_service import (
+        CalendarSyncService,
+    )
+
+    with SessionLocal() as db:
+        try:
+            calendar_id = CalendarSyncService(db).ensure_calendar(athlete_id)
+        except Exception as exc:
+            print(f"[FAIL] Connected, but the calendar call failed: {exc}")
+            print("       Re-authorise by deleting the row in")
+            print("       google_calendar_credentials and re-running this.")
+            return EXIT_BLOCKED
+
+    print("[  ok  ] Google Calendar is connected and reachable.")
+    print(f"         Calendar: 'Resilio Training' ({calendar_id})")
+    print("         Approving a week will write its sessions there.")
+    return EXIT_OK
+
+
 def verify_telegram() -> int:
     """Confirm the bot token works and print who it belongs to."""
     token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
@@ -409,6 +491,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Ask Telegram whether the bot token works, and print the bot name.",
     )
+    parser.add_argument(
+        "--verify-google",
+        action="store_true",
+        help="Report Google Calendar status and hand over the consent URL.",
+    )
     parser.add_argument("--new", action="store_true", help="Force a new athlete.")
     parser.add_argument("--name")
     parser.add_argument("--age", type=int)
@@ -437,6 +524,9 @@ def main() -> int:
 
     if args.verify_telegram:
         return verify_telegram()
+
+    if args.verify_google:
+        return verify_google()
 
     blockers = check_config()
 

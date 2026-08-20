@@ -473,3 +473,78 @@ class TestVerifyTelegram:
             bootstrap.verify_telegram()
 
         assert "super-secret" not in capsys.readouterr().out
+
+
+class TestVerifyGoogle:
+    def _clear(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        for name in bootstrap.GOOGLE_VARS:
+            monkeypatch.delenv(name, raising=False)
+        monkeypatch.setenv("PUBLIC_BASE_URL", "http://127.0.0.1:8000")
+
+    def test_unconfigured_lists_every_missing_variable(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        self._clear(monkeypatch)
+
+        assert bootstrap.verify_google() == 1
+
+        out = capsys.readouterr().out
+        for name in bootstrap.GOOGLE_VARS:
+            assert name in out
+        assert "/integrations/link/callback/google" in out
+
+    def test_it_names_the_exact_redirect_to_register(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        self._clear(monkeypatch)
+        monkeypatch.setenv("PUBLIC_BASE_URL", "https://coach.example.com")
+
+        bootstrap.verify_google()
+
+        assert (
+            "https://coach.example.com/integrations/link/callback/google"
+            in capsys.readouterr().out
+        )
+
+    def test_configured_but_unauthorised_hands_over_the_consent_url(
+        self,
+        sqlite_db: Any,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        from cryptography.fernet import Fernet
+
+        self._clear(monkeypatch)
+        monkeypatch.setenv("GOOGLE_CLIENT_ID", "abc.apps.googleusercontent.com")
+        monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "shh")
+        monkeypatch.setenv("GOOGLE_ENCRYPTION_KEY", Fernet.generate_key().decode())
+        monkeypatch.setenv(
+            "GOOGLE_REDIRECT_URI",
+            "http://127.0.0.1:8000/integrations/link/callback/google",
+        )
+        bootstrap.ensure_athlete(_args(name="Simon"))
+
+        assert bootstrap.verify_google() == 1
+
+        out = capsys.readouterr().out
+        assert "accounts.google.com" in out
+        assert "calendar.app.created" in out
+        assert "ON THIS MACHINE" in out
+
+    def test_no_athlete_is_reported_before_anything_else(
+        self, sqlite_db: Any, monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        from cryptography.fernet import Fernet
+
+        self._clear(monkeypatch)
+        monkeypatch.setenv("GOOGLE_CLIENT_ID", "abc")
+        monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "shh")
+        monkeypatch.setenv("GOOGLE_ENCRYPTION_KEY", Fernet.generate_key().decode())
+        monkeypatch.setenv(
+            "GOOGLE_REDIRECT_URI",
+            "http://127.0.0.1:8000/integrations/link/callback/google",
+        )
+
+        assert bootstrap.verify_google() == 1
+        assert "No athlete yet" in capsys.readouterr().out
