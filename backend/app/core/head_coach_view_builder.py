@@ -50,6 +50,7 @@ def build_head_coach_view(
         weight_kg=_opt(athlete.weight_kg, int, float),
         height_cm=_opt(athlete.height_cm, int, float),
         vdot=_opt(athlete.vdot, int, float),
+        vdot_source="declared" if _opt(athlete.vdot, int, float) else None,
         ftp_watts=_opt(athlete.ftp_watts, int),
         css_per_100m=_opt(athlete.css_per_100m, int, float),
         max_hr=_opt(athlete.max_hr, int),
@@ -66,6 +67,7 @@ def build_head_coach_view(
         view.active_plan_summary = _active_plan_summary(athlete.id, db)
         view.recent_sessions = _recent_sessions(athlete.id, db)
         _attach_load_state(view, athlete.id, db)
+        _attach_estimated_vdot(view, athlete.id, db)
         _attach_snapshot(view, athlete.id, db)
     except Exception:
         # A conversation turn is worth more than a complete view.
@@ -176,6 +178,59 @@ def _recent_sessions(athlete_id: str, db: Any) -> list[dict[str, Any]]:
             entry["rpe"] = row.perceived_exertion
         sessions.append(entry)
     return sessions
+
+
+def _attach_estimated_vdot(view: HeadCoachView, athlete_id: str, db: Any) -> None:
+    """Fill in the VDOT the planner would infer, when none was declared.
+
+    ``RunningCoach.analyze`` falls back to ``estimate_vdot`` on the athlete's
+    recent Strava runs and never writes the result back, so reading the column
+    alone left the conversational coach blind to a number the planner was
+    already prescribing paces from.
+
+    Labelled as an estimate: it comes from whatever pace the athlete happened
+    to run, not from a tested effort.
+    """
+    from ..db.models import StravaActivityModel
+    from ..schemas.connector import StravaActivity
+    from .running_logic import estimate_vdot
+
+    if view.vdot is not None:
+        return
+
+    rows = db.query(StravaActivityModel).filter(
+        StravaActivityModel.athlete_id == athlete_id
+    ).all()
+    activities = [
+        StravaActivity(
+            id=str(row.id),
+            name=row.name or "",
+            sport_type=row.sport_type or "",
+            date=row.started_at.date() if row.started_at else date.today(),
+            duration_seconds=int(row.duration_s or 0),
+            distance_meters=row.distance_m,
+            perceived_exertion=row.perceived_exertion,
+        )
+        for row in rows
+    ]
+    if not activities:
+        return
+
+    estimate = estimate_vdot(activities)
+    # estimate_vdot returns its beginner floor (35.0) when nothing qualifies;
+    # only report a value that actually came from a run in the window.
+    qualifying = any(
+        a.sport_type == "Run"
+        and a.distance_meters
+        and a.distance_meters >= 1000
+        and (date.today() - a.date).days <= 30
+        for a in activities
+    )
+    if not qualifying:
+        return
+
+    view.vdot = estimate
+    view.vdot_source = "estimated_from_recent_runs"
 
 
 def _attach_load_state(view: HeadCoachView, athlete_id: str, db: Any) -> None:

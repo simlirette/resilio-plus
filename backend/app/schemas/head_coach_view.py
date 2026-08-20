@@ -47,6 +47,10 @@ class HeadCoachView(BaseModel):
 
     # ─── Fitness markers the specialists prescribe from ──────────────────────
     vdot: float | None = None
+    # "declared" when the athlete gave a tested value, "estimated_from_recent_runs"
+    # when it was inferred from Strava. The coach must not present an
+    # inferred VDOT as a measured one.
+    vdot_source: str | None = None
     ftp_watts: int | None = None
     css_per_100m: float | None = None
     max_hr: int | None = None
