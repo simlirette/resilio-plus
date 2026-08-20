@@ -26,7 +26,7 @@ the Google console.
 ### 0.2 Generate the ones you can
 
 ```bash
-python scripts/bootstrap_v4.py --keys
+poetry run python scripts/bootstrap_v4.py --keys
 ```
 
 Paste all four lines into `.env`. Encryption keys are write-once: rotating one
@@ -63,7 +63,7 @@ and tells you which variable.
 In a second terminal:
 
 ```bash
-python scripts/bootstrap_v4.py --name "Your Name" --age 34 --sex M --weight-kg 75 --height-cm 180 --primary-sport running --hours-per-week 8 --timezone America/Montreal
+poetry run python scripts/bootstrap_v4.py --name "Your Name" --age 34 --sex M --weight-kg 75 --height-cm 180 --primary-sport running --hours-per-week 8 --timezone America/Montreal
 ```
 
 It prints your athlete id (put it in `.env` as `ADMIN_ATHLETE_ID`) and a
@@ -158,10 +158,11 @@ URIs.
    ```
 
 5. Put the client id/secret in `.env` as `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`.
-6. Generate the at-rest key for the refresh token:
+6. Generate the at-rest key for the refresh token — `bootstrap_v4.py --keys`
+   prints it alongside the others (§0.2), or on its own:
 
    ```bash
-   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+   poetry run python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
    ```
 
    → `GOOGLE_ENCRYPTION_KEY`.
@@ -200,8 +201,14 @@ with `env_file`, so nothing in the compose files needs editing for V4.
 The bot never auto-creates an athlete. A chat becomes an identity in one of two
 ways.
 
-**Link code (normal path).** Mint one, then send it to the bot as a plain
-message:
+**Link code (normal path).** `bootstrap_v4.py` mints one on every run and
+prints it — that is the intended path:
+
+```bash
+poetry run python scripts/bootstrap_v4.py
+```
+
+Send that code to the bot as a plain message. If you would rather do it by hand:
 
 ```sql
 INSERT INTO messaging_link_codes (code, athlete_id, expires_at)
@@ -267,7 +274,7 @@ then restart the app (the cron is registered at startup).
 **Run a cycle by hand** — either text `/plan`, or:
 
 ```bash
-PYTHONPATH=backend python - <<'PY'
+PYTHONPATH=backend poetry run python - <<'PY'
 from app.db.database import SessionLocal
 from app.jobs.weekly_jobs import run_weekly_cycle_now
 with SessionLocal() as db:
@@ -326,7 +333,7 @@ FROM pending_approvals WHERE athlete_id = '<uuid>' ORDER BY created_at DESC LIMI
 Against a running instance:
 
 ```bash
-PYTHONPATH=backend python scripts/smoke_test_v4.py \
+PYTHONPATH=backend poetry run python scripts/smoke_test_v4.py \
   --base-url https://coach.example.com \
   --athlete-id <athlete-uuid> \
   --external-id <telegram chat id>
