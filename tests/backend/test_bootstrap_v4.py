@@ -548,3 +548,44 @@ class TestVerifyGoogle:
 
         assert bootstrap.verify_google() == 1
         assert "No athlete yet" in capsys.readouterr().out
+
+
+class TestAdminAthleteId:
+    def test_it_appears_in_the_report(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        monkeypatch.setenv("ADMIN_ATHLETE_ID", "1a2d73d5-0000-0000-0000-000000000000")
+
+        bootstrap.check_config()
+
+        assert "ADMIN_ATHLETE_ID" in capsys.readouterr().out
+
+    def test_its_value_is_shown_because_it_is_not_a_secret(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        monkeypatch.setenv("ADMIN_ATHLETE_ID", "1a2d73d5-0000-0000-0000-000000000000")
+
+        bootstrap.check_config()
+
+        assert "-> 1a2d73d5-0000-0000-0000-000000000000" in capsys.readouterr().out
+
+    def test_unset_explains_what_it_is_instead_of_blocking(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        monkeypatch.delenv("ADMIN_ATHLETE_ID", raising=False)
+
+        blockers = bootstrap.check_config()
+
+        out = capsys.readouterr().out
+        assert "ADMIN_ATHLETE_ID is unset" in out
+        assert "athlete's id" in out
+        assert "ADMIN_ATHLETE_ID" not in blockers
+
+    def test_no_hint_once_it_is_set(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        monkeypatch.setenv("ADMIN_ATHLETE_ID", "any-value")
+
+        bootstrap.check_config()
+
+        assert "is unset" not in capsys.readouterr().out
