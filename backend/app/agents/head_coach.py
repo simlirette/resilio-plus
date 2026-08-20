@@ -127,23 +127,35 @@ class HeadCoach:
                 for s in result
             ]
 
-        # Rule 3: CRITICAL conflicts → drop shorter session of conflicting pair
+        # Rule 3: CRITICAL conflicts → drop shorter session of the clashing pair
+        #
+        # Scoped per date. This filter used to match on sport alone, despite the
+        # comment claiming otherwise, so it gathered every session of those
+        # sports across the whole week and dropped the shortest one anywhere in
+        # it. A HIIT/lifting clash on Monday deleted an easy run on Wednesday
+        # and left Monday untouched: it removed training the athlete should do
+        # and kept the collision that raised the flag.
         for conflict in conflicts:
             if conflict.severity != ConflictSeverity.CRITICAL:
                 continue
-            # Find sessions belonging to the conflicting agents on the same date
             agents_in_conflict = set(conflict.agents)
-            candidate_sessions = [
+            involved = [
                 s
                 for s in result
                 if s.sport.value in agents_in_conflict
                 or any(a in s.workout_type for a in agents_in_conflict)
             ]
-            if len(candidate_sessions) >= 2:
+            dates_in_conflict = {
+                day
+                for day in {s.date for s in involved}
+                if len([s for s in involved if s.date == day]) >= 2
+            }
+            for day in sorted(dates_in_conflict):
+                same_day = [s for s in involved if s.date == day]
                 # Drop shorter session (tiebreaker: alphabetically later sport name)
-                shortest_duration = min(s.duration_min for s in candidate_sessions)
+                shortest_duration = min(s.duration_min for s in same_day)
                 candidates_shortest = [
-                    s for s in candidate_sessions if s.duration_min == shortest_duration
+                    s for s in same_day if s.duration_min == shortest_duration
                 ]
                 if len(candidates_shortest) == 1:
                     to_drop = candidates_shortest[0]
@@ -151,5 +163,6 @@ class HeadCoach:
                     # Tiebreak: drop alphabetically later sport name
                     to_drop = max(candidates_shortest, key=lambda s: s.sport.value)
                 result = [s for s in result if s is not to_drop]
+                involved = [s for s in involved if s is not to_drop]
 
         return result
