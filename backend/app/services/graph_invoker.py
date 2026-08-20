@@ -192,10 +192,14 @@ class DefaultGraphInvoker:
         athlete = db.query(AthleteModel).filter(AthleteModel.id == athlete_id).first()
         if athlete is None:
             return None
+        # ACWR is computed from this. Passing [] - as every call site used to -
+        # pins the ratio at 0.00 "undertrained" no matter what the athlete did.
+        from ..core.load_history import daily_training_loads
+
         plan_thread_id, proposed = self._plan_creator().create_plan(
             athlete_id=athlete_id,
             athlete_dict=athlete_profile_dict(athlete),
-            load_history=[],
+            load_history=daily_training_loads(athlete_id, db),
             db=db,
         )
         return {"plan_proposal": proposed, "plan_thread_id": plan_thread_id}

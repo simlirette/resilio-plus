@@ -197,7 +197,11 @@ class TestOnboarding:
         assert output is not None
         assert output["plan_proposal"] == PROPOSED_PLAN
         assert output["plan_thread_id"] == "plan-thread-1"
-        assert coaching.calls == [(athlete_id, [])]
+        # A real 28-day window, not the empty list that used to pin ACWR at 0.00.
+        assert len(coaching.calls) == 1
+        called_athlete, load_history = coaching.calls[0]
+        assert called_athlete == athlete_id
+        assert len(load_history) == 28
 
 
 class TestPlanGeneration:
@@ -215,6 +219,41 @@ class TestPlanGeneration:
             "plan_proposal": PROPOSED_PLAN,
             "plan_thread_id": "plan-thread-1",
         }
+        assert len(coaching.calls[0][1]) == 28
+
+    def test_the_load_history_reflects_real_training(
+        self, db_session: Session
+    ) -> None:
+        """Sessions the athlete actually did must reach ACWR."""
+        import uuid as _uuid
+        from datetime import datetime, timedelta, timezone as _tz
+
+        from app.db.models import StravaActivityModel
+
+        athlete_id = make_athlete(
+            db_session, journey_phase="baseline_pending_confirmation"
+        )
+        db_session.add(
+            StravaActivityModel(
+                id=f"strava_{_uuid.uuid4().hex[:8]}",
+                athlete_id=athlete_id,
+                strava_id=int(_uuid.uuid4().int % 10**12),
+                sport_type="running",
+                name="long run",
+                started_at=datetime.now(_tz.utc) - timedelta(days=1),
+                duration_s=3600,
+                perceived_exertion=10.0,
+            )
+        )
+        db_session.commit()
+        coaching = FakeCoaching()
+
+        DefaultGraphInvoker(coaching=coaching).invoke(
+            "plan_generation", athlete_id, "thread-1", {}, db_session
+        )
+
+        load_history = coaching.calls[0][1]
+        assert sum(load_history) > 0
 
     def test_unknown_athlete_returns_none(self, db_session: Session) -> None:
         coaching = FakeCoaching()

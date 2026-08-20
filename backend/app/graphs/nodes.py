@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import logging
 import uuid
 from datetime import date, timedelta
 from typing import Any
@@ -34,6 +35,8 @@ from .state import AthleteCoachingState
 # ---------------------------------------------------------------------------
 # Serialization helpers
 # ---------------------------------------------------------------------------
+
+logger = logging.getLogger(__name__)
 
 
 def _acwr_to_dict(acwr: ACWRResult) -> dict[str, Any]:
@@ -152,6 +155,39 @@ def compute_acwr(state: AthleteCoachingState, config: RunnableConfig) -> dict[st
 # ---------------------------------------------------------------------------
 
 
+def _connector_inputs(athlete_id: str, config: RunnableConfig) -> dict[str, Any]:
+    """Return the athlete's recent provider data for AgentContext.
+
+    Best-effort on purpose. A provider outage, or a graph run with no database
+    in config (unit tests), degrades to the previous behaviour — empty lists —
+    rather than failing the whole planning run.
+    """
+    empty: dict[str, Any] = {
+        "strava_activities": [],
+        "hevy_workouts": [],
+        "terra_health": [],
+    }
+    db = config.get("configurable", {}).get("db")
+    if db is None:
+        return empty
+
+    try:
+        from ..services.connector_service import fetch_connector_data
+
+        data = fetch_connector_data(athlete_id, db)
+    except Exception:
+        logger.warning("connector_data_unavailable", exc_info=True)
+        return empty
+
+    terra = data.get("terra_health")
+    return {
+        "strava_activities": data.get("strava_activities") or [],
+        "hevy_workouts": data.get("hevy_workouts") or [],
+        # fetch_connector_data returns a single snapshot; AgentContext wants a list.
+        "terra_health": [terra] if terra else [],
+    }
+
+
 def delegate_specialists(state: AthleteCoachingState, config: RunnableConfig) -> dict[str, Any]:
     """Invoke all sport-specific specialist agents and collect recommendations."""
     athlete = _athlete_from_dict(state["athlete_dict"])
@@ -169,11 +205,18 @@ def delegate_specialists(state: AthleteCoachingState, config: RunnableConfig) ->
     end = today + timedelta(days=6)
     phase = get_current_phase(athlete.target_race_date, today)
 
+    # Until V4 wired this, every specialist planned blind: AgentContext carries
+    # strava_activities / hevy_workouts / terra_health fields that were never
+    # populated, so the agents never saw a single thing the athlete had done.
+    connectors = _connector_inputs(state["athlete_id"], config)
+
     context = AgentContext(
         athlete=athlete,
         date_range=(today, end),
         phase=phase.phase.value,
         sport_budgets=sport_budgets,
+        weeks_remaining=phase.weeks_remaining,
+        **connectors,
     )
 
     agents = build_agents(athlete)
