@@ -191,8 +191,17 @@ class TestClassifyIntentRetry:
         assert result.decision == "HEAD_COACH_DIRECT"
         assert MockClient.return_value.messages.create.call_count == 2
 
-    def test_double_timeout_raises(self):
-        """Two consecutive timeouts → raises."""
+    def test_double_timeout_degrades_to_head_coach(self):
+        """Two consecutive timeouts → Head Coach, not an exception.
+
+        Changed 2026-08-20. This test used to assert that a double timeout
+        raised APITimeoutError. It does not any more, deliberately: the
+        exception propagated out of run_chat_turn and the athlete got
+        "something broke on my side" instead of an answer. Routing decides
+        which specialist to consult, so losing it costs precision, not the
+        conversation — and the Head Coach prompt carries its own clinical
+        guardrails. See tests/backend/services/test_classify_intent_timeout.py.
+        """
         from app.services.classify_intent_service import classify_intent
         import anthropic as anthropic_lib
 
@@ -200,8 +209,11 @@ class TestClassifyIntentRetry:
             MockClient.return_value.messages.create.side_effect = anthropic_lib.APITimeoutError(
                 request=MagicMock()
             )
-            with pytest.raises(anthropic_lib.APITimeoutError):
-                classify_intent(_make_request())
+            result = classify_intent(_make_request())
+
+        assert result.decision == "HEAD_COACH_DIRECT"
+        assert result.confidence == 0.0
+        assert MockClient.return_value.messages.create.call_count == 2
 
 
 class TestClassifyIntentParsing:

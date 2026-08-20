@@ -14,8 +14,10 @@ Contract:
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
+from typing import Any
 from pathlib import Path
 
 import anthropic
@@ -27,10 +29,31 @@ from ..schemas.intent import IntentClassification, IntentClassificationRequest
 
 _MODEL = "claude-haiku-4-5-20251001"
 _MAX_TOKENS = 1024
-_TIMEOUT_SECONDS = 0.8  # 800ms hard limit
+logger = logging.getLogger(__name__)
+
+_TIMEOUT_SECONDS = 8.0
+"""Seconds allowed for one classification attempt.
+
+Was 0.8s, chosen as a latency target rather than a failure threshold. A real
+round trip - network plus generation - does not fit in it, so two attempts
+would exhaust and the raised error took the whole conversation turn with it.
+Override with CLASSIFY_INTENT_TIMEOUT_S.
+"""
+
+_FALLBACK_DECISION = "HEAD_COACH_DIRECT"
+"""Where routing sends a message it could not classify.
+
+Routing is an optimisation - it picks which specialist to consult. Losing it
+should cost precision, not the conversation. The Head Coach prompt carries its
+own clinical guardrails, so answering from it beats answering nothing.
+"""
 
 # Load prompt from docs/prompts/classify-intent.md (relative to repo root)
-_PROMPT_PATH = Path(__file__).parents[4] / "docs" / "prompts" / "classify-intent.md"
+# parents[3] is the repository root: services -> app -> backend -> repo.
+# This was parents[4], one level too high, so the file never resolved and the
+# loader fell back to a 277-character stub while the real 82 KB routing prompt
+# went unused.
+_PROMPT_PATH = Path(__file__).parents[3] / "docs" / "prompts" / "classify-intent.md"
 
 
 def _load_system_prompt() -> str:
@@ -55,24 +78,128 @@ _CONTRACT_PAYLOAD_RE = re.compile(
 )
 
 
-def _parse_response(raw_text: str) -> IntentClassification:
-    """Extract <contract_payload> JSON block from Haiku XML output and parse it."""
-    match = _CONTRACT_PAYLOAD_RE.search(raw_text)
-    if not match:
-        raise ValueError(
-            f"classify_intent: no <contract_payload> found in model output. "
-            f"Raw (first 500 chars): {raw_text[:500]!r}"
-        )
-    payload_json = match.group(1)
-    try:
-        data = json.loads(payload_json)
-    except json.JSONDecodeError as exc:
-        raise ValueError(
-            f"classify_intent: could not parse <contract_payload> as JSON: {exc}. "
-            f"Payload: {payload_json[:300]!r}"
-        ) from exc
+_VALID_DECISIONS = {
+    "HEAD_COACH_DIRECT",
+    "SPECIALIST_TECHNICAL",
+    "CLINICAL_ESCALATION_IMMEDIATE",
+    "OUT_OF_SCOPE",
+    "CLARIFICATION_NEEDED",
+}
 
-    return IntentClassification(**data)
+_VALID_ESCALATIONS = {"tca_declared", "self_harm_signal"}
+
+_LANGUAGE_ALIASES = {
+    "french": "fr",
+    "francais": "fr",
+    "français": "fr",
+    "english": "en",
+    "anglais": "en",
+    "mixed": "fr-en-mixed",
+    "fr-en": "fr-en-mixed",
+}
+
+_JSON_FENCE_RE = re.compile(r"```(?:json)?\s*(\{.*?\})\s*```", re.DOTALL)
+_BARE_OBJECT_RE = re.compile(r"(\{.*\})", re.DOTALL)
+
+
+def _extract_payload(raw_text: str) -> dict[str, Any]:
+    """Pull the payload out of whatever shape the model produced.
+
+    The contract asks for <contract_payload> tags. Live output has also used a
+    ```json fence, a bare object, and a fence wrapping a "contract_payload"
+    key, sometimes followed by prose. Being strict here bought nothing: it sent
+    every message to the fallback and no specialist was ever consulted.
+    """
+    candidates: list[str] = []
+    tagged = _CONTRACT_PAYLOAD_RE.search(raw_text)
+    if tagged:
+        candidates.append(tagged.group(1))
+    fenced = _JSON_FENCE_RE.search(raw_text)
+    if fenced:
+        candidates.append(fenced.group(1))
+    bare = _BARE_OBJECT_RE.search(raw_text)
+    if bare:
+        candidates.append(bare.group(1))
+
+    for candidate in candidates:
+        try:
+            data = json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(data, dict):
+            continue
+        inner = data.get("contract_payload")
+        return inner if isinstance(inner, dict) else data
+
+    raise ValueError(
+        "classify_intent: no usable JSON payload in model output. "
+        f"Raw (first 500 chars): {raw_text[:500]!r}"
+    )
+
+
+def _coerce(data: dict[str, Any]) -> dict[str, Any]:
+    """Normalise a payload that is close enough, without inventing meaning."""
+    out = {k: v for k, v in data.items() if k in IntentClassification.model_fields}
+
+    language = str(out.get("language_detected", "fr")).strip().lower()
+    out["language_detected"] = _LANGUAGE_ALIASES.get(language, language)
+    if out["language_detected"] not in {"fr", "en", "fr-en-mixed"}:
+        out["language_detected"] = "fr"
+
+    chain = out.get("specialist_chain")
+    if isinstance(chain, str):
+        chain = [{"specialist": chain}]
+    if isinstance(chain, list):
+        normalised = []
+        for item in chain[:3]:
+            if isinstance(item, str):
+                item = {"specialist": item}
+            if not isinstance(item, dict) or "specialist" not in item:
+                continue
+            # `reason` is required by the schema; the model often omits it.
+            item.setdefault("reason", "routed by intent classifier")
+            normalised.append(item)
+        out["specialist_chain"] = normalised or None
+    elif chain is not None:
+        out["specialist_chain"] = None
+
+    reasoning = str(out.get("reasoning") or "Routing decision.")
+    out["reasoning"] = reasoning[:200]
+
+    out.setdefault("clinical_context_active_acknowledged", False)
+    out["clinical_context_active_acknowledged"] = bool(
+        out.get("clinical_context_active_acknowledged")
+    )
+
+    confidence = out.get("confidence", 0.0)
+    try:
+        out["confidence"] = min(1.0, max(0.0, float(confidence)))
+    except (TypeError, ValueError):
+        out["confidence"] = 0.0
+
+    escalation = out.get("clinical_escalation_type")
+    if escalation not in _VALID_ESCALATIONS:
+        # An invented type must not manufacture an emergency: live output once
+        # classified "dead legs" as an acute neuromuscular escalation.
+        out["clinical_escalation_type"] = None
+
+    decision = out.get("decision")
+    if decision not in _VALID_DECISIONS:
+        # Honour an invented decision only when it carries a type we recognise.
+        if out.get("clinical_escalation_type") in _VALID_ESCALATIONS:
+            out["decision"] = "CLINICAL_ESCALATION_IMMEDIATE"
+        else:
+            logger.warning(
+                "classify_intent_unknown_decision", extra={"decision": str(decision)}
+            )
+            out["decision"] = "HEAD_COACH_DIRECT"
+
+    return out
+
+
+def _parse_response(raw_text: str) -> IntentClassification:
+    """Parse the model's routing decision, tolerating format drift."""
+    return IntentClassification(**_coerce(_extract_payload(raw_text)))
 
 
 # ─── User message serialiser ─────────────────────────────────────────────────
@@ -96,6 +223,31 @@ def _build_user_content(request: IntentClassificationRequest) -> str:
 
 # ─── Public entry point ───────────────────────────────────────────────────────
 
+def _timeout_seconds() -> float:
+    """Per-attempt budget, overridable via CLASSIFY_INTENT_TIMEOUT_S."""
+    raw = os.environ.get("CLASSIFY_INTENT_TIMEOUT_S", "").strip()
+    if not raw:
+        return _TIMEOUT_SECONDS
+    try:
+        value = float(raw)
+    except ValueError:
+        return _TIMEOUT_SECONDS
+    return value if value > 0 else _TIMEOUT_SECONDS
+
+
+def _fallback_classification(reason: str) -> IntentClassification:
+    """Route to the Head Coach when classification is unavailable."""
+    logger.warning("classify_intent_fallback", extra={"reason": reason})
+    return IntentClassification(
+        decision="HEAD_COACH_DIRECT",
+        specialist_chain=None,
+        confidence=0.0,
+        reasoning=f"Routing unavailable ({reason}); Head Coach answering directly.",
+        language_detected="fr",
+        clinical_context_active_acknowledged=False,
+    )
+
+
 def classify_intent(request: IntentClassificationRequest) -> IntentClassification:
     """Classify a free-form user message into a routing decision.
 
@@ -116,7 +268,7 @@ def classify_intent(request: IntentClassificationRequest) -> IntentClassificatio
             max_tokens=_MAX_TOKENS,
             system=_SYSTEM_PROMPT,
             messages=[{"role": "user", "content": user_content}],
-            timeout=_TIMEOUT_SECONDS,
+            timeout=_timeout_seconds(),
         )
         raw: str = getattr(message.content[0], "text", "")
         return _parse_response(raw)
@@ -125,5 +277,10 @@ def classify_intent(request: IntentClassificationRequest) -> IntentClassificatio
         try:
             return _call()
         except anthropic.APITimeoutError:
-            # Retry once on timeout (plan D3 spec: retry 1× on timeout)
-            return _call()
+            # Retry once on timeout (plan D3 spec: retry 1x on timeout)
+            try:
+                return _call()
+            except Exception:
+                return _fallback_classification("timeout")
+        except Exception as exc:
+            return _fallback_classification(type(exc).__name__)
