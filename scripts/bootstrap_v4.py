@@ -72,6 +72,9 @@ GROUPS: dict[str, tuple[tuple[str, bool], ...]] = {
         ("ANTHROPIC_API_KEY", True),
         ("JWT_SECRET", True),
     ),
+    "Ops (optional, but this is how you see whether the cron fired)": (
+        ("ADMIN_ATHLETE_ID", False),
+    ),
     "Telegram (the coach cannot reach you without these)": (
         ("TELEGRAM_BOT_TOKEN", True),
         ("TELEGRAM_MODE", False),
@@ -108,7 +111,10 @@ def check_config() -> list[str]:
             else:
                 mark = OPTIONAL
             shown = ""
-            if name in ("PUBLIC_BASE_URL", "TELEGRAM_MODE") and _is_set(name):
+            if (
+                name in ("PUBLIC_BASE_URL", "TELEGRAM_MODE", "ADMIN_ATHLETE_ID")
+                and _is_set(name)
+            ):
                 shown = f"  -> {os.environ[name]}"
             print(f"  [{mark}] {name}{shown}")
 
@@ -116,6 +122,11 @@ def check_config() -> list[str]:
     if mode == "webhook" and not _is_set("TELEGRAM_WEBHOOK_SECRET"):
         print("\n  [MISSING] TELEGRAM_WEBHOOK_SECRET (required in webhook mode)")
         blockers.append("TELEGRAM_WEBHOOK_SECRET")
+
+    if not _is_set("ADMIN_ATHLETE_ID"):
+        print()
+        print("  ADMIN_ATHLETE_ID is unset. It is just your athlete's id - this")
+        print("  script prints it, and it gates /admin/jobs and /admin/metrics.")
 
     blockers.extend(_check_provider_pairs())
     return blockers
