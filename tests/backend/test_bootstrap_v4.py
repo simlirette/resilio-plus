@@ -348,3 +348,128 @@ class TestProviderWiring:
             "https://coach.example.com/integrations/link/callback/google"
             in capsys.readouterr().out
         )
+
+
+class TestSelectiveKeys:
+    def test_a_single_name_mints_only_that_key(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        monkeypatch.delenv("GOOGLE_ENCRYPTION_KEY", raising=False)
+
+        assert bootstrap.print_keys(["GOOGLE_ENCRYPTION_KEY"]) == 0
+
+        out = capsys.readouterr().out
+        assert "GOOGLE_ENCRYPTION_KEY=" in out
+        assert "JWT_SECRET=" not in out
+        assert "STRAVA_ENCRYPTION_KEY=" not in out
+
+    def test_no_names_mints_all_of_them(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        for name in (
+            "JWT_SECRET",
+            "STRAVA_ENCRYPTION_KEY",
+            "GOOGLE_ENCRYPTION_KEY",
+            "TELEGRAM_WEBHOOK_SECRET",
+        ):
+            monkeypatch.delenv(name, raising=False)
+
+        assert bootstrap.print_keys(None) == 0
+
+        out = capsys.readouterr().out
+        assert out.count("=") >= 4
+
+    def test_an_unknown_name_is_refused(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        assert bootstrap.print_keys(["NOPE"]) == 1
+        assert "Unknown key name" in capsys.readouterr().out
+
+    def test_overwriting_a_key_already_in_use_is_flagged(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        monkeypatch.setenv("STRAVA_ENCRYPTION_KEY", "already-in-use")
+
+        bootstrap.print_keys(["STRAVA_ENCRYPTION_KEY"])
+
+        out = capsys.readouterr().out
+        assert "WARNING" in out
+        assert "unreadable" in out
+
+    def test_a_fresh_key_carries_no_warning(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        monkeypatch.delenv("GOOGLE_ENCRYPTION_KEY", raising=False)
+
+        bootstrap.print_keys(["GOOGLE_ENCRYPTION_KEY"])
+
+        assert "WARNING" not in capsys.readouterr().out
+
+
+class TestVerifyTelegram:
+    def test_missing_token_is_reported(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
+
+        assert bootstrap.verify_telegram() == 1
+        assert "MISSING" in capsys.readouterr().out
+
+    def test_a_placeholder_counts_as_missing(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "CHANGEME")
+        assert bootstrap.verify_telegram() == 1
+
+    def test_a_working_token_names_the_bot(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        import httpx
+        import respx
+
+        monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "123:abc")
+        with respx.mock(base_url="https://api.telegram.org") as mock:
+            mock.get("/bot123:abc/getMe").mock(
+                return_value=httpx.Response(
+                    200,
+                    json={
+                        "ok": True,
+                        "result": {"username": "resilioplusbot", "first_name": "resilio+"},
+                    },
+                )
+            )
+            assert bootstrap.verify_telegram() == 0
+
+        out = capsys.readouterr().out
+        assert "@resilioplusbot" in out
+        assert "t.me/resilioplusbot" in out
+
+    def test_a_rejected_token_says_so(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        import httpx
+        import respx
+
+        monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "123:bad")
+        with respx.mock(base_url="https://api.telegram.org") as mock:
+            mock.get("/bot123:bad/getMe").mock(return_value=httpx.Response(401))
+            assert bootstrap.verify_telegram() == 1
+
+        assert "rejected the token" in capsys.readouterr().out
+
+    def test_the_token_is_never_printed(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        import httpx
+        import respx
+
+        monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "123:super-secret")
+        with respx.mock(base_url="https://api.telegram.org") as mock:
+            mock.get("/bot123:super-secret/getMe").mock(
+                return_value=httpx.Response(
+                    200, json={"ok": True, "result": {"username": "b", "first_name": "b"}}
+                )
+            )
+            bootstrap.verify_telegram()
+
+        assert "super-secret" not in capsys.readouterr().out

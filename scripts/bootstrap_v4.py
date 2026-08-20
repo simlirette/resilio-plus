@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """First-run setup for the V4 text coach.
 
-The bot never auto-creates an athlete — that is a deliberate safety property,
+The bot never auto-creates an athlete - that is a deliberate safety property,
 but it means a fresh install has nothing for a Telegram chat to link to. This
 script closes that gap: it checks the configuration, creates the athlete, and
 mints the link code you send to the bot as your first message.
@@ -15,7 +15,7 @@ every run mints a fresh link code.
         --weight-kg 75 --height-cm 180 --primary-sport running \\
         --hours-per-week 8 --timezone America/Montreal
 
-Never prints a secret's value — only whether it is set.
+Never prints a secret's value - only whether it is set.
 """
 from __future__ import annotations
 
@@ -25,6 +25,7 @@ import os
 import secrets
 import sys
 import uuid
+from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -42,7 +43,7 @@ OPTIONAL = " skip "
 SPORTS = ("running", "lifting", "swimming", "biking")
 
 
-# ─── Configuration ────────────────────────────────────────────────────────────
+# --- Configuration ---------------------------------------------------------
 
 
 def _is_set(name: str) -> bool:
@@ -82,7 +83,7 @@ GROUPS: dict[str, tuple[tuple[str, bool], ...]] = {
         ("GOOGLE_ENCRYPTION_KEY", False),
         ("GOOGLE_REDIRECT_URI", False),
     ),
-    "Strava (optional — activities can also arrive via Hevy/Terra)": (
+    "Strava (optional - activities can also arrive via Hevy/Terra)": (
         ("STRAVA_CLIENT_ID", False),
         ("STRAVA_CLIENT_SECRET", False),
         ("STRAVA_ENCRYPTION_KEY", False),
@@ -108,7 +109,7 @@ def check_config() -> list[str]:
                 mark = OPTIONAL
             shown = ""
             if name in ("PUBLIC_BASE_URL", "TELEGRAM_MODE") and _is_set(name):
-                shown = f"  → {os.environ[name]}"
+                shown = f"  -> {os.environ[name]}"
             print(f"  [{mark}] {name}{shown}")
 
     mode = os.getenv("TELEGRAM_MODE", "polling").strip() or "polling"
@@ -136,13 +137,13 @@ def _check_provider_pairs() -> list[str]:
         if not _is_set(key_var):
             problems.append(key_var)
             notes.append(
-                f"  [MISSING] {key_var} — {provider} is configured but its tokens "
+                f"  [MISSING] {key_var} - {provider} is configured but its tokens "
                 "have nowhere safe to live."
             )
         if not _is_set(redirect_var):
             problems.append(redirect_var)
             notes.append(
-                f"  [MISSING] {redirect_var} — without it the OAuth callback "
+                f"  [MISSING] {redirect_var} - without it the OAuth callback "
                 f"falls back to a route that no longer exists. Set:\n"
                 f"            {redirect_var}={expected}"
             )
@@ -160,21 +161,86 @@ def _check_provider_pairs() -> list[str]:
     return problems
 
 
-def print_keys() -> None:
-    """Print freshly generated secrets for the operator to paste in."""
+def _generators() -> dict[str, Callable[[], str]]:
     from cryptography.fernet import Fernet
 
-    print("Generated secrets — paste into .env, then never regenerate them:")
-    print()
-    print(f"JWT_SECRET={secrets.token_hex(32)}")
-    print(f"STRAVA_ENCRYPTION_KEY={Fernet.generate_key().decode()}")
-    print(f"GOOGLE_ENCRYPTION_KEY={Fernet.generate_key().decode()}")
-    print(f"TELEGRAM_WEBHOOK_SECRET={secrets.token_urlsafe(32)}")
-    print()
-    print("Rotating an encryption key makes the tokens stored under it unreadable.")
+    return {
+        "JWT_SECRET": lambda: secrets.token_hex(32),
+        "STRAVA_ENCRYPTION_KEY": lambda: Fernet.generate_key().decode(),
+        "GOOGLE_ENCRYPTION_KEY": lambda: Fernet.generate_key().decode(),
+        "TELEGRAM_WEBHOOK_SECRET": lambda: secrets.token_urlsafe(32),
+    }
 
 
-# ─── Database ─────────────────────────────────────────────────────────────────
+def print_keys(names: list[str] | None = None) -> int:
+    """Print freshly generated secrets for the operator to paste in.
+
+    Takes explicit names so you can mint one without rotating the others -
+    regenerating a key that already encrypted a stored token destroys it.
+    """
+    generators = _generators()
+    wanted = names or list(generators)
+
+    unknown = [n for n in wanted if n not in generators]
+    if unknown:
+        print(f"Unknown key name(s): {', '.join(unknown)}")
+        print(f"Known: {', '.join(generators)}")
+        return EXIT_BLOCKED
+
+    already = [n for n in wanted if _is_set(n)]
+    print("Generated secrets - paste into .env:")
+    print()
+    for name in wanted:
+        print(f"{name}={generators[name]()}")
+    print()
+    if already:
+        print("WARNING: these are already set in .env, and replacing an")
+        print("encryption key makes every token stored under it unreadable:")
+        for name in already:
+            print(f"  - {name}")
+        print("Keep the existing value unless you mean to start that")
+        print("integration over.")
+    else:
+        print("Rotating an encryption key later makes the tokens stored")
+        print("under it unreadable. Set these once.")
+    return EXIT_OK
+
+
+def verify_telegram() -> int:
+    """Confirm the bot token works and print who it belongs to."""
+    token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+    if not token or token.upper().startswith("CHANGEME"):
+        print("[MISSING] TELEGRAM_BOT_TOKEN is not set.")
+        return EXIT_BLOCKED
+
+    import httpx
+
+    try:
+        response = httpx.get(
+            f"https://api.telegram.org/bot{token}/getMe", timeout=15.0
+        )
+    except Exception as exc:
+        print(f"[FAIL] Could not reach Telegram: {type(exc).__name__}")
+        return EXIT_BLOCKED
+
+    if response.status_code == 401:
+        print("[FAIL] Telegram rejected the token (401).")
+        print("       Re-copy it from BotFather - it is the whole string,")
+        print("       digits, colon and all.")
+        return EXIT_BLOCKED
+    if response.status_code != 200:
+        print(f"[FAIL] Telegram answered {response.status_code}.")
+        return EXIT_BLOCKED
+
+    bot = response.json().get("result", {})
+    username = bot.get("username", "?")
+    print("[  ok  ] Telegram token works.")
+    print(f"         Bot: @{username} ({bot.get('first_name', '')})")
+    print(f"         Open https://t.me/{username} to start the chat.")
+    return EXIT_OK
+
+
+# --- Database --------------------------------------------------------------
 
 
 def check_database() -> bool:
@@ -189,7 +255,7 @@ def check_database() -> bool:
         print(f"\n[MISSING] Database unreachable: {type(exc).__name__}")
         print("          Start it with:  docker compose up -d db")
         print("          If it is already running, try 127.0.0.1 instead of")
-        print("          localhost in DATABASE_URL — on Windows, WSL can own")
+        print("          localhost in DATABASE_URL - on Windows, WSL can own")
         print("          [::1]:5432 and localhost resolves there first.")
         print("          Then migrate:   alembic upgrade head")
         return False
@@ -320,7 +386,7 @@ def existing_identity(athlete_id: str) -> str | None:
         return row.external_id if row is not None else None
 
 
-# ─── Main ─────────────────────────────────────────────────────────────────────
+# --- Main ------------------------------------------------------------------
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -329,7 +395,20 @@ def build_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("--check", action="store_true", help="Config report only.")
-    parser.add_argument("--keys", action="store_true", help="Generate secrets and exit.")
+    parser.add_argument(
+        "--keys",
+        nargs="*",
+        metavar="NAME",
+        help=(
+            "Generate secrets and exit. Give names to mint only those, e.g. "
+            "--keys GOOGLE_ENCRYPTION_KEY."
+        ),
+    )
+    parser.add_argument(
+        "--verify-telegram",
+        action="store_true",
+        help="Ask Telegram whether the bot token works, and print the bot name.",
+    )
     parser.add_argument("--new", action="store_true", help="Force a new athlete.")
     parser.add_argument("--name")
     parser.add_argument("--age", type=int)
@@ -340,7 +419,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--hours-per-week", type=float)
     parser.add_argument("--timezone")
     parser.add_argument(
-        "--weekly-cycle-day", type=int, help="0=Monday … 6=Sunday (default 6)."
+        "--weekly-cycle-day", type=int, help="0=Monday ... 6=Sunday (default 6)."
     )
     parser.add_argument("--weekly-cycle-hour", type=int)
     parser.add_argument(
@@ -353,9 +432,11 @@ def main() -> int:
     args = build_parser().parse_args()
     _load_dotenv()
 
-    if args.keys:
-        print_keys()
-        return EXIT_OK
+    if args.keys is not None:
+        return print_keys(args.keys or None)
+
+    if args.verify_telegram:
+        return verify_telegram()
 
     blockers = check_config()
 
@@ -380,7 +461,7 @@ def main() -> int:
     print(f"  status            {action}")
     for field in PROFILE_FIELDS:
         print(f"  {field:<18}{profile[field]}")
-    print("  (weekly_cycle_day: 0=Monday … 6=Sunday)")
+    print("  (weekly_cycle_day: 0=Monday ... 6=Sunday)")
     if action == "reused unchanged":
         print()
         print("  This is whatever athlete already existed in the database. If the")
@@ -394,11 +475,11 @@ def main() -> int:
     print(f"  1. Put this in .env:   ADMIN_ATHLETE_ID={athlete_id}")
 
     if linked_chat is not None:
-        print(f"  2. Telegram already linked to chat {linked_chat} — nothing to do.")
+        print(f"  2. Telegram already linked to chat {linked_chat} - nothing to do.")
         print("  3. Start the backend, then message the bot.")
     else:
         code = mint_link_code(athlete_id, args.code_hours)
-        print("  2. Start the backend (see docs/backend/TELEGRAM-COACH.md §Quickstart).")
+        print("  2. Start the backend (see docs/backend/TELEGRAM-COACH.md Quickstart).")
         print("  3. Message your bot on Telegram with exactly this, and nothing else:")
         print()
         print(f"         {code}")
