@@ -24,6 +24,7 @@ Stored on ``AthleteModel.active_onboarding_thread_id``.
 from __future__ import annotations
 
 import dataclasses
+import logging
 import os
 import uuid
 from typing import Any
@@ -58,6 +59,8 @@ class _OnboardingThread:
 
 # Module-level state (MemorySaver equivalent for D7)
 _thread_states: dict[str, _OnboardingThread] = {}
+
+logger = logging.getLogger(__name__)
 
 
 # ─── Block definitions ────────────────────────────────────────────────────────
@@ -132,6 +135,41 @@ def _call_head_coach(instruction: str, context: str) -> str:
         }],
     )
     return getattr(message.content[0], "text", "")
+
+
+def _persist_block_answer(
+    athlete: Any,
+    block: int,
+    user_response: str,
+    db: Any,
+) -> None:
+    """Extract typed facts from one block answer and write them to the row.
+
+    `collected_data` lives in `_thread_states`, which is process-local: without
+    this, everything the athlete says is lost on restart and the row still
+    reads as it did at signup.
+
+    Best-effort by design. A failed extraction costs one fact and the coach can
+    ask again; letting it raise would end the conversation.
+    """
+    from ..services.onboarding_extraction import apply_extraction, extract_block
+
+    try:
+        data = extract_block(block, user_response)
+        if not data:
+            return
+        changed = apply_extraction(athlete, data, db)
+        if changed:
+            logger.info(
+                "onboarding_profile_updated",
+                extra={"athlete_id": athlete.id, "block": block, "fields": changed},
+            )
+    except Exception:
+        logger.warning(
+            "onboarding_persist_failed",
+            extra={"athlete_id": getattr(athlete, "id", None), "block": block},
+            exc_info=True,
+        )
 
 
 def _block_question(block: int, view: HeadCoachView) -> str:
@@ -244,6 +282,7 @@ def run_onboarding_respond(
     # Store current block response
     key = _BLOCK_DATA_KEYS.get(state.current_block, f"block_{state.current_block}")
     state.collected_data[key] = user_response
+    _persist_block_answer(athlete, state.current_block, user_response, db)
 
     next_block = state.current_block + 1
 
