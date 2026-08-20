@@ -252,7 +252,10 @@ def _attach_snapshot(view: HeadCoachView, athlete_id: str, db: Any) -> None:
     if snapshot is None:
         return
 
-    view.readiness = snapshot.readiness
+    # Only a measured readiness reaches the coach. An unmeasured 1.0 is the
+    # absence of a signal, and reads as 'fully recovered' in the prompt.
+    if getattr(snapshot, "readiness_source", None) == "measured":
+        view.readiness = snapshot.readiness
     strain = json.loads(snapshot.strain_json or "{}")
     if isinstance(strain, dict):
         view.muscle_strain = {

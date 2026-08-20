@@ -27,9 +27,11 @@ def snapshot_athlete(athlete_id: str, db: Session) -> None:
     """
     today = date.today()
     data = fetch_connector_data(athlete_id, db)
-    readiness = compute_readiness(
-        [data["terra_health"]] if data["terra_health"] else [],
-    )
+    terra = data["terra_health"]
+    readiness = compute_readiness([terra] if terra else [])
+    # Distinguishes a neutral modifier from an absent signal -- see
+    # AthleteStateSnapshotModel.readiness_source.
+    readiness_source = "measured" if terra else None
     strain = compute_muscle_strain(
         data["strava_activities"],
         data["hevy_workouts"],
@@ -42,6 +44,7 @@ def snapshot_athlete(athlete_id: str, db: Session) -> None:
     )
     if existing:
         existing.readiness = readiness
+        existing.readiness_source = readiness_source
         existing.strain_json = json.dumps(strain.model_dump(mode="json"))
     else:
         db.add(
@@ -50,6 +53,7 @@ def snapshot_athlete(athlete_id: str, db: Session) -> None:
                 athlete_id=athlete_id,
                 snapshot_date=today,
                 readiness=readiness,
+                readiness_source=readiness_source,
                 strain_json=json.dumps(strain.model_dump(mode="json")),
             )
         )

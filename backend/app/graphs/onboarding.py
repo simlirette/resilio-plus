@@ -24,6 +24,7 @@ Stored on ``AthleteModel.active_onboarding_thread_id``.
 from __future__ import annotations
 
 import dataclasses
+import json
 import logging
 import os
 import uuid
@@ -137,6 +138,75 @@ def _call_head_coach(instruction: str, context: str) -> str:
     return getattr(message.content[0], "text", "")
 
 
+# ─── Thread state persistence ─────────────────────────────────────────────────
+#
+# `_thread_states` is the hot path and stays a plain dict. It is a *cache* in
+# front of `athletes.onboarding_state_json`: a restart empties the dict, and
+# without the column the athlete was silently sent back to block 1 with the
+# coach asking everything again.
+
+
+def _save_state(state: _OnboardingThread, db: Any) -> None:
+    """Mirror one thread's state onto its athlete row."""
+    athlete = db.get(AthleteModel, state.athlete_id)
+    if athlete is None:
+        return
+    athlete.onboarding_state_json = json.dumps(
+        {
+            "thread_id": state.thread_id,
+            "athlete_id": state.athlete_id,
+            "current_block": state.current_block,
+            "collected_data": state.collected_data,
+            "status": state.status,
+        },
+        ensure_ascii=False,
+    )
+    db.commit()
+
+
+def _restore_state(thread_id: str, db: Any) -> _OnboardingThread | None:
+    """Rebuild a cached thread from the database, or return None.
+
+    Corrupt or mismatched state yields None rather than raising: a restart is
+    not the moment to start throwing errors at the athlete. They restart the
+    conversation, which is bad; they do not get an exception, which is worse.
+    """
+    cached = _thread_states.get(thread_id)
+    if cached is not None:
+        return cached
+
+    athlete_id = thread_id.split(":", 1)[0]
+    athlete = db.get(AthleteModel, athlete_id)
+    if athlete is None:
+        return None
+
+    raw = getattr(athlete, "onboarding_state_json", None)
+    if not raw:
+        return None
+
+    try:
+        stored = json.loads(raw)
+        if stored.get("thread_id") != thread_id:
+            return None
+        state = _OnboardingThread(
+            thread_id=str(stored["thread_id"]),
+            athlete_id=str(stored["athlete_id"]),
+            current_block=int(stored["current_block"]),
+            collected_data=dict(stored.get("collected_data") or {}),
+            status=str(stored["status"]),
+        )
+    except (ValueError, KeyError, TypeError):
+        logger.warning(
+            "onboarding_state_unreadable",
+            extra={"athlete_id": athlete_id, "thread_id": thread_id},
+            exc_info=True,
+        )
+        return None
+
+    _thread_states[thread_id] = state
+    return state
+
+
 def _persist_block_answer(
     athlete: Any,
     block: int,
@@ -210,9 +280,12 @@ def run_onboarding_start(
 
     existing_thread_id: str | None = getattr(athlete, "active_onboarding_thread_id", None)
 
-    if existing_thread_id and existing_thread_id in _thread_states:
-        # Resume existing thread at its current block
-        state = _thread_states[existing_thread_id]
+    restored = (
+        _restore_state(existing_thread_id, db) if existing_thread_id else None
+    )
+    if restored is not None:
+        # Resume existing thread at its current block, even across a restart
+        state = restored
         question = _block_question(state.current_block, view)
         return {
             "thread_id": state.thread_id,
@@ -235,6 +308,7 @@ def run_onboarding_start(
     # Persist thread_id on athlete record
     athlete.active_onboarding_thread_id = thread_id
     db.commit()
+    _save_state(state, db)
 
     question = _block_question(1, view)
     return {
@@ -272,10 +346,9 @@ def run_onboarding_respond(
     Raises:
         ValueError: If thread_id is not found in active thread states.
     """
-    if thread_id not in _thread_states:
+    state = _restore_state(thread_id, db)
+    if state is None:
         raise ValueError(f"Onboarding thread {thread_id!r} not found")
-
-    state = _thread_states[thread_id]
     athlete = _get_athlete(state.athlete_id, db)
     view = build_head_coach_view(athlete)
 
@@ -292,6 +365,7 @@ def run_onboarding_respond(
         state.current_block = next_block
         athlete.journey_phase = "baseline_pending_confirmation"
         db.commit()
+        _save_state(state, db)
         return {
             "thread_id": thread_id,
             "current_block": next_block,
@@ -302,6 +376,7 @@ def run_onboarding_respond(
         }
 
     state.current_block = next_block
+    _save_state(state, db)
     question = _block_question(next_block, view)
 
     return {

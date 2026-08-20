@@ -120,6 +120,15 @@ class AthleteModel(Base):
         String, nullable=True, default=None
     )
     """Thread ID for the persistent onboarding graph (format: {athlete_id}:onboarding:{uuid4})."""
+    onboarding_state_json: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True, default=None
+    )
+    """Serialised onboarding thread state.
+
+    The graph keeps threads in a module-level dict, which a restart empties. This
+    column is what the dict is rebuilt from, so a conversation interrupted by a
+    deploy resumes at the block it reached instead of at question one.
+    """
     active_recovery_thread_id: Mapped[Optional[str]] = mapped_column(
         String, nullable=True, default=None
     )

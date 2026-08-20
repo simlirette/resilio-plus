@@ -48,7 +48,12 @@ class AthleteStateSnapshotModel(Base):
         String, ForeignKey("athletes.id", ondelete="CASCADE"), nullable=False
     )
     snapshot_date: Mapped[datetime] = mapped_column(Date, nullable=False)
+    # A modifier in [0.5, 1.5]; 1.0 means 'no adjustment'.
     readiness: Mapped[float] = mapped_column(Float, nullable=False)
+    # "measured" when a recovery signal actually existed, NULL when the 1.0
+    # above is merely the absence of one. Without this the two are
+    # indistinguishable, and the coach reads the second as 'fully fresh'.
+    readiness_source: Mapped[str | None] = mapped_column(String, nullable=True)
     strain_json: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
