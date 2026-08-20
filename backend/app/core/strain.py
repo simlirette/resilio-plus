@@ -13,6 +13,7 @@ Reference: Impellizzeri et al. (2004) sRPE; Coggan TSS model; ACWR methodology.
 """
 from __future__ import annotations
 
+import re
 from datetime import date, datetime, timedelta, timezone
 
 from ..models.athlete_state import MuscleStrainScore
@@ -252,6 +253,112 @@ EXERCISE_MUSCLE_MAP: dict[str, dict[str, float]] = {
     },
 }
 
+
+# ---------------------------------------------------------------------------
+# Exercise name resolution
+# ---------------------------------------------------------------------------
+#
+# EXERCISE_MUSCLE_MAP is keyed on clean canonical names. Hevy exports the
+# equipment in the name itself -- "Incline Bench Press (Dumbbell)", "Pull Up
+# (Weighted)" -- so an exact lookup misses almost everything a real account
+# contains and silently charges `__unknown__` (core only). Resolution below is
+# additive: exact keys keep resolving to themselves, byte for byte.
+
+_EQUIPMENT_QUALIFIER = re.compile(r"\s*\([^)]*\)")
+_SEPARATORS = re.compile(r"[\s\-_]+")
+
+
+def _normalise(name: str) -> str:
+    """Drop equipment qualifiers, unify separators and case."""
+    return _SEPARATORS.sub(" ", _EQUIPMENT_QUALIFIER.sub(" ", name or "")).strip().lower()
+
+
+_CANONICAL_BY_NORMAL: dict[str, str] = {
+    _normalise(key): key for key in EXERCISE_MUSCLE_MAP if key != "__unknown__"
+}
+
+# Names Hevy uses that do not reduce to a canonical key. Mapped to the closest
+# canonical movement by recruitment pattern, not by name.
+_ALIASES: dict[str, str] = {
+    "shoulder press": "Overhead Press",
+    "military press": "Overhead Press",
+    "arnold press": "Overhead Press",
+    "upright row": "Lateral Raise",
+    "rear delt reverse fly": "Face Pull",
+    "reverse fly": "Face Pull",
+    "shrug": "Face Pull",
+    "triceps extension": "Skull Crusher",
+    "tricep extension": "Skull Crusher",
+    "overhead press extension": "Skull Crusher",
+    "triceps pushdown": "Tricep Pushdown",
+    "triceps dip": "Dips",
+    "dip": "Dips",
+    "preacher curl": "Barbell Curl",
+    "hammer curl": "Dumbbell Curl",
+    "bicep curl": "Dumbbell Curl",
+    "biceps curl": "Dumbbell Curl",
+    "concentration curl": "Dumbbell Curl",
+    "chest press": "Bench Press",
+    "chest fly": "Bench Press",
+    "cable fly": "Bench Press",
+    "pec deck": "Bench Press",
+    "t bar row": "Barbell Row",
+    "bent over row": "Barbell Row",
+    "chin up": "Pull-up",
+    "front squat": "Squat",
+    "goblet squat": "Squat",
+    "hack squat": "Squat",
+    "bulgarian split squat": "Lunge",
+    "split squat": "Lunge",
+    "calf press": "Calf Raise",
+    "crunch": "Cable Crunch",
+    "sit up": "Cable Crunch",
+    "leg raise": "Cable Crunch",
+    "russian twist": "Cable Crunch",
+    "hyperextension": "Good Morning",
+    "back extension": "Good Morning",
+}
+
+
+def _longest_containing(normal: str, candidates: dict[str, str]) -> str | None:
+    """Return the canonical name whose key appears in `normal`, longest first.
+
+    "Seated Lateral Raise" contains "lateral raise"; "Overhead Tricep
+    Extension" contains "tricep extension". Longest wins so "incline bench
+    press" is not stolen by "bench press".
+    """
+    best: str | None = None
+    best_len = 0
+    for key, canonical in candidates.items():
+        if len(key) > best_len and re.search(rf"(?:^|\s){re.escape(key)}(?:\s|$)", normal):
+            best, best_len = canonical, len(key)
+    return best
+
+
+def resolve_exercise(name: str) -> dict[str, float]:
+    """Return the muscle recruitment map for an exercise name.
+
+    Falls back to ``EXERCISE_MUSCLE_MAP["__unknown__"]`` rather than raising --
+    an unrecognised movement should cost precision, not a planning run.
+    """
+    exact = EXERCISE_MUSCLE_MAP.get(name)
+    if exact is not None:
+        return exact
+
+    normal = _normalise(name)
+    if not normal:
+        return EXERCISE_MUSCLE_MAP["__unknown__"]
+
+    canonical = _CANONICAL_BY_NORMAL.get(normal) or _ALIASES.get(normal)
+    if canonical is None:
+        canonical = _longest_containing(normal, _CANONICAL_BY_NORMAL) or _longest_containing(
+            normal, _ALIASES
+        )
+    if canonical is None:
+        return EXERCISE_MUSCLE_MAP["__unknown__"]
+    return EXERCISE_MUSCLE_MAP[canonical]
+
+
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
@@ -322,7 +429,7 @@ def compute_muscle_strain(
         if not (0 <= delta < 28):
             continue
         for exercise in workout.exercises:
-            ex_map = EXERCISE_MUSCLE_MAP.get(exercise.name, EXERCISE_MUSCLE_MAP["__unknown__"])
+            ex_map = resolve_exercise(exercise.name)
             rpes = _rpe_fallback(exercise.sets)
             for s, rpe in zip(exercise.sets, rpes):
                 if s.reps is None:
