@@ -26,7 +26,7 @@ import secrets
 import sys
 import uuid
 from collections.abc import Callable
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -434,7 +434,12 @@ PROFILE_FIELDS = (
     "timezone",
     "weekly_cycle_day",
     "weekly_cycle_hour",
+    "target_race_date",
 )
+
+# Stored as JSON text on the athlete row, so handled separately from the
+# scalar fields above.
+JSON_LIST_FIELDS = {"sports": "sports_json", "goals": "goals_json"}
 
 PROFILE_DEFAULTS: dict[str, object] = {
     "name": "Athlete",
@@ -447,6 +452,7 @@ PROFILE_DEFAULTS: dict[str, object] = {
     "timezone": "America/Montreal",
     "weekly_cycle_day": 6,
     "weekly_cycle_hour": 18,
+    "target_race_date": None,
 }
 
 
@@ -457,6 +463,25 @@ def _supplied(args: argparse.Namespace) -> dict[str, object]:
         for field in PROFILE_FIELDS
         if getattr(args, field) is not None
     }
+
+
+def _supplied_lists(args: argparse.Namespace) -> dict[str, str]:
+    """JSON-list columns the operator passed, already serialised."""
+    out: dict[str, str] = {}
+    for field, column in JSON_LIST_FIELDS.items():
+        value = getattr(args, field, None)
+        if value:
+            out[column] = json.dumps(list(value))
+    return out
+
+
+def _parse_race_date(value: str) -> date:
+    try:
+        return date.fromisoformat(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(
+            f"--target-race-date must be YYYY-MM-DD, got {value!r}"
+        ) from None
 
 
 def ensure_athlete(args: argparse.Namespace) -> tuple[str, str, dict[str, object]]:
@@ -477,29 +502,41 @@ def ensure_athlete(args: argparse.Namespace) -> tuple[str, str, dict[str, object
             if existing is not None:
                 for field, value in supplied.items():
                     setattr(existing, field, value)
-                if "primary_sport" in supplied:
-                    existing.sports_json = json.dumps([supplied["primary_sport"]])
+                lists = _supplied_lists(args)
+                # An explicit --sports wins; otherwise a new primary sport at
+                # least keeps the list consistent with it.
+                if "sports_json" not in lists and "primary_sport" in supplied:
+                    lists["sports_json"] = json.dumps([supplied["primary_sport"]])
+                for column, payload in lists.items():
+                    setattr(existing, column, payload)
                 db.commit()
-                action = "updated" if supplied else "reused unchanged"
+                action = "updated" if (supplied or lists) else "reused unchanged"
                 profile = {f: getattr(existing, f) for f in PROFILE_FIELDS}
+                profile["sports"] = json.loads(existing.sports_json or "[]")
+                profile["goals"] = json.loads(existing.goals_json or "[]")
                 return existing.id, action, profile
 
         values: dict[str, object] = {**PROFILE_DEFAULTS, **supplied}
+        lists = _supplied_lists(args)
+        lists.setdefault("sports_json", json.dumps([values["primary_sport"]]))
+        lists.setdefault("goals_json", json.dumps([]))
         athlete_id = str(uuid.uuid4())
         db.add(
             AthleteModel(
                 id=athlete_id,
-                sports_json=json.dumps([values["primary_sport"]]),
-                goals_json=json.dumps([]),
                 available_days_json=json.dumps([0, 1, 2, 3, 4, 5, 6]),
                 equipment_json=json.dumps([]),
                 journey_phase="signup",
                 preferred_session_hour_json=json.dumps({}),
+                **lists,
                 **values,  # type: ignore[arg-type]
             )
         )
         db.commit()
-        return athlete_id, "created", values
+        reported = dict(values)
+        reported["sports"] = json.loads(lists["sports_json"])
+        reported["goals"] = json.loads(lists["goals_json"])
+        return athlete_id, "created", reported
 
 
 def mint_link_code(athlete_id: str, hours: int) -> str:
@@ -567,6 +604,23 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--weight-kg", type=float)
     parser.add_argument("--height-cm", type=float)
     parser.add_argument("--primary-sport", choices=SPORTS)
+    parser.add_argument(
+        "--sports",
+        nargs="+",
+        choices=SPORTS,
+        help="Every sport the athlete trains, e.g. --sports running lifting.",
+    )
+    parser.add_argument(
+        "--goal",
+        dest="goals",
+        action="append",
+        help="Repeatable, e.g. --goal 'half marathon Usti nad Labem'.",
+    )
+    parser.add_argument(
+        "--target-race-date",
+        type=_parse_race_date,
+        help="YYYY-MM-DD. Drives the periodization phase and weeks remaining.",
+    )
     parser.add_argument("--hours-per-week", type=float)
     parser.add_argument("--timezone")
     parser.add_argument(
@@ -615,6 +669,9 @@ def main() -> int:
     print(f"  status            {action}")
     for field in PROFILE_FIELDS:
         print(f"  {field:<18}{profile[field]}")
+    for extra in ("sports", "goals"):
+        if extra in profile:
+            print(f"  {extra:<18}{profile[extra]}")
     print("  (weekly_cycle_day: 0=Monday ... 6=Sunday)")
     if action == "reused unchanged":
         print()

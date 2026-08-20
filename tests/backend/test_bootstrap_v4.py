@@ -57,6 +57,7 @@ def sqlite_db(monkeypatch: pytest.MonkeyPatch) -> Any:
 
 def _args(**overrides: Any) -> argparse.Namespace:
     base: dict[str, Any] = {field: None for field in bootstrap.PROFILE_FIELDS}
+    base.update({field: None for field in bootstrap.JSON_LIST_FIELDS})
     base["new"] = False
     base.update(overrides)
     return argparse.Namespace(**base)
@@ -705,3 +706,84 @@ class TestMissingBase64Padding:
         assert bootstrap._accepts_fernet(self._valid()) is True
         assert bootstrap._accepts_fernet("nope") is False
         assert bootstrap._accepts_fernet("") is False
+
+
+class TestSportsGoalsAndRaceDate:
+    """These three drive the plan, so the setup script has to be able to set them.
+
+    Without a race date the periodization phase is always general_prep; with one
+    30 days out it is competition. Without goals, analyze_goals has nothing to
+    allocate sport budgets from.
+    """
+
+    def test_multiple_sports_are_stored(self, sqlite_db: Any) -> None:
+        from app.db.models import AthleteModel
+
+        athlete_id, _, profile = bootstrap.ensure_athlete(
+            _args(name="Simon", primary_sport="running", sports=["running", "lifting"])
+        )
+
+        assert profile["sports"] == ["running", "lifting"]
+        with sqlite_db.SessionLocal() as db:
+            row = db.get(AthleteModel, athlete_id)
+            assert row is not None
+            assert row.sports_json == '["running", "lifting"]'
+
+    def test_goals_are_stored(self, sqlite_db: Any) -> None:
+        _id, _action, profile = bootstrap.ensure_athlete(
+            _args(name="Simon", goals=["half marathon Usti nad Labem"])
+        )
+
+        assert profile["goals"] == ["half marathon Usti nad Labem"]
+
+    def test_race_date_is_stored(self, sqlite_db: Any) -> None:
+        from datetime import date
+
+        _id, _action, profile = bootstrap.ensure_athlete(
+            _args(name="Simon", target_race_date=date(2026, 9, 19))
+        )
+
+        assert profile["target_race_date"] == date(2026, 9, 19)
+
+    def test_explicit_sports_beat_the_primary_sport_default(
+        self, sqlite_db: Any
+    ) -> None:
+        _id, _action, profile = bootstrap.ensure_athlete(
+            _args(name="Simon", primary_sport="running", sports=["running", "lifting"])
+        )
+        assert profile["sports"] == ["running", "lifting"]
+
+    def test_changing_only_the_primary_sport_still_syncs_the_list(
+        self, sqlite_db: Any
+    ) -> None:
+        bootstrap.ensure_athlete(_args(name="Simon", sports=["running", "lifting"]))
+
+        _id, _action, profile = bootstrap.ensure_athlete(
+            _args(primary_sport="swimming")
+        )
+
+        assert profile["sports"] == ["swimming"]
+
+    def test_an_update_preserves_lists_it_was_not_given(
+        self, sqlite_db: Any
+    ) -> None:
+        bootstrap.ensure_athlete(
+            _args(name="Simon", sports=["running", "lifting"], goals=["half"])
+        )
+
+        _id, _action, profile = bootstrap.ensure_athlete(_args(age=24))
+
+        assert profile["sports"] == ["running", "lifting"]
+        assert profile["goals"] == ["half"]
+        assert profile["age"] == 24
+
+    def test_the_race_date_parser_rejects_junk(self) -> None:
+        import argparse as _argparse
+
+        with pytest.raises(_argparse.ArgumentTypeError):
+            bootstrap._parse_race_date("19 septembre")
+
+    def test_the_race_date_parser_accepts_iso(self) -> None:
+        from datetime import date
+
+        assert bootstrap._parse_race_date("2026-09-19") == date(2026, 9, 19)
