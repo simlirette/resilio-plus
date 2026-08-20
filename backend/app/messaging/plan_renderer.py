@@ -56,7 +56,8 @@ def render_week(
     if reasoning:
         lines.append("")
         lines.append("**Why this week**")
-        lines.extend(f"- {line}" for line in reasoning)
+        for entry in reasoning:
+            lines.extend(_as_bullet(entry))
 
     if degraded_sources:
         lines.append("")
@@ -92,6 +93,19 @@ def _header(plan: Mapping[str, Any], sessions: Sequence[Mapping[str, Any]]) -> s
     if phase:
         parts.append(f"phase {phase}")
     return f"**{week_label}** — {' · '.join(parts)}"
+
+
+def _as_bullet(entry: str) -> list[str]:
+    """Render one reasoning entry as a bullet, indenting any extra lines.
+
+    Agent notes are sometimes several lines — nutrition targets per day type,
+    for instance. Emitting them raw leaves orphan lines that do not read as
+    part of the bullet above them.
+    """
+    parts = [part.rstrip() for part in entry.splitlines() if part.strip()]
+    if not parts:
+        return []
+    return [f"- {parts[0]}"] + [f"  {part.lstrip()}" for part in parts[1:]]
 
 
 def _reasoning_lines(plan: Mapping[str, Any]) -> list[str]:

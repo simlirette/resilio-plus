@@ -122,3 +122,46 @@ class TestRenderSessionLine:
         )
         assert "steady" in line
         assert "30 min" in line
+
+
+class TestMultiLineNotes:
+    """Agent notes are sometimes several lines — they must stay one bullet.
+
+    The nutrition coach emits per-day-type targets as a multi-line block; a live
+    plan on 2026-08-20 rendered it as orphan lines under a stray bullet.
+    """
+
+    MULTI = (
+        "rest: carbs=3.5g/kg protein=1.8g/kg\n"
+        "strength: carbs=4.5g/kg protein=1.8g/kg\n"
+        "race: carbs=7.0g/kg protein=1.8g/kg"
+    )
+
+    def test_extra_lines_are_indented_under_their_bullet(self) -> None:
+        text = render_week({**PLAN, "notes": [self.MULTI]})
+
+        assert "- rest: carbs=3.5g/kg protein=1.8g/kg" in text
+        assert "  strength: carbs=4.5g/kg protein=1.8g/kg" in text
+        assert "\nstrength:" not in text
+
+    def test_only_one_bullet_is_opened_per_note(self) -> None:
+        text = render_week({**PLAN, "notes": [self.MULTI]})
+
+        why = text.split("**Why this week**", 1)[1]
+        assert why.count("- rest:") == 1
+        assert "- strength:" not in why
+
+    def test_a_single_line_note_is_unchanged(self) -> None:
+        text = render_week({**PLAN, "notes": ["Volume held flat."]})
+        assert "- Volume held flat." in text
+
+    def test_blank_lines_inside_a_note_are_dropped(self) -> None:
+        text = render_week({**PLAN, "notes": ["first\n\n\nsecond"]})
+
+        assert "- first" in text
+        assert "  second" in text
+        assert "\n\n  second" not in text
+
+    def test_an_all_whitespace_note_produces_no_bullet(self) -> None:
+        text = render_week({**PLAN, "notes": ["   \n  \n"]})
+        assert "-  " not in text
