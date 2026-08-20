@@ -66,6 +66,19 @@ def test_it_runs_the_preflight_before_starting_the_backend(source: str) -> None:
     assert preflight < uvicorn, "starting the app before the preflight hides the cause"
 
 
+def test_it_hands_the_env_file_to_uvicorn(source: str) -> None:
+    """Without --env-file the server is blind to everything the preflight saw.
+
+    The preflight reads .env itself, so a launcher that omits this starts a
+    backend with no API key, no bot token and no Google settings while every
+    check reports green - which is exactly how it failed on 2026-08-20.
+    """
+    uvicorn_line = next(
+        line for line in source.splitlines() if "uvicorn app.main:app" in line
+    )
+    assert "--env-file" in uvicorn_line
+
+
 @pytest.mark.skipif(sys.platform != "win32", reason="needs powershell.exe")
 def test_powershell_can_parse_it() -> None:
     command = (

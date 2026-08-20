@@ -128,8 +128,43 @@ def check_config() -> list[str]:
         print("  ADMIN_ATHLETE_ID is unset. It is just your athlete's id - this")
         print("  script prints it, and it gates /admin/jobs and /admin/metrics.")
 
+    blockers.extend(_check_fernet_keys())
     blockers.extend(_check_provider_pairs())
     return blockers
+
+
+FERNET_KEYS = ("STRAVA_ENCRYPTION_KEY", "GOOGLE_ENCRYPTION_KEY")
+
+
+def _check_fernet_keys() -> list[str]:
+    """A key of the wrong shape passes every other check and fails at use.
+
+    It fails *after* the OAuth round trip succeeds, as a 500, with the
+    authorization code already spent - so validate the shape up front.
+    """
+    from cryptography.fernet import Fernet
+
+    problems: list[str] = []
+    notes: list[str] = []
+    for name in FERNET_KEYS:
+        if not _is_set(name):
+            continue
+        value = os.environ[name].strip()
+        try:
+            Fernet(value.encode())
+        except Exception:
+            problems.append(name)
+            notes.append(
+                f"  [ BAD  ] {name} is not a valid Fernet key ({len(value)} "
+                "chars; it must be exactly 44 url-safe base64\n"
+                "            characters, not a passphrase). Generate one with:\n"
+                f"            poetry run python scripts/bootstrap_v4.py --keys {name}"
+            )
+    if notes:
+        print("\nEncryption keys")
+        for note in notes:
+            print(note)
+    return problems
 
 
 def _check_provider_pairs() -> list[str]:

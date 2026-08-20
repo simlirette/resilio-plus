@@ -73,5 +73,8 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
+# --env-file is not optional: the preflight above reads .env itself, so without
+# it the server starts "configured" by every check and still cannot see
+# ANTHROPIC_API_KEY, TELEGRAM_BOT_TOKEN or the Google settings.
 Write-Host "[coach] backend on http://127.0.0.1:8000 - Ctrl+C to stop" -ForegroundColor Green
-& $python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+& $python -m uvicorn app.main:app --env-file .env --host 127.0.0.1 --port 8000

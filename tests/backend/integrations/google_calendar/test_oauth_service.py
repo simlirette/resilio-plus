@@ -229,3 +229,36 @@ class TestAccessToken:
 
         assert provide() == "access-cached"
         assert provide() == "access-forced"
+
+
+class TestEncryptionKeyValidation:
+    """An unusable key must fail as configuration, not as a 500 mid-callback."""
+
+    def test_a_passphrase_is_refused_as_configuration(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("GOOGLE_ENCRYPTION_KEY", "my-secret-key-1234")
+        monkeypatch.setenv("GOOGLE_CLIENT_ID", "abc")
+        monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "shh")
+
+        with pytest.raises(GoogleCalendarConfigurationError) as exc:
+            connect("athlete-x", None)  # type: ignore[arg-type]
+
+        assert "Fernet" in str(exc.value)
+        assert "44" in str(exc.value)
+
+    def test_an_empty_key_is_still_refused(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("GOOGLE_ENCRYPTION_KEY", "")
+
+        with pytest.raises(GoogleCalendarConfigurationError):
+            connect("athlete-x", None)  # type: ignore[arg-type]
+
+    def test_a_valid_key_gets_past_validation(
+        self, db_session: Session, athlete: str, key: str
+    ) -> None:
+        # The `key` fixture installs a real Fernet key; connect() must work.
+        assert connect(athlete, db_session)["auth_url"].startswith(
+            "https://accounts.google.com"
+        )

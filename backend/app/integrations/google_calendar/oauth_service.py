@@ -49,11 +49,26 @@ class InvalidOAuthStateError(ValueError):
 
 
 def _encryption_key() -> str:
+    """Return the at-rest key, refusing anything Fernet cannot actually use.
+
+    Validated here rather than at first use: without this, a key of the wrong
+    shape sails through every check and only fails *after* the OAuth round trip
+    has succeeded, as an opaque 500 with the athlete's authorization code
+    already spent.
+    """
     key = os.getenv("GOOGLE_ENCRYPTION_KEY", "").strip()
     if not key:
         raise GoogleCalendarConfigurationError(
             "GOOGLE_ENCRYPTION_KEY environment variable is not set"
         )
+    try:
+        Fernet(key.encode())
+    except Exception as exc:
+        raise GoogleCalendarConfigurationError(
+            "GOOGLE_ENCRYPTION_KEY is not a valid Fernet key. It must be exactly "
+            "44 url-safe base64 characters, not a passphrase. Generate one with: "
+            "python scripts/bootstrap_v4.py --keys GOOGLE_ENCRYPTION_KEY"
+        ) from exc
     return key
 
 

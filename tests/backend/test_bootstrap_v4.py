@@ -589,3 +589,65 @@ class TestAdminAthleteId:
         bootstrap.check_config()
 
         assert "is unset" not in capsys.readouterr().out
+
+
+class TestFernetKeyValidation:
+    """A key of the wrong shape passes every other check and fails at use.
+
+    Seen live on 2026-08-20: a 19-character passphrase in GOOGLE_ENCRYPTION_KEY
+    survived the whole OAuth round trip and then 500'd while storing the token,
+    with the authorization code already spent.
+    """
+
+    def test_a_passphrase_is_rejected(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        monkeypatch.setenv("GOOGLE_ENCRYPTION_KEY", "my-secret-key-1234")
+        monkeypatch.delenv("STRAVA_ENCRYPTION_KEY", raising=False)
+
+        problems = bootstrap._check_fernet_keys()
+
+        assert problems == ["GOOGLE_ENCRYPTION_KEY"]
+        out = capsys.readouterr().out
+        assert "not a valid Fernet key" in out
+        assert "44" in out
+
+    def test_a_real_key_passes(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        from cryptography.fernet import Fernet
+
+        monkeypatch.setenv("GOOGLE_ENCRYPTION_KEY", Fernet.generate_key().decode())
+        monkeypatch.setenv("STRAVA_ENCRYPTION_KEY", Fernet.generate_key().decode())
+
+        assert bootstrap._check_fernet_keys() == []
+
+    def test_an_unset_key_is_not_a_shape_problem(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        for name in bootstrap.FERNET_KEYS:
+            monkeypatch.delenv(name, raising=False)
+
+        assert bootstrap._check_fernet_keys() == []
+
+    def test_both_keys_are_checked(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("GOOGLE_ENCRYPTION_KEY", "too-short")
+        monkeypatch.setenv("STRAVA_ENCRYPTION_KEY", "also-too-short")
+
+        assert set(bootstrap._check_fernet_keys()) == set(bootstrap.FERNET_KEYS)
+
+    def test_a_hex_secret_is_rejected(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # token_hex(32) is 64 chars - a plausible mistake, still not Fernet.
+        monkeypatch.setenv("GOOGLE_ENCRYPTION_KEY", "a" * 64)
+        monkeypatch.delenv("STRAVA_ENCRYPTION_KEY", raising=False)
+
+        assert bootstrap._check_fernet_keys() == ["GOOGLE_ENCRYPTION_KEY"]
+
+    def test_it_blocks_the_overall_check(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("GOOGLE_ENCRYPTION_KEY", "nope")
+
+        assert "GOOGLE_ENCRYPTION_KEY" in bootstrap.check_config()
