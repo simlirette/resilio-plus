@@ -81,7 +81,11 @@ def build_coaching_graph(*, checkpointer: Any, interrupt: bool = True) -> Any:
     builder.add_edge("compute_acwr", "delegate_specialists")
     builder.add_edge("delegate_specialists", "merge_recommendations")
     builder.add_edge("merge_recommendations", "detect_conflicts")
-    builder.add_edge("resolve_conflicts", "detect_conflicts")  # loop back after resolution
+    # resolve_conflicts is a logging pass-through — arbitration happens in
+    # build_proposed_plan (HeadCoach._arbitrate). Routing it back to
+    # detect_conflicts re-derived the same verdict from unchanged
+    # recommendations, so any critical conflict looped until the recursion limit.
+    builder.add_edge("resolve_conflicts", "build_proposed_plan")
 
     # Conflict routing
     builder.add_conditional_edges(
