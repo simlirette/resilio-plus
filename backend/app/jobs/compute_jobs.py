@@ -42,7 +42,7 @@ def snapshot_athlete(athlete_id: str, db: Session) -> None:
     )
     if existing:
         existing.readiness = readiness
-        existing.strain_json = json.dumps(strain.model_dump())
+        existing.strain_json = json.dumps(strain.model_dump(mode="json"))
     else:
         db.add(
             AthleteStateSnapshotModel(
@@ -50,7 +50,7 @@ def snapshot_athlete(athlete_id: str, db: Session) -> None:
                 athlete_id=athlete_id,
                 snapshot_date=today,
                 readiness=readiness,
-                strain_json=json.dumps(strain.model_dump()),
+                strain_json=json.dumps(strain.model_dump(mode="json")),
             )
         )
 
