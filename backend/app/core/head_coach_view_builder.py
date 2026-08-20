@@ -193,7 +193,7 @@ def _attach_estimated_vdot(view: HeadCoachView, athlete_id: str, db: Any) -> Non
     """
     from ..db.models import StravaActivityModel
     from ..schemas.connector import StravaActivity
-    from .running_logic import _is_run, estimate_vdot
+    from .running_logic import estimate_vdot, qualifies_for_vdot
 
     if view.vdot is not None:
         return
@@ -216,20 +216,12 @@ def _attach_estimated_vdot(view: HeadCoachView, athlete_id: str, db: Any) -> Non
     if not activities:
         return
 
-    estimate = estimate_vdot(activities)
-    # estimate_vdot returns its beginner floor (35.0) when nothing qualifies;
-    # only report a value that actually came from a run in the window.
-    qualifying = any(
-        _is_run(a.sport_type)
-        and a.distance_meters
-        and a.distance_meters >= 1000
-        and (date.today() - a.date).days <= 30
-        for a in activities
-    )
-    if not qualifying:
+    # One predicate, shared with the estimator -- an inline copy here drifted
+    # from it within a single commit.
+    if not any(qualifies_for_vdot(a) for a in activities):
         return
 
-    view.vdot = estimate
+    view.vdot = estimate_vdot(activities)
     view.vdot_source = "estimated_from_recent_runs"
 
 

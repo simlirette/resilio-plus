@@ -128,39 +128,72 @@ def _is_run(sport_type: str | None) -> bool:
     return key.lower() in _RUN_SPORT_TYPES
 
 
-def estimate_vdot(
-    activities: list[StravaActivity],
-    reference_date: date | None = None,
-) -> float:
-    """Estimate VDOT from recent run activities. Returns 35.0 (beginner) if no data.
+# A run shorter than this cannot establish an aerobic pace -- a 1 km effort is
+# a sprint, and reading its pace off an easy-pace table inflates the estimate.
+_MIN_VDOT_DISTANCE_M = 3000.0
+_VDOT_WINDOW_DAYS = 30
+_BEGINNER_VDOT = 35.0
 
-    Filters to last 30 days, sport_type == "Run", distance >= 1000m.
-    Computes pace per km and finds the nearest VDOT row by easy_pace.
-    Returns the maximum VDOT found across all valid activities.
+
+def qualifies_for_vdot(
+    activity: StravaActivity,
+    reference_date: date | None = None,
+) -> bool:
+    """Whether one activity may contribute to a VDOT estimate.
+
+    Exposed so callers ask the same question the estimator asks; an inline copy
+    of this rule in the view builder drifted from it within a single commit.
     """
     from datetime import date as _date
 
     ref = reference_date or _date.today()
-    cutoff = ref - timedelta(days=30)
-    runs = [
-        a
-        for a in activities
-        if _is_run(a.sport_type)
-        and a.date >= cutoff
-        and a.distance_meters is not None
-        and a.distance_meters >= 1000
-    ]
+    return (
+        _is_run(activity.sport_type)
+        and activity.date >= ref - timedelta(days=_VDOT_WINDOW_DAYS)
+        and activity.distance_meters is not None
+        and activity.distance_meters >= _MIN_VDOT_DISTANCE_M
+        and activity.duration_seconds > 0
+    )
+
+
+def estimate_vdot(
+    activities: list[StravaActivity],
+    reference_date: date | None = None,
+) -> float:
+    """Estimate VDOT from recent runs. Returns 35.0 (beginner) when none qualify.
+
+    Each qualifying run's average pace is looked up against the *easy* pace
+    column, and the **median** across runs is taken.
+
+    Median, not maximum. The previous version took the fastest run in the
+    window, so a single threshold session -- whose average pace is nowhere near
+    an easy pace -- set the number, and every prescribed pace for the block
+    derived from it. In an 80/20 distribution the median run is an easy run,
+    which is what the table is keyed on. It also means one hard day, or one GPS
+    glitch, cannot move the estimate.
+
+    This stays an estimate. A declared race time goes through Daniels' table
+    instead and should replace it.
+    """
+    runs = [a for a in activities if qualifies_for_vdot(a, reference_date)]
     if not runs:
-        return 35.0
+        return _BEGINNER_VDOT
 
-    best = 0
+    vdots: list[int] = []
     for a in runs:
-        pace = a.duration_seconds / ((a.distance_meters or 1.0) / 1000)  # s/km — filtered not-None
+        pace = a.duration_seconds / ((a.distance_meters or 1.0) / 1000)  # s/km
         row = min(_VDOT_TABLE, key=lambda r: abs(r[1] - pace))
-        if row[0] > best:
-            best = row[0]
+        vdots.append(row[0])
 
-    return float(best) if best > 0 else 35.0
+    vdots.sort()
+    middle = len(vdots) // 2
+    if len(vdots) % 2:
+        median = float(vdots[middle])
+    else:
+        # Round down on a tie: under-prescribing is the safer error.
+        median = float(vdots[middle - 1])
+
+    return median if median > 0 else _BEGINNER_VDOT
 
 
 def compute_running_fatigue(activities: list[StravaActivity]) -> FatigueScore:
