@@ -115,6 +115,19 @@ _VDOT_TABLE: list[tuple[int, int, int]] = [
 ]
 
 
+# Strava says "Run"; the strava_activities table says "running" (see
+# activity_mapper.SPORT_MAP). Filtering on one spelling silently excluded every
+# activity read back from the table, dropping VDOT to its beginner floor.
+_RUN_SPORT_TYPES: frozenset[str] = frozenset(
+    {"run", "running", "trailrun", "virtualrun", "treadmillrun"}
+)
+
+
+def _is_run(sport_type: str | None) -> bool:
+    key = "".join((sport_type or "").split()).replace("-", "").replace("_", "")
+    return key.lower() in _RUN_SPORT_TYPES
+
+
 def estimate_vdot(
     activities: list[StravaActivity],
     reference_date: date | None = None,
@@ -132,7 +145,7 @@ def estimate_vdot(
     runs = [
         a
         for a in activities
-        if a.sport_type == "Run"
+        if _is_run(a.sport_type)
         and a.date >= cutoff
         and a.distance_meters is not None
         and a.distance_meters >= 1000

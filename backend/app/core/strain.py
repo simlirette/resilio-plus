@@ -254,6 +254,49 @@ EXERCISE_MUSCLE_MAP: dict[str, dict[str, float]] = {
 }
 
 
+# Strava emits "Run"/"Ride"/"Swim"; activity_mapper.SPORT_MAP rewrites those to
+# Resilio's internal "running"/"biking"/"swimming" before they hit the
+# strava_activities table. The same StravaActivity shape therefore carries one
+# vocabulary from the API and the other from a row, so both must resolve.
+_SPORT_ALIASES: dict[str, str] = {
+    "run": "Run",
+    "running": "Run",
+    "virtualrun": "Run",
+    "treadmillrun": "Run",
+    "trailrun": "TrailRun",
+    "ride": "Ride",
+    "biking": "Ride",
+    "bike": "Ride",
+    "cycling": "Ride",
+    "virtualride": "Ride",
+    "ebikeride": "Ride",
+    "gravelride": "Ride",
+    "mountainbikeride": "Ride",
+    "swim": "Swim",
+    "swimming": "Swim",
+    "openwaterswim": "Swim",
+}
+
+
+def resolve_sport(sport_type: str) -> dict[str, float]:
+    """Return the muscle recruitment map for a cardio sport, either vocabulary.
+
+    Falls back to ``SPORT_MUSCLE_MAP["__unknown__"]`` -- which carries a
+    non-zero coefficient for every muscle, so an unrecognised sport still
+    registers load rather than vanishing.
+    """
+    exact = SPORT_MUSCLE_MAP.get(sport_type)
+    if exact is not None:
+        return exact
+
+    key = _SEPARATORS.sub("", sport_type or "").lower()
+    canonical = _SPORT_ALIASES.get(key)
+    if canonical is None:
+        return SPORT_MUSCLE_MAP["__unknown__"]
+    return SPORT_MUSCLE_MAP[canonical]
+
+
+
 # ---------------------------------------------------------------------------
 # Exercise name resolution
 # ---------------------------------------------------------------------------
@@ -419,7 +462,7 @@ def compute_muscle_strain(
         duration_h = activity.duration_seconds / 3600.0
         intensity_factor = rpe / 10.0
         base_au = duration_h * intensity_factor**2 * 100.0
-        sport_map = SPORT_MUSCLE_MAP.get(activity.sport_type, SPORT_MUSCLE_MAP["__unknown__"])
+        sport_map = resolve_sport(activity.sport_type)
         for m in MUSCLES:
             daily[m][delta] += base_au * sport_map.get(m, 0.0)
 

@@ -8,7 +8,23 @@ import pytest
 import respx
 
 from app.db.models import AthleteModel, ConnectorCredentialModel
+from app.integrations.strava.oauth_service import decrypt_token, encrypt_token
 from app.services.connector_service import fetch_connector_data
+
+
+# Strava tokens live Fernet-encrypted since V3-R. These helpers used to store
+# plaintext in the `_enc` columns and assert plaintext came back out, which is
+# what let `_model_to_credential` ship a ciphertext bearer token to Strava
+# unnoticed for months -- the tests round-tripped the bug faithfully.
+@pytest.fixture(autouse=True)
+def _strava_key(monkeypatch):
+    from cryptography.fernet import Fernet
+
+    key = Fernet.generate_key().decode()
+    monkeypatch.setenv("STRAVA_ENCRYPTION_KEY", key)
+    monkeypatch.setenv("STRAVA_CLIENT_ID", "test_client_id")
+    monkeypatch.setenv("STRAVA_CLIENT_SECRET", "test_client_secret")
+    return key
 
 
 # ─── helpers ───────────────────────────────────────────────────────────────────
@@ -26,10 +42,11 @@ def _make_athlete(db_session):
     return athlete_id
 
 
-def _add_strava_cred(db_session, athlete_id, expires_at=9999999999):
+def _add_strava_cred(db_session, athlete_id, expires_at=9999999999, *, key):
     db_session.add(ConnectorCredentialModel(
         id=str(uuid.uuid4()), athlete_id=athlete_id, provider="strava",
-        access_token_enc="test_access", refresh_token_enc="test_refresh",
+        access_token_enc=encrypt_token("test_access", key),
+        refresh_token_enc=encrypt_token("test_refresh", key),
         expires_at=expires_at, extra_json="{}",
     ))
     db_session.commit()
@@ -46,7 +63,7 @@ def _add_hevy_cred(db_session, athlete_id):
 
 # ─── tests ─────────────────────────────────────────────────────────────────────
 
-def test_fetch_no_credentials_returns_empty_lists(db_session):
+def test_fetch_no_credentials_returns_empty_lists(db_session, _strava_key):
     athlete_id = _make_athlete(db_session)
     result = fetch_connector_data(athlete_id, db_session)
     assert result["strava_activities"] == []
@@ -55,9 +72,9 @@ def test_fetch_no_credentials_returns_empty_lists(db_session):
 
 
 @respx.mock
-def test_fetch_strava_activities_maps_to_schema(db_session):
+def test_fetch_strava_activities_maps_to_schema(db_session, _strava_key):
     athlete_id = _make_athlete(db_session)
-    _add_strava_cred(db_session, athlete_id)
+    _add_strava_cred(db_session, athlete_id, key=_strava_key)
 
     respx.get("https://www.strava.com/api/v3/athlete/activities").mock(
         return_value=httpx.Response(200, json=[{
@@ -82,7 +99,7 @@ def test_fetch_strava_activities_maps_to_schema(db_session):
 
 
 @respx.mock
-def test_fetch_hevy_workouts_maps_to_schema(db_session):
+def test_fetch_hevy_workouts_maps_to_schema(db_session, _strava_key):
     athlete_id = _make_athlete(db_session)
     _add_hevy_cred(db_session, athlete_id)
 
@@ -113,10 +130,10 @@ def test_fetch_hevy_workouts_maps_to_schema(db_session):
 
 
 @respx.mock
-def test_strava_token_refresh_on_expiry_persisted_to_db(db_session):
+def test_strava_token_refresh_on_expiry_persisted_to_db(db_session, _strava_key):
     athlete_id = _make_athlete(db_session)
     expired_at = int(time.time()) - 10
-    _add_strava_cred(db_session, athlete_id, expires_at=expired_at)
+    _add_strava_cred(db_session, athlete_id, expires_at=expired_at, key=_strava_key)
 
     respx.post("https://www.strava.com/oauth/token").mock(
         return_value=httpx.Response(200, json={
@@ -134,15 +151,18 @@ def test_strava_token_refresh_on_expiry_persisted_to_db(db_session):
     cred = db_session.query(ConnectorCredentialModel).filter_by(
         athlete_id=athlete_id, provider="strava"
     ).first()
-    assert cred.access_token_enc == "new_access"
     assert cred.expires_at == 9999999999
-    assert cred.refresh_token_enc == "new_refresh"
+    # Stored encrypted, not plaintext: a plaintext value in an `_enc` column
+    # fails to decrypt on every later read.
+    assert cred.access_token_enc != "new_access"
+    assert decrypt_token(cred.access_token_enc, _strava_key) == "new_access"
+    assert decrypt_token(cred.refresh_token_enc, _strava_key) == "new_refresh"
 
 
-def test_fetch_strava_network_error_returns_empty(db_session):
+def test_fetch_strava_network_error_returns_empty(db_session, _strava_key):
     """A ConnectorError during fetch returns [] without raising."""
     athlete_id = _make_athlete(db_session)
-    _add_strava_cred(db_session, athlete_id)
+    _add_strava_cred(db_session, athlete_id, key=_strava_key)
 
     with respx.mock:
         respx.get("https://www.strava.com/api/v3/athlete/activities").mock(
