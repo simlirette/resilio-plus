@@ -350,6 +350,7 @@ Add `--skip-calendar` to stop before any calendar write. It sends real messages
 
 | Symptom | Look at |
 |---|---|
+| `pytest` crawls to a test a minute | The coach's Postgres is running. Stop it for the run (`docker compose stop db`) — see `docs/V1.1-BACKLOG.md` #18. |
 | `server closed the connection unexpectedly` from Postgres | On Windows, WSL may own `[::1]:5432`. Use `127.0.0.1` in `DATABASE_URL`, never `localhost`. |
 | Bot silent in polling mode | `TELEGRAM_BOT_TOKEN` set? logs for `telegram_polling_*`? another process already long-polling (Telegram allows one)? |
 | Bot silent in webhook mode | `getWebhookInfo` → `last_error_message`; secret mismatch answers 403 |
