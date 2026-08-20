@@ -10,6 +10,103 @@ every session into a dedicated **Resilio Training** Google Calendar.
 
 ---
 
+## 0. Quickstart — running it on your own laptop today
+
+No public URL, no tunnel, no cloud. Telegram polling needs no inbound
+connection, and both OAuth providers accept a loopback redirect, so the whole
+thing runs locally. Total: about fifteen minutes, most of it in BotFather and
+the Google console.
+
+### 0.1 Get the two secrets you cannot generate
+
+1. **Telegram bot token** — message [@BotFather](https://t.me/BotFather), `/newbot`,
+   copy the token.
+2. **Anthropic API key** — the coach is the product; without it nothing thinks.
+
+### 0.2 Generate the ones you can
+
+```bash
+python scripts/bootstrap_v4.py --keys
+```
+
+Paste all four lines into `.env`. Encryption keys are write-once: rotating one
+makes every token stored under it unreadable.
+
+### 0.3 Fill in the rest of `.env`
+
+```
+DATABASE_URL=postgresql+psycopg2://resilio:resilio@127.0.0.1:5432/resilio_db
+TELEGRAM_BOT_TOKEN=<from BotFather>
+TELEGRAM_MODE=polling
+PUBLIC_BASE_URL=http://127.0.0.1:8000
+ANTHROPIC_API_KEY=<yours>
+```
+
+> **Use `127.0.0.1`, not `localhost`.** On Windows with WSL installed,
+> `wslrelay.exe` can hold `[::1]:5432`, and `localhost` resolves to IPv6 first —
+> so every connection dies with *"server closed the connection unexpectedly"*
+> while `docker ps` cheerfully reports the database as healthy. This costs an
+> hour if you do not know it.
+
+### 0.4 Start everything
+
+```powershell
+.\scripts\start_coach.ps1
+```
+
+That brings up Postgres, migrates to head, runs the preflight, and starts the
+backend. If the preflight reports something missing it stops before starting,
+and tells you which variable.
+
+### 0.5 Create yourself and link your phone
+
+In a second terminal:
+
+```bash
+python scripts/bootstrap_v4.py --name "Your Name" --age 34 --sex M --weight-kg 75 --height-cm 180 --primary-sport running --hours-per-week 8 --timezone America/Montreal
+```
+
+It prints your athlete id (put it in `.env` as `ADMIN_ATHLETE_ID`) and a
+one-time link code. Message your bot with **just that code**. The coach replies
+"Telegram connected to Resilio."
+
+The numbers you pass are what the coach plans from — age, sex, weight and
+weekly hours drive VDOT, macros and load. Re-run the script with different
+flags to correct them; it updates in place.
+
+### 0.6 Connect your data
+
+Send `/connect`. You get one tappable link per provider.
+
+- **Hevy / Terra** — the link opens a one-field page; paste the key.
+- **Strava / Google** — these are OAuth. Open those two links **in the browser
+  on the laptop running the backend**, not on your phone: the redirect goes to
+  `127.0.0.1`, which only that machine can reach. Same account either way.
+
+For Strava, set the callback domain to `127.0.0.1` in your Strava API
+application. For Google, add
+`http://127.0.0.1:8000/integrations/link/callback/google` as an authorized
+redirect URI. Google accepts loopback addresses for exactly this case.
+
+### 0.7 Use it
+
+- Talk to it. Anything: "legs are wrecked", "how did last week go?".
+- `/plan` builds next week now instead of waiting for Sunday.
+- Tap **Approve** and the sessions appear in a new "Resilio Training" calendar.
+- Tap **Change**, reply "too much volume Wednesday", get a revised week.
+- Sunday 18:00 local, it does all of that unprompted, forever.
+
+### 0.8 When you want it always-on
+
+The laptop has to be awake for the Sunday cycle to fire (a missed window is
+picked up within 2h of the machine coming back — `misfire_grace_time=7200` —
+but a laptop that was closed all Sunday misses the week). Moving to a small
+VPS or Fly.io is §5 of `docs/backend/DEPLOYMENT.md`; switch
+`TELEGRAM_MODE=webhook`, set a real `PUBLIC_BASE_URL`, and update both redirect
+URIs.
+
+---
+
 ## 1. What you have to set up, once
 
 ### 1.1 Telegram bot
@@ -246,6 +343,7 @@ Add `--skip-calendar` to stop before any calendar write. It sends real messages
 
 | Symptom | Look at |
 |---|---|
+| `server closed the connection unexpectedly` from Postgres | On Windows, WSL may own `[::1]:5432`. Use `127.0.0.1` in `DATABASE_URL`, never `localhost`. |
 | Bot silent in polling mode | `TELEGRAM_BOT_TOKEN` set? logs for `telegram_polling_*`? another process already long-polling (Telegram allows one)? |
 | Bot silent in webhook mode | `getWebhookInfo` → `last_error_message`; secret mismatch answers 403 |
 | "Send your link code here…" on every message | the chat is not linked — see §2 |
