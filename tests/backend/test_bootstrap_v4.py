@@ -274,3 +274,77 @@ class TestKeys:
         # The Fernet keys must actually be Fernet keys.
         for name in ("STRAVA_ENCRYPTION_KEY", "GOOGLE_ENCRYPTION_KEY"):
             Fernet(values[name].encode())
+
+
+class TestProviderWiring:
+    def _clear(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        for name in (
+            "STRAVA_CLIENT_ID",
+            "STRAVA_ENCRYPTION_KEY",
+            "STRAVA_REDIRECT_URI",
+            "GOOGLE_CLIENT_ID",
+            "GOOGLE_ENCRYPTION_KEY",
+            "GOOGLE_REDIRECT_URI",
+        ):
+            monkeypatch.delenv(name, raising=False)
+        monkeypatch.setenv("PUBLIC_BASE_URL", "http://127.0.0.1:8000")
+
+    def test_an_unconfigured_provider_is_not_nagged_about(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        self._clear(monkeypatch)
+        assert bootstrap._check_provider_pairs() == []
+
+    def test_a_client_id_without_its_key_or_redirect_blocks(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        self._clear(monkeypatch)
+        monkeypatch.setenv("STRAVA_CLIENT_ID", "12345")
+
+        problems = bootstrap._check_provider_pairs()
+
+        assert set(problems) == {"STRAVA_ENCRYPTION_KEY", "STRAVA_REDIRECT_URI"}
+        out = capsys.readouterr().out
+        assert "/integrations/link/callback/strava" in out
+
+    def test_a_fully_wired_provider_passes(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        self._clear(monkeypatch)
+        monkeypatch.setenv("GOOGLE_CLIENT_ID", "abc.apps.googleusercontent.com")
+        monkeypatch.setenv("GOOGLE_ENCRYPTION_KEY", "a-key")
+        monkeypatch.setenv(
+            "GOOGLE_REDIRECT_URI",
+            "http://127.0.0.1:8000/integrations/link/callback/google",
+        )
+
+        assert bootstrap._check_provider_pairs() == []
+
+    def test_a_redirect_pointing_somewhere_else_warns_without_blocking(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        self._clear(monkeypatch)
+        monkeypatch.setenv("STRAVA_CLIENT_ID", "12345")
+        monkeypatch.setenv("STRAVA_ENCRYPTION_KEY", "a-key")
+        monkeypatch.setenv(
+            "STRAVA_REDIRECT_URI", "http://localhost:8000/auth/strava/callback"
+        )
+
+        problems = bootstrap._check_provider_pairs()
+
+        assert problems == []
+        assert "warn" in capsys.readouterr().out
+
+    def test_the_expected_redirect_follows_the_public_base(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        self._clear(monkeypatch)
+        monkeypatch.setenv("PUBLIC_BASE_URL", "https://coach.example.com/")
+        monkeypatch.setenv("GOOGLE_CLIENT_ID", "abc")
+
+        bootstrap._check_provider_pairs()
+
+        assert (
+            "https://coach.example.com/integrations/link/callback/google"
+            in capsys.readouterr().out
+        )

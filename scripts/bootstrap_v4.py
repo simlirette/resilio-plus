@@ -115,7 +115,49 @@ def check_config() -> list[str]:
     if mode == "webhook" and not _is_set("TELEGRAM_WEBHOOK_SECRET"):
         print("\n  [MISSING] TELEGRAM_WEBHOOK_SECRET (required in webhook mode)")
         blockers.append("TELEGRAM_WEBHOOK_SECRET")
+
+    blockers.extend(_check_provider_pairs())
     return blockers
+
+
+def _check_provider_pairs() -> list[str]:
+    """Catch half-configured providers, which fail only at the OAuth bounce."""
+    base = os.getenv("PUBLIC_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+    problems: list[str] = []
+    notes: list[str] = []
+
+    for provider, id_var, key_var, redirect_var in (
+        ("Strava", "STRAVA_CLIENT_ID", "STRAVA_ENCRYPTION_KEY", "STRAVA_REDIRECT_URI"),
+        ("Google", "GOOGLE_CLIENT_ID", "GOOGLE_ENCRYPTION_KEY", "GOOGLE_REDIRECT_URI"),
+    ):
+        if not _is_set(id_var):
+            continue
+        expected = f"{base}/integrations/link/callback/{provider.lower()}"
+        if not _is_set(key_var):
+            problems.append(key_var)
+            notes.append(
+                f"  [MISSING] {key_var} — {provider} is configured but its tokens "
+                "have nowhere safe to live."
+            )
+        if not _is_set(redirect_var):
+            problems.append(redirect_var)
+            notes.append(
+                f"  [MISSING] {redirect_var} — without it the OAuth callback "
+                f"falls back to a route that no longer exists. Set:\n"
+                f"            {redirect_var}={expected}"
+            )
+        elif os.environ[redirect_var].rstrip("/") != expected:
+            notes.append(
+                f"  [ warn ] {redirect_var} is not {expected}\n"
+                f"            It must match the provider console exactly, and land "
+                "on a route that exists."
+            )
+
+    if notes:
+        print("\nProvider wiring")
+        for note in notes:
+            print(note)
+    return problems
 
 
 def print_keys() -> None:
