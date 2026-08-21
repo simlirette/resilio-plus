@@ -58,8 +58,14 @@ class HeadCoachView(BaseModel):
 
     # ─── Goal ────────────────────────────────────────────────────────────────
     goals: list[str] = Field(default_factory=list)
+    # Without this the model falls back to its training prior and argues with
+    # a correct race date. It happened on the first live conversation.
+    today: date | None = None
     target_race_date: date | None = None
     weeks_to_race: int | None = None
+    # Exact, because weeks round: 3 days out and 27 days out can read as the
+    # same number of weeks and hide the urgency.
+    days_to_race: int | None = None
 
     # ─── Current training state ──────────────────────────────────────────────
     acwr_ratio: float | None = None

@@ -20,6 +20,27 @@ RECENT_SESSION_LIMIT = 10
 RECENT_SESSION_DAYS = 14
 
 
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _athlete_today(athlete: AthleteModel) -> date:
+    """Today as the athlete experiences it, falling back to UTC."""
+    now = _utcnow()
+    name = getattr(athlete, "timezone", None)
+    if name:
+        try:
+            from zoneinfo import ZoneInfo
+
+            return now.astimezone(ZoneInfo(str(name))).date()
+        except Exception:
+            logger.warning(
+                "athlete_timezone_unreadable",
+                extra={"athlete_id": getattr(athlete, "id", None)},
+            )
+    return now.date()
+
+
 def build_head_coach_view(
     athlete: AthleteModel,
     db: Any | None = None,
@@ -37,8 +58,11 @@ def build_head_coach_view(
     if isinstance(race_date, datetime):
         race_date = race_date.date()
 
+    today = _athlete_today(athlete)
+
     view = HeadCoachView(
         athlete_id=athlete.id,
+        today=today,
         journey_phase=athlete.journey_phase,
         sports=sports,
         primary_sport=athlete.primary_sport,
@@ -57,7 +81,8 @@ def build_head_coach_view(
         resting_hr=_opt(athlete.resting_hr, int),
         goals=goals,
         target_race_date=race_date,
-        weeks_to_race=_weeks_to_race(race_date),
+        weeks_to_race=_weeks_to_race(race_date, today),
+        days_to_race=_days_to_race(race_date, today),
     )
 
     if db is None:
@@ -101,11 +126,17 @@ def _json_list(raw: str | None) -> list[Any]:
     return value if isinstance(value, list) else []
 
 
-def _weeks_to_race(race_date: date | None) -> int | None:
+def _weeks_to_race(race_date: date | None, today: date) -> int | None:
     if not isinstance(race_date, date):
         return None
-    days = (race_date - datetime.now(timezone.utc).date()).days
-    return max(0, days // 7)
+    return max(0, (race_date - today).days // 7)
+
+
+def _days_to_race(race_date: date | None, today: date) -> int | None:
+    """Signed on purpose: a race already run should read as stale, not as today."""
+    if not isinstance(race_date, date):
+        return None
+    return (race_date - today).days
 
 
 def _active_plan_summary(athlete_id: str, db: Any) -> dict[str, Any] | None:
