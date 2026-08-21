@@ -41,6 +41,7 @@ from ..services.coordinator_service import coordinator_service
 from ..services.deep_link_service import (
     InvalidDeepLinkError,
     consume_link,
+    consume_pending,
     resolve_link,
 )
 
@@ -154,7 +155,16 @@ def _store_key_credential(
 
 
 def _after_connect(db: Session, athlete_id: str, provider: str) -> None:
-    """Register sync jobs, tell the coach, tell the athlete."""
+    """Burn the link, register sync jobs, tell the coach, tell the athlete."""
+    try:
+        consume_pending(db, athlete_id=athlete_id, provider=provider)
+    except Exception:
+        logger.warning(
+            "deep_link_consume_failed",
+            extra={"athlete_id": athlete_id, "provider": provider},
+            exc_info=True,
+        )
+
     try:
         register_athlete_jobs(athlete_id, provider, get_scheduler())
     except RuntimeError:
@@ -225,12 +235,12 @@ def open_link(token: str, db: DB) -> Any:
         return _dead_link_page()
 
     if link.provider == "strava":
-        consume_link(db, token=token)
+        # Not consumed here: the token burns in the callback, once the athlete
+        # has actually connected. See deep_link_service.consume_pending.
         auth_url = strava_oauth_connect(link.athlete_id, db)["auth_url"]
         return RedirectResponse(auth_url, status_code=302)
 
     if link.provider == "google":
-        consume_link(db, token=token)
         try:
             auth_url = google_oauth_connect(link.athlete_id, db)["auth_url"]
         except GoogleCalendarConfigurationError:
@@ -242,7 +252,6 @@ def open_link(token: str, db: DB) -> Any:
     if link.provider == "terra":
         widget_url = os.getenv("TERRA_WIDGET_URL", "").strip()
         if widget_url:
-            consume_link(db, token=token)
             return RedirectResponse(widget_url, status_code=302)
 
     return _key_form_page(token, link.provider)

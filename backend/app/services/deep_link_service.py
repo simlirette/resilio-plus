@@ -205,6 +205,45 @@ def consume_link(
         raise DeepLinkPersistenceError from None
 
 
+def consume_pending(
+    db: Session,
+    *,
+    athlete_id: str,
+    provider: str,
+    clock: Callable[[], datetime] = _utcnow,
+) -> bool:
+    """Burn the newest live link for one athlete and provider. Returns whether one was.
+
+    Single-use attaches to *completing* a connection, not to opening the page.
+    Consuming at the redirect meant anything that merely fetched the URL -- a
+    link preview, a browser prefetch, a scanner -- destroyed it, and the athlete
+    tapped a dead link with no explanation.
+
+    Newest first: re-sending /connect issues a fresh link, and the one just used
+    is the last one issued. Nothing pending is not an error -- a provider can be
+    connected through the API without a deep link ever existing.
+    """
+    now = clock()
+    try:
+        with db.begin():
+            row = (
+                db.query(DeepLinkTokenModel)
+                .filter(
+                    DeepLinkTokenModel.athlete_id == athlete_id,
+                    DeepLinkTokenModel.provider == provider,
+                    DeepLinkTokenModel.consumed_at.is_(None),
+                )
+                .order_by(DeepLinkTokenModel.created_at.desc())
+                .first()
+            )
+            if row is None or _as_aware(row.expires_at) <= now:
+                return False
+            row.consumed_at = now
+            return True
+    except SQLAlchemyError:
+        raise DeepLinkPersistenceError from None
+
+
 def settle(db: Session) -> None:
     """Close a transaction an earlier read autobegan.
 

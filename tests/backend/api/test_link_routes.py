@@ -101,9 +101,19 @@ class TestOpenLink:
         assert response.status_code == 302
         assert response.headers["location"] == "https://strava.example/oauth"
 
-    def test_strava_link_is_single_use(
+    def test_opening_a_strava_link_does_not_burn_it(
         self, client_and_db: tuple[TestClient, Session], monkeypatch: pytest.MonkeyPatch
     ) -> None:
+        """Changed 2026-08-20. This used to assert the second open returned 410.
+
+        Consuming at the redirect meant anything that merely *fetched* the URL
+        destroyed it -- a link preview, a browser prefetch, a scanner. It
+        happened for real: a curl checking the link worked burned the Strava
+        token without connecting anything.
+
+        Single-use still holds; it now attaches to completing the connection.
+        See test_deep_link_burns_on_completion.py.
+        """
         client, db = client_and_db
         token = _issue(db, "strava")
         monkeypatch.setattr(
@@ -114,7 +124,29 @@ class TestOpenLink:
         client.get(f"/integrations/link/{token}", follow_redirects=False)
         second = client.get(f"/integrations/link/{token}", follow_redirects=False)
 
-        assert second.status_code == 410
+        assert second.status_code == 302
+
+    def test_a_strava_link_dies_once_the_connection_completes(
+        self, client_and_db: tuple[TestClient, Session], monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from app.services.deep_link_service import consume_pending
+
+        client, db = client_and_db
+        token = _issue(db, "strava")
+        monkeypatch.setattr(
+            "app.routes.link.strava_oauth_connect",
+            lambda athlete_id, db: {"auth_url": "https://strava.example/oauth"},
+        )
+
+        client.get(f"/integrations/link/{token}", follow_redirects=False)
+        consume_pending(db, athlete_id=ATHLETE_ID, provider="strava")
+
+        assert (
+            client.get(
+                f"/integrations/link/{token}", follow_redirects=False
+            ).status_code
+            == 410
+        )
 
     def test_terra_link_redirects_when_a_widget_is_configured(
         self, client_and_db: tuple[TestClient, Session], monkeypatch: pytest.MonkeyPatch
