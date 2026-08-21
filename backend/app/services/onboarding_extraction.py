@@ -113,27 +113,50 @@ Rules:
 - The athlete may answer in French or English."""
 
 
-_PROFILE_PROMPT = """You read a full coaching conversation and extract the athlete's profile.
+_PROFILE_PROMPT = """You read a coaching conversation and extract the athlete's profile.
 
 Return ONLY a JSON object. No prose, no explanation, no code fence.
 
 Rules:
-- Include a key ONLY if the athlete stated it somewhere in the conversation.
-- Never guess, never infer, never fill a plausible default.
-- Omit anything not stated. An empty object is valid.
-- Never output a `vdot` key. Report `race_distance` and `race_time_seconds`.
-- Times in seconds. Dates as YYYY-MM-DD.
-- `sports`: every sport the athlete practises. Listing a sport as a *priority*
-  is not a reason to omit the others.
-- `sports_removed`: only sports the athlete explicitly said they have stopped.
-- `sessions_per_week`: {sport: count} — how many *sessions*, not hours.
-- `hours_per_week`: only if the athlete gave a duration, never a session count.
+- Include a key ONLY if the athlete stated it. Never guess, never infer, never
+  fill a plausible default. An empty object is valid.
+- Never output a `vdot` key.
+- `race_distance` and `race_time_seconds` describe a race the athlete has
+  ALREADY COMPLETED. A goal, a target time, or the event they are training for
+  is NOT a result: omit both keys rather than reporting a goal. If several
+  completed races are mentioned, report the longest one.
+- `race_distance` must be one of: mile, 5k, 10k, 15k, half_marathon, marathon.
+  Never a number, never metres.
+- `sports` and `sports_removed` must use exactly: running, lifting, swimming,
+  biking. Weight training, musculation, gym, strength training are all
+  `lifting`.
+- `sports` is every sport the athlete practises. Naming one as a priority is
+  not a reason to omit the others.
+- `sports_removed` is only for sports they explicitly said they have stopped.
+- `sessions_per_week` is {sport: count} — how many SESSIONS, not hours.
+- `hours_per_week` only if they gave a duration, never a session count.
+- Dates as YYYY-MM-DD. Resolve relative dates against the date given at the top
+  of the transcript; never assume the current year.
 - The athlete may write in French or English.
 
 Keys: age, sex (M/F), weight_kg, height_cm, max_hr, resting_hr, sports,
 sports_removed, primary_sport, sessions_per_week, hours_per_week, goals,
 target_race_date, race_distance, race_time_seconds, ftp_watts, css_per_100m,
 available_days (weekday numbers, Monday=0)."""
+
+
+def build_profile_transcript(turns: list[Turn], today: date) -> str:
+    """Render a conversation for the extractor, anchored to a date.
+
+    Without the date the extractor resolved "19 septembre" to 2024 for a race
+    in 2026 -- it has no clock, so it used its training prior.
+    """
+    lines = [f"Today's date: {today.isoformat()}", ""]
+    lines += [
+        f"{'ATHLETE' if turn.role == 'user' else 'COACH'}: {turn.content}"
+        for turn in turns
+    ]
+    return "\n\n".join(lines)
 
 
 def _call_profile_extractor(transcript: str) -> str:
@@ -159,10 +182,7 @@ def extract_profile(turns: list[Turn]) -> dict[str, Any]:
     if not turns:
         return {}
 
-    transcript = "\n\n".join(
-        f"{'ATHLETE' if turn.role == 'user' else 'COACH'}: {turn.content}"
-        for turn in turns
-    )
+    transcript = build_profile_transcript(turns, date.today())
 
     try:
         raw = _call_profile_extractor(transcript)
