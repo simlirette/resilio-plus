@@ -61,6 +61,7 @@ class LiftingCoach(BaseAgent):
             weeks_remaining=context.weeks_remaining,
             available_days=context.athlete.available_days,
             hours_budget=hours_budget,
+            sessions_target=context.sessions_per_week.get("lifting"),
             volume_modifier=phase.volume_modifier,
             running_load_ratio=running_load_ratio,
             week_start=context.date_range[0],

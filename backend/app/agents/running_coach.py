@@ -55,6 +55,7 @@ class RunningCoach(BaseAgent):
             weeks_remaining=context.weeks_remaining,
             available_days=context.athlete.available_days,
             hours_budget=hours_budget,
+            sessions_target=context.sessions_per_week.get("running"),
             volume_modifier=phase.volume_modifier,
             tid_strategy=phase.tid_recommendation,
             week_start=context.date_range[0],

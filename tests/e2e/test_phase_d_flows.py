@@ -175,8 +175,15 @@ class TestInjuryToRecoveryTakeover:
 
 
 class TestOnboardingCompleteFlow:
-    def test_onboarding_6_blocs_to_baseline(self):
-        """Flow 4: 6 onboarding blocs → journey_phase=baseline_pending_confirmation."""
+    def test_onboarding_reaches_baseline(self):
+        """Flow 4: onboarding → journey_phase=baseline_pending_confirmation.
+
+        Changed 2026-08-21 (Phase B1). Onboarding no longer ends after six
+        fixed blocks -- it ends when the profile can support a plan and the
+        athlete confirms. The six instructions were what made the coach ask for
+        running volume three times. This drives to the ceiling so it still
+        exercises the handoff with an extraction that yields nothing.
+        """
         from app.graphs.onboarding import run_onboarding_respond, run_onboarding_start
 
         athlete = _make_athlete(journey_phase="onboarding")
@@ -187,16 +194,15 @@ class TestOnboardingCompleteFlow:
             start = run_onboarding_start("a1", db)
 
         thread_id = start["thread_id"]
-        responses = ["intro", "25ans/70kg", "semi 6mois", "3ans running", "DUP"]
+        from app.graphs.onboarding import _MAX_BLOCK
 
-        for resp in responses:
+        final = {"status": "in_progress"}
+        for _ in range(_MAX_BLOCK + 1):
+            if final["status"] == "completed":
+                break
             with patch("app.graphs.onboarding.anthropic.Anthropic") as M:
                 M.return_value.messages.create.return_value = _mock_llm()
-                run_onboarding_respond(thread_id, resp, db=db)
-
-        with patch("app.graphs.onboarding.anthropic.Anthropic") as M:
-            M.return_value.messages.create.return_value = _mock_llm()
-            final = run_onboarding_respond(thread_id, "confirme", db=db)
+                final = run_onboarding_respond(thread_id, "reponse", db=db)
 
         assert final["status"] == "completed"
         assert final.get("journey_phase") == "baseline_pending_confirmation"

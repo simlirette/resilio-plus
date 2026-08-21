@@ -188,6 +188,42 @@ def _connector_inputs(athlete_id: str, config: RunnableConfig) -> dict[str, Any]
     }
 
 
+def _sessions_per_week(athlete_id: str, config: RunnableConfig) -> dict[str, int]:
+    """How many sessions per sport the athlete asked for.
+
+    `AthleteProfile` has no such field, so the graph could not carry it and the
+    session count stayed an accident of dividing an hours budget into chunks --
+    two runs and no lifting for someone who runs three times a week and lifts
+    four.
+
+    Best-effort, like `_connector_inputs`: an empty mapping means "not stated"
+    and leaves every generator on its previous behaviour.
+    """
+    db = config.get("configurable", {}).get("db")
+    if db is None:
+        return {}
+
+    try:
+        from ..db.models import AthleteModel
+
+        athlete = db.get(AthleteModel, athlete_id)
+        raw = getattr(athlete, "sessions_per_week_json", None) if athlete else None
+        if not raw:
+            return {}
+        parsed = json.loads(raw)
+    except Exception:
+        logger.warning("sessions_per_week_unreadable", extra={"athlete_id": athlete_id})
+        return {}
+
+    if not isinstance(parsed, dict):
+        return {}
+    return {
+        str(sport): int(count)
+        for sport, count in parsed.items()
+        if isinstance(count, (int, float)) and not isinstance(count, bool)
+    }
+
+
 def delegate_specialists(state: AthleteCoachingState, config: RunnableConfig) -> dict[str, Any]:
     """Invoke all sport-specific specialist agents and collect recommendations."""
     athlete = _athlete_from_dict(state["athlete_dict"])
@@ -216,6 +252,7 @@ def delegate_specialists(state: AthleteCoachingState, config: RunnableConfig) ->
         phase=phase.phase.value,
         sport_budgets=sport_budgets,
         weeks_remaining=phase.weeks_remaining,
+        sessions_per_week=_sessions_per_week(state["athlete_id"], config),
         **connectors,
     )
 

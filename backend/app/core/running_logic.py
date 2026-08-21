@@ -246,6 +246,46 @@ def _is_hiit(a: StravaActivity) -> bool:
     return False
 
 
+def _resize_week(raw: list[tuple[str, int]], target: int) -> list[tuple[str, int]]:
+    """Redistribute a week's minutes across exactly `target` sessions.
+
+    Volume is preserved; only its shape changes. Quality sessions are kept
+    ahead of easy ones when shrinking, because three runs must not silently
+    become three easy runs -- that is a different training week, not a smaller
+    one.
+    """
+    total = sum(minutes for _, minutes in raw)
+    if total <= 0:
+        return raw
+
+    quality = [item for item in raw if "easy" not in item[0] and "long" not in item[0]]
+    easy = [item for item in raw if item not in quality]
+    ordered = quality + easy
+
+    if target < len(ordered):
+        kept = ordered[:target]
+    else:
+        kept = list(ordered)
+        # Split the longest easy session repeatedly until the count is reached.
+        while len(kept) < target:
+            kept.sort(key=lambda item: item[1], reverse=True)
+            label, minutes = kept.pop(0)
+            half = max(1, minutes // 2)
+            kept.extend([(label, half), (label, minutes - half)])
+
+    share = total / len(kept)
+    weights = [minutes for _, minutes in kept]
+    weight_total = sum(weights) or len(kept)
+    resized = [
+        (label, max(15, round(total * (minutes / weight_total))))
+        for (label, minutes) in kept
+    ]
+    # `share` is only used to keep short weeks from collapsing to the floor.
+    if all(minutes == 15 for _, minutes in resized):
+        resized = [(label, max(15, int(share))) for label, _ in kept]
+    return resized
+
+
 def generate_running_sessions(
     vdot: float,
     week_number: int,
@@ -255,6 +295,7 @@ def generate_running_sessions(
     volume_modifier: float,
     tid_strategy: TIDStrategy,
     week_start: date,  # Monday of the planning week
+    sessions_target: int | None = None,
     _paces: dict[str, Any] | None = None,  # injected in tests to avoid file I/O
 ) -> list[WorkoutSlot]:
     """Generate weekly running sessions as WorkoutSlots.
@@ -263,6 +304,13 @@ def generate_running_sessions(
     overload per week in block. Taper (weeks_remaining <= 2) overrides to 50%.
     80/20 TID: 80% Z1, 20% quality. Quality selection by tid_strategy.
     Each WorkoutSlot.fatigue_score is zeroed (placeholder; aggregate computed separately).
+
+    ``sessions_target`` is how many runs the athlete asked for. Without it the
+    count is a byproduct of dividing the budget into 30-90 minute chunks, and
+    the athlete's own answer -- "je vise 3 sorties" -- never reaches the plan.
+    Given, it reshapes the same weekly volume into that many sessions rather
+    than adding or removing training. Ignored when absent or non-positive, so
+    every existing caller is unaffected.
     """
     if not available_days:
         return []
@@ -315,6 +363,10 @@ def generate_running_sessions(
             dur = min(90, remaining_z1)
             raw.append(("easy_z1", max(30, dur)))
             remaining_z1 -= dur
+
+    # 3b. Reshape to the requested number of sessions, keeping total volume.
+    if sessions_target is not None and sessions_target > 0 and raw:
+        raw = _resize_week(raw, sessions_target)
 
     # 4. Assign days: longest sessions -> weekend (5-6) first
     raw_sorted = sorted(raw, key=lambda t: t[1], reverse=True)

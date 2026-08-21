@@ -148,6 +148,7 @@ def generate_lifting_sessions(
     volume_modifier: float,
     running_load_ratio: float,
     week_start: date,  # Monday of the planning week
+    sessions_target: int | None = None,
 ) -> list[WorkoutSlot]:
     """Generate weekly lifting sessions as WorkoutSlots.
 
@@ -155,6 +156,11 @@ def generate_lifting_sessions(
     Hybrid reduction: running_load_ratio > 0.5 -> lower body sessions shorter.
     Wave loading: week_number % 4 == 0 -> 60% duration (deload, checked first).
     Arms hypertrophy: included when dup==0 AND len(available_days) >= 4.
+
+    ``sessions_target`` is how many lifting sessions the athlete asked for.
+    Without it the DUP rotation decides, and an athlete who lifts four times a
+    week could be handed two -- or, when the sport was dropped from their
+    profile entirely, none. Ignored when absent or non-positive.
     """
     if not available_days:
         return []
@@ -202,6 +208,14 @@ def generate_lifting_sessions(
         raw.append(("full_body_endurance", max(20, int(45 * dur_mult)), "core, quads, back"))
 
     # Cap to available days
+    # The athlete's declared frequency outranks the DUP rotation's default
+    # shape; the days they are actually free still outrank both.
+    if sessions_target is not None and sessions_target > 0:
+        limit = min(sessions_target, len(available_days))
+        while len(raw) < limit:
+            raw.append(raw[len(raw) % max(1, len(raw))])
+        raw = raw[:limit]
+
     slots = raw[: len(available_days)]
 
     _z = FatigueScore(

@@ -28,6 +28,9 @@ class AgentContext:
     week_number: int = 1  # 1-based week in multi-week plan
     weeks_remaining: int = 0  # weeks until target_race_date
     sport_budgets: dict[str, float] = field(default_factory=dict)  # sport name → hours
+    # sport name → sessions the athlete asked for. Empty means "not stated",
+    # which leaves each generator on its previous behaviour.
+    sessions_per_week: dict[str, int] = field(default_factory=dict)
     # V3: optional hormonal profile — used by lifting/running/nutrition agents
     hormonal_profile: Optional["HormonalProfile"] = field(default=None)
 
