@@ -236,7 +236,7 @@ class TestApprove:
 
         assert coaching.calls == [("thread-1", True, None)]
         assert outcome.calendar is None
-        assert "calendar" in notifier.last_text.lower()
+        assert "agenda" in notifier.last_text.lower()
 
     def test_replayed_button_does_not_resume_twice(
         self, db_session: Session, athlete_id: str, identity: str
@@ -268,7 +268,7 @@ class TestApprove:
 
         assert len(coaching.calls) == 1
         assert outcome.resolution == "ignored"
-        assert "already" in notifier.last_text.lower()
+        assert "déjà" in notifier.last_text.lower()
 
     def test_expired_button_is_explained_and_does_not_resume(
         self, db_session: Session, athlete_id: str, identity: str
@@ -304,7 +304,7 @@ class TestApprove:
 
         assert coaching.calls == []
         assert outcome.resolution == "ignored"
-        assert "expired" in notifier.last_text.lower()
+        assert "expiré" in notifier.last_text.lower()
 
     def test_cross_athlete_button_raises_and_touches_nothing(
         self,
@@ -421,7 +421,7 @@ class TestRevise:
         assert old is not None and old.resolution == "revise"
         _, text, buttons = notifier.sent[-1]
         assert buttons is not None and len(buttons) == 3
-        assert "recovery" in text
+        assert "récupération" in text
 
     def test_latch_is_consumed_so_the_next_message_is_normal_chat(
         self, db_session: Session, athlete_id: str, identity: str
@@ -533,7 +533,7 @@ class TestFailuresAreVisible:
 
         assert outcome.resolution == "error"
         assert "/plan" in notifier.last_text
-        assert "calendar" in notifier.last_text.lower()
+        assert "agenda" in notifier.last_text.lower()
 
     def test_a_failing_calendar_says_the_plan_is_still_saved(
         self, db_session: Session, athlete_id: str, identity: str
@@ -563,7 +563,7 @@ class TestFailuresAreVisible:
 
         assert outcome.resolution == "approve"
         assert outcome.calendar is None
-        assert "approved and saved" in notifier.last_text
+        assert "approuvée et enregistrée" in notifier.last_text
         assert coaching.calls == [("thread-1", True, None)]
 
     def test_a_failing_revision_tells_the_athlete(

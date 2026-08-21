@@ -36,15 +36,15 @@ from .plan_renderer import render_week
 
 logger = logging.getLogger(__name__)
 
-APPROVE_LABEL = "✅ Approve"
-REVISE_LABEL = "✏️ Change"
-REJECT_LABEL = "❌ Skip this week"
+APPROVE_LABEL = "✅ Approuver"
+REVISE_LABEL = "✏️ Modifier"
+REJECT_LABEL = "❌ Sauter cette semaine"
 
 KIND_WEEKLY_PLAN = "weekly_plan"
 
 _REVISION_PROMPT = (
-    "What should change? Reply in plain language — for example "
-    '"too much volume Wednesday" or "I am travelling Thursday".'
+    "Qu'est-ce qui doit changer ? Réponds normalement — par exemple "
+    '« trop de volume mercredi » ou « je voyage jeudi ».'
 )
 
 
@@ -199,8 +199,8 @@ class ApprovalService:
             return self._finish(
                 athlete_id,
                 "reject",
-                "Skipped — nothing was written to your calendar. "
-                "Text me whenever you want to plan a different week.",
+                "Semaine sautée — rien n'a été écrit dans ton agenda. "
+                "Écris-moi quand tu veux planifier une autre semaine.",
             )
 
         return self._approve(athlete_id, approval.thread_id, approval.kind)
@@ -243,8 +243,8 @@ class ApprovalService:
             return self._finish(
                 athlete_id,
                 "error",
-                "I could not rework that week just now. Ask me to rebuild it "
-                "with /plan and I will start from a clean slate.",
+                "Je n'ai pas pu retravailler cette semaine maintenant. Demande-moi de la "
+                "refaire avec `/plan` et je repars de zéro.",
             )
 
         new_token = self.send_plan_for_approval(
@@ -308,16 +308,16 @@ class ApprovalService:
             return self._finish(
                 athlete_id,
                 "error",
-                "I could not finalise that week. Nothing was written to your "
-                "calendar. Ask me to rebuild it with /plan.",
+                "Je n'ai pas pu finaliser cette semaine. Rien n'a été écrit dans ton "
+                "agenda. Demande-moi de la refaire avec `/plan`.",
             )
 
         if self._calendar_pusher is None:
             return self._finish(
                 athlete_id,
                 "approve",
-                "Plan approved. No calendar is connected yet, so nothing was "
-                "written — connect Google Calendar and I will push it there.",
+                "Semaine approuvée. Aucun agenda n'est connecté, donc rien n'a été "
+                "écrit — connecte Google Calendar et je l'y enverrai.",
             )
 
         try:
@@ -329,13 +329,13 @@ class ApprovalService:
             return self._finish(
                 athlete_id,
                 "approve",
-                "Plan approved and saved, but I could not write it to your "
-                "calendar. Reconnect Google Calendar with /connect and approve "
-                "the next week to resync.",
+                "Semaine approuvée et enregistrée, mais je n'ai pas pu l'écrire dans ton "
+                "agenda. Reconnecte Google Calendar avec `/connect` et approuve "
+                "la semaine suivante pour resynchroniser.",
             )
 
         summary = (
-            f"Plan approved and written to your Resilio Training calendar — "
+            f"Semaine approuvée et écrite dans ton agenda Resilio Training — "
             f"{report.get('created', 0)} created, {report.get('updated', 0)} updated, "
             f"{report.get('deleted', 0)} removed."
         )
@@ -372,7 +372,7 @@ class ApprovalService:
     def _ignore(self, athlete_id: str, error: Exception) -> ApprovalOutcome:
         message = _DEAD_TOKEN_MESSAGES.get(
             type(error),
-            "That button is no longer active. Text me and we will pick it up from there.",
+            "Ce bouton n'est plus actif. Écris-moi et on repart de là.",
         )
         self._notifier.send(athlete_id, message)
         return ApprovalOutcome(resolution="ignored", message=message)
@@ -389,11 +389,11 @@ class ApprovalService:
 
 _DEAD_TOKEN_MESSAGES: dict[type, str] = {
     ExpiredApprovalError: (
-        "That plan expired before it was answered. Ask me for a fresh week "
-        "whenever you are ready."
+        "Cette semaine a expiré avant d'avoir une réponse. "
+        "Demande-m'en une nouvelle quand tu veux."
     ),
-    AlreadyResolvedApprovalError: "That one is already handled — nothing changed.",
+    AlreadyResolvedApprovalError: "Déjà traité — rien n'a changé.",
     UnknownApprovalError: (
-        "I do not recognise that button any more. Ask me for a fresh week."
+        "Je ne reconnais plus ce bouton. Demande-moi une nouvelle semaine."
     ),
 }

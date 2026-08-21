@@ -65,8 +65,8 @@ class TestRenderWeek:
     def test_lists_every_session_grouped_by_day(self) -> None:
         text = render_week(PLAN)
 
-        assert "Monday 05 May" in text
-        assert "Wednesday 07 May" in text
+        assert "lundi 5 mai" in text
+        assert "mercredi 7 mai" in text
         assert "tempo" in text
         assert "lower_strength" in text
         assert "60 min" in text
@@ -87,7 +87,7 @@ class TestRenderWeek:
 
     def test_reports_weekly_totals(self) -> None:
         text = render_week(PLAN)
-        assert "2 sessions" in text
+        assert "2 séances" in text
         assert "2h15" in text
 
     def test_notes_render_when_present(self) -> None:
@@ -96,14 +96,14 @@ class TestRenderWeek:
 
     def test_empty_plan_states_rest_week(self) -> None:
         text = render_week({"phase": "recovery", "sessions": []})
-        assert "No sessions" in text
+        assert "Aucune séance" in text
 
     def test_handles_missing_optional_blocks(self) -> None:
         text = render_week({"sessions": PLAN["sessions"]})
         assert "tempo" in text
 
     def test_none_plan_is_reported_not_crashed(self) -> None:
-        assert "No plan" in render_week(None)
+        assert "Aucune semaine" in render_week(None)
 
     def test_degraded_sources_are_surfaced(self) -> None:
         text = render_week(PLAN, degraded_sources=["hevy"])
@@ -147,7 +147,7 @@ class TestMultiLineNotes:
     def test_only_one_bullet_is_opened_per_note(self) -> None:
         text = render_week({**PLAN, "notes": [self.MULTI]})
 
-        why = text.split("**Why this week**", 1)[1]
+        why = text.split("**Pourquoi cette semaine**", 1)[1]
         assert why.count("- rest:") == 1
         assert "- strength:" not in why
 

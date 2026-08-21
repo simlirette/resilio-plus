@@ -269,7 +269,7 @@ def test_approving_the_proposed_week_resumes_the_plan_thread(
     )
 
     assert outcome.resolution == "approve"
-    assert "approved" in channel.messages[-1][0].lower()
+    assert "approuvée" in channel.messages[-1][0].lower()
 
 
 def test_connect_command_issues_provider_links_mid_onboarding(

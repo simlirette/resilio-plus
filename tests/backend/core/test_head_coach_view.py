@@ -262,6 +262,9 @@ class TestTrainingState:
                 athlete_id=athlete.id,
                 snapshot_date=NOW.date(),
                 readiness=0.82,
+                # Only a measured readiness reaches the view; an unmeasured
+                # neutral 1.0 is the absence of a signal, not a good one.
+                readiness_source="measured",
                 strain_json=json.dumps({"quads": 74.0, "calves": 31.0}),
             )
         )

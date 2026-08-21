@@ -125,14 +125,14 @@ class TestStatus:
 
         text = notifier.last
         assert "signup" in text
-        assert "Strava: connected" in text
-        assert "Hevy: not connected" in text
+        assert "Strava: connecté" in text
+        assert "Hevy: non connecté" in text
 
     def test_unknown_athlete_is_reported(
         self, db_session: Session, notifier: RecordingNotifier
     ) -> None:
         build_router(db_session, notifier).handle("ghost", "/status")
-        assert "no profile" in notifier.last
+        assert "pas encore de profil" in notifier.last
 
 
 class TestPlan:
@@ -146,7 +146,7 @@ class TestPlan:
         ).handle(athlete_id, "/plan")
 
         assert calls == [athlete_id]
-        assert "one moment" in notifier.sent[0]
+        assert "un instant" in notifier.sent[0]
 
     def test_reports_when_not_wired(
         self, db_session: Session, athlete_id: str, notifier: RecordingNotifier
@@ -154,7 +154,7 @@ class TestPlan:
         outcome = build_router(db_session, notifier).handle(athlete_id, "/plan")
 
         assert outcome.handled is True
-        assert "not switched on" in notifier.last
+        assert "pas encore activée" in notifier.last
 
     def test_failure_is_reported_not_swallowed_silently(
         self, db_session: Session, athlete_id: str, notifier: RecordingNotifier
@@ -166,4 +166,4 @@ class TestPlan:
             athlete_id, "/plan"
         )
 
-        assert "could not build the week" in notifier.last
+        assert "pas pu construire la semaine" in notifier.last

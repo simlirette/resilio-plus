@@ -21,10 +21,51 @@ _FALLBACK_EMOJI = "•"
 
 _ACWR_COMMENT: dict[str, str] = {
     "safe": "safe zone",
-    "caution": "caution — load is climbing",
-    "danger": "danger zone — load must come down",
-    "insufficient_data": "not enough history yet",
+    "caution": "prudence — la charge monte",
+    "danger": "zone rouge — la charge doit baisser",
+    "insufficient_data": "pas encore assez d'historique",
 }
+
+# strftime follows the process locale, which is C in every environment this
+# runs in, so day and month names came out English inside French sentences.
+# Explicit tables rather than locale.setlocale, which is process-global and
+# would leak into every other thread.
+_DAYS_FR: tuple[str, ...] = (
+    "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche",
+)
+_MONTHS_FR: tuple[str, ...] = (
+    "janvier", "février", "mars", "avril", "mai", "juin",
+    "juillet", "août", "septembre", "octobre", "novembre", "décembre",
+)
+
+# Values that arrive as enum names from the planning engine and would otherwise
+# be shown to the athlete raw.
+_PHASE_FR: dict[str, str] = {
+    "general_prep": "préparation générale",
+    "specific_prep": "préparation spécifique",
+    "pre_competition": "pré-compétition",
+    "competition": "compétition",
+    "transition": "transition",
+    "recovery": "récupération",
+}
+_READINESS_FR: dict[str, str] = {
+    "green": "verte",
+    "yellow": "orange",
+    "red": "rouge",
+}
+_SEVERITY_FR: dict[str, str] = {
+    "critical": "critique",
+    "warning": "attention",
+    "info": "info",
+}
+
+
+def _fr_day(value: "date") -> str:
+    return f"{_DAYS_FR[value.weekday()]} {value.day} {_MONTHS_FR[value.month - 1]}"
+
+
+def _fr_short_day(value: "date") -> str:
+    return f"{value.day} {_MONTHS_FR[value.month - 1]}"
 
 
 def render_week(
@@ -34,14 +75,14 @@ def render_week(
 ) -> str:
     """Return the athlete-facing text for a proposed or approved week."""
     if plan is None:
-        return "No plan is available for this week yet."
+        return "Aucune semaine n'est disponible pour l'instant."
 
     sessions = [s for s in plan.get("sessions", []) or [] if isinstance(s, dict)]
     lines: list[str] = [_header(plan, sessions)]
 
     if not sessions:
         lines.append("")
-        lines.append("No sessions this week — full rest is the prescription.")
+        lines.append("Aucune séance cette semaine — repos complet, c'est la prescription.")
     else:
         for day, day_sessions in _group_by_day(sessions):
             lines.append("")
@@ -55,14 +96,14 @@ def render_week(
     reasoning = _reasoning_lines(plan)
     if reasoning:
         lines.append("")
-        lines.append("**Why this week**")
+        lines.append("**Pourquoi cette semaine**")
         for entry in reasoning:
             lines.extend(_as_bullet(entry))
 
     if degraded_sources:
         lines.append("")
         joined = ", ".join(degraded_sources)
-        lines.append(f"*Planned without fresh data from: {joined}.*")
+        lines.append(f"*Planifiée sans données fraîches de : {joined}.*")
 
     return "\n".join(lines)
 
@@ -80,18 +121,20 @@ def render_session_line(session: Mapping[str, Any]) -> str:
 def _header(plan: Mapping[str, Any], sessions: Sequence[Mapping[str, Any]]) -> str:
     phase = str(plan.get("phase") or "").strip()
     start = _first_date(sessions)
-    week_label = f"Week of {start:%d %B}" if start is not None else "Next week"
+    week_label = (
+        f"Semaine du {_fr_short_day(start)}" if start is not None else "Semaine à venir"
+    )
     total_minutes = sum(
         int(s.get("duration_min", 0) or 0)
         for s in sessions
         if isinstance(s.get("duration_min"), (int, float))
     )
     parts = [
-        f"{len(sessions)} session{'s' if len(sessions) != 1 else ''}",
+        f"{len(sessions)} séance{'s' if len(sessions) != 1 else ''}",
         _format_duration(total_minutes),
     ]
     if phase:
-        parts.append(f"phase {phase}")
+        parts.append(f"phase {_PHASE_FR.get(phase, phase)}")
     return f"**{week_label}** — {' · '.join(parts)}"
 
 
@@ -122,20 +165,20 @@ def _reasoning_lines(plan: Mapping[str, Any]) -> list[str]:
 
     readiness = plan.get("readiness_level")
     if isinstance(readiness, str) and readiness:
-        lines.append(f"Readiness {readiness}")
+        lines.append(f"Disponibilité {_READINESS_FR.get(readiness, readiness)}")
 
     fatigue = plan.get("global_fatigue")
     if isinstance(fatigue, Mapping):
         recovery = fatigue.get("recovery_hours")
         if isinstance(recovery, (int, float)):
-            lines.append(f"Estimated recovery {int(recovery)} h across the week")
+            lines.append(f"Récupération estimée {int(recovery)} h sur la semaine")
 
     for conflict in plan.get("conflicts", []) or []:
         if isinstance(conflict, Mapping):
             message = str(conflict.get("message") or "").strip()
             if message:
                 severity = str(conflict.get("severity") or "").strip()
-                prefix = f"{severity}: " if severity else ""
+                prefix = f"{_SEVERITY_FR.get(severity, severity)} : " if severity else ""
                 lines.append(f"{prefix}{message}")
 
     notes = plan.get("notes")
@@ -172,7 +215,7 @@ def _day_label(session: Mapping[str, Any]) -> str:
     parsed = _parse_date(session.get("date"))
     if parsed is None:
         return "Unscheduled"
-    return f"{parsed:%A %d %B}"
+    return _fr_day(parsed)
 
 
 def _first_date(sessions: Sequence[Mapping[str, Any]]) -> date | None:

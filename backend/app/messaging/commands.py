@@ -31,13 +31,13 @@ _PROVIDER_LABEL = {
 }
 
 _HELP = (
-    "**What I understand**\n"
-    "- `/connect` — links to connect Strava, Hevy and Terra\n"
-    "- `/status` — what is connected and where you are in the journey\n"
-    "- `/plan` — build next week now instead of waiting for Sunday\n"
-    "- `/help` — this list\n"
+    "**Ce que je comprends**\n"
+    "- `/connect` — liens pour connecter Strava, Hevy et Terra\n"
+    "- `/status` — ce qui est connecté et où tu en es dans le parcours\n"
+    "- `/plan` — construire la semaine maintenant sans attendre dimanche\n"
+    "- `/help` — cette liste\n"
     "\n"
-    "Everything else is a normal conversation — just tell me what is going on."
+    "Le reste est une conversation normale — dis-moi simplement où tu en es."
 )
 
 
@@ -96,7 +96,7 @@ class CommandRouter:
         if handler is None:
             return self._reply(
                 name,
-                f"I do not know `/{name}`. Try `/help`.",
+                f"Je ne connais pas `/{name}`. Essaie `/help`.",
                 athlete_id,
             )
         return handler(athlete_id)
@@ -106,9 +106,9 @@ class CommandRouter:
     def _start(self, athlete_id: str) -> CommandOutcome:
         return self._reply(
             "start",
-            "I am your Resilio head coach. Tell me about yourself and I will "
-            "build your training from there. Use `/connect` whenever you want "
-            "to hook up Strava, Hevy or your watch.",
+            "Je suis ton head coach Resilio. Parle-moi de toi et je construirai "
+            "ton entraînement à partir de là. Utilise `/connect` quand tu veux "
+            "brancher Strava, Hevy ou ta montre.",
             athlete_id,
         )
 
@@ -128,19 +128,19 @@ class CommandRouter:
             logger.warning("connect_links_failed", exc_info=True)
             return self._reply(
                 "connect",
-                "I could not mint connection links just now — try again shortly.",
+                "Je n'ai pas pu générer les liens de connexion — réessaie dans un instant.",
                 athlete_id,
             )
         if message is None:
             return self._reply(
-                "connect", "Everything is already connected.", athlete_id
+                "connect", "Tout est déjà connecté.", athlete_id
             )
         return self._reply("connect", message, athlete_id)
 
     def _status(self, athlete_id: str) -> CommandOutcome:
         athlete = self._db.get(AthleteModel, athlete_id)
         if athlete is None:
-            return self._reply("status", "I have no profile for you yet.", athlete_id)
+            return self._reply("status", "Je n'ai pas encore de profil pour toi.", athlete_id)
 
         connected = set(
             self._db.scalars(
@@ -152,27 +152,27 @@ class CommandRouter:
         if self._db.in_transaction():
             self._db.commit()
 
-        rows = [f"- Journey phase: {athlete.journey_phase}"]
+        rows = [f"- Phase du parcours : {athlete.journey_phase}"]
         for provider, label in _PROVIDER_LABEL.items():
-            mark = "connected" if provider in connected else "not connected"
+            mark = "connecté" if provider in connected else "non connecté"
             rows.append(f"- {label}: {mark}")
-        return self._reply("status", "**Where you stand**\n" + "\n".join(rows), athlete_id)
+        return self._reply("status", "**Où tu en es**\n" + "\n".join(rows), athlete_id)
 
     def _plan(self, athlete_id: str) -> CommandOutcome:
         if self._weekly_cycle is None:
             return self._reply(
                 "plan",
-                "Weekly planning is not switched on for this deployment yet.",
+                "La planification hebdomadaire n'est pas encore activée ici.",
                 athlete_id,
             )
-        self._notifier.send(athlete_id, "Building next week — one moment.")
+        self._notifier.send(athlete_id, "Je construis la semaine — un instant.")
         try:
             self._weekly_cycle(athlete_id, self._db)
         except Exception:
             logger.warning("manual_weekly_cycle_failed", exc_info=True)
             return self._reply(
                 "plan",
-                "I could not build the week just now. Try again in a few minutes.",
+                "Je n'ai pas pu construire la semaine. Réessaie dans quelques minutes.",
                 athlete_id,
             )
         return CommandOutcome(handled=True, name="plan")

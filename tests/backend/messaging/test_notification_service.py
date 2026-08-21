@@ -267,7 +267,7 @@ def test_send_chunks_to_channel_limit_and_puts_buttons_only_on_final_chunk(
     _add_identity(db_session, athlete_id)
     channel = RecordingChannel("telegram", max_length=5)
     service = NotificationService(db_session, {"telegram": channel})
-    buttons = [Button(label="Approve", token="opaque-approve")]
+    buttons = [Button(label="Approuver", token="opaque-approve")]
 
     provider_ids = service.send(
         athlete_id,
@@ -563,7 +563,7 @@ def test_send_delivers_and_audits_a_12000_character_plan(
     service = NotificationService(db_session, {"telegram": channel})
     plan_fragment = "Run easy today. Recover fully tomorrow.\n\n"
     text = (plan_fragment * 400)[:12_000]
-    buttons = [Button(label="Approve", token="opaque-plan-approval")]
+    buttons = [Button(label="Approuver", token="opaque-plan-approval")]
 
     provider_ids = service.send(athlete_id, text, buttons, kind="weekly_plan")
 

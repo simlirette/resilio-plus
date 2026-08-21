@@ -370,7 +370,7 @@ def test_plain_language_revision_reshapes_the_week_and_drops_the_session(
         token=token,
         resolution="revise",
     )
-    assert "what should change" in channel.messages[-1][0].lower()
+    assert "qu'est-ce qui doit changer" in channel.messages[-1][0].lower()
 
     gateway.handle_inbound("telegram", EXTERNAL_ID, "too much volume Wednesday")
 
