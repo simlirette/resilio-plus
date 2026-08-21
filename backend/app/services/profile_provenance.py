@@ -151,7 +151,30 @@ def describe_profile(view: Any, db: Any, athlete_id: str) -> str:
         lines.append("")
         lines.append(view.goal_feasibility)
 
+    objective = _objective_line(db, athlete_id)
+    if objective:
+        lines.append("")
+        lines.append(objective)
+
     return "\n".join(lines)
+
+
+def _objective_line(db: Any, athlete_id: str) -> str:
+    """Whether the target race is still ahead of the athlete.
+
+    Without it a race in the past stays the plan's target forever:
+    `weeks_to_race` clamps at zero, so every week after the date reads as race
+    week and the coach never notices the event has been run.
+    """
+    try:
+        from ..core.objective import describe_objective
+        from ..db.models import AthleteModel
+
+        athlete = db.get(AthleteModel, athlete_id)
+        return describe_objective(athlete) if athlete is not None else ""
+    except Exception:
+        logger.warning("objective_status_unreadable", extra={"athlete_id": athlete_id})
+        return ""
 
 
 def _missing(view: Any) -> list[str]:

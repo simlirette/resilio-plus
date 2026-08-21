@@ -4,7 +4,8 @@ from __future__ import annotations
 import json
 import logging
 import uuid
-from datetime import date
+from datetime import date, timedelta
+from typing import Any
 
 from sqlalchemy.orm import Session
 
@@ -20,6 +21,64 @@ from .runner import run_job
 logger = logging.getLogger(__name__)
 
 
+#: A baseline built from last winter says nothing about this week.
+_RECOVERY_WINDOW_DAYS = 30
+
+
+def _recovery_records(
+    athlete_id: str,
+    db: Session,
+    terra: Any,
+) -> list[Any]:
+    """Recovery signal for readiness: Terra if present, else Apple Health.
+
+    The goal document names Apple Health as a data source. Its parser, its
+    aggregator and its table all shipped in V3-X -- and nothing ever read the
+    table, so an athlete could import a full export and readiness stayed None.
+
+    The two are never mixed. Terra reports RMSSD, Apple Health reports SDNN:
+    different measurements on different scales. Readiness is a delta against a
+    baseline, so a window that switches between them produces a swing that
+    looks like fatigue and is arithmetic.
+    """
+    if terra is not None:
+        return [terra]
+
+    try:
+        from ..db.models import AppleHealthDailyModel
+        from ..schemas.connector import TerraHealthData
+
+        cutoff = date.today() - timedelta(days=_RECOVERY_WINDOW_DAYS)
+        rows = (
+            db.query(AppleHealthDailyModel)
+            .filter(
+                AppleHealthDailyModel.athlete_id == athlete_id,
+                AppleHealthDailyModel.record_date >= cutoff,
+            )
+            .all()
+        )
+    except Exception:
+        logger.warning("apple_health_unreadable", extra={"athlete_id": athlete_id})
+        return []
+
+    records: list[Any] = []
+    for row in rows:
+        if row.hrv_sdnn_avg is None and row.sleep_hours is None:
+            continue
+        records.append(
+            TerraHealthData(
+                date=row.record_date,
+                # SDNN carried in the RMSSD field on purpose: readiness only
+                # ever compares this series to itself, and mixing is prevented
+                # above. `AthleteMetrics.hrv_sdnn` stays the field of record.
+                hrv_rmssd=row.hrv_sdnn_avg,
+                sleep_duration_hours=row.sleep_hours,
+                active_energy_kcal=row.active_energy_kcal,
+            )
+        )
+    return records
+
+
 def snapshot_athlete(athlete_id: str, db: Session) -> None:
     """Compute readiness + strain for one athlete and upsert today's snapshot.
 
@@ -27,11 +86,11 @@ def snapshot_athlete(athlete_id: str, db: Session) -> None:
     """
     today = date.today()
     data = fetch_connector_data(athlete_id, db)
-    terra = data["terra_health"]
-    readiness = compute_readiness([terra] if terra else [])
+    records = _recovery_records(athlete_id, db, data["terra_health"])
+    readiness = compute_readiness(records)
     # Distinguishes a neutral modifier from an absent signal -- see
     # AthleteStateSnapshotModel.readiness_source.
-    readiness_source = "measured" if terra else None
+    readiness_source = "measured" if records else None
     strain = compute_muscle_strain(
         data["strava_activities"],
         data["hevy_workouts"],
