@@ -43,6 +43,7 @@ from ..schemas.head_coach_view import HeadCoachView
 from ..schemas.intent import IntentClassification
 from ..services.classify_intent_service import classify_intent
 from ..services.conversation import Turn, build_messages, recent_turns, record_turn
+from ..services.reply import OUTPUT_CONTRACT, athlete_facing
 
 # ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -153,6 +154,9 @@ def _format_head_coach_user_content(
     if specialist_notes:
         lines.append(f"\nSpecialist notes:\n{specialist_notes}")
     lines.append(f"\nUser message: {user_message}")
+    # Asks the model to mark what is meant for the athlete. `athlete_facing`
+    # still scrubs the result, because a contract only works when honoured.
+    lines.append(OUTPUT_CONTRACT)
     return "\n".join(lines)
 
 
@@ -405,7 +409,9 @@ def run_chat_turn(
             history=history,
         )
 
-    # 5. Persist messages
+    # 5. Strip anything the model wrote for itself, then persist
+    final_response = athlete_facing(final_response)
+
     _persist_messages(
         athlete_id=athlete_id,
         user_message=user_message,
