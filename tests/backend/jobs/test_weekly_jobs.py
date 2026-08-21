@@ -89,6 +89,8 @@ class FakeApprovals:
         plan: Any = None,
         degraded_sources: Any = None,
         payload: dict[str, Any] | None = None,
+        # The coach's read on the week that just ended, sent above the new plan.
+        preamble: str | None = None,
     ) -> str:
         self.calls.append(
             {

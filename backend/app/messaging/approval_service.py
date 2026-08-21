@@ -130,8 +130,14 @@ class ApprovalService:
         plan: Mapping[str, Any] | None,
         degraded_sources: Sequence[str] | None = None,
         payload: dict[str, Any] | None = None,
+        preamble: str | None = None,
     ) -> str:
-        """Text the week with approve / change / skip buttons; return the token."""
+        """Text the week with approve / change / skip buttons; return the token.
+
+        `preamble` carries the coach's read on the week that just ended. It goes
+        above the new plan because that is the order a coach speaks in: what
+        happened, then what is next.
+        """
         token = create_approval(
             self._db,
             athlete_id=athlete_id,
@@ -141,6 +147,8 @@ class ApprovalService:
             clock=self._clock,
         )
         text = render_week(plan, degraded_sources=degraded_sources)
+        if preamble and preamble.strip():
+            text = preamble.strip() + "\n\n---\n\n" + text
         self._notifier.send(athlete_id, text, self.buttons_for(token))
         return token
 
@@ -334,10 +342,16 @@ class ApprovalService:
                 "la semaine suivante pour resynchroniser.",
             )
 
+        # The runnable sessions also go to the watch. Never fatal: the week is
+        # already approved and in the calendar by this point.
+        from .watch_hook import describe_push, push_to_watch
+
+        watch = describe_push(push_to_watch(final_plan or {}))
+
         summary = (
             f"Semaine approuvée et écrite dans ton agenda Resilio Training — "
             f"{report.get('created', 0)} created, {report.get('updated', 0)} updated, "
-            f"{report.get('deleted', 0)} removed."
+            f"{report.get('deleted', 0)} removed.{watch}"
         )
         outcome = self._finish(athlete_id, "approve", summary)
         return ApprovalOutcome(

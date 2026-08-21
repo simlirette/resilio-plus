@@ -30,6 +30,7 @@ from ..services.monitoring_service import MonitoringService
 from .compute_jobs import snapshot_athlete
 from .runner import run_job
 from .sync_jobs import sync_hevy_for_athlete, sync_strava_for_athlete, sync_terra_for_athlete
+from .weekly_review import write_statement
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +96,12 @@ def run_weekly_cycle_now(
     result.degraded_sources = _sync_providers(athlete_id)
     _compute_state(athlete_id, db)
 
+    # Look back before looking forward. Sending a fresh week without a word
+    # about the one that just ended is a scheduler, not a coach -- and it is
+    # what the athlete received every Sunday until now.
+    statement = write_statement(athlete_id, db)
+    _settle(db)
+
     output = _generate_week(athlete_id, db, invoker)
     plan = output.get("plan_proposal") if isinstance(output, Mapping) else None
     thread_id = output.get("plan_thread_id") if isinstance(output, Mapping) else None
@@ -114,6 +121,7 @@ def run_weekly_cycle_now(
         plan=plan,
         degraded_sources=result.degraded_sources or None,
         payload={"trigger": "weekly_cycle"},
+        preamble=statement,
     )
 
     result.plan_sent = True
