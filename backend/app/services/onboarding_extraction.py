@@ -419,6 +419,52 @@ def _apply_sessions_per_week(athlete: AthleteModel, value: Any) -> bool:
     return True
 
 
+_FLEXIBILITY = ("fixed", "flexible")
+
+
+def _apply_session_hours(athlete: AthleteModel, value: Any) -> bool:
+    """Store {sport: hour}. The calendar has read this column all along.
+
+    Nothing ever wrote it, so every session in every week landed at the default
+    hour whatever the athlete said. Hour 0 is midnight and a real answer, so the
+    bound check is explicit rather than truthiness.
+    """
+    if not isinstance(value, dict):
+        return False
+
+    hours: dict[str, int] = {}
+    for sport, hour in value.items():
+        if not isinstance(sport, str) or sport.strip().lower() not in _KNOWN_SPORTS:
+            continue
+        if isinstance(hour, bool) or not isinstance(hour, (int, float)):
+            continue
+        if not 0 <= int(hour) <= 23:
+            continue
+        hours[sport.strip().lower()] = int(hour)
+
+    if not hours:
+        return False
+    athlete.preferred_session_hour_json = json.dumps(hours, ensure_ascii=False)
+    return True
+
+
+def _apply_flexibility(athlete: AthleteModel, value: Any) -> bool:
+    """Only the two values the planner understands.
+
+    Free text here would mean nothing to the code that reads it, so an
+    unrecognised answer is refused and the coach can ask again.
+    """
+    if not isinstance(value, str):
+        return False
+    normalised = value.strip().lower()
+    if normalised not in _FLEXIBILITY:
+        return False
+    if athlete.schedule_flexibility == normalised:
+        return False
+    athlete.schedule_flexibility = normalised
+    return True
+
+
 def apply_extraction(
     athlete: AthleteModel,
     data: dict[str, Any],
@@ -464,6 +510,12 @@ def apply_extraction(
 
     if _apply_sessions_per_week(athlete, data.get("sessions_per_week")):
         changed.append("sessions_per_week")
+
+    if _apply_session_hours(athlete, data.get("preferred_session_hour")):
+        changed.append("preferred_session_hour")
+
+    if _apply_flexibility(athlete, data.get("schedule_flexibility")):
+        changed.append("schedule_flexibility")
 
     primary = data.get("primary_sport")
     if isinstance(primary, str) and primary.strip().lower() in _KNOWN_SPORTS:

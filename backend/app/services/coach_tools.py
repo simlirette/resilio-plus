@@ -99,6 +99,21 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                     "items": {"type": "integer"},
                     "description": "Jours disponibles, lundi = 0.",
                 },
+                "preferred_session_hour": {
+                    "type": "object",
+                    "description": (
+                        "Heure de la journée par sport, 0-23. Ex : "
+                        '{"running": 7, "lifting": 18}.'
+                    ),
+                },
+                "schedule_flexibility": {
+                    "type": "string",
+                    "enum": ["fixed", "flexible"],
+                    "description": (
+                        "« fixed » si les créneaux ne bougent pas, « flexible » "
+                        "si tu peux déplacer une séance dans la semaine."
+                    ),
+                },
             },
         },
     },
