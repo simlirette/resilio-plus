@@ -141,7 +141,15 @@ def _days_to_race(race_date: date | None, today: date) -> int | None:
 
 
 def _active_plan_summary(athlete_id: str, db: Any) -> dict[str, Any] | None:
-    """The plan the coach itself wrote — it could not see it before."""
+    """The plan the coach itself wrote — it could not see it before.
+
+    Carries whether the plan's week is over. This returns the most recently
+    created plan, which is not the same thing as a current one: on 2026-08-21
+    Simon's facts block announced a week that had ended in April as "plan
+    actif", and the coach would have discussed a Wednesday session that
+    happened four months earlier. Dropping the plan would lose real history, so
+    it is kept and labelled.
+    """
     from sqlalchemy import desc
 
     from ..db.models import TrainingPlanModel
@@ -155,11 +163,17 @@ def _active_plan_summary(athlete_id: str, db: Any) -> dict[str, Any] | None:
     if plan is None:
         return None
 
+    end = plan.end_date if isinstance(plan.end_date, date) else None
+    # The last day of the plan is still ahead of an athlete reading this on it.
+    days_since_end = (date.today() - end).days if end else 0
+
     slots = _json_list(plan.weekly_slots_json)
     return {
         "phase": plan.phase,
         "start_date": plan.start_date.isoformat() if plan.start_date else None,
-        "end_date": plan.end_date.isoformat() if plan.end_date else None,
+        "end_date": end.isoformat() if end else None,
+        "over": days_since_end > 0,
+        "days_since_end": max(days_since_end, 0),
         "total_weekly_hours": plan.total_weekly_hours,
         "acwr": plan.acwr,
         "status": getattr(plan, "status", "active"),

@@ -138,7 +138,7 @@ def describe_profile(view: Any, db: Any, athlete_id: str) -> str:
     if view.muscle_strain:
         top = dict(sorted(view.muscle_strain.items(), key=lambda kv: -kv[1])[:4])
         add("fatigue musculaire", top, MEASURED)
-    add("plan actif", view.active_plan_summary, MEASURED)
+    add(_plan_label(view.active_plan_summary), view.active_plan_summary, MEASURED)
     if view.recent_sessions:
         add("séances récentes", len(view.recent_sessions), MEASURED)
 
@@ -157,6 +157,19 @@ def describe_profile(view: Any, db: Any, athlete_id: str) -> str:
         lines.append(objective)
 
     return "\n".join(lines)
+
+
+def _plan_label(plan: Any) -> str:
+    """"plan actif" is a claim, and for a week that ended in April it is false.
+
+    The label carries the staleness because the dict is what the model reads
+    fastest — a plan announced as active is reasoned about as active, whatever
+    the dates inside say.
+    """
+    if not isinstance(plan, dict) or not plan.get("over"):
+        return "plan actif"
+    days = plan.get("days_since_end", 0)
+    return f"dernier plan (terminé depuis {days} jour{'s' if days != 1 else ''})"
 
 
 def _objective_line(db: Any, athlete_id: str) -> str:
