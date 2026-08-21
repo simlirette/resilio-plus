@@ -18,6 +18,7 @@ from __future__ import annotations
 import logging
 from datetime import date, datetime, timedelta, timezone
 from typing import Any
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,48 @@ def session_load(duration_minutes: float, rpe: float | None) -> float:
     return hours * intensity**2 * 100.0
 
 
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _athlete_zone(athlete_id: str, db: Any) -> ZoneInfo | None:
+    """The athlete's timezone, or None when it cannot be read."""
+    try:
+        from ..db.models import AthleteModel
+
+        athlete = db.get(AthleteModel, athlete_id)
+        name = getattr(athlete, "timezone", None) if athlete is not None else None
+        if name:
+            return ZoneInfo(str(name))
+    except (ZoneInfoNotFoundError, ValueError, KeyError, AttributeError):
+        logger.warning("athlete_timezone_unreadable", extra={"athlete_id": athlete_id})
+    except Exception:
+        logger.warning(
+            "athlete_timezone_lookup_failed",
+            extra={"athlete_id": athlete_id},
+            exc_info=True,
+        )
+    return None
+
+
+def _athlete_today(athlete_id: str, db: Any) -> date:
+    """Today as the athlete experiences it.
+
+    The window used to end on the UTC date, which for an athlete in Montreal is
+    a different day for four hours of every evening. During that window the
+    series gains a day that has not happened yet and every session shifts one
+    bucket further into the past, so ACWR falls with no change in training.
+    Observed live: 1.54 "danger" in the afternoon, 0.59 "undertrained" the same
+    evening.
+
+    Falls back to UTC when the athlete, or their timezone, cannot be read -- a
+    slightly wrong window beats no plan.
+    """
+    now = _utcnow()
+    zone = _athlete_zone(athlete_id, db)
+    return now.astimezone(zone).date() if zone is not None else now.date()
+
+
 def daily_training_loads(
     athlete_id: str,
     db: Any,
@@ -56,13 +99,14 @@ def daily_training_loads(
     Degrades to all zeros if the database cannot be read: a missing history
     should make the coach cautious, not crash the weekly cycle.
     """
-    end = reference_date or datetime.now(timezone.utc).date()
+    end = reference_date or _athlete_today(athlete_id, db)
     start = end - timedelta(days=days - 1)
     buckets = [0.0] * days
 
     try:
+        zone = _athlete_zone(athlete_id, db)
         _add_strava_activities(athlete_id, db, start, buckets)
-        _add_session_logs(athlete_id, db, start, buckets)
+        _add_session_logs(athlete_id, db, start, buckets, zone)
     except Exception:
         logger.warning(
             "load_history_unavailable", extra={"athlete_id": athlete_id}, exc_info=True
@@ -72,8 +116,31 @@ def daily_training_loads(
     return buckets
 
 
-def _index_for(moment: datetime | date, start: date, days: int) -> int | None:
-    day = moment.date() if isinstance(moment, datetime) else moment
+def _index_for(
+    moment: datetime | date,
+    start: date,
+    days: int,
+    zone: ZoneInfo | None = None,
+) -> int | None:
+    """Bucket one session, by the athlete's calendar day.
+
+    A run stored at 22:00 UTC is the next morning in Tokyo and the same evening
+    in Montreal. Bucketing on the UTC date puts it on a day the athlete did not
+    train, while the window end has already moved on -- so the session lands
+    outside the acute window entirely.
+    """
+    if isinstance(moment, datetime):
+        if zone is not None:
+            aware = (
+                moment
+                if moment.tzinfo is not None
+                else moment.replace(tzinfo=timezone.utc)
+            )
+            day = aware.astimezone(zone).date()
+        else:
+            day = moment.date()
+    else:
+        day = moment
     offset = (day - start).days
     return offset if 0 <= offset < days else None
 
@@ -92,6 +159,10 @@ def _add_strava_activities(
         .all()
     )
     for row in rows:
+        # No zone conversion, deliberately. The connector reads Strava's
+        # `start_date_local` as a bare date and activity_mapper stores it at
+        # midnight UTC, so `started_at` is a local date wearing a datetime
+        # costume. Converting it westwards moves every session back a day.
         index = _index_for(row.started_at, start, len(buckets))
         if index is None:
             continue
@@ -105,6 +176,7 @@ def _add_session_logs(
     db: Any,
     start: date,
     buckets: list[float],
+    zone: ZoneInfo | None = None,
 ) -> None:
     from ..db.models import SessionLogModel
 
@@ -116,7 +188,8 @@ def _add_session_logs(
     for row in rows:
         if row.skipped:
             continue
-        index = _index_for(row.logged_at, start, len(buckets))
+        # `logged_at` *is* a real instant, so it does convert.
+        index = _index_for(row.logged_at, start, len(buckets), zone)
         if index is None:
             continue
         buckets[index] += session_load(float(row.actual_duration_min or 0), row.rpe)
