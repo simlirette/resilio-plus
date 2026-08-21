@@ -45,6 +45,14 @@ def _run_through_blocks(thread_id: str, db: MagicMock, up_to_block: int) -> None
             run_onboarding_respond(thread_id, "response", db=db)
 
 
+# Changed 2026-08-21 (Phase B1). Onboarding no longer ends after a fixed six
+# blocks: it ends when the profile can support a plan and the athlete has
+# confirmed the summary. The six fixed instructions were what made the coach
+# ask for running volume in blocks 3, 4 *and* 5 after it had already been told.
+# `_MAX_BLOCK` is now a ceiling, not a schedule -- these tests drive to it so
+# they still exercise the handoff.
+
+
 class TestOnboardingBlocs4to6:
     def test_bloc4_sports_history(self):
         """Bloc 4 reachable after bloc 3; collects sport_history key."""
@@ -100,7 +108,9 @@ class TestOnboardingBlocs4to6:
             start = run_onboarding_start("a1", db)
 
         thread_id = start["thread_id"]
-        _run_through_blocks(thread_id, db, up_to_block=6)
+        from app.graphs.onboarding import _MAX_BLOCK
+
+        _run_through_blocks(thread_id, db, up_to_block=_MAX_BLOCK)
 
         with patch("app.graphs.onboarding.anthropic.Anthropic") as M:
             M.return_value.messages.create.return_value = _mock_llm()
@@ -109,8 +119,12 @@ class TestOnboardingBlocs4to6:
         assert result["status"] == "completed"
         assert result.get("journey_phase") == "baseline_pending_confirmation"
 
-    def test_full_sequence_1_to_6_completes(self):
-        """All 6 blocs complete → status=completed with handoff phase."""
+    def test_the_ceiling_always_reaches_a_handoff(self):
+        """Even with nothing extracted, the athlete reaches a plan eventually.
+
+        The ceiling exists so a stubborn extraction failure cannot turn
+        onboarding into an interrogation with no exit.
+        """
         from app.graphs.onboarding import run_onboarding_respond, run_onboarding_start
 
         athlete = _make_athlete()
@@ -121,25 +135,22 @@ class TestOnboardingBlocs4to6:
             start = run_onboarding_start("a1", db)
 
         thread_id = start["thread_id"]
-        responses = [
-            "intro",         # bloc 1
-            "25 ans, 70kg",  # bloc 2
-            "semi en 6 mois", # bloc 3
-            "3 ans running", # bloc 4
-            "DUP",           # bloc 5
-        ]
-        for resp in responses:
-            with patch("app.graphs.onboarding.anthropic.Anthropic") as M:
-                M.return_value.messages.create.return_value = _mock_llm()
-                run_onboarding_respond(thread_id, resp, db=db)
+        from app.graphs.onboarding import _MAX_BLOCK
 
         with patch("app.graphs.onboarding.anthropic.Anthropic") as M:
             M.return_value.messages.create.return_value = _mock_llm()
-            result = run_onboarding_respond(thread_id, "confirme", db=db)
+            result = run_onboarding_respond(thread_id, "intro", db=db)
 
-        assert result["status"] == "completed"
+        for _ in range(_MAX_BLOCK):
+            if result["status"] == "completed":
+                break
+            with patch("app.graphs.onboarding.anthropic.Anthropic") as M:
+                M.return_value.messages.create.return_value = _mock_llm()
+                result = run_onboarding_respond(thread_id, "reponse", db=db)
+
+        assert result["status"] == "completed", "the ceiling never fired"
+        assert result.get("journey_phase") == "baseline_pending_confirmation"
         assert result["collected_data"]["intro_response"] == "intro"
-        assert result["collected_data"]["basic_profile"] == "25 ans, 70kg"
 
 
 class TestInjuryMidOnboarding:

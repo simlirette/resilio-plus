@@ -42,6 +42,14 @@ from ..services.conversation import (
     recent_turns,
     record_message,
 )
+from ..services.onboarding_goal import (
+    describe_gaps,
+    describe_optional,
+    optional_gaps,
+    profile_gaps,
+    ready_to_confirm,
+)
+from ..services.reply import OUTPUT_CONTRACT, athlete_facing
 
 # ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -49,7 +57,9 @@ _MODEL_CHAT = "claude-sonnet-4-6"
 _MAX_TOKENS = 1024
 
 # Total onboarding blocks (D7: 1-3, D8: 4-6)
-_MAX_BLOCK = 6
+#: Hard ceiling on questions. `ready_to_confirm` normally ends the
+#: conversation earlier, as soon as the profile can support a plan.
+_MAX_BLOCK = 12
 
 
 # ─── Thread state ─────────────────────────────────────────────────────────────
@@ -71,36 +81,6 @@ logger = logging.getLogger(__name__)
 
 
 # ─── Block definitions ────────────────────────────────────────────────────────
-
-_BLOCK_INSTRUCTIONS: dict[int, str] = {
-    1: (
-        "Tu lances un onboarding pour un nouvel athlète. "
-        "Présente-toi brièvement comme Head Coach Resilio+ et "
-        "demande à l'athlète de se décrire en quelques mots "
-        "(sport principal, niveau, objectif général)."
-    ),
-    2: (
-        "Collecte le profil de base de l'athlète : âge, sexe biologique, "
-        "poids (kg) et taille (cm). Pose les questions de façon conversationnelle."
-    ),
-    3: (
-        "Demande l'objectif principal de l'athlète et l'horizon temporel "
-        "(ex: finir un semi-marathon en 6 mois). Sois précis et direct."
-    ),
-    4: (
-        "Collecte l'historique sportif et les disciplines actives de l'athlète : "
-        "années de pratique, compétitions passées, sports actuellement pratiqués."
-    ),
-    5: (
-        "Recueille les préférences d'entraînement : méthodologie (ex: DUP, linéaire), "
-        "fréquence souhaitée par discipline, contraintes horaires. "
-        "Si l'athlète fait de la musculation, demande les préférences de périodisation."
-    ),
-    6: (
-        "Présente un résumé du scope convenu (disciplines, objectif, méthodologie). "
-        "Demande confirmation avant de lancer la génération du plan de base."
-    ),
-}
 
 # Key used to store each block's response in collected_data
 _BLOCK_DATA_KEYS: dict[int, str] = {
@@ -255,22 +235,48 @@ def _persist_block_answer(
         )
 
 
-def _block_question(
-    block: int,
-    view: HeadCoachView,
-    history: list[Turn] | None = None,
-) -> str:
-    """Generate the Head Coach's question for one onboarding block.
+def _onboarding_instruction(athlete: Any, turns_taken: int) -> str:
+    """Tell the coach what the profile still lacks, not which form field to fill.
 
-    `history` is what stops the coach re-asking. Without it every block was
-    composed in isolation, so it asked for the goal a minute after being told
-    it and for the race distance after it had been stated twice.
+    Six fixed instructions used to drive this. Block 4 said "collecte
+    l'historique sportif" and block 5 said "fréquence souhaitée par discipline",
+    so the coach asked for running volume in blocks 3, 4 *and* 5 -- after Phase
+    A had handed it the whole conversation and it visibly read it. It was not
+    forgetting; it was obeying.
     """
-    instruction = _BLOCK_INSTRUCTIONS.get(
-        block, f"Continue l'onboarding au bloc {block}."
+    gaps = profile_gaps(athlete)
+
+    if ready_to_confirm(athlete, turns_taken):
+        return (
+            "Tu as ce qu'il faut pour construire un plan. Résume à l'athlète ce "
+            "que tu as retenu de lui — profil, sports, objectif, fréquence, "
+            "contraintes — et demande-lui de confirmer ou de corriger avant que "
+            "tu génères la semaine. Ne repose aucune question déjà répondue."
+        )
+
+    return (
+        f"{describe_gaps(gaps)}. Demande à l'athlète uniquement ce qui manque, "
+        "avec tes mots, en une ou deux questions maximum. Tu as l'historique "
+        "complet de la conversation : ne repose jamais quelque chose qu'il a "
+        "déjà dit, et appuie-toi sur ce qu'il vient de te donner. "
+        f"{describe_optional(optional_gaps(athlete))}"
     )
+
+
+def _onboarding_question(
+    athlete: Any,
+    view: HeadCoachView,
+    history: list[Turn] | None,
+    turns_taken: int,
+) -> str:
+    """Compose the coach's next message from the conversation and the gaps."""
     context = f"Athlete context (onboarding):\n{view.model_dump_json()}"
-    return _call_head_coach(instruction, context, history)
+    raw = _call_head_coach(
+        _onboarding_instruction(athlete, turns_taken) + OUTPUT_CONTRACT,
+        context,
+        history,
+    )
+    return athlete_facing(raw)
 
 
 # ─── Public entry points ──────────────────────────────────────────────────────
@@ -308,8 +314,8 @@ def run_onboarding_start(
     if restored is not None:
         # Resume existing thread at its current block, even across a restart
         state = restored
-        question = _block_question(
-            state.current_block, view, recent_turns(db, athlete_id)
+        question = _onboarding_question(
+            athlete, view, recent_turns(db, athlete_id), state.current_block
         )
         record_message(db, athlete_id, "assistant", question)
         return {
@@ -335,7 +341,7 @@ def run_onboarding_start(
     db.commit()
     _save_state(state, db)
 
-    question = _block_question(1, view, recent_turns(db, athlete_id))
+    question = _onboarding_question(athlete, view, recent_turns(db, athlete_id), 0)
     record_message(db, athlete_id, "assistant", question)
     return {
         "thread_id": thread_id,
@@ -388,8 +394,12 @@ def run_onboarding_respond(
 
     next_block = state.current_block + 1
 
-    if next_block > _MAX_BLOCK:
-        # Handoff: bloc 6 confirmed → transition to baseline_pending_confirmation
+    # Onboarding ends when the profile can support a plan and the athlete has
+    # confirmed the summary -- not after a fixed number of questions. The turn
+    # ceiling inside `ready_to_confirm` is what stops a stubborn extraction
+    # failure turning this into an interrogation with no exit.
+    was_confirming = state.status == "confirming"
+    if was_confirming or next_block > _MAX_BLOCK:
         state.status = "completed"
         state.current_block = next_block
         athlete.journey_phase = "baseline_pending_confirmation"
@@ -405,9 +415,12 @@ def run_onboarding_respond(
         }
 
     state.current_block = next_block
+    state.status = (
+        "confirming" if ready_to_confirm(athlete, next_block) else "in_progress"
+    )
     _save_state(state, db)
-    question = _block_question(
-        next_block, view, recent_turns(db, state.athlete_id)
+    question = _onboarding_question(
+        athlete, view, recent_turns(db, state.athlete_id), next_block
     )
     record_message(db, state.athlete_id, "assistant", question)
 
@@ -479,8 +492,8 @@ def resume_onboarding_after_recovery(
         db.commit()
 
         view = build_head_coach_view(athlete)
-        question = _block_question(
-            suspended_block, view, recent_turns(db, athlete.id)
+        question = _onboarding_question(
+            athlete, view, recent_turns(db, athlete.id), suspended_block
         )
         record_message(db, athlete.id, "assistant", question)
         return {

@@ -122,14 +122,19 @@ Rules:
   fill a plausible default. An empty object is valid.
 - Never output a `vdot` key.
 - `race_distance` and `race_time_seconds` describe a race the athlete has
-  ALREADY COMPLETED. A goal, a target time, or the event they are training for
-  is NOT a result: omit both keys rather than reporting a goal. If several
-  completed races are mentioned, report the longest one.
+  ALREADY RUN. If they state any finished time -- "5km: 26min47s", "10 km en
+  1h04" -- ALWAYS report it; that is the single most useful fact in the whole
+  conversation. If several are mentioned, report the longest distance.
+  A goal or a target time is NOT a result: "objectif sub-2h au semi" is a goal
+  and must never be reported here. When the only time mentioned is a goal,
+  omit both keys.
 - `race_distance` must be one of: mile, 5k, 10k, 15k, half_marathon, marathon.
   Never a number, never metres.
 - `sports` and `sports_removed` must use exactly: running, lifting, swimming,
   biking. Weight training, musculation, gym, strength training are all
-  `lifting`.
+  `lifting`. A sport that is none of these -- hockey, football, climbing,
+  tennis -- is simply NOT REPORTED. Never map it to the nearest value: dek
+  hockey is not biking, and a wrong sport puts sessions in the wrong plan.
 - `sports` is every sport the athlete practises. Naming one as a priority is
   not a reason to omit the others.
 - `sports_removed` is only for sports they explicitly said they have stopped.

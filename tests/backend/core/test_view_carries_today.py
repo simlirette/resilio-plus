@@ -157,7 +157,7 @@ class TestItReachesTheModel:
         "builder,module_name",
         [
             ("_format_head_coach_user_content", "app.graphs.chat_turn"),
-            ("_block_question", "app.graphs.onboarding"),
+            ("_onboarding_question", "app.graphs.onboarding"),
         ],
     )
     def test_every_prompt_builder_passes_the_whole_view(

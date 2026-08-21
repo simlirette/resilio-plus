@@ -145,14 +145,15 @@ class TestResumeAfterRestart:
     def test_the_conversation_can_be_finished_across_a_restart(
         self, db_session
     ) -> None:
-        from app.graphs.onboarding import run_onboarding_respond, run_onboarding_start
+        """Changed in Phase B1: completion is driven by the profile, not a block
+        count, so this drives to the ceiling rather than to block 6."""
+        from app.graphs.onboarding import _MAX_BLOCK, run_onboarding_respond
 
-        thread_id = _advance_to(db_session, 6)
+        thread_id = _advance_to(db_session, _MAX_BLOCK)
         _simulate_restart()
 
         coach, extract = _quiet()
         with coach, extract:
-            run_onboarding_start(ATHLETE, db_session)
             result = run_onboarding_respond(thread_id, "oui", db_session)
 
         assert result["status"] == "completed"
