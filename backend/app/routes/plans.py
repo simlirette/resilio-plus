@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from ..agents.base import AgentContext
 from ..agents.head_coach import HeadCoach
+from ..core.load_history import daily_training_loads
 from ..core.periodization import get_current_phase
 from ..db.models import AthleteModel, TrainingPlanModel
 from ..dependencies import get_current_athlete_id, get_db
@@ -73,7 +74,12 @@ def _create_plan_for_athlete(
     )
 
     coach = HeadCoach(agents=build_agents(athlete))
-    weekly_plan = coach.build_week(context, load_history=[])
+    # Same series the V4 weekly cycle uses. Passing [] here pinned ACWR at
+    # 0.00 undertrained, so a plan built through the API was computed as
+    # though the athlete had never trained.
+    weekly_plan = coach.build_week(
+        context, load_history=daily_training_loads(athlete_id, db)
+    )
 
     plan_model = TrainingPlanModel(
         id=str(uuid.uuid4()),

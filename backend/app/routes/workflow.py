@@ -27,6 +27,7 @@ from pydantic import BaseModel
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
+from ..core.load_history import daily_training_loads
 from ..db.models import AthleteModel, SessionLogModel, TrainingPlanModel, WeeklyReviewModel
 from ..dependencies import get_current_athlete_id, get_db
 from ..dependencies.mode_guard import require_full_mode
@@ -269,7 +270,7 @@ def create_plan_workflow(
         thread_id, proposed_dict = service.create_plan(
             athlete_id=athlete_id,
             athlete_dict=athlete_profile.model_dump(mode="json"),
-            load_history=[],
+            load_history=daily_training_loads(athlete_id, db),
             db=db,
         )
     except Exception as exc:
