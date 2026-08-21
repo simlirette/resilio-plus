@@ -206,3 +206,19 @@ Rejected:
 - MarkdownV2 formatting, persistent dedupe in T2, callback approvals before T3.
 Open:
 - T3 (approvals over text) next, fresh session.
+
+## 2026-08-21 [saved] — data path closed, conversational layer found hollow
+Goal: Close every data-path defect, then diagnose why the live coach felt fake.
+Decisions:
+- Measure every fix against the live account, not fixtures — all 12 defects had valid fallbacks, so the suite stayed green throughout.
+- Strava `started_at` is a local date stored at midnight UTC; never timezone-convert it. `session_logs.logged_at` is a real instant and does.
+- New `readiness_source` column: a 1.0 modifier means "no adjustment" to agents but reads as "fully fresh" in the coach view.
+- Extraction refuses out-of-range values instead of clamping, and derives VDOT from a stated race time rather than asking the model.
+- Onboarding's 6 fixed blocks are the root cause of "not a real coach" — no history, no date, no memory. Plan: `docs/superpowers/plans/2026-08-21-real-coach.md`.
+Rejected:
+- Clamping a bad extraction — launders a parse error into a plausible value.
+- Letting the model emit `vdot` — it would set every prescribed pace.
+- Tests that round-trip the implementation's wrong invariant — promotes the bug to spec.
+Open:
+- VDOT 30 in the first live plan is untraced.
+- Phase A (conversation memory) not started.
