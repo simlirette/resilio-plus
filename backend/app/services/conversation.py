@@ -32,6 +32,8 @@ from datetime import datetime, timedelta, timezone
 from threading import Lock
 from typing import Any
 
+from anthropic.types import MessageParam
+
 logger = logging.getLogger(__name__)
 
 ROLES = ("user", "assistant")
@@ -40,6 +42,13 @@ ROLES = ("user", "assistant")
 #: onboarding; beyond that the oldest turns matter less than the context they
 #: cost.
 DEFAULT_HISTORY_LIMIT = 12
+
+#: Stands in front of a conversation the coach opened, so its first question
+#: survives into the prompt while the message list still starts with `user`.
+CONVERSATION_OPENER = "(début de la conversation)"
+
+#: Separator when two same-role turns are merged.
+_PARAGRAPH = "\n\n"
 
 
 @dataclass(frozen=True)
@@ -181,6 +190,52 @@ def recent_turns(
     ]
 
 
-def as_messages(turns: list[Turn]) -> list[dict[str, str]]:
-    """Turns in the shape the Anthropic SDK expects."""
-    return [{"role": turn.role, "content": turn.content} for turn in turns]
+def as_messages(turns: list[Turn]) -> list[MessageParam]:
+    """Turns in the shape the Anthropic SDK expects.
+
+    Typed as `MessageParam` rather than `dict[str, str]` so the two call sites
+    do not each need a cast to satisfy the SDK signature.
+    """
+    return [
+        MessageParam(role=turn.role, content=turn.content)  # type: ignore[typeddict-item]
+        for turn in turns
+    ]
+
+
+def build_messages(
+    turns: list[Turn] | None,
+    user_content: str,
+) -> list[MessageParam]:
+    """History plus the current turn, in a shape the API will accept.
+
+    The API requires the list to start with ``user`` and to alternate. A stored
+    conversation does neither reliably: onboarding opens with the coach
+    speaking first, and an athlete who sends two messages in a row leaves two
+    consecutive ``user`` turns. Both are normal, and both are a 400 if passed
+    through untouched.
+
+    A leading assistant turn is *kept*, behind a synthetic opener. Dropping it
+    was the first attempt and it threw away the question the athlete was
+    answering -- their reply then arrived with nothing to attach it to, which
+    is the exact failure this whole phase exists to fix. The opener is neutral
+    on purpose: it marks the start of the conversation rather than putting
+    words in the athlete's mouth.
+
+    Consecutive same-role turns are merged, which preserves every word the
+    athlete wrote instead of discarding one of them.
+    """
+    messages = as_messages(turns or [])
+
+    if messages and messages[0]["role"] != "user":
+        messages.insert(0, MessageParam(role="user", content=CONVERSATION_OPENER))
+
+    current = MessageParam(role="user", content=user_content)
+
+    merged: list[MessageParam] = []
+    for message in [*messages, current]:
+        if merged and merged[-1]["role"] == message["role"]:
+            joined = f"{merged[-1]['content']}{_PARAGRAPH}{message['content']}"
+            merged[-1] = MessageParam(role=message["role"], content=joined)
+        else:
+            merged.append(message)
+    return merged

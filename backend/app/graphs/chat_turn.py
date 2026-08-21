@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import json
 import os
-import uuid
 from typing import Any
 
 import anthropic
@@ -39,10 +38,11 @@ from ..agents.prompts import (
 )
 from ..core.classify_intent_builder import build_classify_intent_request
 from ..core.head_coach_view_builder import build_head_coach_view
-from ..db.models import AthleteModel, ChatMessageModel
+from ..db.models import AthleteModel
 from ..schemas.head_coach_view import HeadCoachView
 from ..schemas.intent import IntentClassification
 from ..services.classify_intent_service import classify_intent
+from ..services.conversation import Turn, build_messages, recent_turns, record_turn
 
 # ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -94,26 +94,19 @@ def _persist_messages(
     specialists_consulted: list[str],
     db: Any,
 ) -> None:
-    """Persist user + assistant messages for the chat history endpoint."""
-    user_msg = ChatMessageModel(
-        id=str(uuid.uuid4()),
-        athlete_id=athlete_id,
-        role="user",
-        content=user_message,
-        intent_decision=None,
-        specialists_consulted=None,
-    )
-    assistant_msg = ChatMessageModel(
-        id=str(uuid.uuid4()),
-        athlete_id=athlete_id,
-        role="assistant",
-        content=assistant_response,
+    """Persist the turn through the shared conversation store.
+
+    It used to write ChatMessageModel here directly, which is why onboarding --
+    the other half of the conversation -- had no way to record anything.
+    """
+    record_turn(
+        db,
+        athlete_id,
+        user_message,
+        assistant_response,
         intent_decision=intent_decision,
         specialists_consulted=json.dumps(specialists_consulted),
     )
-    db.add(user_msg)
-    db.add(assistant_msg)
-    db.commit()
 
 
 # ─── LLM invocation helpers ───────────────────────────────────────────────────
@@ -126,14 +119,21 @@ def _make_client() -> anthropic.Anthropic:
 def _call_agent(
     system_prompt: str,
     user_content: str,
+    history: list[Turn] | None = None,
 ) -> str:
-    """Call Anthropic with a given system prompt and user content, return text."""
+    """Call Anthropic with a system prompt, the conversation so far, and this turn.
+
+    History is optional because specialists do not get it: they are asked a
+    targeted question and their notes are synthesised by the Head Coach, which
+    is the voice the athlete actually reads. Handing the whole transcript to up
+    to three specialists per turn multiplies the cost of a part nobody sees.
+    """
     client = _make_client()
     message = client.messages.create(
         model=_MODEL_CHAT,
         max_tokens=_MAX_TOKENS_CHAT,
         system=system_prompt,
-        messages=[{"role": "user", "content": user_content}],
+        messages=build_messages(history, user_content),
     )
     return getattr(message.content[0], "text", "")
 
@@ -294,11 +294,13 @@ def run_chat_turn(
             "thread_id": None,  # ephemeral — no persistent thread
         }
     """
-    # 1. Load athlete + build view
+    # 1. Load athlete + build view + the conversation so far
     athlete = _get_athlete(athlete_id, db)
     # Pass db: without it the coach answers knowing only sports and weekly
     # hours - no plan, no ACWR, no idea what the athlete actually did.
     view = build_head_coach_view(athlete, db)
+    # Read before this turn is persisted, so it is the history *up to* now.
+    history = recent_turns(db, athlete_id)
     clinical_flag: str | None = getattr(athlete, "clinical_context_flag", None)
 
     # 2. Classify intent
@@ -333,6 +335,7 @@ def run_chat_turn(
             user_content=hc_content + "\n\nDecision: CLARIFICATION_NEEDED. "
             f"Generate a short intro phrase only (≤1 sentence). "
             f"Axes: {clarification_axes}",
+            history=history,
         )
 
     elif intent.decision == "OUT_OF_SCOPE":
@@ -344,6 +347,7 @@ def run_chat_turn(
             system_prompt=HEAD_COACH_PROMPT,
             user_content=hc_content + "\n\nDecision: OUT_OF_SCOPE. "
             "Respond briefly: this topic is outside your coaching scope.",
+            history=history,
         )
 
     elif intent.decision == "SPECIALIST_TECHNICAL" and intent.specialist_chain:
@@ -370,6 +374,7 @@ def run_chat_turn(
         final_response = _call_agent(
             system_prompt=HEAD_COACH_PROMPT,
             user_content=hc_content,
+            history=history,
         )
 
     else:
@@ -397,6 +402,7 @@ def run_chat_turn(
         final_response = _call_agent(
             system_prompt=HEAD_COACH_PROMPT,
             user_content=hc_content,
+            history=history,
         )
 
     # 5. Persist messages

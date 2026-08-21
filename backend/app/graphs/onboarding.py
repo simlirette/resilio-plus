@@ -36,6 +36,12 @@ from ..agents.prompts import HEAD_COACH_PROMPT
 from ..core.head_coach_view_builder import build_head_coach_view
 from ..db.models import AthleteModel
 from ..schemas.head_coach_view import HeadCoachView
+from ..services.conversation import (
+    Turn,
+    build_messages,
+    recent_turns,
+    record_message,
+)
 
 # ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -124,16 +130,19 @@ def _make_client() -> anthropic.Anthropic:
     return anthropic.Anthropic(api_key=api_key)
 
 
-def _call_head_coach(instruction: str, context: str) -> str:
+def _call_head_coach(
+    instruction: str,
+    context: str,
+    history: list[Turn] | None = None,
+) -> str:
     client = _make_client()
     message = client.messages.create(
         model=_MODEL_CHAT,
         max_tokens=_MAX_TOKENS,
         system=HEAD_COACH_PROMPT,
-        messages=[{
-            "role": "user",
-            "content": f"{context}\n\nInstruction: {instruction}",
-        }],
+        messages=build_messages(
+            history, f"{context}\n\nInstruction: {instruction}"
+        ),
     )
     return getattr(message.content[0], "text", "")
 
@@ -242,13 +251,22 @@ def _persist_block_answer(
         )
 
 
-def _block_question(block: int, view: HeadCoachView) -> str:
-    """Generate Head Coach question for the given onboarding block."""
+def _block_question(
+    block: int,
+    view: HeadCoachView,
+    history: list[Turn] | None = None,
+) -> str:
+    """Generate the Head Coach's question for one onboarding block.
+
+    `history` is what stops the coach re-asking. Without it every block was
+    composed in isolation, so it asked for the goal a minute after being told
+    it and for the race distance after it had been stated twice.
+    """
     instruction = _BLOCK_INSTRUCTIONS.get(
         block, f"Continue l'onboarding au bloc {block}."
     )
     context = f"Athlete context (onboarding):\n{view.model_dump_json()}"
-    return _call_head_coach(instruction, context)
+    return _call_head_coach(instruction, context, history)
 
 
 # ─── Public entry points ──────────────────────────────────────────────────────
@@ -286,7 +304,10 @@ def run_onboarding_start(
     if restored is not None:
         # Resume existing thread at its current block, even across a restart
         state = restored
-        question = _block_question(state.current_block, view)
+        question = _block_question(
+            state.current_block, view, recent_turns(db, athlete_id)
+        )
+        record_message(db, athlete_id, "assistant", question)
         return {
             "thread_id": state.thread_id,
             "current_block": state.current_block,
@@ -310,7 +331,8 @@ def run_onboarding_start(
     db.commit()
     _save_state(state, db)
 
-    question = _block_question(1, view)
+    question = _block_question(1, view, recent_turns(db, athlete_id))
+    record_message(db, athlete_id, "assistant", question)
     return {
         "thread_id": thread_id,
         "current_block": 1,
@@ -355,6 +377,9 @@ def run_onboarding_respond(
     # Store current block response
     key = _BLOCK_DATA_KEYS.get(state.current_block, f"block_{state.current_block}")
     state.collected_data[key] = user_response
+    # Recorded *before* the next question is composed, so the coach can see
+    # the answer it is about to follow up on.
+    record_message(db, state.athlete_id, "user", user_response)
     _persist_block_answer(athlete, state.current_block, user_response, db)
 
     next_block = state.current_block + 1
@@ -377,7 +402,10 @@ def run_onboarding_respond(
 
     state.current_block = next_block
     _save_state(state, db)
-    question = _block_question(next_block, view)
+    question = _block_question(
+        next_block, view, recent_turns(db, state.athlete_id)
+    )
+    record_message(db, state.athlete_id, "assistant", question)
 
     return {
         "thread_id": thread_id,
@@ -447,7 +475,10 @@ def resume_onboarding_after_recovery(
         db.commit()
 
         view = build_head_coach_view(athlete)
-        question = _block_question(suspended_block, view)
+        question = _block_question(
+            suspended_block, view, recent_turns(db, athlete.id)
+        )
+        record_message(db, athlete.id, "assistant", question)
         return {
             "thread_id": thread_id,
             "current_block": suspended_block,
