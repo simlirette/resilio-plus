@@ -5,10 +5,9 @@ import uuid
 from typing import Any
 
 import pytest
-from sqlalchemy.orm import Session
-
 from app.db.models import ConnectorCredentialModel, DeepLinkTokenModel
 from app.messaging.commands import CommandRouter, is_command
+from sqlalchemy.orm import Session
 
 
 class RecordingNotifier:

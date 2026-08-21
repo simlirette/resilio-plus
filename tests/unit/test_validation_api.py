@@ -1,17 +1,19 @@
 """Unit tests for validation API functions."""
 
-import pytest
 from datetime import date, timedelta
+
+import pytest
+
 from resilio.api.validation import (
+    ValidationError,
+    api_assess_goal_feasibility,
     api_validate_interval_structure,
     api_validate_plan_structure,
-    api_assess_goal_feasibility,
-    ValidationError,
 )
 from resilio.schemas.validation import (
+    GoalFeasibilityAssessment,
     IntervalStructureValidation,
     PlanStructureValidation,
-    GoalFeasibilityAssessment,
 )
 
 

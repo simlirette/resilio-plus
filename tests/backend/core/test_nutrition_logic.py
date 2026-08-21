@@ -1,7 +1,6 @@
-import pytest
 from app.core.nutrition_logic import compute_nutrition_directives
-from app.schemas.athlete import AthleteProfile, Sport, DayType
-from app.schemas.nutrition import DayNutrition, NutritionPlan
+from app.schemas.athlete import AthleteProfile, DayType, Sport
+from app.schemas.nutrition import NutritionPlan
 
 
 def _athlete(weight=75.0):

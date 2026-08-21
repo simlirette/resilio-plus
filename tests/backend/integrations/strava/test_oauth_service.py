@@ -6,21 +6,19 @@ import uuid
 import httpx
 import pytest
 import respx
+from app.db import models  # noqa: F401
+from app.db.database import Base
+from app.db.models import AthleteModel, ConnectorCredentialModel
+from app.integrations.strava.oauth_service import (
+    callback,
+    connect,
+    decrypt_token,
+    encrypt_token,
+    get_valid_credential,
+)
 from cryptography.fernet import Fernet
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
-from app.db.database import Base
-from app.db import models  # noqa: F401
-from app.db.models import AthleteModel, ConnectorCredentialModel
-from app.integrations.strava.oauth_service import (
-    connect,
-    callback,
-    get_valid_credential,
-    encrypt_token,
-    decrypt_token,
-)
-
 
 TEST_KEY = Fernet.generate_key().decode()
 _ATHLETE_ID = str(uuid.uuid4())

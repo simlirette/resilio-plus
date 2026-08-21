@@ -10,9 +10,6 @@ import uuid
 from typing import Any
 
 import pytest
-from sqlalchemy import create_engine, event
-from sqlalchemy.orm import Session as SASession
-
 from app.db import models as _models  # noqa: F401 — registers ORM models
 from app.db.database import Base
 from app.db.models import (
@@ -28,6 +25,8 @@ from app.messaging.approval_service import ApprovalService
 from app.messaging.approvals import parse_callback
 from app.messaging.base import Button
 from app.messaging.gateway import MessagingGateway
+from sqlalchemy import create_engine, event
+from sqlalchemy.orm import Session as SASession
 
 ATHLETE_ID = "athlete-v4-e2e"
 EXTERNAL_ID = "555000"

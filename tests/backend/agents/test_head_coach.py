@@ -1,19 +1,14 @@
 from datetime import date
 
-import pytest
-
-from app.agents.head_coach import HeadCoach, WeeklyPlan
+from app.agents.head_coach import HeadCoach
 from app.core.acwr import ACWRStatus
-from app.core.conflict import ConflictSeverity
 from app.schemas.athlete import Sport
-from app.schemas.fatigue import FatigueScore
 from app.schemas.plan import WorkoutSlot
+
 from tests.backend.agents.conftest import (
     MockAgent,
-    make_recommendation,
     make_fatigue,
-    sample_context,
-    sample_athlete,
+    make_recommendation,
 )
 
 

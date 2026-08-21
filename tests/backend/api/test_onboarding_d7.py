@@ -3,10 +3,9 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from fastapi.testclient import TestClient
-
-from app.main import app
 from app.dependencies import get_current_athlete_id, get_db
+from app.main import app
+from fastapi.testclient import TestClient
 
 
 def _make_db_with_athlete(athlete_id: str = "a1") -> MagicMock:
@@ -70,7 +69,7 @@ class TestOnboardingStartEndpoint:
 class TestOnboardingRespondEndpoint:
     def test_respond_returns_200(self):
         """POST /onboarding/respond returns 200 with next block."""
-        from app.graphs.onboarding import _thread_states, _OnboardingThread
+        from app.graphs.onboarding import _OnboardingThread, _thread_states
 
         # Pre-populate thread state
         thread_id = "a1:onboarding:test-d7-api"

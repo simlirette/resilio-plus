@@ -1,8 +1,7 @@
+
 import pytest
-from app.agents.base import AgentRecommendation, AgentContext
-from app.schemas.athlete import AthleteProfile, Sport
-from datetime import date
-from tests.backend.agents.conftest import make_recommendation, MockAgent, make_fatigue
+
+from tests.backend.agents.conftest import MockAgent, make_recommendation
 
 
 def test_agent_recommendation_default_readiness_modifier():

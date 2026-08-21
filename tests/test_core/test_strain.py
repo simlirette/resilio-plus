@@ -11,9 +11,7 @@ When EWMA_28d == 0 (no history at all), score == 0.0.
 """
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
-
-import pytest
+from datetime import date, datetime
 
 
 def _make_hevy_workout(

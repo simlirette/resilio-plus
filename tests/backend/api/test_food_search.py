@@ -1,4 +1,5 @@
 from unittest.mock import patch
+
 from app.schemas.food import FoodItem
 
 _CHICKEN = FoodItem(

@@ -1,8 +1,7 @@
-import os
-import respx
 import httpx
 import pytest
-from app.integrations.nutrition.usda_client import search, fetch
+import respx
+from app.integrations.nutrition.usda_client import fetch, search
 
 
 @pytest.fixture(autouse=True)

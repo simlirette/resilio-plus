@@ -1,4 +1,5 @@
 from datetime import date
+
 from app.agents.base import AgentContext, AgentRecommendation
 from app.agents.recovery_coach import RecoveryCoach
 from app.schemas.athlete import AthleteProfile, Sport

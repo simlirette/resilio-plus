@@ -4,8 +4,6 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from sqlalchemy.orm import Session
-
 from app.db.models import AthleteModel, DeepLinkTokenModel
 from app.services.deep_link_service import (
     InvalidDeepLinkError,
@@ -16,6 +14,7 @@ from app.services.deep_link_service import (
     link_url,
     resolve_link,
 )
+from sqlalchemy.orm import Session
 
 FIXED_NOW = datetime(2031, 3, 1, 9, 0, tzinfo=timezone.utc)
 

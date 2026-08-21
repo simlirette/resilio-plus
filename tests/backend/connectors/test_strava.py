@@ -1,12 +1,12 @@
 import json
+from datetime import date, datetime, timezone
+from pathlib import Path
+
+import httpx
 import pytest
 import respx
-import httpx
-from pathlib import Path
-from datetime import datetime, timezone, date
-
 from app.connectors.strava import StravaConnector
-from app.schemas.connector import ConnectorCredential, StravaActivity, StravaLap
+from app.schemas.connector import StravaActivity, StravaLap
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 

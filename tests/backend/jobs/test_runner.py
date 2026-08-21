@@ -1,17 +1,14 @@
 import time
-import uuid
-from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
-from app.db.database import Base
 from app.db import models as _models  # noqa: F401
+from app.db.database import Base
 from app.jobs import models as _job_models  # noqa: F401
 from app.jobs.models import JobRunModel
 from app.jobs.runner import run_job
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 
 @pytest.fixture()

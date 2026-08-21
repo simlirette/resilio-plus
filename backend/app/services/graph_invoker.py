@@ -23,6 +23,8 @@ from sqlalchemy.orm import Session
 
 from ..db.models import AthleteModel, ChatMessageModel
 from .athlete_profile import athlete_profile_dict
+from .coach_loop import run_coach_turn
+from .conversation import record_turn
 from .coordinator_service import CoordinatorService
 from .deep_link_service import connector_links_message
 
@@ -78,18 +80,7 @@ class DefaultGraphInvoker:
         payload: dict[str, Any],
         db: Session,
     ) -> dict[str, Any] | None:
-        from ..graphs.chat_turn import run_chat_turn
-
-        message = _message_of(payload)
-        if message is None:
-            return None
-        result: dict[str, Any] = run_chat_turn(
-            athlete_id=athlete_id,
-            user_message=message,
-            db=db,
-            last_3_intents=recent_intents(athlete_id, db),
-        )
-        return result
+        return self._converse(athlete_id, payload, db)
 
     def _run_onboarding(
         self,
@@ -98,27 +89,41 @@ class DefaultGraphInvoker:
         payload: dict[str, Any],
         db: Session,
     ) -> dict[str, Any] | None:
-        from ..graphs.onboarding import run_onboarding_respond, run_onboarding_start
+        """Onboarding is the same conversation, with a thinner profile.
 
+        It used to be a separate six-block script, and chat used to be an
+        intent classifier feeding a specialist chain. Two paths, two failure
+        modes, and neither could answer a direct question. The difference is
+        now what the profile contains, not which code runs.
+        """
+        return self._converse(athlete_id, payload, db)
+
+    def _converse(
+        self,
+        athlete_id: str,
+        payload: dict[str, Any],
+        db: Session,
+    ) -> dict[str, Any] | None:
+        """One athlete message, answered by the model with its tools."""
         message = _message_of(payload)
-        result: dict[str, Any] | None = None
-        if message is not None:
-            try:
-                result = run_onboarding_respond(thread_id, message, db)
-            except ValueError:
-                # No live thread for this id — the process restarted, or this is
-                # the athlete's first message. Ask block 1 instead of failing.
-                result = None
-        if result is None:
-            result = run_onboarding_start(athlete_id, db)
+        if message is None:
+            return None
 
-        if result.get("current_block") == _CONNECTOR_INVITE_BLOCK:
-            result = _with_connector_invitation(result, athlete_id, db)
+        outcome = run_coach_turn(athlete_id=athlete_id, user_message=message, db=db)
+        record_turn(db, athlete_id, message, outcome.reply)
+        result: dict[str, Any] = {
+            "message": outcome.reply,
+            "tools_used": outcome.tools_used,
+            "ok": outcome.ok,
+        }
 
-        if result.get("status") == "completed":
+        # A generated week still needs a human button before it reaches the
+        # calendar. This used to chain off "onboarding completed"; it now chains
+        # off the coach actually building one.
+        if "generate_plan" in outcome.tools_used:
             proposal = self._propose_plan(athlete_id, db)
             if proposal is not None:
-                result = {**result, **proposal}
+                result.update(proposal)
         return result
 
     def _run_followup_transition(

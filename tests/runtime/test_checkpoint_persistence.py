@@ -6,11 +6,10 @@ import os
 import sqlite3
 import tempfile
 
-import pytest
+from app.services.coaching_service import CoachingService
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.checkpoint.sqlite import SqliteSaver
 
-from app.services.coaching_service import CoachingService
 from tests.runtime.conftest import SIMON_PROFILE, STABLE_LOAD
 
 

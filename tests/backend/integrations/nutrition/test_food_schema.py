@@ -1,7 +1,7 @@
-import pytest
-from app.schemas.food import FoodItem
-from app.db.models import FoodCacheModel
 from datetime import datetime, timezone
+
+from app.db.models import FoodCacheModel
+from app.schemas.food import FoodItem
 
 
 def test_food_item_stores_name_fr():

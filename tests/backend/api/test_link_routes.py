@@ -6,17 +6,16 @@ from collections.abc import Iterator
 from typing import Any
 
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy.pool import StaticPool
-
 from app.db import models as _models  # noqa: F401 — registers ORM models
 from app.db.database import Base
 from app.db.models import AthleteModel, ConnectorCredentialModel, DeepLinkTokenModel
 from app.dependencies import get_db
 from app.main import app
 from app.services.deep_link_service import issue_link
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
 
 ATHLETE_ID = "44444444-4444-4444-4444-444444444444"
 

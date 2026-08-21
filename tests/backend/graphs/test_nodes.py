@@ -1,9 +1,6 @@
 """Unit tests for coaching graph node functions."""
-import dataclasses
 from datetime import date
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 # Pre-import via the 'app.' path to avoid SQLAlchemy double-table-registration.
 # The pytest pythonpath config adds 'backend/' so 'app.' is the correct root.
@@ -11,6 +8,7 @@ import pytest
 # — a different module key. By importing here first via 'app.' we ensure the
 # models are registered once; the lazy import in the node then reuses sys.modules.
 import app.services.energy_cycle_service  # noqa: F401
+import pytest
 
 from backend.app.graphs.nodes import (
     analyze_profile,

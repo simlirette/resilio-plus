@@ -7,17 +7,15 @@ rate limits and errors.
 """
 
 import json
+from datetime import date, datetime, timezone
+from unittest.mock import patch
 
 import pytest
 import yaml
-from datetime import date, datetime, timezone
-from unittest.mock import Mock, patch, MagicMock
-from pathlib import Path
 
-from resilio.core.workflows import run_sync_workflow
 from resilio.core.repository import RepositoryIO
-from resilio.schemas.config import Config, Secrets, Settings
-from resilio.schemas.config import StravaSecrets
+from resilio.core.workflows import run_sync_workflow
+from resilio.schemas.config import Config, Secrets, Settings, StravaSecrets
 from resilio.schemas.sync import SyncPhase, SyncReport
 
 
@@ -89,7 +87,7 @@ class TestIncrementalSync:
         mock_config,
     ):
         """Activities should be saved incrementally, not batched."""
-        from resilio.schemas.activity import RawActivity, ActivitySource
+        from resilio.schemas.activity import ActivitySource, RawActivity
 
         # Create 3 activities to sync
         activities = [
@@ -158,8 +156,8 @@ class TestIncrementalSync:
     ):
         """Sync should resume from where it stopped after rate limit."""
         from resilio.schemas.activity import (
-            RawActivity,
             ActivitySource,
+            RawActivity,
         )
 
         # First sync: 2 activities, then rate limit
@@ -452,7 +450,7 @@ class TestIncrementalSync:
         mock_config,
     ):
         """Profile update failure should not stop activity sync."""
-        from resilio.schemas.activity import RawActivity, ActivitySource
+        from resilio.schemas.activity import ActivitySource, RawActivity
 
         # Mock profile update to fail
         mock_profile.side_effect = Exception("Profile fetch failed")
@@ -494,7 +492,7 @@ class TestIncrementalSync:
         mock_config,
     ):
         """Metrics computation failure should not stop activity persistence."""
-        from resilio.schemas.activity import RawActivity, ActivitySource
+        from resilio.schemas.activity import ActivitySource, RawActivity
 
         # Mock metrics to fail
         mock_metrics.side_effect = Exception("Metrics computation failed")
@@ -541,7 +539,7 @@ class TestIncrementalSync:
         mock_config,
     ):
         """Re-running sync should not create duplicate activities."""
-        from resilio.schemas.activity import RawActivity, ActivitySource
+        from resilio.schemas.activity import ActivitySource, RawActivity
 
         # Same activity synced twice
         activity = RawActivity(

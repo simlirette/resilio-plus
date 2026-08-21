@@ -1,9 +1,8 @@
 import pytest
+from app.db import models  # noqa: F401 — registers ORM models with Base
+from app.db.database import Base
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
-
-from app.db.database import Base
-from app.db import models  # noqa: F401 — registers ORM models with Base
 
 
 @pytest.fixture()

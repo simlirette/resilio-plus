@@ -1,15 +1,14 @@
 # tests/e2e/conftest.py
 """Shared fixtures for end-to-end API workflow tests."""
 import pytest
+from app.db import models  # noqa: F401 — registers all ORM models with Base
+from app.db.database import Base
+from app.dependencies import get_db
+from app.main import app
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-
-from app.db.database import Base
-from app.db import models  # noqa: F401 — registers all ORM models with Base
-from app.dependencies import get_db
-from app.main import app
 
 
 def _make_e2e_engine():

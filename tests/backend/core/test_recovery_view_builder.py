@@ -1,8 +1,7 @@
 """D6 TDD — recovery_view_builder."""
 from __future__ import annotations
 
-from datetime import date, timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 

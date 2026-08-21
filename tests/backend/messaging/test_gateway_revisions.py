@@ -6,10 +6,9 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
-from sqlalchemy.orm import Session
-
 from app.db.models import MessagingIdentityModel
 from app.messaging import MessagingGateway
+from sqlalchemy.orm import Session
 
 
 class RecordingChannel:

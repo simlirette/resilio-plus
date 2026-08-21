@@ -1,10 +1,6 @@
 """D3 TDD — classify_intent_builder (build_classify_intent_request)."""
 from __future__ import annotations
 
-import json
-
-import pytest
-
 from app.db.models import AthleteModel
 from app.schemas.intent import IntentClassificationRequest
 

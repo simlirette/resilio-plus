@@ -2,9 +2,7 @@
 Pytest configuration and shared fixtures.
 """
 
-import sys
 import pytest
-from pathlib import Path
 
 
 @pytest.fixture
@@ -75,8 +73,8 @@ def db_engine(_db_engine_session):
     """Session-scoped engine with migrations applied. Skip if DB unavailable."""
     if _db_engine_session is None:
         pytest.skip("Test PostgreSQL not available")
-    from alembic.config import Config
     from alembic import command as alembic_cmd
+    from alembic.config import Config
     cfg = Config("alembic.ini")
     cfg.set_main_option("sqlalchemy.url", _TEST_DB_URL)
     alembic_cmd.upgrade(cfg, "head")
@@ -93,6 +91,7 @@ def db_engine(_db_engine_session):
 def _seed_db(db_engine):
     """Seed test fixture once per session."""
     from sqlalchemy.orm import Session
+
     from scripts.seed_data.test_fixture import insert_test_fixture
     with Session(db_engine) as session:
         insert_test_fixture(session)

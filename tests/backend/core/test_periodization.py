@@ -1,5 +1,6 @@
 from datetime import date, timedelta
-from app.core.periodization import get_current_phase, MacroPhase, TIDStrategy
+
+from app.core.periodization import MacroPhase, TIDStrategy, get_current_phase
 
 
 def _race_in(weeks: int) -> date:

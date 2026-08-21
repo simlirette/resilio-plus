@@ -12,7 +12,6 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import pytest
-
 from app.core.load_history import (
     DEFAULT_RPE,
     daily_training_loads,

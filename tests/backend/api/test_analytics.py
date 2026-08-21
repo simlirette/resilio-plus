@@ -1,4 +1,3 @@
-import pytest
 from tests.backend.api.conftest import authed_client, client  # noqa: F401
 
 

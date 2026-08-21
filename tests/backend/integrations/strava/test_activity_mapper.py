@@ -1,9 +1,9 @@
 import json
-from datetime import date, datetime, timezone
+from datetime import date
 
-from app.db.models import StravaActivityModel, ConnectorCredentialModel
+from app.db.models import ConnectorCredentialModel, StravaActivityModel
+from app.integrations.strava.activity_mapper import to_model
 from app.schemas.connector import StravaActivity
-from app.integrations.strava.activity_mapper import SPORT_MAP, to_model
 
 
 def test_strava_activity_model_has_enc_columns():

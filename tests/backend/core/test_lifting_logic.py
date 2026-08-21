@@ -1,9 +1,12 @@
 from datetime import date, timedelta
+
 from app.core.lifting_logic import (
-    StrengthLevel, estimate_strength_level,
-    compute_lifting_fatigue, generate_lifting_sessions,
+    StrengthLevel,
+    compute_lifting_fatigue,
+    estimate_strength_level,
+    generate_lifting_sessions,
 )
-from app.schemas.connector import HevyWorkout, HevyExercise, HevySet
+from app.schemas.connector import HevyExercise, HevySet, HevyWorkout
 
 
 def _set(reps=8, kg=60.0, rpe=7.0) -> HevySet:

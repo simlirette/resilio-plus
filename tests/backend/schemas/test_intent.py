@@ -47,7 +47,7 @@ class TestIntentClassification:
         assert obj.specialist_chain is None
 
     def test_valid_specialist_technical_with_chain(self):
-        from app.schemas.intent import IntentClassification, SpecialistTarget
+        from app.schemas.intent import IntentClassification
         obj = IntentClassification(
             **_valid_classification(
                 decision="SPECIALIST_TECHNICAL",

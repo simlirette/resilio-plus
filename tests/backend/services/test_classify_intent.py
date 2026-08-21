@@ -4,16 +4,12 @@ from __future__ import annotations
 import json
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from app.schemas.intent import (
     ConversationContextMinimal,
     IntentClassification,
     IntentClassificationRequest,
-    SpecialistTarget,
     UserProfileMinimal,
 )
-
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -174,8 +170,8 @@ class TestClassifyIntentClinicalAcknowledgement:
 class TestClassifyIntentRetry:
     def test_timeout_triggers_retry(self):
         """On first timeout, service retries once and succeeds."""
-        from app.services.classify_intent_service import classify_intent
         import anthropic as anthropic_lib
+        from app.services.classify_intent_service import classify_intent
 
         payload = _make_contract_payload()
         success = _mock_haiku_xml(payload)
@@ -202,8 +198,8 @@ class TestClassifyIntentRetry:
         conversation — and the Head Coach prompt carries its own clinical
         guardrails. See tests/backend/services/test_classify_intent_timeout.py.
         """
-        from app.services.classify_intent_service import classify_intent
         import anthropic as anthropic_lib
+        from app.services.classify_intent_service import classify_intent
 
         with patch("app.services.classify_intent_service.anthropic.Anthropic") as MockClient:
             MockClient.return_value.messages.create.side_effect = anthropic_lib.APITimeoutError(

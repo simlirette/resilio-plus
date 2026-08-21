@@ -16,9 +16,7 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
 from sqlalchemy import create_engine, event
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-
 
 # ---------------------------------------------------------------------------
 # Load constants
@@ -199,9 +197,9 @@ def simon_single_day_profile() -> dict[str, Any]:
 
 def layla_luteal_context():
     """Returns (athlete, terra, hormonal_profile) tuple for S8."""
+    from app.models.athlete_state import HormonalProfile
     from app.schemas.athlete import AthleteProfile, Sport
     from app.schemas.connector import TerraHealthData
-    from app.models.athlete_state import HormonalProfile
 
     athlete = AthleteProfile(
         name="Layla",

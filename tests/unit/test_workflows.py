@@ -4,30 +4,29 @@ Unit tests for M1 - Internal Workflows (core/workflows.py).
 Tests workflow orchestration, transaction management, and error handling.
 """
 
+from datetime import date, datetime, timedelta
+from unittest.mock import Mock, patch
+
 import pytest
 import yaml
-from datetime import date, datetime, timedelta
-from unittest.mock import Mock, MagicMock, patch
-from pathlib import Path
 
+from resilio.core.paths import current_plan_path
+from resilio.core.repository import RepositoryIO
 from resilio.core.workflows import (
-    WorkflowLock,
     TransactionLog,
     WorkflowError,
+    WorkflowLock,
     WorkflowLockError,
     WorkflowRollbackError,
-    run_sync_workflow,
-    run_metrics_refresh,
-    run_plan_generation,
     run_adaptation_check,
     run_manual_activity_workflow,
+    run_metrics_refresh,
+    run_plan_generation,
+    run_sync_workflow,
 )
-from resilio.core.repository import RepositoryIO
-from resilio.core.paths import current_plan_path
 from resilio.schemas.plan import MasterPlan
 from resilio.schemas.profile import ConflictPolicy, Goal, GoalType, TrainingConstraints
 from resilio.schemas.sync import SyncPhase
-
 
 # ============================================================
 # FIXTURES

@@ -1,7 +1,7 @@
 import json
 import logging
 
-from app.observability.correlation import correlation_id_ctx, athlete_id_ctx
+from app.observability.correlation import athlete_id_ctx, correlation_id_ctx
 from app.observability.logging_config import JSONFormatter, configure_logging
 
 

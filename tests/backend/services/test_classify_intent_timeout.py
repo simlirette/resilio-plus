@@ -12,20 +12,16 @@ own clinical guardrails, so defaulting to it is safer than answering nothing.
 from __future__ import annotations
 
 from typing import Any
+from unittest.mock import MagicMock, patch  # noqa: E402
 
 import anthropic
 import pytest
-
-from app.services import classify_intent_service as svc
-
-
-from unittest.mock import MagicMock, patch  # noqa: E402
-
 from app.schemas.intent import (  # noqa: E402
     ConversationContextMinimal,
     IntentClassificationRequest,
     UserProfileMinimal,
 )
+from app.services import classify_intent_service as svc
 
 VALID = """<contract_payload>
 {

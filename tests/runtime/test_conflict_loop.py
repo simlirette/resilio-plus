@@ -12,9 +12,8 @@ fire on the first realistic plan.
 """
 from __future__ import annotations
 
-from langgraph.checkpoint.memory import MemorySaver
-
 from app.graphs.coaching_graph import build_coaching_graph
+from langgraph.checkpoint.memory import MemorySaver
 
 
 def _edges() -> list[tuple[str, str, bool]]:

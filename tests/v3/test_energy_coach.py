@@ -8,19 +8,15 @@ Couvre :
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
 import pytest
-
+from app.agents.energy_coach import EnergyCoach
+from app.agents.energy_coach.agent import EnergyCheckIn, EnergyInput
 from app.core.energy_availability import (
     calculate_energy_availability,
     detect_reds_risk,
     get_ea_status,
 )
-from app.agents.energy_coach import EnergyCoach
-from app.agents.energy_coach.agent import EnergyCheckIn, EnergyInput
 from app.models.athlete_state import EnergySnapshot
-
 
 # ---------------------------------------------------------------------------
 # calculate_energy_availability

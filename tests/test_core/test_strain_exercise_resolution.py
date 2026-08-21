@@ -16,7 +16,6 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-
 from app.core.strain import EXERCISE_MUSCLE_MAP, resolve_exercise
 
 UNKNOWN = EXERCISE_MUSCLE_MAP["__unknown__"]

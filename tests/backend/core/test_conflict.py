@@ -1,12 +1,10 @@
 from datetime import date
 
-import pytest
-
-from app.core.conflict import detect_conflicts, Conflict, ConflictSeverity
+from app.agents.base import AgentRecommendation
+from app.core.conflict import ConflictSeverity, detect_conflicts
 from app.schemas.athlete import Sport
 from app.schemas.fatigue import FatigueScore
 from app.schemas.plan import WorkoutSlot
-from app.agents.base import AgentRecommendation
 
 
 def _make_fatigue():

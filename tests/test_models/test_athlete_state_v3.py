@@ -5,8 +5,6 @@ Couvre : EnergySnapshot, HormonalProfile, AllostaticEntry, RecoveryVetoV3, get_a
 from datetime import date, datetime, timezone
 
 import pytest
-from pydantic import ValidationError
-
 from app.models.athlete_state import (
     AgentView,
     AllostaticComponents,
@@ -19,11 +17,10 @@ from app.models.athlete_state import (
     HormonalProfile,
     PlanSnapshot,
     RecoveryVetoV3,
-    SyncSource,
     get_agent_view,
 )
 from app.schemas.athlete import AthleteProfile, Sport
-
+from pydantic import ValidationError
 
 # ---------------------------------------------------------------------------
 # EnergySnapshot

@@ -4,9 +4,9 @@ Unit tests for M2 - Config & Secrets module.
 Tests configuration loading, validation, and repository root detection.
 """
 
+
 import pytest
 import yaml
-from pathlib import Path
 
 from resilio.core.config import ConfigError, get_repo_root, load_config
 from resilio.schemas.config import Config, ConfigErrorType

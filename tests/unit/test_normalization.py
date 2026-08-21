@@ -5,28 +5,29 @@ Tests sport type normalization, surface detection, data quality assessment,
 unit conversions, and filename generation.
 """
 
-import pytest
 from datetime import date, datetime
+
+import pytest
+
 from resilio.core.normalization import (
+    InvalidActivityError,
+    determine_data_quality,
+    determine_surface_type,
+    generate_activity_filename,
     normalize_activity,
     normalize_and_persist,
     normalize_sport_type,
-    determine_surface_type,
-    determine_data_quality,
-    generate_activity_filename,
     validate_activity,
-    InvalidActivityError,
 )
 from resilio.core.repository import RepositoryIO
 from resilio.schemas.activity import (
-    RawActivity,
-    NormalizedActivity,
     ActivitySource,
+    DataQuality,
+    NormalizedActivity,
+    RawActivity,
     SportType,
     SurfaceType,
-    DataQuality,
 )
-
 
 # ============================================================
 # TEST FIXTURES

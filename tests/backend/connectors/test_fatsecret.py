@@ -1,10 +1,10 @@
 import json
+from datetime import date
+from pathlib import Path
+
+import httpx
 import pytest
 import respx
-import httpx
-from pathlib import Path
-from datetime import date
-
 from app.connectors.fatsecret import FatSecretConnector
 from app.schemas.connector import FatSecretDay
 

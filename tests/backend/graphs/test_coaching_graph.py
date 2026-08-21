@@ -1,13 +1,10 @@
 """Integration tests for the coaching graph and CoachingService."""
 import uuid
-from datetime import date
 from unittest.mock import MagicMock, patch
-
-import pytest
-from langgraph.checkpoint.memory import MemorySaver
 
 # Pre-import via 'app.' path to avoid SQLAlchemy double-table-registration.
 import app.services.energy_cycle_service  # noqa: F401
+from langgraph.checkpoint.memory import MemorySaver
 
 from backend.app.graphs.coaching_graph import build_coaching_graph
 from backend.app.graphs.state import AthleteCoachingState

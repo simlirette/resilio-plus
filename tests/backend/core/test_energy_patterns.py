@@ -2,13 +2,11 @@
 import uuid
 from datetime import datetime, timedelta, timezone
 
-import pytest
+from app.db import models as _db_models  # noqa — registers all ORM models
+from app.db.database import Base
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-
-from app.db.database import Base
-from app.db import models as _db_models  # noqa — registers all ORM models
 
 
 def _make_engine():
@@ -83,9 +81,9 @@ def test_head_coach_messages_has_required_columns():
 # ---------------------------------------------------------------------------
 
 def test_submit_checkin_persists_legs_feeling():
-    from app.services.energy_cycle_service import EnergyCycleService
-    from app.schemas.checkin import CheckInInput
     from app.models.schemas import EnergySnapshotModel
+    from app.schemas.checkin import CheckInInput
+    from app.services.energy_cycle_service import EnergyCycleService
 
     engine = _make_engine()
     session = _make_session(engine)
@@ -106,9 +104,9 @@ def test_submit_checkin_persists_legs_feeling():
 
 
 def test_submit_checkin_persists_stress_level():
-    from app.services.energy_cycle_service import EnergyCycleService
-    from app.schemas.checkin import CheckInInput
     from app.models.schemas import EnergySnapshotModel
+    from app.schemas.checkin import CheckInInput
+    from app.services.energy_cycle_service import EnergyCycleService
 
     engine = _make_engine()
     session = _make_session(engine)
@@ -457,7 +455,6 @@ def test_detect_energy_patterns_creates_reds_message():
 
 def test_setup_scheduler_has_energy_patterns_job():
     from app.jobs.scheduler import setup_scheduler
-    from apscheduler.schedulers.background import BackgroundScheduler
 
     scheduler = setup_scheduler()
     try:

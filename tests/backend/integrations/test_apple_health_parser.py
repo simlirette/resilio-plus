@@ -1,8 +1,7 @@
 """Tests for Apple Health XML streaming parser."""
 from __future__ import annotations
 
-import io
-from datetime import date, datetime, timezone
+from datetime import date, timezone
 from pathlib import Path
 
 import pytest

@@ -2,7 +2,6 @@
 import pytest
 from pydantic import ValidationError
 
-
 # ---------------------------------------------------------------------------
 # Task 1 — Pydantic schemas
 # ---------------------------------------------------------------------------
@@ -44,8 +43,9 @@ def test_checkin_input_rejects_invalid_energy():
 
 
 def test_readiness_response_fields():
-    from app.schemas.checkin import ReadinessResponse
     from datetime import date
+
+    from app.schemas.checkin import ReadinessResponse
     r = ReadinessResponse(
         date=date.today(),
         objective_score=70.0,
@@ -64,8 +64,9 @@ def test_readiness_response_fields():
 
 
 def test_hormonal_profile_update_valid():
-    from app.schemas.checkin import HormonalProfileUpdate
     from datetime import date
+
+    from app.schemas.checkin import HormonalProfileUpdate
     h = HormonalProfileUpdate(
         enabled=True,
         cycle_length_days=28,
@@ -80,10 +81,10 @@ def test_hormonal_profile_update_valid():
 # ---------------------------------------------------------------------------
 
 def test_energy_snapshot_has_objective_score():
+    from app.db import models as _models  # noqa
+    from app.db.database import Base
     from sqlalchemy import create_engine, inspect
     from sqlalchemy.pool import StaticPool
-    from app.db.database import Base
-    from app.db import models as _models  # noqa
 
     engine = create_engine(
         "sqlite:///:memory:",
@@ -101,14 +102,14 @@ def test_energy_snapshot_has_objective_score():
 # Task 3 — EnergyCycleService unit tests
 # ---------------------------------------------------------------------------
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 import uuid
 from datetime import datetime, timezone
 
-from app.db.database import Base
 from app.db import models as _db_models  # noqa
+from app.db.database import Base
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 
 def _make_engine():
@@ -143,8 +144,8 @@ def _make_athlete(session, sex="M"):
 
 
 def test_service_submit_checkin_creates_snapshot():
-    from app.services.energy_cycle_service import EnergyCycleService
     from app.schemas.checkin import CheckInInput
+    from app.services.energy_cycle_service import EnergyCycleService
 
     engine = _make_engine()
     Session = sessionmaker(bind=engine)
@@ -168,8 +169,8 @@ def test_service_submit_checkin_creates_snapshot():
 
 
 def test_service_no_duplicate_checkin_same_day():
-    from app.services.energy_cycle_service import EnergyCycleService
     from app.schemas.checkin import CheckInInput
+    from app.services.energy_cycle_service import EnergyCycleService
     from fastapi import HTTPException
 
     engine = _make_engine()
@@ -206,8 +207,8 @@ def test_service_get_today_snapshot_returns_none_when_no_checkin():
 
 
 def test_service_get_today_snapshot_returns_snapshot_after_checkin():
-    from app.services.energy_cycle_service import EnergyCycleService
     from app.schemas.checkin import CheckInInput
+    from app.services.energy_cycle_service import EnergyCycleService
 
     engine = _make_engine()
     Session = sessionmaker(bind=engine)
@@ -228,8 +229,8 @@ def test_service_get_today_snapshot_returns_snapshot_after_checkin():
 
 
 def test_service_get_history_returns_last_n_days():
-    from app.services.energy_cycle_service import EnergyCycleService
     from app.models.schemas import EnergySnapshotModel
+    from app.services.energy_cycle_service import EnergyCycleService
 
     engine = _make_engine()
     Session = sessionmaker(bind=engine)

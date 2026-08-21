@@ -5,11 +5,9 @@ from datetime import date
 from unittest.mock import patch
 
 import pytest
-
-from app.db.models import ConnectorCredentialModel, SessionLogModel, TrainingPlanModel
-from app.db.models import AthleteModel
-from app.services.sync_service import ConnectorNotFoundError, SyncService
+from app.db.models import AthleteModel, ConnectorCredentialModel, SessionLogModel, TrainingPlanModel
 from app.schemas.connector import HevyExercise, HevySet, HevyWorkout, TerraHealthData
+from app.services.sync_service import ConnectorNotFoundError, SyncService
 
 _ATHLETE_ID = str(uuid.uuid4())
 

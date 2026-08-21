@@ -1,6 +1,7 @@
 import json
-import pytest
 from datetime import date
+
+import pytest
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import sessionmaker
 
@@ -47,8 +48,8 @@ def test_in_memory_engine_fk_enforcement():
 
 def setup_db(engine):
     """Create all tables. Call at start of each DB test."""
-    from app.db.database import Base
     from app.db import models  # noqa: F401 — registers ORM models with Base
+    from app.db.database import Base
     Base.metadata.create_all(engine)
     return sessionmaker(engine)
 
@@ -130,9 +131,10 @@ def test_athlete_json_fields_stored_as_strings():
 
 
 def test_training_plan_fk_constraint_enforced():
+    import uuid
+
     from app.db.models import TrainingPlanModel
     from sqlalchemy.exc import IntegrityError
-    import uuid
     engine = make_test_engine()
     Session = setup_db(engine)
     with Session() as session:
@@ -153,8 +155,9 @@ def test_training_plan_fk_constraint_enforced():
 
 
 def test_weekly_review_fk_to_both_athlete_and_plan():
-    from app.db.models import AthleteModel, TrainingPlanModel, WeeklyReviewModel
     import uuid
+
+    from app.db.models import AthleteModel, TrainingPlanModel, WeeklyReviewModel
     engine = make_test_engine()
     Session = setup_db(engine)
     athlete_id = str(uuid.uuid4())
@@ -188,8 +191,9 @@ def test_weekly_review_fk_to_both_athlete_and_plan():
 
 
 def test_nutrition_plan_targets_json_round_trip():
-    from app.db.models import AthleteModel, NutritionPlanModel
     import uuid
+
+    from app.db.models import AthleteModel, NutritionPlanModel
     engine = make_test_engine()
     Session = setup_db(engine)
     athlete_id = str(uuid.uuid4())
@@ -222,8 +226,9 @@ def test_connector_credentials_table_created():
 
 
 def test_connector_credential_crud_round_trip():
-    from app.db.models import AthleteModel, ConnectorCredentialModel
     import uuid
+
+    from app.db.models import AthleteModel, ConnectorCredentialModel
     engine = make_test_engine()
     Session = setup_db(engine)
     athlete_id = str(uuid.uuid4())
@@ -248,9 +253,10 @@ def test_connector_credential_crud_round_trip():
 
 
 def test_connector_credential_unique_constraint():
+    import uuid
+
     from app.db.models import AthleteModel, ConnectorCredentialModel
     from sqlalchemy.exc import IntegrityError
-    import uuid
     engine = make_test_engine()
     Session = setup_db(engine)
     athlete_id = str(uuid.uuid4())
@@ -275,9 +281,10 @@ def test_connector_credential_unique_constraint():
 
 
 def test_training_plan_created_at_auto_populated():
-    from app.db.models import AthleteModel, TrainingPlanModel
-    from datetime import datetime, timedelta, timezone
     import uuid
+    from datetime import datetime, timedelta, timezone
+
+    from app.db.models import AthleteModel, TrainingPlanModel
     engine = make_test_engine()
     Session = setup_db(engine)
     athlete_id = str(uuid.uuid4())
@@ -307,8 +314,9 @@ def test_training_plan_created_at_auto_populated():
 
 
 def test_athlete_credentials_relationship():
-    from app.db.models import AthleteModel, ConnectorCredentialModel
     import uuid
+
+    from app.db.models import AthleteModel, ConnectorCredentialModel
     engine = make_test_engine()
     Session = setup_db(engine)
     athlete_id = str(uuid.uuid4())
@@ -329,10 +337,11 @@ def test_athlete_credentials_relationship():
 
 
 def test_session_log_crud():
-    from app.db.models import AthleteModel, SessionLogModel
     import json
     import uuid
     from datetime import datetime, timezone
+
+    from app.db.models import AthleteModel, SessionLogModel
     engine = make_test_engine()
     Session = setup_db(engine)
     athlete_id = str(uuid.uuid4())
@@ -360,10 +369,10 @@ def test_session_log_crud():
 
 
 def test_session_log_athlete_relationship():
-    from app.db.models import AthleteModel, SessionLogModel
-    import json
     import uuid
     from datetime import datetime, timezone
+
+    from app.db.models import AthleteModel, SessionLogModel
     engine = make_test_engine()
     Session = setup_db(engine)
     athlete_id = str(uuid.uuid4())

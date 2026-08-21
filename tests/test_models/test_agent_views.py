@@ -1,6 +1,5 @@
 """Tests for get_agent_view() — all 8 agents, parametric matrix validation."""
 import pytest
-
 from app.models.athlete_state import AgentView, get_agent_view
 
 ALL_SECTIONS = frozenset({

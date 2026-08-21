@@ -1,10 +1,10 @@
 """Verify run_job() sets correlation ID, emits structured logs, increments metric."""
 import logging
-import pytest
 from unittest.mock import MagicMock
+
 from app.jobs.runner import run_job
-from app.observability.metrics import metrics
 from app.observability.correlation import correlation_id_ctx
+from app.observability.metrics import metrics
 
 
 def _reset_metrics():

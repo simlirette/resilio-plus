@@ -6,24 +6,23 @@ six-second rule, and environmental pace adjustments based on Daniels' methodolog
 """
 
 import pytest
+
 from resilio.core.vdot import (
-    calculate_vdot,
-    calculate_training_paces,
-    calculate_race_equivalents,
-    apply_six_second_rule,
     adjust_pace_for_altitude,
     adjust_pace_for_heat,
     adjust_pace_for_hills,
-    parse_time_string,
+    apply_six_second_rule,
+    calculate_race_equivalents,
+    calculate_training_paces,
+    calculate_vdot,
     format_time_seconds,
+    parse_time_string,
 )
 from resilio.schemas.vdot import (
-    RaceDistance,
-    PaceUnit,
-    ConditionType,
     ConfidenceLevel,
+    PaceUnit,
+    RaceDistance,
 )
-
 
 # ============================================================
 # TIME PARSING & FORMATTING TESTS
@@ -448,8 +447,9 @@ class TestVDOTEstimationRaceHistoryFallback:
 
     def _mock_repository_with_easy_run(self, monkeypatch, days_ago=5):
         """Mock RepositoryIO to return a dummy easy run (not a quality workout)."""
-        from unittest.mock import Mock
         from datetime import date, datetime, timedelta
+        from unittest.mock import Mock
+
         from resilio.schemas.activity import DataQuality, NormalizedActivity, SportType, SurfaceType
 
         activity_date = date.today() - timedelta(days=days_ago)
@@ -483,10 +483,11 @@ class TestVDOTEstimationRaceHistoryFallback:
 
     def test_fallback_recent_race_no_decay(self, tmp_path, monkeypatch):
         """Test VDOT estimation fallback with recent race (<3 months) - no decay."""
-        from resilio.api.vdot import estimate_current_vdot
-        from resilio.schemas.vdot import VDOTEstimate
         from datetime import date, timedelta
         from unittest.mock import Mock
+
+        from resilio.api.vdot import estimate_current_vdot
+        from resilio.schemas.vdot import VDOTEstimate
 
         # Setup paths
         activities_dir = tmp_path / "activities"
@@ -528,10 +529,11 @@ class TestVDOTEstimationRaceHistoryFallback:
 
     def test_fallback_moderate_age_race_3pct_decay(self, tmp_path, monkeypatch):
         """Test VDOT estimation fallback with 3-6 month old race - 3% decay."""
-        from resilio.api.vdot import estimate_current_vdot
-        from resilio.schemas.vdot import VDOTEstimate
         from datetime import date, timedelta
         from unittest.mock import Mock
+
+        from resilio.api.vdot import estimate_current_vdot
+        from resilio.schemas.vdot import VDOTEstimate
 
         # Setup paths
         activities_dir = tmp_path / "activities"
@@ -573,10 +575,11 @@ class TestVDOTEstimationRaceHistoryFallback:
 
     def test_fallback_old_race_progressive_decay(self, tmp_path, monkeypatch):
         """Test VDOT estimation fallback with 12-month old race - progressive decay."""
-        from resilio.api.vdot import estimate_current_vdot
-        from resilio.schemas.vdot import VDOTEstimate
         from datetime import date, timedelta
         from unittest.mock import Mock
+
+        from resilio.api.vdot import estimate_current_vdot
+        from resilio.schemas.vdot import VDOTEstimate
 
         # Setup paths
         activities_dir = tmp_path / "activities"
@@ -618,10 +621,11 @@ class TestVDOTEstimationRaceHistoryFallback:
 
     def test_fallback_uses_most_recent_race(self, tmp_path, monkeypatch):
         """Test that fallback uses the most recent race when multiple exist."""
-        from resilio.api.vdot import estimate_current_vdot
-        from resilio.schemas.vdot import VDOTEstimate
         from datetime import date, timedelta
         from unittest.mock import Mock
+
+        from resilio.api.vdot import estimate_current_vdot
+        from resilio.schemas.vdot import VDOTEstimate
 
         # Setup paths
         activities_dir = tmp_path / "activities"
@@ -664,8 +668,9 @@ class TestVDOTEstimationRaceHistoryFallback:
 
     def test_no_workouts_no_pbs_returns_error(self, tmp_path, monkeypatch):
         """Test that error is returned when no workouts and no PBs."""
-        from resilio.api.vdot import estimate_current_vdot, VDOTError
         from unittest.mock import Mock
+
+        from resilio.api.vdot import VDOTError, estimate_current_vdot
 
         # Setup paths
         activities_dir = tmp_path / "activities"
@@ -696,10 +701,11 @@ class TestVDOTEstimationRaceHistoryFallback:
 
     def test_fallback_clamps_vdot_to_valid_range(self, tmp_path, monkeypatch):
         """Test that fallback clamps decayed VDOT to valid 30-85 range."""
-        from resilio.api.vdot import estimate_current_vdot
-        from resilio.schemas.vdot import VDOTEstimate
         from datetime import date, timedelta
         from unittest.mock import Mock
+
+        from resilio.api.vdot import estimate_current_vdot
+        from resilio.schemas.vdot import VDOTEstimate
 
         # Setup paths
         activities_dir = tmp_path / "activities"

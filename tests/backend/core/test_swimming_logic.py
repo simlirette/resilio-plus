@@ -1,7 +1,9 @@
 from datetime import date
-import pytest
+
 from app.core.swimming_logic import (
-    estimate_css, compute_swimming_fatigue, generate_swimming_sessions,
+    compute_swimming_fatigue,
+    estimate_css,
+    generate_swimming_sessions,
 )
 from app.schemas.athlete import AthleteProfile, Sport
 from app.schemas.connector import StravaActivity

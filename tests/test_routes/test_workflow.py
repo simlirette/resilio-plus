@@ -11,10 +11,7 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 
-import pytest
-
 from tests.test_routes.conftest import authed_client  # noqa: F401
-
 
 # ---------------------------------------------------------------------------
 # Auth

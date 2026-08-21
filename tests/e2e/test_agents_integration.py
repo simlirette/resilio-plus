@@ -10,17 +10,13 @@ Profil de référence : Simon — VDOT 45, phase build, 78.5 kg, 8h/semaine
 """
 from __future__ import annotations
 
-import json
-import pathlib
 from datetime import date, timedelta
 
 import pytest
-
 from app.agents.base import AgentContext, AgentRecommendation
 from app.agents.head_coach import HeadCoach, WeeklyPlan
 from app.agents.lifting_coach import LiftingCoach
 from app.agents.nutrition_coach import NutritionCoach
-from app.agents.recovery_coach.agent import RecoveryCoachV3
 from app.agents.recovery_coach.prescriber import compute_recovery_veto_v3
 from app.agents.running_coach import RunningCoach
 from app.core.conflict import ConflictSeverity, detect_conflicts
@@ -28,7 +24,11 @@ from app.core.running_logic import get_vdot_paces
 from app.models.athlete_state import EnergySnapshot, HormonalProfile
 from app.schemas.athlete import AthleteProfile, DayType, Sport
 from app.schemas.connector import (
-    HevyExercise, HevySet, HevyWorkout, StravaActivity, TerraHealthData,
+    HevyExercise,
+    HevySet,
+    HevyWorkout,
+    StravaActivity,
+    TerraHealthData,
 )
 from app.schemas.fatigue import FatigueScore
 from app.schemas.plan import WorkoutSlot
@@ -408,7 +408,6 @@ class TestLiftingCoachSimonE2E:
 class TestRecoveryCoachV3Scenarios:
 
     def _snapshot(self, allostatic=30.0, ea=52.0) -> EnergySnapshot:
-        from datetime import timezone
         return EnergySnapshot(
             timestamp=WEEK_START.timetuple(),
             allostatic_score=allostatic,
@@ -654,7 +653,6 @@ class TestNutritionCoachE2E:
 
     def test_cycle_menstrual_supplements_in_notes(self):
         """Phase menstruelle → suppléments fer, magnésium, oméga-3 mentionnés."""
-        from app.models.athlete_state import HormonalProfile as HP
         hp = HormonalProfile(
             enabled=True,
             cycle_length_days=28,
@@ -723,8 +721,7 @@ class TestHeadCoachWorkflowE2E:
 
     def test_conflict_detection_hiit_plus_lifting_same_day(self):
         """Fractionné + lifting le même jour → conflit CRITICAL détecté."""
-        from app.agents.base import AgentRecommendation
-        from tests.backend.agents.conftest import MockAgent, make_recommendation, make_fatigue
+        from tests.backend.agents.conftest import make_recommendation
 
         # Session HIIT et lifting le même lundi
         hiit_slot = WorkoutSlot(
@@ -756,7 +753,7 @@ class TestHeadCoachWorkflowE2E:
 
     def test_conflict_resolution_drops_shorter_session(self):
         """Résolution : session la plus courte du conflit CRITICAL est supprimée."""
-        from tests.backend.agents.conftest import MockAgent, make_recommendation, make_fatigue
+        from tests.backend.agents.conftest import MockAgent, make_recommendation
 
         hiit_slot = WorkoutSlot(
             date=WEEK_START,

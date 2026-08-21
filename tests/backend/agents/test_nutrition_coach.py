@@ -1,4 +1,5 @@
 from datetime import date
+
 from app.agents.base import AgentContext, AgentRecommendation
 from app.agents.nutrition_coach import NutritionCoach
 from app.schemas.athlete import AthleteProfile, Sport

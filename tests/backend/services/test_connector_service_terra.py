@@ -1,11 +1,8 @@
 """Tests for connector_service.fetch_connector_data — Terra health data."""
 import json
 import uuid
-from datetime import date
-from unittest.mock import patch
 
 from app.db.models import AthleteModel, ConnectorCredentialModel
-from app.schemas.connector import TerraHealthData
 from app.services.connector_service import fetch_connector_data
 
 

@@ -159,9 +159,8 @@ class TestOnboardingRespond:
 
     def test_invalid_thread_raises(self):
         """Unknown thread_id raises ValueError."""
-        from app.graphs.onboarding import run_onboarding_respond
-
         import pytest
+        from app.graphs.onboarding import run_onboarding_respond
 
         with pytest.raises(ValueError, match="not found"):
             run_onboarding_respond(

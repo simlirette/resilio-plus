@@ -9,33 +9,24 @@ Tests the complete M9 workflow with realistic multi-sport activity data:
 - Generate weekly summaries with intensity distribution
 """
 
-import pytest
-import yaml
 from datetime import date, datetime, timedelta
-from pathlib import Path
 
-from resilio.core.repository import RepositoryIO
 from resilio.core.metrics import (
     compute_daily_metrics,
-    compute_weekly_summary,
     compute_metrics_batch,
-    MetricsCalculationError,
 )
+from resilio.core.repository import RepositoryIO
 from resilio.schemas.activity import (
-    NormalizedActivity,
+    DataQuality,
     LoadCalculation,
+    NormalizedActivity,
     SessionType,
     SportType,
     SurfaceType,
-    DataQuality,
 )
 from resilio.schemas.metrics import (
     DailyMetrics,
-    WeeklySummary,
-    TSBZone,
-    ACWRZone,
     ReadinessLevel,
-    ConfidenceLevel,
 )
 
 

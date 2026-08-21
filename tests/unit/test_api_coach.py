@@ -6,23 +6,23 @@ Unit tests for Coach API
 Tests get_todays_workout(), get_weekly_status(), and get_training_status().
 """
 
-import pytest
 from datetime import date, timedelta
 from unittest.mock import Mock, patch
 
+import pytest
+
 from resilio.api.coach import (
-    get_todays_workout,
-    get_weekly_status,
-    get_training_status,
     CoachError,
     WeeklyStatus,
+    get_todays_workout,
+    get_training_status,
+    get_weekly_status,
 )
-from resilio.schemas.enrichment import EnrichedWorkout, EnrichedMetrics
+from resilio.schemas.enrichment import EnrichedMetrics, EnrichedWorkout
 from resilio.schemas.metrics import DailyMetrics
-from resilio.schemas.profile import AthleteProfile
 from resilio.schemas.plan import WorkoutPrescription
+from resilio.schemas.profile import AthleteProfile
 from resilio.schemas.repository import RepoError, RepoErrorType
-
 
 # ============================================================
 # FIXTURES
@@ -233,7 +233,6 @@ class TestGetTodaysWorkout:
         mock_repo.read_yaml.side_effect = [mock_daily_metrics, mock_profile]
 
         # Mock enrichment
-        from resilio.api.coach import enrich_workout
         with patch("resilio.api.coach.enrich_workout") as mock_enrich:
             mock_enrich.return_value = Mock()
 
@@ -439,8 +438,8 @@ class TestFindLatestMetricsDate:
 
     def test_find_latest_metrics_date_today(self, tmp_path):
         """Test finding metrics for today."""
-        from resilio.core.repository import RepositoryIO
         from resilio.api.coach import _find_latest_metrics_date
+        from resilio.core.repository import RepositoryIO
 
         repo = RepositoryIO()
         repo.repo_root = tmp_path
@@ -458,8 +457,8 @@ class TestFindLatestMetricsDate:
 
     def test_find_latest_metrics_date_none(self, tmp_path):
         """Test finding metrics when none exist."""
-        from resilio.core.repository import RepositoryIO
         from resilio.api.coach import _find_latest_metrics_date
+        from resilio.core.repository import RepositoryIO
 
         repo = RepositoryIO()
         repo.repo_root = tmp_path

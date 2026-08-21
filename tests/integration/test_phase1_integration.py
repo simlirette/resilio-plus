@@ -4,22 +4,26 @@ Integration tests for Phase 1: Core Infrastructure.
 Tests the complete workflow: Config → Repository → Profile
 """
 
-import pytest
 import yaml
-from pathlib import Path
 
-from resilio.core.config import load_config, ConfigError
-from resilio.core.repository import RepositoryIO, RepoError
-from resilio.core.profile import ProfileService, ProfileError, validate_constraints, calculate_vdot, RaceDistance
+from resilio.core.config import ConfigError, load_config
+from resilio.core.profile import (
+    ProfileError,
+    ProfileService,
+    RaceDistance,
+    calculate_vdot,
+    validate_constraints,
+)
+from resilio.core.repository import RepoError, RepositoryIO
 from resilio.schemas.profile import (
     AthleteProfile,
+    ConflictPolicy,
     Goal,
     GoalType,
+    RunningPriority,
+    StravaConnection,
     TrainingConstraints,
     Weekday,
-    RunningPriority,
-    ConflictPolicy,
-    StravaConnection,
 )
 
 

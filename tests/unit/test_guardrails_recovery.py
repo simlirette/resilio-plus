@@ -8,7 +8,6 @@ Tests recovery protocols based on Daniels' Table 9.2 and Pfitzinger's guidelines
 - Illness recovery planning
 """
 
-import pytest
 from resilio.core.guardrails.recovery import (
     calculate_break_return_plan,
     calculate_masters_recovery,
@@ -16,7 +15,6 @@ from resilio.core.guardrails.recovery import (
     generate_illness_recovery_plan,
 )
 from resilio.schemas.guardrails import IllnessSeverity
-
 
 # ============================================================
 # BREAK RETURN PLAN TESTS

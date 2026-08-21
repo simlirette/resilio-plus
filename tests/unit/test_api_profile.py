@@ -4,35 +4,35 @@ Unit tests for Profile API (api/profile.py).
 Tests get_profile(), update_profile(), and set_goal().
 """
 
-import pytest
 from datetime import date, timedelta
 from unittest.mock import Mock, patch
 
+import pytest
+
 from resilio.api.profile import (
+    ProfileError,
+    add_sport_to_profile,
     create_profile,
     get_profile,
-    update_profile,
-    set_goal,
-    add_sport_to_profile,
-    remove_sport_from_profile,
     pause_sport_in_profile,
+    remove_sport_from_profile,
     resume_sport_in_profile,
-    ProfileError,
+    set_goal,
+    update_profile,
 )
 from resilio.schemas.profile import (
     AthleteProfile,
+    ConflictPolicy,
     Goal,
     GoalType,
-    Weekday,
-    TrainingConstraints,
-    RunningPriority,
-    ConflictPolicy,
     OtherSport,
     PauseReason,
+    RunningPriority,
+    TrainingConstraints,
     WeatherPreferences,
+    Weekday,
 )
 from resilio.schemas.repository import RepoError, RepoErrorType
-
 
 # ============================================================
 # FIXTURES
@@ -538,7 +538,6 @@ class TestPR2ConstraintFields:
     @patch("resilio.api.profile.RepositoryIO")
     def test_create_profile_constraint_defaults(self, mock_repo_cls, mock_log):
         """Test that constraint fields use sensible defaults when not provided."""
-        from resilio.schemas.profile import Weekday
 
         mock_repo = Mock()
         mock_repo_cls.return_value = mock_repo

@@ -14,7 +14,6 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta, timezone
 
 import pytest
-
 from app.core.head_coach_view_builder import build_head_coach_view
 from app.db.models import AthleteModel, StravaActivityModel
 

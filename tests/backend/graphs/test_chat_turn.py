@@ -1,11 +1,7 @@
 """D4 TDD — chat_turn graph (HEAD_COACH_DIRECT + SPECIALIST_TECHNICAL single + handle_session_log)."""
 from __future__ import annotations
 
-import uuid
 from unittest.mock import MagicMock, patch
-
-import pytest
-
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 

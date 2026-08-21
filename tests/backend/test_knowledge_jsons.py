@@ -1,8 +1,9 @@
 """Validation tests for all 9 knowledge JSON files in docs/knowledge/."""
 import json
-import pytest
-import jsonschema
 from pathlib import Path
+
+import jsonschema
+import pytest
 
 REPO_ROOT = Path(__file__).parent.parent.parent
 KNOWLEDGE_DIR = REPO_ROOT / "docs" / "knowledge"

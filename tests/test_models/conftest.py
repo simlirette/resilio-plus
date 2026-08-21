@@ -2,7 +2,6 @@
 from datetime import date, datetime, timezone
 
 import pytest
-
 from app.models.athlete_state import (
     AllostaticComponents,
     AllostaticEntry,

@@ -1,14 +1,8 @@
-import json
 import uuid
-from datetime import date, datetime, timezone
+from datetime import date
 from unittest.mock import patch
 
-import pytest
-from fastapi.testclient import TestClient
-
-from app.db.models import AthleteModel, ConnectorCredentialModel, SessionLogModel, TrainingPlanModel
-from app.schemas.connector import HevyWorkout, HevyExercise, HevySet
-
+from app.schemas.connector import HevyExercise, HevySet, HevyWorkout
 
 _TODAY = date.today().isoformat()
 
@@ -75,8 +69,9 @@ def test_terra_sync_with_mock(authed_client):
         json={"terra_user_id": "terra-user-abc"},
     )
 
-    from app.schemas.connector import TerraHealthData
     from datetime import date as _date
+
+    from app.schemas.connector import TerraHealthData
     mock_data = TerraHealthData(
         date=_date.today(),
         hrv_rmssd=55.0,

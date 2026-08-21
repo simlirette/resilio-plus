@@ -7,9 +7,7 @@ Couvre :
 from __future__ import annotations
 
 import pytest
-
 from app.core.allostatic import calculate_allostatic_score, intensity_cap_from_score
-
 
 # ---------------------------------------------------------------------------
 # Helpers

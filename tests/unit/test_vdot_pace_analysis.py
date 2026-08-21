@@ -4,16 +4,15 @@ Unit tests for VDOT pace analysis module - HR-based easy pace detection and VDOT
 Tests quality workout detection, HR-based easy pace classification, and VDOT inference.
 """
 
-import pytest
 from datetime import date, datetime, timedelta
 
 from resilio.core.vdot.pace_analysis import (
+    analyze_recent_paces,
     calculate_easy_hr_range,
+    find_vdot_from_easy_pace,
+    find_vdot_from_pace,
     is_easy_effort_by_hr,
     is_quality_workout,
-    find_vdot_from_pace,
-    find_vdot_from_easy_pace,
-    analyze_recent_paces,
 )
 from resilio.schemas.activity import NormalizedActivity
 
@@ -27,7 +26,7 @@ def create_run(
     is_treadmill: bool = False
 ) -> NormalizedActivity:
     """Helper to create a run activity with specific properties."""
-    from resilio.schemas.activity import SportType, SurfaceType, DataQuality
+    from resilio.schemas.activity import DataQuality, SportType, SurfaceType
 
     duration_minutes = int(duration_seconds / 60)
     sport_type = SportType.TREADMILL_RUN if is_treadmill else SportType.RUN

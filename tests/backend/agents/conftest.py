@@ -1,15 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 from datetime import date
 
 import pytest
-
 from app.agents.base import AgentContext, AgentRecommendation, BaseAgent
 from app.schemas.athlete import AthleteProfile, Sport
 from app.schemas.fatigue import FatigueScore
-from app.schemas.plan import WorkoutSlot
-from app.schemas.connector import StravaActivity, HevyWorkout, TerraHealthData, FatSecretDay
 
 
 def make_fatigue(local=10.0, cns=10.0, metabolic=10.0, recovery=8.0, muscles=None):

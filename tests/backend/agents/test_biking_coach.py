@@ -1,5 +1,5 @@
 from datetime import date
-import pytest
+
 from app.agents.base import AgentContext, AgentRecommendation
 from app.agents.biking_coach import BikingCoach
 from app.schemas.athlete import AthleteProfile, Sport

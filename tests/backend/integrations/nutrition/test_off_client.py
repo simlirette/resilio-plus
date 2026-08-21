@@ -1,7 +1,7 @@
+import httpx
 import pytest
 import respx
-import httpx
-from app.integrations.nutrition.off_client import search, fetch
+from app.integrations.nutrition.off_client import fetch, search
 
 _OFF_SEARCH = "https://world.openfoodfacts.org/cgi/search.pl"
 

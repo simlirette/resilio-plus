@@ -9,7 +9,6 @@ import os
 
 import pytest
 
-
 _TEST_DB_URL = os.environ.get(
     "TEST_DATABASE_URL",
     "postgresql+psycopg2://resilio:resilio@localhost:5433/resilio_test",
@@ -23,8 +22,9 @@ def test_engine():
     """Create test DB engine and apply migrations once for this module."""
     pytest.importorskip("psycopg2", reason="psycopg2 not available")
     from sqlalchemy import create_engine
-    from alembic.config import Config
+
     from alembic import command as alembic_cmd
+    from alembic.config import Config
 
     engine = create_engine(_TEST_DB_URL)
     try:
@@ -66,9 +66,10 @@ def db_session(test_engine):
 
 
 def test_test_fixture_inserts_expected_rows(db_session):
-    from scripts.seed_data.test_fixture import insert_test_fixture, TEST_ATHLETE_ID
-    from app.db.models import AthleteModel, UserModel, TrainingPlanModel, SessionLogModel
-    from app.models.schemas import EnergySnapshotModel, AllostaticEntryModel
+    from app.db.models import AthleteModel, SessionLogModel, TrainingPlanModel, UserModel
+    from app.models.schemas import AllostaticEntryModel, EnergySnapshotModel
+
+    from scripts.seed_data.test_fixture import TEST_ATHLETE_ID, insert_test_fixture
 
     insert_test_fixture(db_session)
     db_session.flush()
@@ -82,8 +83,9 @@ def test_test_fixture_inserts_expected_rows(db_session):
 
 
 def test_test_fixture_is_idempotent(db_session):
-    from scripts.seed_data.test_fixture import insert_test_fixture, TEST_ATHLETE_ID
     from app.db.models import AthleteModel
+
+    from scripts.seed_data.test_fixture import TEST_ATHLETE_ID, insert_test_fixture
 
     insert_test_fixture(db_session)
     insert_test_fixture(db_session)  # second call — must not raise or duplicate
@@ -94,15 +96,22 @@ def test_test_fixture_is_idempotent(db_session):
 
 
 def test_alice_inserts_expected_rows(db_session):
-    from scripts.seed_data.alice import insert_alice, ALICE_ID
     from app.db.models import (
-        AthleteModel, UserModel, TrainingPlanModel,
-        SessionLogModel, WeeklyReviewModel, NutritionPlanModel,
+        AthleteModel,
+        NutritionPlanModel,
+        SessionLogModel,
+        TrainingPlanModel,
+        UserModel,
+        WeeklyReviewModel,
     )
     from app.models.schemas import (
-        AllostaticEntryModel, EnergySnapshotModel,
-        HormonalProfileModel, HeadCoachMessageModel,
+        AllostaticEntryModel,
+        EnergySnapshotModel,
+        HeadCoachMessageModel,
+        HormonalProfileModel,
     )
+
+    from scripts.seed_data.alice import ALICE_ID, insert_alice
 
     insert_alice(db_session)
     db_session.flush()
@@ -120,8 +129,9 @@ def test_alice_inserts_expected_rows(db_session):
 
 
 def test_alice_is_idempotent(db_session):
-    from scripts.seed_data.alice import insert_alice, ALICE_ID
     from app.db.models import AthleteModel
+
+    from scripts.seed_data.alice import ALICE_ID, insert_alice
 
     insert_alice(db_session)
     insert_alice(db_session)
@@ -130,12 +140,17 @@ def test_alice_is_idempotent(db_session):
 
 
 def test_marc_inserts_expected_rows(db_session):
-    from scripts.seed_data.marc import insert_marc, MARC_ID
     from app.db.models import (
-        AthleteModel, UserModel, TrainingPlanModel,
-        SessionLogModel, WeeklyReviewModel, ConnectorCredentialModel,
+        AthleteModel,
+        ConnectorCredentialModel,
+        SessionLogModel,
+        TrainingPlanModel,
+        UserModel,
+        WeeklyReviewModel,
     )
     from app.models.schemas import AllostaticEntryModel, EnergySnapshotModel
+
+    from scripts.seed_data.marc import MARC_ID, insert_marc
 
     insert_marc(db_session)
     db_session.flush()
@@ -151,8 +166,9 @@ def test_marc_inserts_expected_rows(db_session):
 
 
 def test_marc_is_idempotent(db_session):
-    from scripts.seed_data.marc import insert_marc, MARC_ID
     from app.db.models import AthleteModel
+
+    from scripts.seed_data.marc import MARC_ID, insert_marc
 
     insert_marc(db_session)
     insert_marc(db_session)
@@ -162,9 +178,10 @@ def test_marc_is_idempotent(db_session):
 
 def test_seed_dev_inserts_both_athletes(db_session):
     """seed_dev inserts Alice and Marc without errors."""
-    from scripts.seed_data.alice import insert_alice, ALICE_ID
-    from scripts.seed_data.marc import insert_marc, MARC_ID
     from app.db.models import AthleteModel
+
+    from scripts.seed_data.alice import ALICE_ID, insert_alice
+    from scripts.seed_data.marc import MARC_ID, insert_marc
 
     insert_alice(db_session)
     insert_marc(db_session)

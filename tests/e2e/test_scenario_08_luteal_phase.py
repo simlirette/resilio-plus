@@ -21,13 +21,13 @@ import random
 from datetime import date, timedelta
 
 import pytest
-
+from app.agents.base import AgentContext
 from app.agents.head_coach import HeadCoach, WeeklyPlan
 from app.agents.lifting_coach import LiftingCoach
 from app.agents.nutrition_coach import NutritionCoach
 from app.agents.running_coach import RunningCoach
-from app.agents.base import AgentContext
-from tests.fixtures.athlete_states import layla_luteal_context, STABLE_LOAD
+
+from tests.fixtures.athlete_states import STABLE_LOAD, layla_luteal_context
 
 # NOTE: This scenario uses HeadCoach.build_week() directly and does NOT instantiate
 # CoachingService. If refactored to use CoachingService, pass an explicit

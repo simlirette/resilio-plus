@@ -1,11 +1,9 @@
 """Tests for the mode system: coaching_mode field, ExternalPlan models."""
 import pytest
+from app.db.database import Base
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-
-from app.db.database import Base
-from app.db import models as _models  # noqa: registers all ORM classes
 
 
 def _engine():
@@ -48,8 +46,9 @@ def test_external_sessions_table_exists():
 
 def test_athlete_coaching_mode_defaults_to_full():
     """Verify coaching_mode defaults to 'full' when not specified."""
-    from app.db.models import AthleteModel
     import uuid
+
+    from app.db.models import AthleteModel
 
     engine = _engine()
     Base.metadata.create_all(engine)
@@ -80,9 +79,10 @@ def test_athlete_coaching_mode_defaults_to_full():
 
 def test_training_plan_status_defaults_to_active():
     """Verify status defaults to 'active' when not specified."""
-    from app.db.models import AthleteModel, TrainingPlanModel
     import uuid
     from datetime import date
+
+    from app.db.models import AthleteModel, TrainingPlanModel
 
     engine = _engine()
     Base.metadata.create_all(engine)
@@ -126,10 +126,11 @@ def test_training_plan_status_defaults_to_active():
 
 def test_external_plan_cascade_deletes_sessions():
     """Verify deleting an ExternalPlan cascades to its ExternalSessions."""
-    from app.models.schemas import ExternalPlanModel, ExternalSessionModel
-    from app.db.models import AthleteModel
     import uuid
     from datetime import date
+
+    from app.db.models import AthleteModel
+    from app.models.schemas import ExternalPlanModel, ExternalSessionModel
 
     engine = _engine()
     Base.metadata.create_all(engine)
@@ -182,7 +183,7 @@ def test_external_plan_cascade_deletes_sessions():
 
 
 # Schema tests for coaching_mode
-from app.schemas.athlete import AthleteCreate, AthleteProfile, AthleteUpdate
+from app.schemas.athlete import AthleteCreate
 
 
 def test_athlete_create_has_coaching_mode_default():
@@ -221,8 +222,8 @@ def test_athlete_create_accepts_tracking_only():
 
 
 def test_athlete_create_rejects_invalid_mode():
-    from pydantic import ValidationError
     import pytest
+    from pydantic import ValidationError
     payload = {
         "name": "Dan",
         "age": 40,
@@ -241,12 +242,12 @@ def test_athlete_create_rejects_invalid_mode():
 
 
 # ModeGuard dependency tests
-import pytest
 from unittest.mock import MagicMock
-from fastapi import HTTPException
 
-from app.dependencies.mode_guard import require_full_mode, require_tracking_mode
+import pytest
 from app.db.models import AthleteModel
+from app.dependencies.mode_guard import require_full_mode, require_tracking_mode
+from fastapi import HTTPException
 
 
 def _make_athlete(coaching_mode: str, athlete_id: str = "abc") -> AthleteModel:

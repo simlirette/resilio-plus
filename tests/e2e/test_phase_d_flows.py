@@ -210,11 +210,11 @@ class TestOnboardingCompleteFlow:
     def test_onboarding_injury_mid_flow_suspend_and_resume(self):
         """Flow 5: injury during bloc 3 → suspend → recovery → resume bloc 3."""
         from app.graphs.onboarding import (
+            _thread_states,
+            resume_onboarding_after_recovery,
             run_onboarding_respond,
             run_onboarding_start,
             suspend_onboarding_for_injury,
-            resume_onboarding_after_recovery,
-            _thread_states,
         )
 
         athlete = _make_athlete(journey_phase="onboarding")

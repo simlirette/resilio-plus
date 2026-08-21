@@ -5,17 +5,16 @@ Tests load calculation using two-channel model, sport multipliers,
 multiplier adjustments, and session type classification.
 """
 
-import pytest
 from datetime import date, datetime
+
+import pytest
+
 from resilio.core.load import (
-    compute_load,
-    calculate_base_effort,
-    get_multipliers,
-    adjust_multipliers,
+    InvalidLoadInputError,
     classify_session_type,
+    compute_load,
     compute_loads_batch,
     validate_load,
-    InvalidLoadInputError,
 )
 from resilio.core.repository import RepositoryIO
 from resilio.schemas.activity import (
@@ -24,7 +23,6 @@ from resilio.schemas.activity import (
     SportType,
     SurfaceType,
 )
-
 
 # ============================================================
 # TEST FIXTURES

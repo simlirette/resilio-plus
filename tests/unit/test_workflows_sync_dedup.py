@@ -3,12 +3,13 @@ Unit tests for workflow deduplication behavior in Strava sync.
 """
 
 from datetime import date, datetime, timedelta, timezone
+
 import pytest
 
-from resilio.core.repository import RepositoryIO
 from resilio.core import workflows
+from resilio.core.repository import RepositoryIO
 from resilio.schemas.activity import NormalizedActivity, SportType
-from resilio.schemas.config import Config, Settings, Secrets, StravaSecrets
+from resilio.schemas.config import Config, Secrets, Settings, StravaSecrets
 from resilio.schemas.sync import SyncPhase
 
 

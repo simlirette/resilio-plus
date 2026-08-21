@@ -145,9 +145,8 @@ class TestFollowupTransitionAdjustment:
 
     def test_invalid_thread_raises(self):
         """Unknown thread_id raises ValueError."""
-        from app.graphs.followup_transition import run_followup_respond
-
         import pytest
+        from app.graphs.followup_transition import run_followup_respond
 
         with pytest.raises(ValueError, match="not found"):
             run_followup_respond(

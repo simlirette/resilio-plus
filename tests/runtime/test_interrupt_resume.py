@@ -2,8 +2,6 @@
 """Tests for graph interrupt at present_to_athlete and resume via approve/reject."""
 from __future__ import annotations
 
-import pytest
-
 from tests.runtime.conftest import SIMON_PROFILE, STABLE_LOAD
 
 

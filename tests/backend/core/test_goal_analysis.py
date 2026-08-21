@@ -1,5 +1,5 @@
 from datetime import date, timedelta
-import pytest
+
 from app.core.goal_analysis import analyze_goals
 from app.schemas.athlete import AthleteProfile, Sport
 

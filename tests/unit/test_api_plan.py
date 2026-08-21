@@ -6,32 +6,30 @@ accept_suggestion(), and decline_suggestion().
 """
 
 import json
-import pytest
 from datetime import date, timedelta
-from unittest.mock import Mock, patch
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
+
+import pytest
 
 from resilio.api.plan import (
-    get_current_plan,
-    export_plan_structure,
+    PlanError,
+    PlanWeeksResult,
+    accept_suggestion,
     build_macro_template,
     create_macro_plan,
-    regenerate_plan,
-    get_plan_weeks,
-    get_pending_suggestions,
-    accept_suggestion,
     decline_suggestion,
+    export_plan_structure,
+    get_current_plan,
+    get_pending_suggestions,
+    get_plan_weeks,
+    regenerate_plan,
     validate_week_plan,
-    PlanError,
-    AcceptResult,
-    DeclineResult,
-    PlanWeeksResult,
 )
 from resilio.schemas.plan import MasterPlan
-from resilio.schemas.profile import Goal, GoalType, AthleteProfile
+from resilio.schemas.profile import AthleteProfile, Goal, GoalType
 from resilio.schemas.repository import RepoError, RepoErrorType
-from types import SimpleNamespace
-
 
 # ============================================================
 # FIXTURES

@@ -1,5 +1,5 @@
-from app.connectors.apple_health import AppleHealthConnector, AppleHealthData
 import pytest
+from app.connectors.apple_health import AppleHealthConnector, AppleHealthData
 
 
 def test_parse_full_payload():

@@ -4,14 +4,12 @@ from __future__ import annotations
 import uuid
 
 import pytest
+from app.db.database import Base
+from app.db.models import AthleteModel
+from app.services.coordinator_service import CoordinatorService
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-
-from app.db.database import Base
-from app.db import models as _models  # noqa: registers all ORM models
-from app.db.models import AthleteModel
-from app.services.coordinator_service import CoordinatorService
 
 
 @pytest.fixture()

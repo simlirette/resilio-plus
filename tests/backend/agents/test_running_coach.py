@@ -1,9 +1,9 @@
 from datetime import date, timedelta
-import pytest
+
 from app.agents.base import AgentContext, AgentRecommendation
 from app.agents.running_coach import RunningCoach
 from app.schemas.athlete import AthleteProfile, Sport
-from app.schemas.connector import StravaActivity, TerraHealthData
+from app.schemas.connector import TerraHealthData
 from app.schemas.plan import WorkoutSlot
 
 

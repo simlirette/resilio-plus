@@ -5,32 +5,31 @@ Tests error handling, input validation, and successful execution for all 8
 analysis functions (4 weekly + 4 risk).
 """
 
-import pytest
 from datetime import date, timedelta
 
+import pytest
+
 from resilio.api.analysis import (
-    api_validate_intensity_distribution,
-    api_detect_activity_gaps,
+    AnalysisError,
     api_analyze_load_distribution_by_sport,
-    api_check_weekly_capacity,
     api_assess_current_risk,
+    api_assess_taper_status,
+    api_check_weekly_capacity,
+    api_detect_activity_gaps,
     api_estimate_recovery_window,
     api_forecast_training_stress,
-    api_assess_taper_status,
-    AnalysisError,
+    api_validate_intensity_distribution,
 )
-
 from resilio.schemas.analysis import (
-    IntensityDistributionAnalysis,
     ActivityGapAnalysis,
-    LoadDistributionAnalysis,
-    WeeklyCapacityCheck,
     CurrentRiskAssessment,
+    IntensityDistributionAnalysis,
+    LoadDistributionAnalysis,
     RecoveryWindowEstimate,
-    TrainingStressForecast,
     TaperStatusAssessment,
+    TrainingStressForecast,
+    WeeklyCapacityCheck,
 )
-
 
 # ============================================================
 # TEST DATA FIXTURES

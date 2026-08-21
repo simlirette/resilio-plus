@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import pytest
-from langgraph.checkpoint.memory import MemorySaver
-
 from app.graphs.coaching_graph import build_coaching_graph
+from langgraph.checkpoint.memory import MemorySaver
 
 
 def test_build_coaching_graph_requires_checkpointer():
@@ -48,8 +47,8 @@ def test_graph_no_interrupt_when_false():
 
 def test_debug_endpoint_schema():
     """The debug state endpoint response schema has required keys."""
-    from langgraph.checkpoint.memory import MemorySaver
     from app.services.coaching_service import CoachingService
+    from langgraph.checkpoint.memory import MemorySaver
 
     svc = CoachingService(checkpointer=MemorySaver())
     config = {"configurable": {"thread_id": "nonexistent:123"}}

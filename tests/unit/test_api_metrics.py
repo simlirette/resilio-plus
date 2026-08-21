@@ -6,27 +6,27 @@ Unit tests for Metrics API
 Tests get_current_metrics(), get_readiness(), and get_intensity_distribution().
 """
 
-import pytest
 from datetime import date, timedelta
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
+
+import pytest
 
 from resilio.api.metrics import (
-    get_current_metrics,
-    get_readiness,
-    get_intensity_distribution,
     MetricsError,
     _find_latest_metrics_date,
-)
-from resilio.schemas.metrics import (
-    DailyMetrics,
-    ReadinessScore,
-    ReadinessLevel,
-    IntensityDistribution,
-    CTLATLMetrics,
+    get_current_metrics,
+    get_intensity_distribution,
+    get_readiness,
 )
 from resilio.schemas.enrichment import EnrichedMetrics, MetricInterpretation
+from resilio.schemas.metrics import (
+    CTLATLMetrics,
+    DailyMetrics,
+    IntensityDistribution,
+    ReadinessLevel,
+    ReadinessScore,
+)
 from resilio.schemas.repository import RepoError, RepoErrorType
-
 
 # ============================================================
 # FIXTURES

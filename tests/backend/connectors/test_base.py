@@ -1,16 +1,16 @@
 import time
+
+import httpx
 import pytest
 import respx
-import httpx
-from tenacity import wait_none
-
-from app.schemas.connector import ConnectorCredential
 from app.connectors.base import (
     BaseConnector,
     ConnectorAPIError,
     ConnectorAuthError,
     ConnectorRateLimitError,
 )
+from app.schemas.connector import ConnectorCredential
+from tenacity import wait_none
 
 
 class FakeConnector(BaseConnector):

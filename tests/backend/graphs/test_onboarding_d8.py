@@ -156,8 +156,10 @@ class TestOnboardingBlocs4to6:
 class TestInjuryMidOnboarding:
     def test_suspend_onboarding_bloc_on_injury(self):
         """Injury during bloc 3 stores suspended_onboarding_block=3."""
-        from app.graphs.onboarding import run_onboarding_respond, run_onboarding_start
-        from app.graphs.onboarding import suspend_onboarding_for_injury
+        from app.graphs.onboarding import (
+            run_onboarding_start,
+            suspend_onboarding_for_injury,
+        )
 
         athlete = _make_athlete()
         db = _make_db(athlete)
@@ -176,7 +178,6 @@ class TestInjuryMidOnboarding:
 
     def test_resume_after_recovery_returns_to_suspended_block(self):
         """Post-takeover with previous_phase=onboarding → resumes suspended block."""
-        from app.graphs.onboarding import run_onboarding_respond, run_onboarding_start
         from app.graphs.onboarding import resume_onboarding_after_recovery
 
         athlete = _make_athlete()
@@ -185,7 +186,7 @@ class TestInjuryMidOnboarding:
         db = _make_db(athlete)
 
         # Pre-populate thread state at block 3
-        from app.graphs.onboarding import _thread_states, _OnboardingThread
+        from app.graphs.onboarding import _OnboardingThread, _thread_states
         thread_id = "a1:onboarding:test-resume"
         _thread_states[thread_id] = _OnboardingThread(
             thread_id=thread_id,

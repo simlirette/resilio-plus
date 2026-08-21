@@ -14,10 +14,9 @@ Référence : docs/resilio-v3-master.md — section 2.2
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Optional
 
 import pytest
-
+from app.agents.recovery_coach.agent import RecoveryCoachV3
 from app.agents.recovery_coach.prescriber import (
     classify_acwr,
     classify_allostatic,
@@ -26,13 +25,11 @@ from app.agents.recovery_coach.prescriber import (
     classify_hrv,
     compute_recovery_veto_v3,
 )
-from app.agents.recovery_coach.agent import RecoveryCoachV3
 from app.models.athlete_state import (
     EnergySnapshot,
     HormonalProfile,
     RecoveryVetoV3,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers

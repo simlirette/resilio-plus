@@ -1,23 +1,21 @@
 """Unit and integration tests for the weekly review graph and WeeklyReviewState."""
 import uuid
 from datetime import date, timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import pytest
+import app.db.models  # noqa: F401 — registers all ORM models (EnergySnapshotModel etc.)
 
 # Pre-import via 'app.' path to avoid SQLAlchemy double-table-registration.
 import app.services.energy_cycle_service  # noqa: F401
-import app.db.models  # noqa: F401 — registers all ORM models (EnergySnapshotModel etc.)
 
 from backend.app.graphs.weekly_review_graph import (
     WeeklyReviewState,
-    build_weekly_review_graph,
     analyze_actual_vs_planned,
+    apply_adjustments,
+    build_weekly_review_graph,
     compute_new_acwr,
     update_athlete_state,
-    apply_adjustments,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers

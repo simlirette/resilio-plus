@@ -1,6 +1,6 @@
 from datetime import date, timedelta
-import pytest
-from app.core.recovery_logic import compute_recovery_status, RecoveryStatus
+
+from app.core.recovery_logic import RecoveryStatus, compute_recovery_status
 from app.schemas.connector import TerraHealthData
 
 

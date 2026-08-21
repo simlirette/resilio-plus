@@ -5,8 +5,6 @@ import uuid
 from typing import Any
 
 import pytest
-from sqlalchemy.orm import Session
-
 from app.db.models import AthleteModel, DeepLinkTokenModel, MessagingIdentityModel
 from app.messaging.approval_service import ApprovalService
 from app.messaging.approvals import parse_callback
@@ -14,6 +12,7 @@ from app.messaging.base import Button
 from app.messaging.commands import CommandRouter
 from app.messaging.gateway import MessagingGateway
 from app.services.graph_invoker import build_live_coordinator
+from sqlalchemy.orm import Session
 
 EXTERNAL_ID = "31337"
 
@@ -136,47 +135,36 @@ def onboarding_athlete(db_session: Session) -> str:
 def scripted_onboarding(
     db_session: Session, monkeypatch: pytest.MonkeyPatch
 ) -> dict[str, int]:
-    """Emulate the onboarding graph's block walk without calling an LLM."""
+    """Emulate the coach's turns without calling an LLM.
+
+    Rewritten 2026-08-21. This used to script the six-block walk; there are no
+    blocks. The coach answers each message through the agentic loop and decides
+    for itself when the profile can support a plan, so the fake counts turns and
+    flips the phase where the real loop would call `generate_plan`.
+    """
     state = {"block": 0}
 
-    def start(athlete_id: str, db: Session) -> dict[str, Any]:
-        state["block"] = 1
-        athlete = db.get(AthleteModel, athlete_id)
-        assert athlete is not None
-        athlete.active_onboarding_thread_id = f"{athlete_id}:onboarding:scripted"
-        db.commit()
-        return {
-            "thread_id": athlete.active_onboarding_thread_id,
-            "current_block": 1,
-            "question": _BLOCK_QUESTIONS[1],
-            "status": "in_progress",
-        }
+    class FakeTurn:
+        def __init__(self, reply: str) -> None:
+            self.reply = reply
+            self.ok = True
+            self.tools_used: list[str] = []
 
-    def respond(thread_id: str, message: str, db: Session) -> dict[str, Any]:
-        if state["block"] == 0:
-            raise ValueError("no live thread")
+    def turn(*, athlete_id: str, user_message: str, db: Session) -> FakeTurn:
         state["block"] += 1
-        athlete_id = thread_id.split(":")[0]
         if state["block"] > 6:
             athlete = db.get(AthleteModel, athlete_id)
             assert athlete is not None
             athlete.journey_phase = "baseline_pending_confirmation"
             db.commit()
-            return {
-                "thread_id": thread_id,
-                "current_block": state["block"],
-                "question": None,
-                "status": "completed",
-            }
-        return {
-            "thread_id": thread_id,
-            "current_block": state["block"],
-            "question": _BLOCK_QUESTIONS[state["block"]],
-            "status": "in_progress",
-        }
+            result = FakeTurn("Profil complet — voici ta semaine.")
+            # Where the real loop would call the tool, which is what chains the
+            # approval buttons.
+            result.tools_used = ["generate_plan"]
+            return result
+        return FakeTurn(_BLOCK_QUESTIONS[min(state["block"], 6)])
 
-    monkeypatch.setattr("app.graphs.onboarding.run_onboarding_start", start)
-    monkeypatch.setattr("app.graphs.onboarding.run_onboarding_respond", respond)
+    monkeypatch.setattr("app.services.graph_invoker.run_coach_turn", turn)
     return state
 
 

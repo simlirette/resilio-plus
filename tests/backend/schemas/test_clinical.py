@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import pytest
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 
 class _Wrapper(BaseModel):

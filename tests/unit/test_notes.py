@@ -10,37 +10,35 @@ Qualitative functions (injury/illness extraction, RPE conflict resolution)
 are handled by Claude Code and are not tested here.
 """
 
-import pytest
 from datetime import date, datetime, timezone
+
+import pytest
+
 from resilio.core.notes import (
     analyze_activity,
+    detect_treadmill,
     estimate_rpe,
+    estimate_rpe_from_duration,
     estimate_rpe_from_hr,
     estimate_rpe_from_pace,
-    estimate_rpe_from_strava_relative,
-    estimate_rpe_from_duration,
-    detect_treadmill,
-    AnalysisError,
-    InsufficientDataError,
 )
 from resilio.schemas.activity import (
+    DataQuality,
     NormalizedActivity,
+    RPESource,
     SportType,
     SurfaceType,
-    DataQuality,
-    RPESource,
 )
 from resilio.schemas.profile import (
     AthleteProfile,
-    VitalSigns,
+    ConflictPolicy,
     Goal,
     GoalType,
-    TrainingConstraints,
-    Weekday,
     RunningPriority,
-    ConflictPolicy,
+    TrainingConstraints,
+    VitalSigns,
+    Weekday,
 )
-
 
 # ============================================================
 # TEST FIXTURES

@@ -1,20 +1,16 @@
-import json
 import uuid
-from datetime import date, datetime, timezone
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
-from freezegun import freeze_time
+from app.db import models as _models  # noqa: F401
+from app.db.database import Base
+from app.db.models import AthleteModel
+from app.jobs import models as _job_models  # noqa: F401
+from app.jobs.compute_jobs import run_daily_snapshot, run_energy_patterns
+from app.jobs.models import AthleteStateSnapshotModel
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-
-from app.db.database import Base
-from app.db import models as _models  # noqa: F401
-from app.jobs import models as _job_models  # noqa: F401
-from app.db.models import AthleteModel, ConnectorCredentialModel
-from app.jobs.models import AthleteStateSnapshotModel, JobRunModel
-from app.jobs.compute_jobs import run_daily_snapshot, run_energy_patterns
 
 
 @pytest.fixture()

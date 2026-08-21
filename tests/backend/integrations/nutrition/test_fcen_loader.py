@@ -1,6 +1,7 @@
 from pathlib import Path
-from app.integrations.nutrition.fcen_loader import load_fcen
+
 from app.db.models import FoodCacheModel
+from app.integrations.nutrition.fcen_loader import load_fcen
 
 _FIXTURE_DIR = Path(__file__).parents[3] / "fixtures" / "fcen"
 

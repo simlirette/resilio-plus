@@ -2,9 +2,8 @@
 from unittest.mock import patch
 
 import pytest
-from cryptography.fernet import Fernet
-
 from app.schemas.strava import SyncSummary
+from cryptography.fernet import Fernet
 
 TEST_KEY = Fernet.generate_key().decode()
 

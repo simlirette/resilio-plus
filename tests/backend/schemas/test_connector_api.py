@@ -1,7 +1,6 @@
 import pytest
+from app.schemas.connector_api import ConnectorListResponse, ConnectorStatus, HevyConnectRequest
 from pydantic import ValidationError
-
-from app.schemas.connector_api import ConnectorStatus, HevyConnectRequest, ConnectorListResponse
 
 
 def test_connector_status_connected():

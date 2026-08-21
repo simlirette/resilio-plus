@@ -7,16 +7,13 @@ from datetime import date
 from unittest.mock import MagicMock, patch
 
 import pytest
-from sqlalchemy import create_engine, event
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
-
-from app.db import models as _models  # noqa: registers all ORM models
 from app.db.database import Base
 from app.db.models import AthleteModel
 from app.schemas.external_plan import ExternalPlanDraft, ExternalPlanDraftSession
 from app.services.plan_import_service import PlanImportService
-
+from sqlalchemy import create_engine, event
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 # ---------------------------------------------------------------------------
 # Helpers

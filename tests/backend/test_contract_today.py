@@ -1,5 +1,4 @@
 """Contract tests — GET /athletes/{id}/today."""
-from datetime import date
 
 
 def test_today_requires_auth(api_client, auth_state):

@@ -6,15 +6,14 @@ from datetime import datetime, timedelta, timezone
 import httpx
 import pytest
 import respx
-from cryptography.fernet import Fernet
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
-from app.db.database import Base
 from app.db import models  # noqa: F401
+from app.db.database import Base
 from app.db.models import AthleteModel, ConnectorCredentialModel, StravaActivityModel
 from app.integrations.strava.oauth_service import encrypt_token
 from app.integrations.strava.sync_service import sync
+from cryptography.fernet import Fernet
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 TEST_KEY = Fernet.generate_key().decode()
 _ATHLETE_ID = str(uuid.uuid4())

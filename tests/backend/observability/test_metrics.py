@@ -112,13 +112,13 @@ def test_metrics_thread_safety():
     assert m.http_requests_total[("GET", "/x", 200)] == 4000
 
 
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
 from app.observability.metrics import (
     MetricsMiddleware,
-    track_agent_call,
     metrics,
+    track_agent_call,
 )
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 
 def _reset_metrics():

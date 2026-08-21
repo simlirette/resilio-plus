@@ -1,8 +1,11 @@
 from datetime import date, timedelta
-from app.core.running_logic import (
-    estimate_vdot, compute_running_fatigue, generate_running_sessions,
-)
+
 from app.core.periodization import TIDStrategy
+from app.core.running_logic import (
+    compute_running_fatigue,
+    estimate_vdot,
+    generate_running_sessions,
+)
 from app.schemas.connector import StravaActivity
 
 

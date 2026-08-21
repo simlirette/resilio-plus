@@ -17,19 +17,19 @@ from __future__ import annotations
 import random
 
 import pytest
+from app.db import models as _db_models  # noqa: F401
+from app.db.database import Base
+from app.models import schemas as _v3  # noqa: F401
+from app.services.coaching_service import CoachingService
 from langgraph.checkpoint.memory import MemorySaver
 from sqlalchemy.orm import sessionmaker
 
-from app.db.database import Base
-from app.db import models as _db_models   # noqa: F401
-from app.models import schemas as _v3     # noqa: F401
-from app.services.coaching_service import CoachingService
 from tests.fixtures.athlete_states import (
+    STABLE_LOAD,
     make_scenario_engine,
     seed_athlete,
     seed_energy_snapshot,
     simon_fresh_profile,
-    STABLE_LOAD,
 )
 
 random.seed(42)
@@ -114,8 +114,8 @@ def test_04_all_sessions_at_1_minute(scenario_db):
 
 def test_05_db_sessions_at_1_minute(scenario_db):
     """Persisted TrainingPlanModel has sessions all at 1min in weekly_slots_json."""
-    import json
     import importlib
+    import json
     _m = importlib.import_module("app.db.models")
     TrainingPlanModel = _m.TrainingPlanModel
 

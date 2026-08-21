@@ -5,55 +5,54 @@ Tests metric interpretation, progressive disclosure, workout enrichment,
 load interpretation, and context table logic.
 """
 
-import pytest
 from datetime import date, timedelta
 from unittest.mock import Mock
+
+import pytest
+
 from resilio.core.enrichment import (
-    interpret_metric,
+    InvalidMetricNameError,
     determine_disclosure_level,
     enrich_metrics,
     enrich_workout,
     interpret_load,
-    InvalidMetricNameError,
+    interpret_metric,
 )
 from resilio.core.repository import RepositoryIO
 from resilio.schemas.enrichment import (
     DisclosureLevel,
-    MetricInterpretation,
     EnrichedMetrics,
     EnrichedWorkout,
-    LoadInterpretation,
 )
 from resilio.schemas.metrics import (
-    DailyMetrics,
-    DailyLoad,
-    CTLATLMetrics,
     ACWRMetrics,
-    ReadinessScore,
-    ReadinessComponents,
-    TSBZone,
     ACWRZone,
-    ReadinessLevel,
-    CTLZone,
     ConfidenceLevel,
+    CTLATLMetrics,
+    CTLZone,
+    DailyLoad,
+    DailyMetrics,
+    ReadinessComponents,
+    ReadinessLevel,
+    ReadinessScore,
+    TSBZone,
 )
 from resilio.schemas.plan import (
-    WorkoutPrescription,
-    WorkoutType,
     IntensityZone,
     PlanPhase,
+    WorkoutPrescription,
+    WorkoutType,
 )
 from resilio.schemas.profile import (
     AthleteProfile,
-    GoalType,
     ConflictPolicy,
+    Goal,
+    GoalType,
     RunningPriority,
     TrainingConstraints,
-    Goal,
     VitalSigns,
     Weekday,
 )
-
 
 # ============================================================
 # TEST FIXTURES
@@ -480,7 +479,6 @@ class TestEnrichMetrics:
 
     def test_enrich_metrics_intensity_not_on_target(self):
         """intensity_on_target should be False when < 80% low intensity."""
-        from datetime import datetime
         # Note: This test currently cannot verify intensity_on_target
         # because enrich_metrics() doesn't have access to intensity distribution yet.
         # The enrichment module uses placeholder values until weekly summary is available.

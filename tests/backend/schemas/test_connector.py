@@ -1,14 +1,15 @@
 from datetime import date
 from uuid import UUID
+
 from app.schemas.connector import (
     ConnectorCredential,
-    StravaLap,
-    StravaActivity,
-    HevySet,
-    HevyExercise,
-    HevyWorkout,
-    FatSecretMeal,
     FatSecretDay,
+    FatSecretMeal,
+    HevyExercise,
+    HevySet,
+    HevyWorkout,
+    StravaActivity,
+    StravaLap,
     TerraHealthData,
 )
 

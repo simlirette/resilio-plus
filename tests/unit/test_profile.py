@@ -5,21 +5,21 @@ Tests profile CRUD operations, constraint validation, and error handling.
 """
 
 import pytest
+
 from resilio.core.profile import (
-    ProfileService,
     ProfileError,
     ProfileErrorType,
+    ProfileService,
 )
 from resilio.core.repository import RepositoryIO
 from resilio.schemas.profile import (
     AthleteProfile,
+    ConflictPolicy,
     Goal,
     GoalType,
+    RunningPriority,
     TrainingConstraints,
     Weekday,
-    RunningPriority,
-    ConflictPolicy,
-    OtherSport,
 )
 
 
@@ -229,8 +229,8 @@ class TestProfileService:
         service = ProfileService(repo)
 
         from resilio.schemas.profile import (
-            StravaConnection,
             OtherSport,
+            StravaConnection,
         )
 
         profile = AthleteProfile(
@@ -327,7 +327,7 @@ class TestVDOTCalculation:
 
     def test_calculate_vdot_for_10k_47min(self):
         """Should calculate VDOT ~43 for 47:00 10K."""
-        from resilio.core.profile import calculate_vdot, RaceDistance
+        from resilio.core.profile import RaceDistance, calculate_vdot
 
         vdot = calculate_vdot(RaceDistance.TEN_K, "47:00")
 
@@ -336,7 +336,7 @@ class TestVDOTCalculation:
 
     def test_calculate_vdot_for_5k_22min(self):
         """Should calculate VDOT ~43.5 for 22:30 5K."""
-        from resilio.core.profile import calculate_vdot, RaceDistance
+        from resilio.core.profile import RaceDistance, calculate_vdot
 
         vdot = calculate_vdot(RaceDistance.FIVE_K, "22:30")
 
@@ -345,7 +345,7 @@ class TestVDOTCalculation:
 
     def test_calculate_vdot_for_marathon(self):
         """Should calculate VDOT for marathon time."""
-        from resilio.core.profile import calculate_vdot, RaceDistance
+        from resilio.core.profile import RaceDistance, calculate_vdot
 
         # 3:30:00 marathon ~ VDOT 45
         vdot = calculate_vdot(RaceDistance.MARATHON, "3:30:00")
@@ -355,7 +355,7 @@ class TestVDOTCalculation:
 
     def test_calculate_vdot_invalid_time_format(self):
         """Should return error for invalid time format."""
-        from resilio.core.profile import calculate_vdot, RaceDistance
+        from resilio.core.profile import RaceDistance, calculate_vdot
 
         result = calculate_vdot(RaceDistance.TEN_K, "invalid")
 

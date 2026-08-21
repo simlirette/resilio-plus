@@ -6,16 +6,14 @@ from datetime import date
 from unittest.mock import MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, event
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
-
-from app.db import models  # noqa: registers all ORM models
 from app.db.database import Base
 from app.dependencies import get_db
 from app.main import app
 from app.schemas.external_plan import ExternalPlanDraft, ExternalPlanDraftSession
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine, event
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 
 def _make_test_engine():
@@ -181,7 +179,6 @@ def test_confirm_creates_plan_and_returns_plan_out(client):
 
     draft = _make_draft(title="Confirmed Plan", num_sessions=2)
 
-    from datetime import datetime
     expected_out = {
         "id": "plan-123",
         "athlete_id": athlete_id,

@@ -1,10 +1,10 @@
 import json
+from datetime import datetime, timezone
+from pathlib import Path
+
+import httpx
 import pytest
 import respx
-import httpx
-from pathlib import Path
-from datetime import datetime, timezone
-
 from app.connectors.hevy import HevyConnector
 from app.schemas.connector import HevyWorkout
 

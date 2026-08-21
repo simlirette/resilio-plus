@@ -1,5 +1,6 @@
-import pytest
 from datetime import date
+
+import pytest
 from pydantic import ValidationError
 
 
@@ -124,8 +125,9 @@ def test_weekly_review_with_recovery_metrics():
 
 
 def test_weekly_review_empty_results_json_not_null():
-    from app.schemas.review import WeeklyReview
     import json
+
+    from app.schemas.review import WeeklyReview
     review = WeeklyReview(**make_review())
     json_str = review.model_dump_json()
     data = json.loads(json_str)

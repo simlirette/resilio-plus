@@ -97,6 +97,7 @@ def test_scrub_idempotent():
 
 
 import logging
+
 from app.observability.pii_filter import PIIFilter
 
 

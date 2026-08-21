@@ -1,7 +1,9 @@
 from datetime import date
-import pytest
+
 from app.core.biking_logic import (
-    estimate_ftp, compute_biking_fatigue, generate_biking_sessions,
+    compute_biking_fatigue,
+    estimate_ftp,
+    generate_biking_sessions,
 )
 from app.schemas.athlete import AthleteProfile, Sport
 from app.schemas.connector import StravaActivity

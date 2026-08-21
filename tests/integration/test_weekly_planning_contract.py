@@ -4,7 +4,6 @@ This test ensures that the suggest_optimal_run_count function provides
 recommendations that prevent presentation-JSON mismatches.
 """
 
-import pytest
 from resilio.api.plan import suggest_optimal_run_count
 
 

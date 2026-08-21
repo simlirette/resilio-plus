@@ -298,9 +298,15 @@ class MessagingGateway:
 
     @staticmethod
     def _render_response(output: object) -> str | None:
+        """The text to send the athlete, whichever key carried it.
+
+        `message` is what the agentic loop returns. `final_response` and
+        `question` are the old chat-graph and onboarding-block keys, kept so a
+        graph that still uses them does not go silent.
+        """
         if not isinstance(output, dict):
             return None
-        for key in ("final_response", "question"):
+        for key in ("message", "final_response", "question"):
             value = output.get(key)
             if isinstance(value, str) and value.strip():
                 return value

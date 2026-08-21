@@ -1,8 +1,8 @@
 import logging
 import os
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
-from app.observability.sentry import init_sentry, _sentry_pii_scrubber
+from app.observability.sentry import _sentry_pii_scrubber, init_sentry
 
 
 def test_init_sentry_noop_without_dsn(caplog):

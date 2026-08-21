@@ -4,13 +4,12 @@ Unit tests for M3 - Repository I/O module.
 Tests file I/O operations, path resolution, and error handling.
 """
 
-import pytest
-import yaml
 from pathlib import Path
+
 from pydantic import BaseModel
 
 from resilio.core.repository import RepositoryIO
-from resilio.schemas.repository import RepoError, RepoErrorType, ReadOptions
+from resilio.schemas.repository import ReadOptions, RepoError, RepoErrorType
 
 
 # Test schema

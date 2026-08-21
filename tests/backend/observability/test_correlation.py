@@ -1,8 +1,8 @@
 from app.observability.correlation import (
-    correlation_id_ctx,
     athlete_id_ctx,
-    get_correlation_id,
+    correlation_id_ctx,
     get_athlete_id,
+    get_correlation_id,
 )
 
 
@@ -33,12 +33,13 @@ def test_athlete_id_set_and_get():
 
 
 import re
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
+
 from app.observability.correlation import (
     CorrelationIdMiddleware,
     correlation_id_ctx,
 )
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 
 def _make_app():

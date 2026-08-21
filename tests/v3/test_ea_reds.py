@@ -6,10 +6,7 @@ Couvre :
 """
 from __future__ import annotations
 
-import pytest
-
 from app.core.hormonal import check_reds, ea_status
-
 
 # ---------------------------------------------------------------------------
 # ea_status

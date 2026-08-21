@@ -9,31 +9,28 @@ Tests quantitative toolkit functions:
 Schema tests remain to validate data models.
 """
 
+from datetime import date
+
 import pytest
-from datetime import date, datetime, timedelta
 from pydantic import ValidationError
 
-from resilio.schemas.adaptation import (
-    TriggerType,
-    AdaptationTrigger,
-    OverrideRiskAssessment,
-    RecoveryEstimate,
-    RiskLevel,
-    SuggestionType,
-    SuggestionStatus,
-    OverrideRisk,
-    WorkoutReference,
-    ProposedChange,
-    Suggestion,
-    SafetyOverride,
-    AdaptationResult,
-)
 from resilio.core.adaptation import (
-    detect_adaptation_triggers,
     assess_override_risk,
+    detect_adaptation_triggers,
     estimate_recovery_time,
 )
-
+from resilio.schemas.adaptation import (
+    AdaptationResult,
+    AdaptationTrigger,
+    OverrideRisk,
+    ProposedChange,
+    RiskLevel,
+    SafetyOverride,
+    SuggestionStatus,
+    SuggestionType,
+    TriggerType,
+    WorkoutReference,
+)
 
 # ============================================================
 # ENUM TESTS

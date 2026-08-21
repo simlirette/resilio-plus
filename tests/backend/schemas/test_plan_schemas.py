@@ -3,9 +3,9 @@ from datetime import date
 
 
 def test_training_plan_response_from_model():
-    from app.schemas.plan import TrainingPlanResponse, WorkoutSlot
     from app.schemas.athlete import Sport
     from app.schemas.fatigue import FatigueScore
+    from app.schemas.plan import TrainingPlanResponse, WorkoutSlot
 
     slot = WorkoutSlot(
         date=date(2026, 4, 7),

@@ -2,8 +2,6 @@
 from datetime import date, datetime, timezone
 
 import pytest
-from pydantic import ValidationError
-
 from app.models.athlete_state import (
     AllostaticComponents,
     AllostaticEntry,
@@ -23,6 +21,7 @@ from app.schemas.athlete import AthleteProfile, Sport
 from app.schemas.connector import HevyWorkout, StravaActivity
 from app.schemas.fatigue import FatigueScore
 from app.schemas.plan import WorkoutSlot
+from pydantic import ValidationError
 
 
 class TestEnergyCheckIn:

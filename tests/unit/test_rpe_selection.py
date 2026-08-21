@@ -8,10 +8,8 @@ This verifies the fix for Bug #1: RPE selection should prioritize high-confidenc
 estimates over low-confidence ones, not just take the first estimate.
 """
 
-import pytest
 from resilio.core.workflows import select_best_rpe_estimate
 from resilio.schemas.activity import RPEEstimate, RPESource
-
 
 # ============================================================
 # TEST: Priority Order (Sport Science-Based)

@@ -1,10 +1,12 @@
 """Tests for date utility functions."""
-import pytest
 from datetime import date, timedelta
+
+import pytest
+
 from resilio.utils.dates import (
+    format_week_range,
     get_next_monday,
     get_week_boundaries,
-    format_week_range,
     validate_week_start,
 )
 

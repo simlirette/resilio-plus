@@ -1,8 +1,6 @@
 """D5 TDD — CrossDisciplineInterferenceService (DEP-C4-004)."""
 from __future__ import annotations
 
-import pytest
-
 
 class TestCrossDisciplineInterferenceService:
     def test_all_zero_when_no_active_plan(self):

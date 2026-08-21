@@ -4,18 +4,17 @@ Unit tests for VDOT continuity module - Training break detection and decay calcu
 Tests break detection, continuity scoring, and Daniels' Table 9.2 decay logic.
 """
 
-import pytest
 from datetime import date, datetime, timedelta
 
 from resilio.core.vdot.continuity import (
-    detect_training_breaks,
-    calculate_vdot_decay,
-    _calculate_short_break_decay,
-    _calculate_long_break_decay,
     _calculate_cross_training_adjustment,
+    _calculate_long_break_decay,
+    _calculate_short_break_decay,
+    calculate_vdot_decay,
+    detect_training_breaks,
 )
-from resilio.schemas.vdot import ConfidenceLevel
 from resilio.schemas.activity import NormalizedActivity
+from resilio.schemas.vdot import ConfidenceLevel
 
 
 def create_run(activity_date: date, sport_type: str = "run") -> NormalizedActivity:

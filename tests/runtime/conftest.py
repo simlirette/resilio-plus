@@ -9,18 +9,17 @@ from datetime import date, timedelta
 from unittest.mock import patch
 
 import pytest
+from app.agents.base import AgentContext, AgentRecommendation
+from app.db import models as _db_models  # noqa: F401
+from app.db.database import Base
+from app.models import schemas as _v3  # noqa: F401
+from app.schemas.fatigue import FatigueScore
+from app.schemas.plan import WorkoutSlot
+from app.services.coaching_service import CoachingService
 from langgraph.checkpoint.memory import MemorySaver
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-
-from app.db.database import Base
-from app.db import models as _db_models  # noqa: F401
-from app.models import schemas as _v3  # noqa: F401
-from app.agents.base import AgentContext, AgentRecommendation
-from app.schemas.fatigue import FatigueScore
-from app.schemas.plan import WorkoutSlot
-from app.services.coaching_service import CoachingService
 
 random.seed(42)
 

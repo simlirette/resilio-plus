@@ -1,9 +1,10 @@
 from datetime import date, timedelta
+
 from backend.app.core.analytics_logic import (
     compute_acwr_series,
     compute_ctl_atl_tsb,
-    compute_sport_breakdown,
     compute_performance_trends,
+    compute_sport_breakdown,
 )
 
 

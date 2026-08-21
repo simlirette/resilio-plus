@@ -1,5 +1,5 @@
 import pytest
-from app.core.acwr import compute_acwr, ACWRStatus, ACWRResult
+from app.core.acwr import ACWRStatus, compute_acwr
 
 
 def test_empty_history_returns_safe_zeros():

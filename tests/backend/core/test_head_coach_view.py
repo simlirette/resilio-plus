@@ -17,7 +17,6 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
 import pytest
-
 from app.core.head_coach_view_builder import build_head_coach_view
 
 NOW = datetime.now(timezone.utc)

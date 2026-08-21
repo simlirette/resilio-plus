@@ -1,7 +1,7 @@
-import json
-from app.schemas.plan import WorkoutSlot
-from app.schemas.fatigue import FatigueScore
 from datetime import date
+
+from app.schemas.fatigue import FatigueScore
+from app.schemas.plan import WorkoutSlot
 
 
 def _slot(**overrides):

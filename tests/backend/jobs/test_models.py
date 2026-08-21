@@ -2,13 +2,12 @@ import uuid
 from datetime import datetime, timezone
 
 import pytest
+from app.db import models as _models  # noqa: F401
+from app.db.database import Base
+from app.jobs import models as _job_models  # noqa: F401
+from app.jobs.models import AthleteStateSnapshotModel, JobRunModel
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
-from app.db.database import Base
-from app.db import models as _models  # noqa: F401
-from app.jobs import models as _job_models  # noqa: F401
-from app.jobs.models import JobRunModel, AthleteStateSnapshotModel
 
 
 @pytest.fixture()
@@ -73,9 +72,10 @@ def test_athlete_state_snapshot_roundtrip(db_session):
 
 
 def test_athlete_state_snapshot_unique_constraint(db_session):
+    from datetime import date
+
     from app.db.models import AthleteModel
     from sqlalchemy.exc import IntegrityError
-    from datetime import date
 
     athlete_id = str(uuid.uuid4())
     db_session.add(AthleteModel(

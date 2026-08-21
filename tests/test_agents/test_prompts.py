@@ -8,11 +8,9 @@ import re
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Import guard — will fail until prompts.py exists
 # ---------------------------------------------------------------------------
-
 from backend.app.agents.prompts import (
     ENERGY_COACH_PROMPT,
     HEAD_COACH_PROMPT,

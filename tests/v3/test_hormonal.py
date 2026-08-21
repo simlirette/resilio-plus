@@ -12,7 +12,6 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-
 from app.core.hormonal import (
     compute_cycle_day,
     detect_cycle_phase,
@@ -20,7 +19,6 @@ from app.core.hormonal import (
     get_nutrition_adjustments,
     get_running_adjustments,
 )
-
 
 # ---------------------------------------------------------------------------
 # compute_cycle_day

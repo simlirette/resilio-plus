@@ -3,15 +3,13 @@ import uuid
 from datetime import date
 
 import pytest
+from app.db.database import Base
+from app.db.models import AthleteModel
+from app.models.schemas import ExternalSessionModel
+from app.services.external_plan_service import ExternalPlanService
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-
-from app.db.database import Base
-from app.db import models as _models  # noqa: registers all ORM models
-from app.db.models import AthleteModel
-from app.models.schemas import ExternalPlanModel, ExternalSessionModel
-from app.services.external_plan_service import ExternalPlanService
 
 
 @pytest.fixture()

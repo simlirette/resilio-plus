@@ -1,4 +1,4 @@
-from app.core.fatigue import aggregate_fatigue, GlobalFatigue
+from app.core.fatigue import aggregate_fatigue
 from app.schemas.fatigue import FatigueScore
 
 

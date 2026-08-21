@@ -1,7 +1,6 @@
 """D11 TDD — MonitoringService (proactive events, APScheduler integration)."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 
 

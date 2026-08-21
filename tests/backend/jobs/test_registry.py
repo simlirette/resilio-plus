@@ -2,14 +2,13 @@ import uuid
 from unittest.mock import MagicMock
 
 import pytest
+from app.db import models as _models  # noqa: F401
+from app.db.database import Base
+from app.db.models import AthleteModel, ConnectorCredentialModel
+from app.jobs import models as _job_models  # noqa: F401
+from app.jobs.registry import register_athlete_jobs, restore_all_jobs, unregister_athlete_jobs
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
-from app.db.database import Base
-from app.db import models as _models  # noqa: F401
-from app.jobs import models as _job_models  # noqa: F401
-from app.db.models import AthleteModel, ConnectorCredentialModel
-from app.jobs.registry import register_athlete_jobs, unregister_athlete_jobs, restore_all_jobs
 
 
 @pytest.fixture()

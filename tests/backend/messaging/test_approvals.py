@@ -1,8 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from sqlalchemy.orm import Session
-
 from app.db.models import AthleteModel, MessagingIdentityModel, PendingApprovalModel
 from app.messaging.approvals import (
     AlreadyResolvedApprovalError,
@@ -16,6 +14,7 @@ from app.messaging.approvals import (
     pop_revision_latch,
     resolve,
 )
+from sqlalchemy.orm import Session
 
 FIXED_NOW = datetime(2031, 5, 4, 12, 0, tzinfo=timezone.utc)
 

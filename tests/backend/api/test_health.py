@@ -3,9 +3,6 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-import httpx
-import pytest
-
 
 def test_health_returns_ok(client):
     resp = client.get("/health")
@@ -14,8 +11,9 @@ def test_health_returns_ok(client):
 
 
 def test_ready_returns_ok_when_db_up(client):
-    from app.routes import health as health_module
     from unittest.mock import MagicMock, patch
+
+    from app.routes import health as health_module
 
     mock_conn = MagicMock()
     mock_conn.__enter__ = lambda s: mock_conn
@@ -51,8 +49,9 @@ def test_ready_deep_returns_503_when_no_api_key(client, monkeypatch):
 
 def test_ready_deep_returns_200_when_all_green(client, monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
-    from app.routes import health as health_module
     from unittest.mock import MagicMock, patch
+
+    from app.routes import health as health_module
 
     mock_conn = MagicMock()
     mock_conn.__enter__ = lambda s: mock_conn

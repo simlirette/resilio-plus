@@ -1,8 +1,5 @@
 """Phase 9 connector tests: last_sync field, terra delete, SyncService delegation."""
-import json
-from unittest.mock import MagicMock, patch
-
-from app.db.models import ConnectorCredentialModel
+from unittest.mock import patch
 
 
 def test_list_connectors_includes_last_sync(authed_client):

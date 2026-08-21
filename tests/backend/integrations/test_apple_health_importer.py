@@ -3,8 +3,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import date, timedelta, timezone
-from datetime import datetime as dt
+from datetime import date, timedelta
 
 import pytest
 from sqlalchemy.orm import Session

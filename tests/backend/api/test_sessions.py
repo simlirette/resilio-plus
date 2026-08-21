@@ -1,6 +1,4 @@
 """Tests for session detail, logging, and history endpoints."""
-import json
-from datetime import date
 
 PLAN_BODY = {"start_date": "2026-04-13", "end_date": "2026-04-19"}
 

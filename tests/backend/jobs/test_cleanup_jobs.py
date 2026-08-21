@@ -1,17 +1,14 @@
 import uuid
 from datetime import datetime, timedelta, timezone
-from unittest.mock import patch, MagicMock
 
 import pytest
-from freezegun import freeze_time
+from app.db import models as _models  # noqa: F401
+from app.db.database import Base
+from app.jobs import models as _job_models  # noqa: F401
+from app.jobs.cleanup_jobs import _cleanup_old_runs
+from app.jobs.models import JobRunModel
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
-from app.db.database import Base
-from app.db import models as _models  # noqa: F401
-from app.jobs import models as _job_models  # noqa: F401
-from app.jobs.models import JobRunModel
-from app.jobs.cleanup_jobs import _cleanup_old_runs, RETENTION_DAYS
 
 
 @pytest.fixture()

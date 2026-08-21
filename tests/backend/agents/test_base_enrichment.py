@@ -1,4 +1,5 @@
 from datetime import date
+
 from app.agents.base import AgentContext
 from app.schemas.athlete import AthleteProfile, Sport
 

@@ -1,12 +1,6 @@
-import json
 import uuid
 
-import pytest
-
 from tests.backend.api.conftest import authed_client, client  # noqa: F401
-
-from app.db.models import ConnectorCredentialModel
-
 
 # ─── hevy ──────────────────────────────────────────────────────────────────────
 

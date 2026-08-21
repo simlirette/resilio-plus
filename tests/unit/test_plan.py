@@ -5,24 +5,24 @@ Tests schema validation, periodization algorithms, workout assignment,
 training guardrails, and plan persistence.
 """
 
-import pytest
 from datetime import date, timedelta
-from pathlib import Path
+
+import pytest
 from pydantic import ValidationError
 
 from resilio.schemas.plan import (
     GoalType,
-    PlanPhase,
-    WorkoutType,
-    IntensityZone,
-    WorkoutPrescription,
-    WorkoutStructureHints,
-    QualitySessionHints,
-    LongRunHints,
     IntensityBalanceHints,
-    WeekPlan,
+    IntensityZone,
+    LongRunHints,
     MasterPlan,
     PlanGenerationResult,
+    PlanPhase,
+    QualitySessionHints,
+    WeekPlan,
+    WorkoutPrescription,
+    WorkoutStructureHints,
+    WorkoutType,
 )
 
 DEFAULT_WORKOUT_STRUCTURE_HINTS = WorkoutStructureHints(
@@ -568,9 +568,10 @@ class TestPeriodization:
 
     def test_timeline_too_short_raises_error(self):
         """Timeline shorter than minimum should log warning but still generate plan."""
-        from resilio.core.plan import calculate_periodization
         import sys
         from io import StringIO
+
+        from resilio.core.plan import calculate_periodization
 
         # Marathon needs 16+ weeks, but function now warns instead of raising
         # Capture stderr to verify warning is logged
@@ -1015,7 +1016,7 @@ class TestWorkoutTemplates:
 
     def test_get_easy_template(self):
         """Should return easy workout template."""
-        from resilio.core.plan import get_workout_template, WorkoutType
+        from resilio.core.plan import WorkoutType, get_workout_template
 
         template = get_workout_template(WorkoutType.EASY)
 
@@ -1025,7 +1026,7 @@ class TestWorkoutTemplates:
 
     def test_get_tempo_template(self):
         """Should return tempo workout template with intervals."""
-        from resilio.core.plan import get_workout_template, WorkoutType
+        from resilio.core.plan import WorkoutType, get_workout_template
 
         template = get_workout_template(WorkoutType.TEMPO)
 
@@ -1039,8 +1040,9 @@ class TestWorkoutModification:
 
     def test_create_downgraded_workout(self):
         """Should downgrade tempo to easy."""
-        from resilio.core.plan import create_workout, create_downgraded_workout, PlanPhase
         from datetime import date
+
+        from resilio.core.plan import PlanPhase, create_downgraded_workout, create_workout
 
         tempo = create_workout(
             workout_type="tempo",
@@ -1061,8 +1063,9 @@ class TestWorkoutModification:
 
     def test_create_shortened_workout(self):
         """Should shorten workout duration."""
-        from resilio.core.plan import create_workout, create_shortened_workout, PlanPhase
         from datetime import date
+
+        from resilio.core.plan import PlanPhase, create_shortened_workout, create_workout
 
         long_run = create_workout(
             workout_type="long_run",
@@ -1086,8 +1089,9 @@ class TestRecoveryEstimation:
 
     def test_easy_run_minimal_recovery(self):
         """Easy runs need minimal recovery."""
-        from resilio.core.plan import create_workout, estimate_recovery_days, PlanPhase
         from datetime import date
+
+        from resilio.core.plan import PlanPhase, create_workout, estimate_recovery_days
 
         easy = create_workout(
             workout_type="easy",
@@ -1104,8 +1108,9 @@ class TestRecoveryEstimation:
 
     def test_tempo_needs_recovery(self):
         """Tempo runs need 2 days recovery."""
-        from resilio.core.plan import create_workout, estimate_recovery_days, PlanPhase
         from datetime import date
+
+        from resilio.core.plan import PlanPhase, create_workout, estimate_recovery_days
 
         tempo = create_workout(
             workout_type="tempo",
@@ -1126,8 +1131,9 @@ class TestGuardrailValidation:
 
     def test_validate_week_detects_too_many_quality_sessions(self):
         """Should detect 3 quality sessions but not auto-fix."""
-        from resilio.core.plan import create_workout, validate_week, WeekPlan, PlanPhase
         from datetime import date
+
+        from resilio.core.plan import PlanPhase, WeekPlan, create_workout, validate_week
 
         # Create week with 3 quality sessions
         tempo = create_workout("tempo", date(2026, 1, 15), 1, 2, PlanPhase.BUILD, 50.0, {})
@@ -1160,8 +1166,9 @@ class TestGuardrailValidation:
 
     def test_validate_week_detects_back_to_back_hard_days(self):
         """Should detect consecutive hard sessions."""
-        from resilio.core.plan import create_workout, validate_week, WeekPlan, PlanPhase
         from datetime import date
+
+        from resilio.core.plan import PlanPhase, WeekPlan, create_workout, validate_week
 
         # Create week with back-to-back hard days
         tempo_tue = create_workout("tempo", date(2026, 1, 14), 1, 1, PlanPhase.BUILD, 50.0, {})
@@ -1187,8 +1194,15 @@ class TestGuardrailValidation:
 
     def test_validate_guardrails_checks_80_20_distribution(self):
         """Should detect 80/20 violations across full plan."""
-        from resilio.core.plan import validate_guardrails, MasterPlan, WeekPlan, create_workout, PlanPhase
         from datetime import date
+
+        from resilio.core.plan import (
+            MasterPlan,
+            PlanPhase,
+            WeekPlan,
+            create_workout,
+            validate_guardrails,
+        )
 
         # Create plan with poor 80/20 distribution (60/40)
         workouts_week1 = [
@@ -1672,7 +1686,7 @@ class TestVolumeDistributionMinimums:
 
         # Should still allocate and sum to target
         total_allocated = sum(allocation.values())
-        assert abs(total_allocated - 20.0) < 0.5, f"Should still allocate all volume"
+        assert abs(total_allocated - 20.0) < 0.5, "Should still allocate all volume"
 
         # Easy runs will be below minimum (validation will catch this)
         # Easy runs will be below minimum (validation will catch this)workout_structure_hints=DEFAULT_WORKOUT_STRUCTURE_HINTS,

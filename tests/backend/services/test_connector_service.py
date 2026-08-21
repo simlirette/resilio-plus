@@ -1,12 +1,11 @@
 import json
 import time
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 
 import httpx
 import pytest
 import respx
-
 from app.db.models import AthleteModel, ConnectorCredentialModel
 from app.integrations.strava.oauth_service import decrypt_token, encrypt_token
 from app.services.connector_service import fetch_connector_data

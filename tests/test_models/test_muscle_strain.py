@@ -71,6 +71,7 @@ def test_muscle_strain_score_computed_at_required():
 
 def test_athlete_metrics_muscle_strain_defaults_none():
     from datetime import date
+
     from app.models.athlete_state import AthleteMetrics
     m = AthleteMetrics(date=date(2026, 4, 13))
     assert m.muscle_strain is None
@@ -78,6 +79,7 @@ def test_athlete_metrics_muscle_strain_defaults_none():
 
 def test_athlete_metrics_accepts_muscle_strain():
     from datetime import date
+
     from app.models.athlete_state import AthleteMetrics, MuscleStrainScore
     strain = MuscleStrainScore(
         quads=50.0,

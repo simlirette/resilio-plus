@@ -1,18 +1,16 @@
 """Tests for S-3 weekly review endpoints: /plan/review/start and /plan/review/confirm."""
 from datetime import date
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
+from app.db.database import Base
+from app.db.models import AthleteModel
+from app.dependencies import get_current_athlete_id, get_db
+from app.main import app
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-
-from app.db.database import Base
-from app.db import models as _models  # noqa: registers all ORM models
-from app.db.models import AthleteModel
-from app.main import app
-from app.dependencies import get_db, get_current_athlete_id
 
 ATHLETE_ID = "22222222-2222-2222-2222-222222222222"
 THREAD_ID = f"{ATHLETE_ID}:review:aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"

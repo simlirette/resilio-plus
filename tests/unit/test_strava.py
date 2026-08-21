@@ -5,25 +5,25 @@ Tests OAuth flow, activity fetching, deduplication, rate limiting,
 and error handling. Uses mocking for API calls.
 """
 
-import pytest
-from datetime import date, datetime, timezone, timedelta
-from unittest.mock import Mock, patch, MagicMock
+from datetime import date, datetime, timedelta, timezone
+from unittest.mock import MagicMock, Mock, patch
+
 import httpx
+import pytest
 
 from resilio.core.strava import (
-    initiate_oauth,
-    exchange_code_for_tokens,
-    refresh_access_token,
-    get_valid_token,
-    fetch_activities,
-    fetch_activity_details,
-    map_strava_to_raw,
-    check_duplicate,
-    create_manual_activity,
-    sync_strava_generator,
     StravaAuthError,
     StravaRateLimitError,
-    StravaAPIError,
+    check_duplicate,
+    create_manual_activity,
+    exchange_code_for_tokens,
+    fetch_activities,
+    fetch_activity_details,
+    get_valid_token,
+    initiate_oauth,
+    map_strava_to_raw,
+    refresh_access_token,
+    sync_strava_generator,
 )
 from resilio.schemas.activity import (
     ActivitySource,
@@ -31,7 +31,6 @@ from resilio.schemas.activity import (
 )
 from resilio.schemas.config import Config, Secrets, Settings
 from resilio.schemas.sync import SyncReport
-
 
 # ============================================================
 # TEST FIXTURES

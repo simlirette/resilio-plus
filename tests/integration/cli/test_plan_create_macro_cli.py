@@ -11,7 +11,6 @@ from typer.testing import CliRunner
 
 from resilio.cli.commands.plan import app
 
-
 runner = CliRunner()
 
 

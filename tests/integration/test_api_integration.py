@@ -4,27 +4,38 @@ Integration tests for API layer.
 Tests end-to-end workflows with real modules (not mocked).
 """
 
-import pytest
-from datetime import date, timedelta, datetime
-from pathlib import Path
+from datetime import date, datetime, timedelta
 
-from resilio.core.repository import RepositoryIO
+import pytest
+
+from resilio.api.coach import CoachError, get_todays_workout, get_training_status, get_weekly_status
+from resilio.api.metrics import (
+    MetricsError,
+    get_current_metrics,
+    get_intensity_distribution,
+    get_readiness,
+)
+from resilio.api.plan import PlanError, get_current_plan, regenerate_plan
+from resilio.api.profile import ProfileError, get_profile, set_goal, update_profile
+from resilio.api.sync import log_activity
 from resilio.core.paths import (
-    get_athlete_dir,
+    athlete_profile_path,
     get_activities_dir,
+    get_athlete_dir,
     get_metrics_dir,
     get_plans_dir,
-    athlete_profile_path,
 )
-from resilio.schemas.config import Config, Settings, Secrets, StravaSecrets
-from resilio.api.sync import sync_strava, log_activity, SyncError
-from resilio.api.coach import get_todays_workout, get_weekly_status, get_training_status, CoachError
-from resilio.api.metrics import get_current_metrics, get_readiness, get_intensity_distribution, MetricsError
-from resilio.api.plan import get_current_plan, regenerate_plan, PlanError
-from resilio.api.profile import get_profile, update_profile, set_goal, ProfileError
-from resilio.schemas.profile import AthleteProfile, Goal, GoalType, TrainingConstraints, ConflictPolicy, Weekday, RunningPriority
-from resilio.schemas.activity import NormalizedActivity
-
+from resilio.core.repository import RepositoryIO
+from resilio.schemas.config import Config, Secrets, Settings, StravaSecrets
+from resilio.schemas.profile import (
+    AthleteProfile,
+    ConflictPolicy,
+    Goal,
+    GoalType,
+    RunningPriority,
+    TrainingConstraints,
+    Weekday,
+)
 
 # ============================================================
 # FIXTURES
@@ -121,8 +132,9 @@ class TestProfileIntegration:
         monkeypatch.setattr("resilio.api.profile.RepositoryIO", lambda: integration_repo)
 
         # Mock regenerate_plan to avoid complex setup
-        from resilio import api
         from unittest.mock import Mock
+
+        from resilio import api
 
         mock_plan = Mock()
         mock_plan.total_weeks = 12
@@ -166,7 +178,7 @@ class TestManualActivityIntegration:
 
         # Mock workflow functions to simplify test
         from resilio.core.workflows import ManualActivityResult
-        from resilio.schemas.activity import NormalizedActivity, LoadCalculation, SessionType
+        from resilio.schemas.activity import LoadCalculation, NormalizedActivity, SessionType
 
         def mock_manual_workflow(repo, sport_type, duration_minutes, **kwargs):
             # Create a realistic activity result

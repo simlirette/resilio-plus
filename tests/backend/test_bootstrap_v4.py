@@ -33,11 +33,10 @@ bootstrap = _load_module()
 @pytest.fixture
 def sqlite_db(monkeypatch: pytest.MonkeyPatch) -> Any:
     """Point the script's lazy `app.db` imports at a throwaway SQLite file."""
-    from sqlalchemy import create_engine, event
-    from sqlalchemy.orm import sessionmaker
-
     import app.db.database as database
     from app.db import models  # noqa: F401 — registers ORM models
+    from sqlalchemy import create_engine, event
+    from sqlalchemy.orm import sessionmaker
 
     engine = create_engine(
         "sqlite:///:memory:", connect_args={"check_same_thread": False}

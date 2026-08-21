@@ -2,12 +2,11 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import pytest
-from sqlalchemy.orm import Session
-
 from app.db.models import AthleteModel, MessagingIdentityModel, PendingApprovalModel
 from app.messaging.approval_service import ApprovalService
 from app.messaging.approvals import ApprovalOwnershipError, parse_callback
 from app.messaging.base import Button
+from sqlalchemy.orm import Session
 
 FIXED_NOW = datetime(2031, 5, 4, 12, 0, tzinfo=timezone.utc)
 

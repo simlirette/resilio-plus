@@ -4,16 +4,14 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 import pytest
+from app.db.database import Base
+from app.db.models import AthleteModel
+from app.dependencies import get_current_athlete_id, get_db
+from app.main import app
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-
-from app.db.database import Base
-from app.db import models as _models  # noqa: registers all ORM models
-from app.db.models import AthleteModel
-from app.main import app
-from app.dependencies import get_current_athlete_id, get_db
 
 ATHLETE_ID = "33333333-3333-3333-3333-333333333333"
 

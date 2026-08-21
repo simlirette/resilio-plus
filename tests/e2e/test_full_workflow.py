@@ -8,8 +8,6 @@ _state carries athlete_id and token across tests.
 """
 from datetime import date, timedelta
 
-import pytest
-
 # Mutable shared state across tests in this module
 _state: dict = {}
 
