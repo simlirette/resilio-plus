@@ -219,22 +219,26 @@ def _restore_state(thread_id: str, db: Any) -> _OnboardingThread | None:
 def _persist_block_answer(
     athlete: Any,
     block: int,
-    user_response: str,
     db: Any,
 ) -> None:
-    """Extract typed facts from one block answer and write them to the row.
+    """Re-read the whole conversation and write what it says about the athlete.
 
-    `collected_data` lives in `_thread_states`, which is process-local: without
-    this, everything the athlete says is lost on restart and the row still
-    reads as it did at signup.
+    Per-block extraction only ever looked at one answer, against a field list
+    written separately from the question the coach actually asked. The two
+    drifted, and two stated race times -- given while the athlete was being
+    asked for their weight -- were discarded, leaving `vdot` NULL after an
+    onboarding whose entire purpose was to establish it.
 
-    Best-effort by design. A failed extraction costs one fact and the coach can
-    ask again; letting it raise would end the conversation.
+    Re-extracting from the transcript each turn costs one Haiku call and makes
+    the position of a fact in the conversation irrelevant.
+
+    Best-effort by design. A failed extraction costs one pass and the next turn
+    tries again; letting it raise would end the conversation.
     """
-    from ..services.onboarding_extraction import apply_extraction, extract_block
+    from ..services.onboarding_extraction import apply_extraction, extract_profile
 
     try:
-        data = extract_block(block, user_response)
+        data = extract_profile(recent_turns(db, athlete.id, limit=40))
         if not data:
             return
         changed = apply_extraction(athlete, data, db)
@@ -380,7 +384,7 @@ def run_onboarding_respond(
     # Recorded *before* the next question is composed, so the coach can see
     # the answer it is about to follow up on.
     record_message(db, state.athlete_id, "user", user_response)
-    _persist_block_answer(athlete, state.current_block, user_response, db)
+    _persist_block_answer(athlete, state.current_block, db)
 
     next_block = state.current_block + 1
 

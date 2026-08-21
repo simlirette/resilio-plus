@@ -1,8 +1,13 @@
 """The onboarding graph must actually call the extractor.
 
-`test_onboarding_extraction.py` pins what extraction does. This pins that it
-happens at all: the extractor existing but never being wired in is exactly the
-failure mode this whole change exists to fix.
+`test_profile_extraction_from_conversation.py` pins what extraction does.
+This pins that it happens at all: an extractor that exists but is never
+wired in is exactly the failure this work exists to fix.
+
+The seam moved in Phase B, deliberately. It was `extract_block(block,
+answer)` and is now `extract_profile(turns)`: reading one answer against a
+field list written separately from the question actually asked is what
+discarded two stated race times.
 """
 from __future__ import annotations
 
@@ -75,7 +80,7 @@ class TestTheAnswerReachesTheRow:
         with (
             patch("app.graphs.onboarding._call_head_coach", return_value="Next?"),
             patch(
-                "app.services.onboarding_extraction.extract_block",
+                "app.services.onboarding_extraction.extract_profile",
                 return_value={"resting_hr": 48},
             ),
         ):
@@ -94,7 +99,7 @@ class TestTheAnswerReachesTheRow:
         with (
             patch("app.graphs.onboarding._call_head_coach", return_value="Next?"),
             patch(
-                "app.services.onboarding_extraction.extract_block",
+                "app.services.onboarding_extraction.extract_profile",
                 return_value={"race_distance": "10k", "race_time_seconds": 2820},
             ),
         ):
@@ -116,7 +121,7 @@ class TestExtractionIsNotLoadBearing:
         with (
             patch("app.graphs.onboarding._call_head_coach", return_value="Next?"),
             patch(
-                "app.services.onboarding_extraction.extract_block",
+                "app.services.onboarding_extraction.extract_profile",
                 side_effect=RuntimeError("extractor exploded"),
             ),
         ):
@@ -132,7 +137,7 @@ class TestExtractionIsNotLoadBearing:
 
         with (
             patch("app.graphs.onboarding._call_head_coach", return_value="Next?"),
-            patch("app.services.onboarding_extraction.extract_block", return_value={}),
+            patch("app.services.onboarding_extraction.extract_profile", return_value={}),
         ):
             run_onboarding_respond(thread_id, "bonjour", db_session)
 

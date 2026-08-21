@@ -31,6 +31,7 @@ from typing import Any
 import anthropic
 
 from ..db.models import AthleteModel
+from .conversation import Turn
 
 logger = logging.getLogger(__name__)
 
@@ -51,9 +52,8 @@ _NUMERIC_BOUNDS: dict[str, tuple[type, float, float]] = {
     "css_per_100m": (float, 60.0, 180.0),
 }
 
-_KNOWN_SPORTS: frozenset[str] = frozenset(
-    {"running", "lifting", "swimming", "biking"}
-)
+_SPORT_ORDER: tuple[str, ...] = ("running", "lifting", "swimming", "biking")
+_KNOWN_SPORTS: frozenset[str] = frozenset(_SPORT_ORDER)
 
 # RaceDistance values accepted by resilio.core.vdot.calculator
 _RACE_DISTANCES: dict[str, str] = {
@@ -111,6 +111,72 @@ Rules:
 - Never output a `vdot` key. Report the race and its time instead.
 - Times go in seconds. Dates go in YYYY-MM-DD.
 - The athlete may answer in French or English."""
+
+
+_PROFILE_PROMPT = """You read a full coaching conversation and extract the athlete's profile.
+
+Return ONLY a JSON object. No prose, no explanation, no code fence.
+
+Rules:
+- Include a key ONLY if the athlete stated it somewhere in the conversation.
+- Never guess, never infer, never fill a plausible default.
+- Omit anything not stated. An empty object is valid.
+- Never output a `vdot` key. Report `race_distance` and `race_time_seconds`.
+- Times in seconds. Dates as YYYY-MM-DD.
+- `sports`: every sport the athlete practises. Listing a sport as a *priority*
+  is not a reason to omit the others.
+- `sports_removed`: only sports the athlete explicitly said they have stopped.
+- `sessions_per_week`: {sport: count} — how many *sessions*, not hours.
+- `hours_per_week`: only if the athlete gave a duration, never a session count.
+- The athlete may write in French or English.
+
+Keys: age, sex (M/F), weight_kg, height_cm, max_hr, resting_hr, sports,
+sports_removed, primary_sport, sessions_per_week, hours_per_week, goals,
+target_race_date, race_distance, race_time_seconds, ftp_watts, css_per_100m,
+available_days (weekday numbers, Monday=0)."""
+
+
+def _call_profile_extractor(transcript: str) -> str:
+    """One Haiku call over the whole conversation. Split out for tests."""
+    message = _client().messages.create(
+        model=_MODEL,
+        max_tokens=_MAX_TOKENS,
+        system=_PROFILE_PROMPT,
+        messages=[{"role": "user", "content": transcript}],
+    )
+    return str(getattr(message.content[0], "text", ""))
+
+
+def extract_profile(turns: list[Turn]) -> dict[str, Any]:
+    """Extract the athlete's profile from an entire conversation.
+
+    Per-block extraction lost whatever the athlete happened to say in the
+    "wrong" block -- most damagingly two race times given while being asked for
+    body measurements, which is why VDOT stayed NULL after an onboarding whose
+    whole purpose was to establish it. Reading the transcript removes that
+    failure by construction.
+    """
+    if not turns:
+        return {}
+
+    transcript = "\n\n".join(
+        f"{'ATHLETE' if turn.role == 'user' else 'COACH'}: {turn.content}"
+        for turn in turns
+    )
+
+    try:
+        raw = _call_profile_extractor(transcript)
+    except Exception:
+        logger.warning("profile_extraction_failed", exc_info=True)
+        return {}
+
+    parsed = _first_json_object(raw)
+    if parsed is None:
+        logger.info("profile_extraction_unparseable")
+        return {}
+
+    return {key: value for key, value in parsed.items() if value is not None}
+
 
 
 def _client() -> anthropic.Anthropic:
@@ -253,6 +319,81 @@ def _derive_vdot(data: dict[str, Any]) -> float | None:
         return None
 
 
+#: A sport is not dropped for being unmentioned, and never below one.
+MIN_SESSIONS = 1
+MAX_SESSIONS = 14
+
+
+def _json_list(raw: str | None) -> list[str]:
+    """Read a JSON list column, tolerating anything that is not one."""
+    if not raw:
+        return []
+    try:
+        value = json.loads(raw)
+    except (TypeError, ValueError):
+        return []
+    return [item for item in value if isinstance(item, str)] if isinstance(value, list) else []
+
+
+def _merge_sports(athlete: AthleteModel, data: dict[str, Any]) -> bool:
+    """Add what the athlete named; remove only what they explicitly dropped.
+
+    A list of sports is a *mention*, not a complete declaration. "Prioriser la
+    course" made the model answer `["running"]`, the old code overwrote the
+    column, and `build_agents` then never instantiated the LiftingCoach -- so a
+    week arrived with zero lifting for an athlete who lifts four times a week.
+
+    Removal stays possible through `sports_removed`, and never empties the
+    list: an athlete with no sports cannot be coached, so that is a bad
+    extraction rather than an instruction.
+    """
+    current = set(_json_list(getattr(athlete, "sports_json", None)))
+    updated = set(current)
+
+    mentioned = _clean_sports(data.get("sports")) if "sports" in data else None
+    if mentioned:
+        updated |= set(mentioned)
+
+    removed = _clean_sports(data.get("sports_removed")) if "sports_removed" in data else None
+    if removed:
+        remaining = updated - set(removed)
+        if remaining:
+            updated = remaining
+
+    if updated == current or not updated:
+        return False
+
+    ordered = [sport for sport in _SPORT_ORDER if sport in updated]
+    athlete.sports_json = json.dumps(ordered, ensure_ascii=False)
+    return True
+
+
+def _apply_sessions_per_week(athlete: AthleteModel, value: Any) -> bool:
+    """Store {sport: sessions}. Never touches `hours_per_week`.
+
+    The two were one column, so "je vise 3 sorties" was written as three
+    *hours* and capped the generated week at 1h30.
+    """
+    if not isinstance(value, dict):
+        return False
+
+    counts: dict[str, int] = {}
+    for sport, count in value.items():
+        if not isinstance(sport, str) or sport.strip().lower() not in _KNOWN_SPORTS:
+            continue
+        if isinstance(count, bool) or not isinstance(count, (int, float)):
+            continue
+        if not MIN_SESSIONS <= int(count) <= MAX_SESSIONS:
+            continue
+        counts[sport.strip().lower()] = int(count)
+
+    if not counts:
+        return False
+
+    athlete.sessions_per_week_json = json.dumps(counts, ensure_ascii=False)
+    return True
+
+
 def apply_extraction(
     athlete: AthleteModel,
     data: dict[str, Any],
@@ -293,10 +434,11 @@ def apply_extraction(
             athlete.goals_json = json.dumps(kept, ensure_ascii=False)
             changed.append("goals")
 
-    sports = _clean_sports(data.get("sports")) if "sports" in data else None
-    if sports is not None:
-        athlete.sports_json = json.dumps(sports, ensure_ascii=False)
+    if _merge_sports(athlete, data):
         changed.append("sports")
+
+    if _apply_sessions_per_week(athlete, data.get("sessions_per_week")):
+        changed.append("sessions_per_week")
 
     primary = data.get("primary_sport")
     if isinstance(primary, str) and primary.strip().lower() in _KNOWN_SPORTS:

@@ -83,6 +83,15 @@ class AthleteModel(Base):
     primary_sport: Mapped[str] = mapped_column(String)
     target_race_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     hours_per_week: Mapped[float] = mapped_column(Float)
+    sessions_per_week_json: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True, default=None
+    )
+    """How many sessions per sport the athlete wants, as {sport: count}.
+
+    Separate from `hours_per_week` because they are different quantities and
+    conflating them cost a whole training week: "je vise 3 sorties" was
+    written as three *hours*, which capped the generated week at 1h30.
+    """
     sleep_hours_typical: Mapped[float] = mapped_column(Float, default=7.0)
     stress_level: Mapped[int] = mapped_column(Integer, default=5)
     job_physical: Mapped[bool] = mapped_column(Boolean, default=False)
