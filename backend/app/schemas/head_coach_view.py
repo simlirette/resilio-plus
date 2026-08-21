@@ -66,6 +66,10 @@ class HeadCoachView(BaseModel):
     # Exact, because weeks round: 3 days out and 27 days out can read as the
     # same number of weeks and hide the urgency.
     days_to_race: int | None = None
+    # What the athlete's fitness projects for their stated goal, and the
+    # alternative to offer alongside it. Empty when there is nothing honest
+    # to say -- no measured VDOT, or a goal with no time in it.
+    goal_feasibility: str | None = None
 
     # ─── Current training state ──────────────────────────────────────────────
     acwr_ratio: float | None = None

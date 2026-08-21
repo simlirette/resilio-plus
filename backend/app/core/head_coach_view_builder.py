@@ -93,6 +93,7 @@ def build_head_coach_view(
         view.recent_sessions = _recent_sessions(athlete.id, db)
         _attach_load_state(view, athlete.id, db)
         _attach_estimated_vdot(view, athlete.id, db)
+        _attach_goal_feasibility(view)
         _attach_snapshot(view, athlete.id, db)
     except Exception:
         # A conversation turn is worth more than a complete view.
@@ -254,6 +255,45 @@ def _attach_estimated_vdot(view: HeadCoachView, athlete_id: str, db: Any) -> Non
 
     view.vdot = estimate_vdot(activities)
     view.vdot_source = "estimated_from_recent_runs"
+
+
+def _attach_goal_feasibility(view: HeadCoachView) -> None:
+    """Tell the coach whether the goal the athlete stated is reachable.
+
+    Runs after the VDOT is resolved, because without a measured fitness there
+    is nothing honest to say and the field stays empty. The first live plan
+    accepted "sub-2h" in silence from an athlete projecting 2h20.
+    """
+    from .goal_feasibility import assess_goal, describe_assessment, parse_goal_time
+
+    if view.vdot is None or not view.goals:
+        return
+
+    for goal in view.goals:
+        seconds = parse_goal_time(str(goal))
+        if seconds is None:
+            continue
+        assessment = assess_goal(view.vdot, _goal_distance(view), seconds)
+        text = describe_assessment(assessment)
+        if text:
+            view.goal_feasibility = text
+        return
+
+
+def _goal_distance(view: HeadCoachView) -> str:
+    """The race the goal is about, read from the goal text itself."""
+    joined = " ".join(str(goal).lower() for goal in view.goals)
+    if "marathon" in joined and not any(
+        word in joined for word in ("semi", "half", "demi")
+    ):
+        return "marathon"
+    if any(word in joined for word in ("semi", "half", "demi", "21")):
+        return "half_marathon"
+    if "10" in joined:
+        return "10k"
+    if "5" in joined:
+        return "5k"
+    return "half_marathon"
 
 
 def _attach_load_state(view: HeadCoachView, athlete_id: str, db: Any) -> None:
