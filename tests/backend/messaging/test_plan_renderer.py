@@ -125,31 +125,36 @@ class TestRenderSessionLine:
 
 
 class TestMultiLineNotes:
-    """Agent notes are sometimes several lines — they must stay one bullet.
+    """A multi-line note stays one bullet, with its extra lines indented.
 
-    The nutrition coach emits per-day-type targets as a multi-line block; a live
-    plan on 2026-08-20 rendered it as orphan lines under a stray bullet.
+    The example changed on 2026-08-21. It used to be the nutrition coach's
+    per-day-type macro table, because that is what a live plan had rendered as
+    orphan lines. That table is now summarised before it ever reaches the
+    athlete (see `test_notes_are_readable.py`) — formatting machine output
+    neatly was solving the wrong half of the problem. The indentation still
+    matters for real multi-line prose, so the mechanism stays pinned; only the
+    example is now one that would actually be sent.
     """
 
     MULTI = (
-        "rest: carbs=3.5g/kg protein=1.8g/kg\n"
-        "strength: carbs=4.5g/kg protein=1.8g/kg\n"
-        "race: carbs=7.0g/kg protein=1.8g/kg"
+        "Volume maintenu à plat cette semaine.\n"
+        "La sortie longue passe au dimanche.\n"
+        "Pas de qualité avant jeudi."
     )
 
     def test_extra_lines_are_indented_under_their_bullet(self) -> None:
         text = render_week({**PLAN, "notes": [self.MULTI]})
 
-        assert "- rest: carbs=3.5g/kg protein=1.8g/kg" in text
-        assert "  strength: carbs=4.5g/kg protein=1.8g/kg" in text
-        assert "\nstrength:" not in text
+        assert "- Volume maintenu à plat cette semaine." in text
+        assert "  La sortie longue passe au dimanche." in text
+        assert "\nLa sortie longue" not in text
 
     def test_only_one_bullet_is_opened_per_note(self) -> None:
         text = render_week({**PLAN, "notes": [self.MULTI]})
 
         why = text.split("**Pourquoi cette semaine**", 1)[1]
-        assert why.count("- rest:") == 1
-        assert "- strength:" not in why
+        assert why.count("- Volume maintenu") == 1
+        assert "- La sortie longue" not in why
 
     def test_a_single_line_note_is_unchanged(self) -> None:
         text = render_week({**PLAN, "notes": ["Volume held flat."]})

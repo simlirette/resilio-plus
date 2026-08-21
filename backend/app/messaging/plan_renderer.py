@@ -6,6 +6,7 @@ dialect. Nothing here emits provider markup directly.
 """
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable, Mapping, Sequence
 from datetime import date
 from typing import Any
@@ -151,6 +152,40 @@ def _as_bullet(entry: str) -> list[str]:
     return [f"- {parts[0]}"] + [f"  {part.lstrip()}" for part in parts[1:]]
 
 
+# A note written as `key=value key=value` is how an agent hands numbers to the
+# Head Coach. It is not something a person reads on their phone. The first live
+# plan ended with five lines of `carbs=3.5g/kg protein=1.8g/kg kcal≈2467`.
+_KEY_VALUE = re.compile(r"[A-Za-z_]{2,}\s*[=≈]\s*[\d.]")
+
+#: What each machine-readable note is replaced with. Dropping them silently
+#: would lose a real coaching point; this keeps the point and loses the table.
+_NOTE_SUMMARIES: tuple[tuple[str, str], ...] = (
+    ("carb", "Nutrition : glucides indexés sur le type de séance, protéines constantes."),
+    ("kcal", "Nutrition : glucides indexés sur le type de séance, protéines constantes."),
+    ("acwr", "Charge suivie via l'ACWR."),
+    ("vdot", "Allures calées sur ton VDOT actuel."),
+    ("quads", "Fatigue musculaire suivie par groupe."),
+)
+_NOTE_FALLBACK = "Détail technique disponible sur demande."
+
+
+def _is_machine_output(note: str) -> bool:
+    """True when a note reads as data rather than as a sentence.
+
+    A pace ("4:09/km") and a date carry digits and colons too, so the test is
+    an ``=`` or ``≈`` binding a bare word to a number -- which prose does not do.
+    """
+    return bool(_KEY_VALUE.search(note))
+
+
+def _readable_note(note: str) -> str:
+    lowered = note.lower()
+    for marker, summary in _NOTE_SUMMARIES:
+        if marker in lowered:
+            return summary
+    return _NOTE_FALLBACK
+
+
 def _reasoning_lines(plan: Mapping[str, Any]) -> list[str]:
     lines: list[str] = []
 
@@ -181,11 +216,22 @@ def _reasoning_lines(plan: Mapping[str, Any]) -> list[str]:
                 prefix = f"{_SEVERITY_FR.get(severity, severity)} : " if severity else ""
                 lines.append(f"{prefix}{message}")
 
-    notes = plan.get("notes")
-    if isinstance(notes, str) and notes.strip():
-        lines.append(notes.strip())
-    elif isinstance(notes, Iterable) and not isinstance(notes, (str, bytes)):
-        lines.extend(str(n).strip() for n in notes if str(n).strip())
+    raw_notes = plan.get("notes")
+    if isinstance(raw_notes, str):
+        candidates = [raw_notes]
+    elif isinstance(raw_notes, Iterable) and not isinstance(raw_notes, bytes):
+        candidates = [str(note) for note in raw_notes]
+    else:
+        candidates = []
+
+    seen: set[str] = set()
+    for note in (n.strip() for n in candidates):
+        if not note:
+            continue
+        rendered = _readable_note(note) if _is_machine_output(note) else note
+        if rendered not in seen:
+            seen.add(rendered)
+            lines.append(rendered)
 
     return lines
 
