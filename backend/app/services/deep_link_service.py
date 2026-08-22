@@ -22,7 +22,15 @@ from ..db.models import (
     GoogleCalendarCredentialModel,
 )
 
-SUPPORTED_PROVIDERS: tuple[str, ...] = ("strava", "hevy", "terra", "google")
+#: Terra is deliberately absent. It is a paid API supplying two signals --
+#: `hrv_rmssd` and `sleep_duration_hours` -- that Apple Health provides from the
+#: athlete's own phone for free, and it appears nowhere in the goal document.
+#: Because this list drives `pending_providers`, leaving it in meant that an
+#: athlete who had connected everything else was offered exactly one thing:
+#: Terra, on a form asking for a dashboard id he would have to buy an account
+#: to obtain. The connector code stays for an athlete who already has Terra;
+#: nothing proposes it unprompted.
+SUPPORTED_PROVIDERS: tuple[str, ...] = ("strava", "hevy", "google")
 
 PROVIDER_LABELS: dict[str, str] = {
     "strava": "Strava",

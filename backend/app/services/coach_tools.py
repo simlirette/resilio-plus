@@ -322,8 +322,19 @@ def _offer_connector_links(_: dict[str, Any], ctx: ToolContext) -> ToolResult:
         heading="**Connecte tes données**",
     )
     if invitation is None:
-        return ToolResult(True, "Tout est déjà connecté.")
-    return ToolResult(True, invitation)
+        return ToolResult(True, "Tout ce qui se branche par lien est connecté." + _APPLE_HEALTH)
+    return ToolResult(True, invitation + "\n" + _APPLE_HEALTH)
+
+
+#: Recovery data has no link to mint: Apple Health is a file the athlete
+#: exports, not an OAuth flow. Without this line the coach has no way to know
+#: the source exists, and HRV and sleep stay unreachable — which is what
+#: removing Terra from the offer would otherwise cause.
+_APPLE_HEALTH = (
+    "\nHRV et sommeil ne passent pas par un lien : Apple Health s'envoie en "
+    "fichier (Santé → profil → Exporter toutes les données → export.xml, puis "
+    "POST /integrations/apple-health/import)."
+)
 
 
 _IMPLEMENTATIONS = {

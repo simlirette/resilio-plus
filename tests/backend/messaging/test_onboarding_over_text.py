@@ -274,11 +274,11 @@ def test_connect_command_issues_provider_links_mid_onboarding(
     gateway.handle_inbound("telegram", EXTERNAL_ID, "/connect")
 
     text = channel.messages[-1][0]
-    assert text.count("https://coach.example.com/integrations/link/") == 4
+    assert text.count("https://coach.example.com/integrations/link/") == 3
 
     db_session.expire_all()
     rows = db_session.query(DeepLinkTokenModel).all()
-    assert {row.provider for row in rows} == {"strava", "hevy", "terra", "google"}
+    assert {row.provider for row in rows} == {"strava", "hevy", "google"}
     assert all(row.consumed_at is None for row in rows)
     db_session.rollback()
 

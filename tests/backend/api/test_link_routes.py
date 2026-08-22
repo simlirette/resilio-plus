@@ -71,6 +71,34 @@ def _issue(db: Session, provider: str) -> str:
     return issue_link(db, athlete_id=ATHLETE_ID, provider=provider)
 
 
+def _legacy_token(db: Session, provider: str) -> str:
+    """A token minted before its provider left `SUPPORTED_PROVIDERS`.
+
+    Terra can no longer be offered (see
+    `tests/backend/services/test_terra_is_not_offered.py`), so `issue_link`
+    rejects it. Links already sitting in an athlete's chat history still
+    resolve — `resolve_link` reads the row and does not re-check the offer
+    list — and this is how that path is reached now.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    from app.db.models import DeepLinkTokenModel
+
+    token = f"legacy-{provider}"
+    now = datetime.now(timezone.utc)
+    with db.begin():
+        db.add(
+            DeepLinkTokenModel(
+                token=token,
+                athlete_id=ATHLETE_ID,
+                provider=provider,
+                created_at=now,
+                expires_at=now + timedelta(hours=2),
+            )
+        )
+    return token
+
+
 class TestOpenLink:
     def test_hevy_link_renders_a_key_form(
         self, client_and_db: tuple[TestClient, Session]
@@ -151,7 +179,7 @@ class TestOpenLink:
         self, client_and_db: tuple[TestClient, Session], monkeypatch: pytest.MonkeyPatch
     ) -> None:
         client, db = client_and_db
-        token = _issue(db, "terra")
+        token = _legacy_token(db, "terra")
         monkeypatch.setenv("TERRA_WIDGET_URL", "https://widget.tryterra.co/abc")
 
         response = client.get(f"/integrations/link/{token}", follow_redirects=False)
@@ -163,7 +191,7 @@ class TestOpenLink:
         self, client_and_db: tuple[TestClient, Session], monkeypatch: pytest.MonkeyPatch
     ) -> None:
         client, db = client_and_db
-        token = _issue(db, "terra")
+        token = _legacy_token(db, "terra")
         monkeypatch.delenv("TERRA_WIDGET_URL", raising=False)
 
         response = client.get(f"/integrations/link/{token}")

@@ -96,13 +96,13 @@ class TestConnect:
         build_router(db_session, notifier).handle(athlete_id, "/connect")
 
         text = notifier.last
-        assert text.count("https://coach.example.com/integrations/link/") == 4
-        for label in ("Strava", "Hevy", "Terra", "Google Calendar"):
+        assert text.count("https://coach.example.com/integrations/link/") == 3
+        for label in ("Strava", "Hevy", "Google Calendar"):
             assert label in text
 
         db_session.expire_all()
         rows = db_session.query(DeepLinkTokenModel).all()
-        assert {row.provider for row in rows} == {"strava", "hevy", "terra", "google"}
+        assert {row.provider for row in rows} == {"strava", "hevy", "google"}
         assert all(row.athlete_id == athlete_id for row in rows)
 
 

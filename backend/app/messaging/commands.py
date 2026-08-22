@@ -16,7 +16,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from ..db.models import AthleteModel, ConnectorCredentialModel
-from ..services.deep_link_service import connector_links_message
+from ..services.deep_link_service import SUPPORTED_PROVIDERS, connector_links_message
 from .base import Button
 
 logger = logging.getLogger(__name__)
@@ -118,11 +118,14 @@ class CommandRouter:
     def _connect(self, athlete_id: str) -> CommandOutcome:
         try:
             # /connect always offers every provider — the athlete may want to
-            # reconnect one that is already linked.
+            # reconnect one that is already linked. The list comes from
+            # SUPPORTED_PROVIDERS, not from _PROVIDER_LABEL: the labels also
+            # name Terra so that an athlete who has it connected sees it in
+            # /status, but nothing offers it any more.
             message = connector_links_message(
                 self._db,
                 athlete_id=athlete_id,
-                providers=list(_PROVIDER_LABEL),
+                providers=list(SUPPORTED_PROVIDERS),
             )
         except SQLAlchemyError:
             logger.warning("connect_links_failed", exc_info=True)
