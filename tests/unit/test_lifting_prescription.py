@@ -291,3 +291,36 @@ def test_strength_sessions_inherit_week_number(monkeypatch):
                                                   "sets": 3, "rep_range": [8, 10], "target_rir": 2}]}]}
     out = lift_api.validate_week_lifting(week)
     assert not any("invalid" in e for e in out["errors"]), out["errors"]
+
+
+def test_save_plan_review_handles_non_ascii(tmp_path, monkeypatch):
+    """save-review crashed on ✅ under cp1252; review files are UTF-8 now."""
+    from types import SimpleNamespace
+
+    import resilio.core.plan as core_plan
+
+    monkeypatch.setattr(core_plan, "_generate_approval_block", lambda *a, **k: "Approuvé ✅")
+    monkeypatch.setattr(core_plan, "current_plan_review_path", lambda: "review.md")
+    src = tmp_path / "src.md"
+    src.write_text("# Plan — semaine clé ✅ Séance", encoding="utf-8")
+    repo = SimpleNamespace(resolve_path=lambda p: str(tmp_path / p))
+    core_plan.save_plan_review(str(src), plan=None, repo=repo)
+    assert "Séance" in (tmp_path / "review.md").read_text(encoding="utf-8")
+
+
+def test_populate_inherits_week_number_on_workouts(monkeypatch):
+    """export-week output omits workouts[].week_number; populate fills it from the week."""
+    import resilio.api.plan as plan_api
+
+    seen = {}
+
+    def fake_validate(week_data):
+        seen["numbers"] = [w.get("week_number") for w in week_data["workouts"]]
+        raise RuntimeError("stop after inheritance")
+
+    monkeypatch.setattr(plan_api, "_validate_explicit_workouts", fake_validate)
+    monkeypatch.setattr(plan_api, "get_current_plan", lambda: SimpleNamespace(weeks=[]))
+    week = {"week_number": 4, "workouts": [{"date": "2026-11-09"}, {"date": "2026-11-11", "week_number": 4}]}
+    with pytest.raises(RuntimeError):
+        plan_api.populate_plan_workouts([week])
+    assert seen["numbers"] == [4, 4]
