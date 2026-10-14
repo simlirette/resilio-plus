@@ -214,7 +214,7 @@ Decisions:
 - Strava `started_at` is a local date stored at midnight UTC; never timezone-convert it. `session_logs.logged_at` is a real instant and does.
 - New `readiness_source` column: a 1.0 modifier means "no adjustment" to agents but reads as "fully fresh" in the coach view.
 - Extraction refuses out-of-range values instead of clamping, and derives VDOT from a stated race time rather than asking the model.
-- Onboarding's 6 fixed blocks are the root cause of "not a real coach" — no history, no date, no memory. Plan: `docs/superpowers/plans/2026-08-21-real-coach.md`.
+- Onboarding's 6 fixed blocks are the root cause of "not a real coach" — no history, no date, no memory. **[refined 2026-08-21: removing them was necessary and not sufficient — see the agentic-coach entry below]** Plan: `docs/superpowers/plans/2026-08-21-real-coach.md`.
 Rejected:
 - Clamping a bad extraction — launders a parse error into a plausible value.
 - Letting the model emit `vdot` — it would set every prescribed pace.
@@ -222,3 +222,89 @@ Rejected:
 Open:
 - VDOT 30 in the first live plan is untraced.
 - Phase A (conversation memory) not started.
+
+## 2026-08-21 [saved] — the coach narrates, it does not decide
+Goal: Second live test still loops; diagnose why A/B/C were not enough.
+Decisions:
+- Any per-turn imperative overrides the conversation. Removing the 6-block script only moved the same failure up one level.
+- Facts need provenance (declared / measured / assumed). The coach told the athlete "tu m'as indiqué 8h" about a bootstrap default.
+- Target architecture is a tool-use loop: model decides the turn, `update_profile` / `generate_plan` / `restart_onboarding` execute.
+- Gaps become context ("the profile lacks X"), never an instruction ("ask for X").
+- Deterministic engine stays untouched; tools call it. It was never the problem.
+Rejected:
+- Patching the instruction again — third variant of the same mistake.
+- Letting the model emit paces directly; tools compute, model phrases.
+- Replays that always answer as expected — they hid the loop for three phases.
+Open:
+- Plan at `docs/superpowers/plans/2026-08-21-agentic-coach.md`; D1 not started.
+- No proactive follow-up exists; Apple Health still unconnected.
+
+## 2026-10-14 15:00 [saved] — Claude Code hybrid coach (design)
+Goal: Use resilio-plus as Claude Code-native coach like du-phan, plus full lifting prescription.
+Decisions:
+- Extend `resilio/` CLI natively (`resilio lift …`); backend untouched — tools compute, coach judges.
+- Root CLAUDE.md becomes coach persona; dev guide moves to `backend/CLAUDE.md`.
+- Hevy writes via deterministic `resilio lift push`, reusing one routine per slot — API has no delete.
+- `hevy-mcp@6.1.16` (telemetry off) for reads/ad-hoc; Strava stays sole load source, Hevy = lift detail.
+- Order SP1 workspace → SP2 model → SP3 skills → SP4 Hevy sync → SP5 push; specs in `docs/superpowers-optimized/specs/`.
+Rejected:
+- CLI importing backend/app/core lifting logic (coupling, shallow heuristics).
+- Lifting via skills/markdown only (`/head-coach` chain) — no data, no guardrails.
+- Cloning Hevy's ChatGPT app — Hevy-hosted, ChatGPT-only.
+Open:
+- [resolved 2026-10-14] SP1 approved, executed, merged to main (07bd385).
+- [resolved 2026-10-14] HEVY_API_KEY set as Windows user env var.
+
+## 2026-10-14 15:30 [saved] — SP1 coach workspace execution
+Goal: Execute SP1: port resilio-app strength/calendar, coach CLAUDE.md, Hevy MCP, live data.
+Decisions:
+- `[tool.uv] managed = false` in pyproject — uv-based MCP (obsidian) at launch built a partial .venv that Poetry silently preferred.
+- Always `poetry run …`; hard-coded `resilio-8kDCl3fk` venv path is stale (Poetry uses `resilio-xN2RUnV3`).
+- Keep "Weather Context & Adjustments" in weekly-plan-generate — contract test requires it (sync wrongly dropped it, restored).
+- Live data copied once; resilio-app left untouched (read-only source).
+Rejected:
+- Running `claude mcp list` in repo root without the uv guard — spawns every MCP there.
+Open:
+- Half-marathon plan ended 2026-09-19; first session needs new goal + macro plan.
+- Approve `hevy` project MCP once; next: SP2 lifting model spec.
+
+## 2026-10-14 16:00 [saved] — coaching handoff resilio-app → resilio-plus
+Goal: Carry the live resilio-app coaching conversation into resilio-plus without losing context.
+Decisions:
+- Pending block proposal stored in `data/plans/handoff_2026-10-14_from_resilio_app.md` (gitignored) — it was never persisted as a plan.
+- Coach sessions continue only in resilio-plus; answering in resilio-app would fork the data again.
+- SP2 inputs from transcript: gym Mon–Wed (+opt Thu), Upper A/Legs/Upper B split, equal priority, Nordic/RDL + knee accessories.
+Rejected:
+- Copying Strava credentials from the transcript into handoff docs.
+Open:
+- Lifting goal (strength/hypertrophy/maintain) still unknown for SP2.
+
+## 2026-10-14 18:30 [saved] — SP2–SP5 lifting shipped
+Goal: Full lifting prescription in the Claude Code coach, pushed to Hevy.
+Decisions:
+- Stages reordered: Hevy data/analysis before prescription — template ids and history needed first.
+- Hevy routines written only by `resilio lift push` (slot per weekday, PUT in place); API cannot delete.
+- Loads only from history ≤6 weeks old, rounded to 0.5 kg (lbs entries arrive as long kg floats).
+- `plan validate-week` now runs lifting checks; strength placement guardrail was never wired before.
+- Calendar offsets computed per date from settings timezone; fixed -04:00 was wrong abroad and after DST.
+Rejected:
+- Writing planned weeks through hevy-mcp (LLM retyping JSON can drift from the validated plan).
+- Real push during development — would leave undeletable test routines in the athlete's Hevy.
+Open:
+- First real `lift push` happens with the first approved week; watch rep_range rendering.
+- `plan export-week` omits workouts[].week_number (export→populate round-trip fails).
+
+## 2026-10-14 21:00 [saved] — resilio-plus lifting rules + simulated sessions
+Goal: Make the Claude Code coach use Simon's resilio-plus lifting design; prove it with simulations.
+Decisions:
+- DUP adapted to hypertrophy_athletic (6-8 / 8-12 / 12-15); no 3-5 rep strength days.
+- SFR tier for every Hevy template: list first, then equipment/pattern heuristic (3/462 → 424/462).
+- ACWR > 1.3 → ≥15% fewer lifting sets vs last Hevy week; deload by week 4; recovery week RIR 3-4.
+- Lifting athletes are multi-sport: macro must fill target_systemic_load_au (analysis load now reads stored activities).
+- Loads logged in lb stay in lb (display + 5/10 lb steps); Hevy still receives exact kg.
+Rejected:
+- CLI tests that run write commands from the repo root — always chdir to tmp with a .git marker.
+- Shell heredocs for regex edits — `\b` became backspace; patch via Python files.
+Open:
+- First real session: answer the 3 questions; check Hevy rep_range rendering on first push.
+- Profile VDOT 36 vs approved 35; hamstring memory tagged resolved — fix in session.
