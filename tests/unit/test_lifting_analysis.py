@@ -95,15 +95,23 @@ def test_classify_pattern(title, pattern):
     assert classify_pattern(title) == pattern
 
 
-def test_sfr_tier_from_exercise_database():
-    cat = build_catalog(
-        {
-            "x": _t("x", "Romanian Deadlift (Dumbbell)", "hamstrings"),
-            "y": _t("y", "Lat Pulldown (Cable)", "lats"),
-        }
-    )
-    assert cat["x"].sfr_tier == 2
-    assert cat["y"].sfr_tier is None  # no exact match → not guessed
+def test_sfr_tier_list_first_then_heuristic():
+    def t(tid, title, primary, equipment):
+        return ExerciseTemplate(id=tid, title=title, primary_muscle_group=primary, equipment=equipment)
+
+    cat = build_catalog({x.id: x for x in [
+        t("a", "Romanian Deadlift (Dumbbell)", "hamstrings", "dumbbell"),   # list: tier 2
+        t("b", "Lat Pulldown (Cable)", "lats", "machine"),                  # machine/cable: 1
+        t("c", "Squat (Barbell)", "quadriceps", "barbell"),                 # barbell squat: 3
+        t("d", "Deadlift (Barbell)", "hamstrings", "barbell"),              # barbell deadlift: 3
+        t("e", "Bent Over Row (Barbell)", "upper_back", "barbell"),         # barbell row: 2
+        t("f", "Bulgarian Split Squat (Dumbbell)", "quadriceps", "dumbbell"),  # DB compound: 2
+        t("g", "Lateral Raise (Dumbbell)", "shoulders", "dumbbell"),        # isolation: 1
+        t("h", "Box Jump", "quadriceps", "none"),                           # plyo: none
+        t("i", "Pull Up", "lats", "none"),                                  # bodyweight compound: 2
+    ]})
+    assert {k: v.sfr_tier for k, v in cat.items()} == {
+        "a": 2, "b": 1, "c": 3, "d": 3, "e": 2, "f": 2, "g": 1, "h": None, "i": 2}
 
 
 def test_landmarks_are_packaged():

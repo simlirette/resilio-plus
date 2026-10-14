@@ -17,6 +17,13 @@ prescribe by RIR, no loads, and tell the athlete once.
 
 ## Design rules
 
+- **DUP:** give the sessions different rep zones (heavy 6–8 / moderate 8–12 / light 12–15); see
+  methodology §3b for the 3-session pattern.
+- **SFR tier first:** Tier 1 machines/cables when running load is moderate/high; Tier 3 barbell lifts
+  only in light running weeks (`sfr_tier` in `resilio lift templates search`).
+- **Activation sets:** `warmup_sets` ≥ 1 for Tier 2 compounds, ≥ 2 for Tier 3.
+- **ACWR > 1.3** (`resilio status`): ≥ 15 % fewer lifting sets than last week.
+
 - Gym sessions only on `gym_days` (+ `optional_days` when the athlete wants them). `validate-week` errors otherwise.
 - Follow the block's `sessions_per_week` and `weekly_sets`; stay inside the hybrid MRV.
 - Place legs per the running week: never the day before long run / intervals / strides / time trial.

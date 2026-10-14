@@ -152,6 +152,37 @@ def load_landmarks() -> dict[str, dict]:
     return {k: v for k, v in data.items() if not k.startswith("_")}
 
 
+_TIER3_BARBELL = re.compile(
+    r"\b(squat|deadlift|bench press|overhead press|military press|clean|snatch)\b"
+)
+_LOW_CNS_HINTS = ("cable", "machine", "smith machine")
+
+
+def sfr_tier(title: str, equipment: Optional[str], pattern: str) -> Optional[int]:
+    """SFR tier: resilio-plus exercise list first, then an equipment/pattern heuristic.
+
+    Tier 1 = high SFR / low CNS (machines, cables, isolation), Tier 2 = free-weight or
+    bodyweight compounds, Tier 3 = heavy barbell squat/deadlift/bench/press/olympic lifts.
+    Plyo, core and carries are not tiered.
+    """
+    listed = _sfr_index().get(_norm(title))
+    if listed is not None:
+        return listed
+    if pattern in (MovementPattern.PLYO.value, MovementPattern.CORE.value, MovementPattern.CARRY.value):
+        return None
+    t = title.lower()
+    if pattern == MovementPattern.ISOLATION.value:
+        return 1
+    if equipment == "machine" or any(h in t for h in _LOW_CNS_HINTS):
+        return 1
+    if equipment == "barbell" or "(barbell)" in t:
+        excluded = re.search(r"\b(romanian|rdl|single leg|split|bulgarian)\b", t)
+        if _TIER3_BARBELL.search(t) and not excluded:
+            return 3
+        return 2
+    return 2
+
+
 def catalog_entry(t: ExerciseTemplate) -> CatalogEntry:
     primary = HEVY_TO_GROUP.get(t.primary_muscle_group or "")
     secondary: list[str] = []
@@ -159,15 +190,16 @@ def catalog_entry(t: ExerciseTemplate) -> CatalogEntry:
         g = HEVY_TO_GROUP.get(m)
         if g and g != primary and g not in secondary:
             secondary.append(g)
+    pattern = classify_pattern(t.title)
     return CatalogEntry(
         template_id=t.id,
         title=t.title,
         template_type=t.type,
         primary_group=primary,
         secondary_groups=secondary,
-        pattern=MovementPattern(classify_pattern(t.title)),
+        pattern=MovementPattern(pattern),
         lower_body=(t.primary_muscle_group or "") in LOWER_BODY_MUSCLES,
-        sfr_tier=_sfr_index().get(_norm(t.title)),
+        sfr_tier=sfr_tier(t.title, t.equipment, pattern),
         equipment=t.equipment,
     )
 

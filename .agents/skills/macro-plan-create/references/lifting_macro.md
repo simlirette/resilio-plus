@@ -26,6 +26,9 @@ resilio lift blocks get
 
 ## Rules
 
+- Deload block at least every 4 weeks (resilio-plus rule), placed on the running recovery week.
+- Plan the DUP zone rotation per block (e.g. weeks 1–3 Upper A heavy / Upper B light, next block swapped).
+
 - Lifting deloads land on the running recovery weeks.
 - `hypertrophy_athletic` with a running test/race ahead: upper body MEV→MAV across the block;
   lower body near MEV (hybrid MRV is low). Final 1–2 weeks before a race/test → `maintenance`

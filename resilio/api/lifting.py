@@ -328,8 +328,58 @@ def validate_week_lifting(week: dict) -> dict:
         _lifting_profile(),
         week_start=week_start,
         week_number=int(week.get("week_number") or 0),
+        context=_week_context(week, week_start),
     )
-    return res.model_dump()
+    out = res.model_dump()
+    return out
+
+
+def _week_context(week: dict, week_start: date):
+    """Running load, ACWR, last week's Hevy sets and deload history for the validator. Never raises."""
+    from resilio.core.lifting.prescription import LiftContext, run_load_level
+
+    runs = [w for w in week.get("workouts") or [] if w.get("workout_type") not in (None, "rest")]
+    minutes = 0.0
+    for w in runs:
+        if w.get("duration_minutes"):
+            minutes += float(w["duration_minutes"])
+        elif w.get("distance_km"):
+            minutes += float(w["distance_km"]) * 6.5
+    ctx = LiftContext(run_load=run_load_level(len(runs), minutes),
+                      is_recovery_week=bool(week.get("is_recovery_week")))
+    try:
+        from resilio.api.metrics import get_current_metrics
+
+        m = get_current_metrics()
+        acwr = getattr(m, "acwr", None)
+        value = getattr(acwr, "value", acwr)
+        if isinstance(value, (int, float)):
+            ctx.acwr = float(value)
+    except Exception:
+        pass
+    try:
+        prev = _store().load_workouts(since=week_start - timedelta(days=7), until=week_start - timedelta(days=1))
+        if prev:
+            ctx.prev_week_sets = float(sum(1 for w in prev for e in w.exercises for st in e.sets if st.is_working))
+    except Exception:
+        pass
+    try:
+        plan = _load_plan()
+        if not isinstance(plan, LiftError):
+            n = int(week.get("week_number") or 0)
+            deload_weeks = {w.week_number for w in plan.weeks if w.is_recovery_week}
+            for b in plan.lifting_blocks:
+                if b.focus == "deload":
+                    deload_weeks.update(range(b.start_week, b.end_week + 1))
+            count = 1
+            k = n - 1
+            while k >= 1 and k not in deload_weeks:
+                count += 1
+                k -= 1
+            ctx.weeks_since_deload = count
+    except Exception:
+        pass
+    return ctx
 
 
 def suggest_loads(file_path: str, overwrite: bool = False) -> Union[dict, LiftError]:

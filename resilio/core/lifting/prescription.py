@@ -29,6 +29,40 @@ NON_HYPERTROPHY = {ExerciseKind.POWER.value, ExerciseKind.MOBILITY.value}
 LOWER_BODY_SET_THRESHOLD = 4  # a non-"legs" session with this many lower-body sets counts as legs
 
 
+# Running-load level (resilio-plus lift-coach rule) → share of the landmark hybrid_reduction applied.
+RUN_LOAD_REDUCTION_SHARE = {"light": 1 / 3, "moderate": 2 / 3, "high": 1.0}
+ACWR_LIFT_CUT_THRESHOLD = 1.3
+ACWR_LIFT_CUT = 0.15  # lifting volume at least 15 % below last week when ACWR > 1.3
+DELOAD_EVERY_WEEKS = 4
+
+
+def run_load_level(run_count: int, run_minutes: float) -> str:
+    """light ≤3 h and ≤3 runs; high >6 h or >4 runs; moderate otherwise."""
+    if run_minutes > 360 or run_count > 4:
+        return "high"
+    if run_minutes <= 180 and run_count <= 3:
+        return "light"
+    return "moderate"
+
+
+class LiftContext(BaseModel):
+    """Week context the validator cannot derive from the sessions alone."""
+
+    run_load: Optional[str] = None  # light | moderate | high (None = assume high)
+    acwr: Optional[float] = None
+    prev_week_sets: Optional[float] = None  # actual working sets last week (Hevy)
+    weeks_since_deload: Optional[int] = None  # counting this week
+    is_recovery_week: bool = False
+
+
+def _rep_zone(rep_low: int) -> str:
+    if rep_low <= 7:
+        return "heavy"
+    if rep_low <= 11:
+        return "moderate"
+    return "light"
+
+
 class LiftValidation(BaseModel):
     errors: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
@@ -68,6 +102,7 @@ def validate_lifting_week(
     week_start: date,
     week_number: int,
     hybrid: bool = True,
+    context: Optional[LiftContext] = None,
 ) -> LiftValidation:
     """Errors block the week; warnings are coaching flags the coach must address or accept."""
     from resilio.core.plan import validate_strength_placement
@@ -123,12 +158,16 @@ def validate_lifting_week(
     if sessions and profile.include_power and not has_power:
         res.warnings.append("No power/plyo exercise this week (profile include_power=true)")
 
+    ctx = context or LiftContext()
+    share = RUN_LOAD_REDUCTION_SHARE.get(ctx.run_load or "high", 1.0)
     vol = planned_volume(sessions, catalog)
     res.planned_volume = vol
     for g, lm in load_landmarks().items():
-        mrv = lm["MRV"] * (1 - lm.get("hybrid_reduction", 0.0)) if hybrid else lm["MRV"]
+        mrv = lm["MRV"] * (1 - lm.get("hybrid_reduction", 0.0) * share) if hybrid else lm["MRV"]
         if vol.get(g, 0) > mrv:
-            res.warnings.append(f"{g}: {vol[g]:g} planned hard sets above MRV {mrv:g}")
+            res.warnings.append(f"{g}: {vol[g]:g} planned hard sets above MRV {mrv:.1f} "
+                                f"(running load {ctx.run_load or 'high'})")
+    _resilio_plus_rules(sessions, catalog, ctx, res)
 
     # Placement vs runs: reuse the run-aware guardrail; sessions loaded with lower-body sets count as legs.
     placement_sessions = []
@@ -141,6 +180,57 @@ def validate_lifting_week(
     for v in validate_strength_placement(week_ns):  # type: ignore[arg-type]
         res.warnings.append(v.message)
     return res
+
+
+def _resilio_plus_rules(sessions: list, catalog: dict[str, CatalogEntry], ctx: LiftContext,
+                        res: LiftValidation) -> None:
+    """Rules carried over from the resilio-plus lift-coach design (DUP, SFR, ACWR, deload, activation)."""
+    working_sets = 0
+    zones: list[str] = []
+    for s in sessions:
+        label = f"{s.date} {s.title or getattr(s.session_type, 'value', s.session_type)}"
+        lows = []
+        for e in s.exercises:
+            entry = catalog.get(e.exercise_template_id)
+            kind = _kind(e)
+            if kind not in NON_HYPERTROPHY:
+                working_sets += e.sets
+            if kind != ExerciseKind.HYPERTROPHY.value:
+                continue
+            if e.rep_range:
+                lows.append(e.rep_range[0])
+            if ctx.is_recovery_week and e.target_rir is not None and e.target_rir < 3:
+                res.warnings.append(f"Recovery week: {e.title} at RIR {e.target_rir}; keep RIR 3-4 and ~40% fewer sets")
+            if entry is None:
+                continue
+            if entry.sfr_tier == 3 and (ctx.run_load or "high") != "light":
+                res.warnings.append(f"{label}: {e.title} is SFR Tier 3 (high CNS cost) with {ctx.run_load or 'high'} "
+                                    "running load; prefer Tier 1/2 (Tier 3 only when running is light)")
+            if entry.pattern in COMPOUND and entry.sfr_tier in (2, 3):
+                needed = 2 if entry.sfr_tier == 3 else 1
+                if e.warmup_sets < needed:
+                    res.warnings.append(f"{label}: {e.title} (Tier {entry.sfr_tier}) needs {needed} activation "
+                                        "set(s) before working sets (warmup_sets)")
+        if lows:
+            zones.append(_rep_zone(sorted(lows)[len(lows) // 2]))
+
+    if len(zones) >= 2 and len(set(zones)) == 1:
+        res.warnings.append(f"No undulation (DUP): all {len(zones)} sessions are in the {zones[0]} rep zone; "
+                            "vary heavy (6-8) / moderate (8-12) / light (12-15) across the week")
+
+    if ctx.acwr is not None and ctx.acwr > ACWR_LIFT_CUT_THRESHOLD and working_sets:
+        if ctx.prev_week_sets:
+            cap = ctx.prev_week_sets * (1 - ACWR_LIFT_CUT)
+            if working_sets > cap:
+                res.warnings.append(f"ACWR {ctx.acwr:.2f} > {ACWR_LIFT_CUT_THRESHOLD}: plan {working_sets} lifting sets "
+                                    f"but must cut >=15% vs last week ({ctx.prev_week_sets:g} -> max {cap:.0f})")
+        else:
+            res.warnings.append(f"ACWR {ctx.acwr:.2f} > {ACWR_LIFT_CUT_THRESHOLD}: cut lifting volume >=15% vs usual")
+
+    if (ctx.weeks_since_deload is not None and ctx.weeks_since_deload >= DELOAD_EVERY_WEEKS
+            and not ctx.is_recovery_week and sessions):
+        res.warnings.append(f"No lifting deload in {ctx.weeks_since_deload} weeks; schedule one "
+                            "(every 3-4 weeks, aligned with a running recovery week)")
 
 
 # ------------------------------------------------------------------- display

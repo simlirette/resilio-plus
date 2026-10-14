@@ -37,6 +37,46 @@ by `hybrid_reduction` (quads −40 %, hamstrings −30 %, glutes/calves −20 %)
 - MEV → MAV: productive range. Start a block near MEV and add 1–2 sets per muscle per week.
 - Above the (hybrid) MRV → recovery debt; cut sets or the run quality suffers first.
 
+## 3b. Resilio-plus rules (carried over from the original lift-coach design)
+
+These come from the resilio-plus lifting coach (`docs/archive/skills/lift-coach/SKILL.md`,
+`backend/app/agents/prompts.py`) and are checked by `resilio plan validate-week`.
+
+**Running load level** (from the week's runs): light ≤ 3 h and ≤ 3 runs · moderate 3–6 h / 3–4 runs ·
+high > 6 h or > 4 runs. The leg-volume reduction above scales with it (light ⅓, moderate ⅔, high full).
+
+**DUP — daily undulating periodization, adapted to `hypertrophy_athletic` (no max-strength days):**
+
+| Day type | Reps | Rest | Intent |
+|---|---|---|---|
+| Heavy hypertrophy | 6–8 | 2–3 min | Mechanical tension, compounds first |
+| Moderate hypertrophy | 8–12 | 90 s | Volume |
+| Light / metabolic | 12–15 | 45–60 s | Capacity, low joint stress |
+
+With 2+ gym sessions per week, use at least two of the three zones (validator warns otherwise).
+For a 3-session split (e.g. Upper A / Legs / Upper B): Upper A heavy, Legs moderate (reduced),
+Upper B light; swap the zones of Upper A and Upper B every block.
+
+**Exercise choice by SFR tier** (`.bmad-core/data/exercise-database.json`, shown as `sfr_tier` in
+`resilio lift templates search`):
+- Tier 1 (high SFR, low CNS: machines, cables): first choice when running load is moderate/high.
+- Tier 2 (moderate: DB RDL, Bulgarian split squat, DB bench, rows, pull-ups, dips).
+- Tier 3 (barbell squat / deadlift / bench / OHP, power clean): only when running load is light.
+- Exercises not on that list get a tier from equipment and movement: machine/cable/isolation = 1,
+  free-weight or bodyweight compound = 2, heavy barbell squat/deadlift/bench/press/olympic = 3.
+  Plyo, core and carries are not tiered.
+
+**Activation sets** before working sets: Tier 2 compounds ≥ 1 (≈ 50 % × 8–10), Tier 3 ≥ 2
+(50 % × 8–10, then 70–75 % × 4–5). Machines: one set is enough. Encode as `warmup_sets`.
+
+**ACWR rule:** when ACWR > 1.3, lifting volume drops ≥ 15 % vs last week's actual Hevy sets.
+
+**Deload cadence:** every 3–4 weeks (mandatory by week 4), on the running recovery week:
+~40 % fewer sets, same loads, RIR 3–4. Never train to failure (RIR 0) as a hybrid athlete.
+
+**Conflict windows** (`data/muscle_overlap.json`): same muscle group at high intensity needs 24 h;
+same-day run + lift needs 6 h; heavy CNS work needs 48 h before key runs.
+
 ## 4. Progression (double progression)
 
 `resilio lift progression` / `resilio lift suggest-loads` apply it from Hevy history:

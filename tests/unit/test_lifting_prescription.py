@@ -199,3 +199,76 @@ def test_validate_week_plan_reads_utf8_on_windows(tmp_path):
     f.write_text(json.dumps({"weeks": [week]}, ensure_ascii=False), encoding="utf-8")
     res = validate_week_plan(str(f))
     assert isinstance(res, dict) and "errors" in res
+
+
+# ---------------------------------------------------------------- resilio-plus rules (DUP, SFR, ACWR, deload)
+
+from resilio.core.lifting.prescription import LiftContext, run_load_level  # noqa: E402
+
+CAT_TIERS = build_catalog({
+    t.id: t for t in [
+        ExerciseTemplate(id="BBS", title="Barbell Back Squat", primary_muscle_group="quadriceps"),
+        ExerciseTemplate(id="LP", title="Machine Leg Press", primary_muscle_group="quadriceps"),
+        ExerciseTemplate(id="RDLD", title="Romanian Deadlift (DB)", primary_muscle_group="hamstrings"),
+        ExerciseTemplate(id="INC", title="Incline Bench Press (Dumbbell)", primary_muscle_group="chest"),
+    ]
+})
+NO_PROTECT = LiftingProfile(gym_days=["monday", "tuesday", "wednesday"], include_power=False)
+
+
+def _v(sessions, ctx, cat=CAT_TIERS):
+    return validate_lifting_week(sessions, [], cat, NO_PROTECT, week_start=MON, week_number=5, context=ctx)
+
+
+def test_run_load_level_thresholds():
+    assert run_load_level(run_count=3, run_minutes=170) == "light"
+    assert run_load_level(run_count=4, run_minutes=300) == "moderate"
+    assert run_load_level(run_count=5, run_minutes=250) == "high"
+    assert run_load_level(run_count=3, run_minutes=400) == "high"
+
+
+def test_tier3_warns_unless_running_load_light():
+    s = [sess(1, [ex("BBS", "Barbell Back Squat", rr=(6, 8))], stype="legs", title="Legs")]
+    assert any("SFR Tier 3" in w for w in _v(s, LiftContext(run_load="moderate")).warnings)
+    assert not any("SFR Tier 3" in w for w in _v(s, LiftContext(run_load="light")).warnings)
+
+
+def test_hybrid_reduction_scales_with_running_load():
+    s = [sess(1, [ex("LP", "Machine Leg Press", sets=7, rr=(10, 12)),
+                  ex("LP", "Machine Leg Press", sets=7, rr=(12, 15))], stype="legs", title="Legs")]
+    # quads MRV 20: high → ×0.6 = 12 (warn); light → ×(1-0.4/3) ≈ 17.3 (no warn)
+    assert any("quads" in w and "MRV" in w for w in _v(s, LiftContext(run_load="high")).warnings)
+    assert not any("quads" in w and "MRV" in w for w in _v(s, LiftContext(run_load="light")).warnings)
+
+
+def test_acwr_above_1_3_requires_15_percent_less_lifting():
+    s = [sess(0, [ex("INC", "Incline Bench Press (Dumbbell)", sets=10)])]
+    assert any("ACWR" in w for w in _v(s, LiftContext(acwr=1.4, prev_week_sets=10)).warnings)
+    assert not any("ACWR" in w for w in _v(s, LiftContext(acwr=1.4, prev_week_sets=12)).warnings)
+    assert not any("ACWR" in w for w in _v(s, LiftContext(acwr=1.1, prev_week_sets=10)).warnings)
+
+
+def test_deload_cadence_and_recovery_week_rir():
+    s = [sess(0, [ex("INC", "Incline Bench Press (Dumbbell)", rir=2)])]
+    assert any("deload" in w.lower() for w in _v(s, LiftContext(weeks_since_deload=4)).warnings)
+    assert not any("deload" in w.lower() for w in _v(s, LiftContext(weeks_since_deload=2)).warnings)
+    rec = _v(s, LiftContext(is_recovery_week=True))
+    assert any("Recovery week" in w and "RIR" in w for w in rec.warnings)
+
+
+def test_dup_warns_when_all_sessions_same_rep_zone():
+    same = [sess(d, [ex("INC", "Incline Bench Press (Dumbbell)", rr=(8, 10))], title=f"S{d}") for d in (0, 1, 2)]
+    varied = [sess(0, [ex("INC", "Incline Bench Press (Dumbbell)", rr=(6, 8))], title="A"),
+              sess(1, [ex("INC", "Incline Bench Press (Dumbbell)", rr=(8, 10))], title="B"),
+              sess(2, [ex("INC", "Incline Bench Press (Dumbbell)", rr=(12, 15))], title="C")]
+    assert any("undulat" in w.lower() for w in _v(same, LiftContext()).warnings)
+    assert not any("undulat" in w.lower() for w in _v(varied, LiftContext()).warnings)
+
+
+def test_activation_sets_for_tier2_and_tier3_compounds():
+    s = [sess(1, [ex("RDLD", "Romanian Deadlift (DB)", rr=(8, 10))], stype="legs", title="Legs")]
+    assert any("activation" in w.lower() for w in _v(s, LiftContext(run_load="light")).warnings)
+    s_ok = [sess(1, [ExercisePrescription(exercise_template_id="RDLD", title="Romanian Deadlift (DB)", sets=3,
+                                          warmup_sets=1, rep_range=[8, 10], target_rir=2)], stype="legs",
+                 title="Legs")]
+    assert not any("activation" in w.lower() for w in _v(s_ok, LiftContext(run_load="light")).warnings)
