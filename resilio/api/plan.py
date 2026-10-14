@@ -2507,6 +2507,15 @@ def validate_week_plan(
                         f"({max_session_minutes}min)"
                     )
 
+    # Strength sessions (lifting prescription + placement vs runs)
+    lifting_result = None
+    if week.get("strength_sessions"):
+        from resilio.api.lifting import validate_week_lifting
+
+        lifting_result = validate_week_lifting(week)
+        errors.extend(lifting_result["errors"])
+        warnings.extend(lifting_result["warnings"])
+
     # Check date alignment
     if "start_date" in week and "end_date" in week:
         try:
@@ -2536,12 +2545,15 @@ def validate_week_plan(
     is_valid = len(errors) == 0
     summary = "Weekly plan validation passed" if is_valid else f"Found {len(errors)} error(s)"
 
-    return {
+    result = {
         "is_valid": is_valid,
         "errors": errors,
         "warnings": warnings,
         "summary": summary
     }
+    if lifting_result is not None:
+        result["lifting_planned_volume"] = lifting_result["planned_volume"]
+    return result
 
 
 def revert_week_plan(week_number: int) -> Union[dict, PlanError]:

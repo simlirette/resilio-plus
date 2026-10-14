@@ -283,3 +283,145 @@ def set_lifting_profile(**changes: Any) -> Union[LiftingProfile, LiftError]:
 
 def is_lift_error(result: object) -> bool:
     return isinstance(result, LiftError)
+
+
+# ------------------------------------------------------------- SP3: prescription
+
+
+def validate_week_lifting(week: dict) -> dict:
+    """Validate ``strength_sessions`` of one weekly-plan JSON week. Never raises.
+
+    Returns ``{"errors": [...], "warnings": [...], "planned_volume": {...}}``.
+    """
+    from types import SimpleNamespace
+
+    from pydantic import ValidationError as PydValidationError
+
+    from resilio.core.lifting.prescription import validate_lifting_week
+    from resilio.schemas.plan import StrengthSession
+
+    out: dict = {"errors": [], "warnings": [], "planned_volume": {}}
+    raw_sessions = week.get("strength_sessions") or []
+    sessions = []
+    for i, raw in enumerate(raw_sessions):
+        try:
+            sessions.append(StrengthSession.model_validate(raw))
+        except PydValidationError as exc:
+            first = exc.errors()[0]
+            loc = ".".join(str(x) for x in first.get("loc", ()))
+            out["errors"].append(f"strength_sessions[{i}] invalid at {loc}: {first.get('msg')}")
+    if out["errors"]:
+        return out
+    try:
+        week_start = date.fromisoformat(str(week.get("start_date")))
+    except ValueError:
+        return out  # date errors are reported by the run validator
+    workouts = [
+        SimpleNamespace(day_of_week=w.get("day_of_week"), workout_type=w.get("workout_type"))
+        for w in week.get("workouts") or []
+        if w.get("day_of_week") is not None
+    ]
+    res = validate_lifting_week(
+        sessions,
+        workouts,
+        catalog(),
+        _lifting_profile(),
+        week_start=week_start,
+        week_number=int(week.get("week_number") or 0),
+    )
+    return res.model_dump()
+
+
+def suggest_loads(file_path: str, overwrite: bool = False) -> Union[dict, LiftError]:
+    """Fill load_kg in a weekly plan JSON from progression (writes the file in place)."""
+    import json
+    from pathlib import Path
+
+    from resilio.core.lifting.prescription import apply_load_suggestions
+
+    path = Path(file_path)
+    if not path.exists():
+        return LiftError("not_found", f"File not found: {file_path}")
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return LiftError("validation", f"Invalid JSON: {exc}")
+    store = _store()
+    workouts = store.load_workouts()
+    profile = _lifting_profile()
+    cat = catalog()
+
+    def suggest(template_id: str, rep_range: list[int], deload: bool):
+        entry = cat.get(template_id)
+        title = entry.title if entry else template_id
+        hist = exercise_history(workouts, template_id, title=title, weeks=12)
+        return progression(hist, rep_range, increment_for(entry, profile), deload=deload)
+
+    report = apply_load_suggestions(data, suggest, overwrite=overwrite)
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    filled = sum(1 for r in report if r["status"] == "filled")
+    return {"file": str(path), "filled": filled, "exercises": report}
+
+
+def _load_plan():
+    from resilio.api.plan import PlanError, get_current_plan
+
+    plan = get_current_plan()
+    if isinstance(plan, PlanError):
+        return LiftError("not_found", plan.message, "Create a plan first (macro-plan-create).")
+    return plan
+
+
+def get_lift_adherence(week_number: int):
+    """Planned strength sessions of plan week N vs Hevy workouts in that week."""
+    from resilio.core.lifting.prescription import adherence
+
+    plan = _load_plan()
+    if isinstance(plan, LiftError):
+        return plan
+    week = next((w for w in plan.weeks if w.week_number == week_number), None)
+    if week is None:
+        return LiftError("not_found", f"Week {week_number} not in current plan.")
+    workouts = _store().load_workouts(
+        since=week.start_date - timedelta(days=1), until=week.end_date + timedelta(days=1)
+    )
+    return adherence(week.strength_sessions, workouts, week_number=week_number)
+
+
+def set_lifting_blocks(file_path: str):
+    """Replace MasterPlan.lifting_blocks from a JSON list file."""
+    import json
+    from pathlib import Path
+
+    from pydantic import TypeAdapter
+    from pydantic import ValidationError as PydValidationError
+
+    from resilio.core.paths import current_plan_path
+    from resilio.core.repository import RepositoryIO
+    from resilio.schemas.lifting import LiftingBlock
+
+    plan = _load_plan()
+    if isinstance(plan, LiftError):
+        return plan
+    try:
+        raw = json.loads(Path(file_path).read_text(encoding="utf-8"))
+        blocks = TypeAdapter(list[LiftingBlock]).validate_python(raw.get("lifting_blocks", raw) if isinstance(raw, dict) else raw)
+    except FileNotFoundError:
+        return LiftError("not_found", f"File not found: {file_path}")
+    except (json.JSONDecodeError, PydValidationError) as exc:
+        return LiftError("validation", f"Invalid lifting blocks: {exc}")
+    for b in blocks:
+        if b.end_week > plan.total_weeks:
+            return LiftError("validation", f"Block ends at week {b.end_week} but plan has {plan.total_weeks} weeks")
+    plan.lifting_blocks = blocks
+    err = RepositoryIO().write_yaml(current_plan_path(), plan)
+    if err is not None:
+        return LiftError("validation", f"Failed to save plan: {err}")
+    return blocks
+
+
+def get_lifting_blocks():
+    plan = _load_plan()
+    if isinstance(plan, LiftError):
+        return plan
+    return plan.lifting_blocks

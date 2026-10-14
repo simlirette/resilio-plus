@@ -765,6 +765,8 @@ def plan_validate_week_command(
                 "warnings_count": len(all_warnings)
             }
         }
+        if "lifting_planned_volume" in semantic_result:
+            result["data"]["lifting_planned_volume"] = semantic_result["lifting_planned_volume"]
         print(json_module.dumps(result, indent=2))
         raise typer.Exit(code=0)
     else:

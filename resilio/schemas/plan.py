@@ -7,6 +7,7 @@ phases. These schemas support evidence-based plan generation with training
 guardrails (80/20 rule, long run caps, hard/easy separation).
 """
 
+from resilio.schemas.lifting import ExercisePrescription, LiftingBlock
 from pydantic import BaseModel, Field, ConfigDict, field_validator, model_validator
 from typing import Optional, List, Literal
 from datetime import date
@@ -428,6 +429,13 @@ class StrengthSession(BaseModel):
     source_tool: str = Field(default="hevy", description="Where the lift is executed/detailed")
     notes: Optional[str] = Field(None, description="Coach notes (placement rationale, cues)")
 
+    # Prescription (SP3): what to lift. Empty = schedule-only session.
+    title: Optional[str] = Field(None, description="Session label, e.g. 'Upper A'")
+    exercises: list[ExercisePrescription] = Field(
+        default_factory=list,
+        description="Exercises with sets, rep range, RIR, load (Hevy template ids)",
+    )
+
     # Identity (auto-generated)
     id: str = Field(default_factory=lambda: f"s_{uuid.uuid4().hex[:8]}")
 
@@ -540,6 +548,12 @@ class MasterPlan(BaseModel):
 
     # Weeks
     weeks: list[WeekPlan] = Field(..., description="All weekly plans")
+
+    # Lifting periodization (SP3): blocks aligned with running phases
+    lifting_blocks: list[LiftingBlock] = Field(
+        default_factory=list,
+        description="Lifting focus, sessions/week and weekly hard-set targets per week range",
+    )
 
     # Volume progression
     starting_volume_km: float = Field(..., ge=0, description="Initial weekly volume")

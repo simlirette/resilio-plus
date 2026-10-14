@@ -228,3 +228,63 @@ def lift_profile_set_command(
         notes=notes,
     )
     _emit(result, "Lifting profile updated")
+
+
+# ------------------------------------------------------------------ SP3
+
+
+@app.command(name="suggest-loads")
+def lift_suggest_loads_command(
+    file: str = typer.Option(..., "--file", help="Weekly plan JSON (weekly-plan-generate output)"),
+    overwrite: bool = typer.Option(False, "--overwrite", help="Replace loads already set"),
+) -> None:
+    """Fill load_kg for each prescribed exercise from Hevy history (double progression).
+
+    Exercises without a logged set in the last 6 weeks keep no load (prescribe by RIR).
+
+    Example:
+        resilio lift suggest-loads --file /tmp/weekly_plan_w3.json
+    """
+    result = api.suggest_loads(file, overwrite=overwrite)
+    msg = "" if api.is_lift_error(result) else f"Filled {result['filled']} load(s) in {result['file']}"
+    _emit(result, msg)
+
+
+@app.command(name="adherence")
+def lift_adherence_command(
+    week: int = typer.Option(..., "--week", min=1, help="Plan week number"),
+) -> None:
+    """Planned strength sessions vs Hevy workouts for a plan week (run lift sync first).
+
+    Example:
+        resilio lift adherence --week 3
+    """
+    result = api.get_lift_adherence(week)
+    msg = ""
+    if not api.is_lift_error(result):
+        msg = f"Week {week}: {result.completed_sessions}/{result.planned_sessions} strength sessions done"
+    _emit(result, msg)
+
+
+blocks_app = typer.Typer(help="Macro-plan lifting blocks")
+app.add_typer(blocks_app, name="blocks")
+
+
+@blocks_app.command(name="get")
+def lift_blocks_get_command() -> None:
+    """Show lifting blocks of the current plan."""
+    _emit(api.get_lifting_blocks(), "Lifting blocks")
+
+
+@blocks_app.command(name="set")
+def lift_blocks_set_command(
+    file: str = typer.Option(..., "--file", help='JSON list (or {"lifting_blocks": [...]})'),
+) -> None:
+    """Replace the current plan's lifting blocks.
+
+    Example file:
+        [{"start_week": 1, "end_week": 3, "focus": "hypertrophy", "sessions_per_week": 3,
+          "weekly_sets": {"chest": 10, "back": 12, "quads": 6, "hamstrings": 6}}]
+    """
+    result = api.set_lifting_blocks(file)
+    _emit(result, "" if api.is_lift_error(result) else f"Saved {len(result)} lifting block(s)")

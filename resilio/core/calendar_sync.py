@@ -185,7 +185,7 @@ def _run_description(workout: WorkoutPrescription) -> str:
 
 def _strength_title(sess: StrengthSession) -> str:
     stype = getattr(sess.session_type, "value", sess.session_type)
-    label = STRENGTH_LABELS.get(stype, "Gym")
+    label = sess.title or STRENGTH_LABELS.get(stype, "Gym")
     return f"🏋️ {label}"
 
 
@@ -262,6 +262,20 @@ def build_run_event(
                         duration_min, reminder_min, uid, settings.timezone, tz_offset)
 
 
+def _strength_description(sess: StrengthSession) -> str:
+    """Exercise list when the session is prescribed, otherwise point to Hevy."""
+    exercises = getattr(sess, "exercises", None) or []
+    if not exercises:
+        return "Voir Hevy pour le détail"
+    from resilio.core.lifting.prescription import format_exercise_line
+
+    lines = [format_exercise_line(e) for e in exercises]
+    if sess.notes:
+        lines += ["", sess.notes]
+    lines += ["", "Routine dans Hevy : dossier « Resilio »."]
+    return "\n".join(lines)
+
+
 def build_strength_event(
     sess: StrengthSession,
     settings: GoogleCalendarSettings,
@@ -271,7 +285,7 @@ def build_strength_event(
     stype = getattr(sess.session_type, "value", sess.session_type)
     uid = _resilio_uid(sess.date, stype, sess.week_number)
     summary = _strength_title(sess)
-    description = "Voir Hevy pour le détail"
+    description = _strength_description(sess)
 
     start_time = _strength_day_time(sess.day_of_week, settings)
     reminder_min = settings.reminders.get("strength", 30)
