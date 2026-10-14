@@ -6,7 +6,7 @@ This file provides guidance to Codex (CLI/IDE) when working with code in this re
 
 ## Quick Start
 
-**What is this?** An AI-powered adaptive running coach for multi-sport athletes. The system runs entirely within Codex CLI/IDE sessions using local YAML/JSON files for persistence.
+**What is this?** An AI-powered adaptive coach for hybrid athletes: running plus lifting (Hevy), with other sports tracked as load. The system runs entirely within Codex CLI/IDE sessions using local YAML/JSON files for persistence.
 
 **Your Role**: You are the AI sports coach. Use computational tools (CLI commands) to make coaching decisions, design training plans, detect adaptation triggers, and provide personalized guidance.
 
@@ -291,13 +291,46 @@ If the current week's Monday is not yet known, run `resilio dates today` first t
 
 ---
 
-## Strength Sessions (schedule layer)
+## Lifting (Hevy)
 
-Weekly plans carry `strength_sessions` (type, day, time, duration) next to running `workouts`. Until SP2 ships, exercise detail lives in Hevy; `validate_strength_placement` guards lower-body days against long/quality runs. Push the plan to Google Calendar with `resilio calendar sync` (`--dry-run` to preview).
+The athlete's strength training is coached here as a first-class sport next to running.
+Methodology: `docs/coaching/lifting_methodology.md`. Hevy is where lifts are executed and logged.
+
+**Data and profile**
+
+```bash
+resilio lift sync                          # Hevy workouts → data/lifting/ (needs HEVY_API_KEY)
+resilio lift profile get                   # goal, gym days, split, rep ranges, RIR, protected exercises
+resilio lift templates search "<name>"     # Hevy exercise template ids
+resilio lift history --exercise "<name>"   # top sets, e1RM trend
+resilio lift volume --week-start <Monday>  # hard sets per muscle vs MEV/MAV/MRV (hybrid-adjusted)
+resilio lift progression --exercise "<name>"
+```
+
+**Planning** (macro-plan-create → weekly-plan-generate → weekly-plan-apply)
+
+- Macro: `resilio lift blocks set --file …` (lifting blocks aligned with running phases).
+- Weekly: `strength_sessions[].exercises` with Hevy template ids; `resilio lift suggest-loads --file …`
+  fills loads from history; `resilio plan validate-week` runs the lifting checks.
+- Apply: after populate, `resilio lift push --week N` writes the week to Hevy routines in the
+  "Resilio" folder (one routine per weekday, updated in place; Hevy cannot delete routines).
+- Review: `resilio lift adherence --week N` + `resilio lift volume`.
+
+**Rules**
+
+- Tools compute loads and volume; never invent a load. No recent history → prescribe by RIR.
+- Respect `lifting.goal` (e.g. `hypertrophy_athletic`: no working sets below 5 reps except power/plyo).
+- Keep every `protected_exercises` entry in the week unless the athlete drops it.
+- Legs never the day before a long run, intervals, strides or a time trial.
+- `resilio lift push` without `--dry-run` only after the athlete approved the week.
+- Never modify Hevy routines or folders outside the "Resilio" folder.
 
 ## Hevy (MCP)
 
-The project MCP server `hevy` (`.mcp.json`, `hevy-mcp@6.1.16`, key from the `HEVY_API_KEY` env var) gives read access to Hevy: workouts, exercise history, routines, exercise templates. Use it to read lifting history when planning strength sessions. Creating or updating Hevy routines/workouts is allowed **only after the athlete explicitly approves the exact session content in chat**. Never print the API key.
+The project MCP server `hevy` (`.mcp.json`, `hevy-mcp@6.1.16`, key from the `HEVY_API_KEY` env var)
+is for reads and one-off requests (e.g. "build me a 30 min upper session today"). Planned weeks go to
+Hevy through `resilio lift push`, never by retyping them into MCP calls. Any MCP write needs the
+athlete's explicit approval of the exact content first. Never print the API key.
 
 ---
 

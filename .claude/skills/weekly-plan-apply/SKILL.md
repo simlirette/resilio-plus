@@ -39,6 +39,7 @@ Apply Progress:
 - [ ] Step 1: Verify approval state
 - [ ] Step 2: Validate payload
 - [ ] Step 3: Apply (populate)
+- [ ] Step 3.5: Push lifting to Hevy (if strength sessions)
 - [ ] Step 4: Confirm workouts persisted
 ```
 
@@ -65,6 +66,16 @@ The command automatically synchronizes the changed week to Google Calendar. Chec
 `data.calendar_sync.ok` in the response. If it is `false`, the plan is already
 saved: return a blocking checklist for the Calendar failure and do NOT populate
 the week again.
+
+<!-- lifting:sp4 -->
+**Step 3.5 — Push lifting to Hevy (only if the week has strength sessions with exercises):**
+```bash
+resilio lift push --week <WEEK_NUMBER>
+```
+This updates the athlete's Hevy routines in the "Resilio" folder (one per weekday).
+It is part of the approved apply, so no extra approval is needed. If it fails
+(`error_type` config/auth/rate_limit/api_error), the plan is already saved:
+return a blocking checklist with the error and `next_steps`. Do NOT re-populate.
 
 **Step 4 — Confirm workouts persisted:**
 ```bash

@@ -244,6 +244,13 @@ Write to: `/tmp/macro_plan_review_YYYY_MM_DD.md`
 - Phase transitions align with table
 - Approval prompt is athlete-facing (no CLI commands exposed)
 
+<!-- lifting:sp4 -->
+## Lifting blocks (athletes with a lifting profile)
+
+After the macro plan is created, add lifting blocks aligned with the running phases
+(`resilio lift blocks set --file ...`). Follow `references/lifting_macro.md`.
+Include the block table in the review document.
+
 ## References (load only if needed)
 
 - Review doc structure: `references/review_doc_template.md`

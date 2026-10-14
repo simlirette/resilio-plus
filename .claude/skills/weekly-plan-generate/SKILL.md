@@ -325,6 +325,21 @@ Create explicit workout JSON manually with exact distances. Example structure:
 
 Write JSON to `/tmp/weekly_plan_w<week>.json`
 
+<!-- lifting:sp4 -->
+6.5. Lifting (only if `resilio lift profile get` returns a profile):
+
+Design the week's `strength_sessions` with exercises, following
+`references/lifting_weekly.md` (inputs: `resilio lift sync`, `lift profile get`,
+`lift blocks get`, `lift volume`). Then fill loads from Hevy history:
+
+```bash
+resilio lift suggest-loads --file /tmp/weekly_plan_w<week>.json
+```
+
+`validate-week` (next step) also runs the lifting checks: Hevy template ids,
+blacklist, min reps, gym days, RIR, protected exercises, planned volume vs hybrid MRV,
+legs placement vs long/quality runs. Address every lifting warning.
+
 7. Validate comprehensively:
 
 ```bash
@@ -406,6 +421,7 @@ resilio plan validate-intervals \
 - Guardrails: `references/guardrails_weekly.md`
 - JSON workflow: `references/json_workflow.md`
 - Multi-sport integration: `references/multi_sport_weekly.md`
+- **Lifting (strength sessions with exercises)**: `references/lifting_weekly.md`
 - Common pitfalls: `references/common_pitfalls_weekly.md`
 - Core methodology: `docs/coaching/methodology.md`
 

@@ -228,6 +228,19 @@ resilio analysis load --activities /tmp/week_activities.json --days 7 --priority
 
 **For complete multi-sport load model and conflict handling**: See [references/multi_sport_balance.md](references/multi_sport_balance.md)
 
+<!-- lifting:sp4 -->
+### Step 5.5: Lifting Review (athletes with a lifting profile)
+
+```bash
+resilio lift sync
+resilio lift adherence --week <WEEK_NUMBER>
+resilio lift volume --week-start <WEEK_MONDAY>
+```
+
+Report sessions done vs planned, sets/reps vs prescription, loads vs suggested,
+hard sets per muscle vs MEV/MAV/MRV, unmapped exercises, and any heavy-legs effect on
+the following quality run. Interpretation: `docs/coaching/lifting_methodology.md` §8.
+
 ### Step 6: Pattern Detection
 
 **Review activity notes for qualitative signals**:

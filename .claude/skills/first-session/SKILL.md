@@ -356,6 +356,23 @@ resilio profile set --min-run-days 3 --max-run-days 4 --max-session-minutes 120
 
 ---
 
+<!-- lifting:sp4 -->
+### Step 6.5: Lifting Setup (if the athlete lifts)
+
+Ask about the lifting goal (hypertrophy for athleticism / hypertrophy / maintenance /
+strength), gym days, split, injuries to protect, and whether they use Hevy.
+With Hevy (Pro API key in `HEVY_API_KEY`):
+
+```bash
+resilio lift sync
+resilio lift templates search "<exercise>"      # exact titles for protected exercises
+resilio lift profile set --goal hypertrophy_athletic --gym-days monday,tuesday,wednesday \
+  --optional-days thursday --split "Upper A,Legs,Upper B" --power \
+  --protected "Nordic Hamstrings Curls;Wall Sit"
+```
+
+Without Hevy: still set the lifting profile; prescriptions will be RIR-based without loads.
+
 ### Step 7: Suggest Next Steps
 
 **After onboarding complete**:

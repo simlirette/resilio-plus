@@ -93,7 +93,9 @@ NOT in `workouts` (so a lift can share a day with a run and never counts toward
 running `target_volume_km`). Each entry: `date`, `day_of_week` (0=Mon),
 `session_type` (`legs` | `upper` | `chest_back` | `arms` | `core` | `other`),
 optional `time_of_day` (`"18:00"`), `duration_minutes` (default 60),
-`source_tool` (default `"hevy"`), `notes`.
+`source_tool` (default `"hevy"`), `notes`, `title` (split label, e.g. `"Upper A"`),
+and `exercises` (prescribed lifts with Hevy template ids, sets, rep range, RIR, load —
+see `lifting_weekly.md`). Sessions without `exercises` are schedule-only.
 
 If you OMIT `strength_sessions` on a week that already has them, the existing
 schedule is preserved (run regeneration never wipes the gym). Only send the
@@ -101,8 +103,8 @@ array when you intend to change the gym schedule.
 
 **Placement rule (validated by `validate_strength_placement`, detection-only):**
 keep `legs` ≥48h before any long run, intervals, or strides session, and never
-on the same day as a run. Current athlete v4 skeleton: Tue=legs, Wed=upper,
-Thu=arms, Sat=chest/back.
+on the same day as a run. Gym days, split and rep ranges come from
+`resilio lift profile get`; lifting checks run inside `resilio plan validate-week`.
 
 **Multi-Sport Note:**
 
