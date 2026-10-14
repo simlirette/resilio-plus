@@ -104,6 +104,16 @@ def _resilio_uid(event_date: date, session_type: str, week_number: int) -> str:
 # ============================================================
 
 
+def _utc_offset(d: date, time_str: str, tz_name: str) -> str:
+    """UTC offset (+HH:MM) of a local wall-clock time in ``tz_name`` on date ``d`` (DST-aware)."""
+    from zoneinfo import ZoneInfo
+
+    h, m = time_str.split(":")
+    local = datetime(d.year, d.month, d.day, int(h), int(m), tzinfo=ZoneInfo(tz_name))
+    raw = local.strftime("%z")  # e.g. +0100
+    return f"{raw[:3]}:{raw[3:]}"
+
+
 def _rfc3339(d: date, time_str: str, tz_offset: str = "-04:00") -> str:
     """Build RFC3339 datetime string from date + HH:MM + UTC offset."""
     h, m = time_str.split(":")
@@ -221,15 +231,19 @@ def _timed_event(
     reminder_min: int,
     uid: str,
     timezone: str,
-    tz_offset: str,
+    tz_offset: Optional[str],
 ) -> dict:
     end_dt = datetime.strptime(start_time, "%H:%M") + timedelta(minutes=duration_min)
     end_time = end_dt.strftime("%H:%M")
     return {
         "summary": summary,
         "description": description,
-        "start": {"dateTime": _rfc3339(event_date, start_time, tz_offset), "timeZone": timezone},
-        "end": {"dateTime": _rfc3339(event_date, end_time, tz_offset), "timeZone": timezone},
+        "start": {"dateTime": _rfc3339(event_date, start_time,
+                                       tz_offset or _utc_offset(event_date, start_time, timezone)),
+                  "timeZone": timezone},
+        "end": {"dateTime": _rfc3339(event_date, end_time,
+                                     tz_offset or _utc_offset(event_date, end_time, timezone)),
+                "timeZone": timezone},
         "reminders": {"useDefault": False, "overrides": _reminder_override(reminder_min)},
         "extendedProperties": {
             "private": {"resilio_managed": MANAGED_MARKER, "resilio_uid": uid}
@@ -241,7 +255,7 @@ def build_run_event(
     workout: WorkoutPrescription,
     week: WeekPlan,
     settings: GoogleCalendarSettings,
-    tz_offset: str = "-04:00",
+    tz_offset: Optional[str] = None,
 ) -> dict:
     """Build Google Calendar event dict for a run workout."""
     wtype = getattr(workout.workout_type, "value", workout.workout_type)
@@ -279,7 +293,7 @@ def _strength_description(sess: StrengthSession) -> str:
 def build_strength_event(
     sess: StrengthSession,
     settings: GoogleCalendarSettings,
-    tz_offset: str = "-04:00",
+    tz_offset: Optional[str] = None,
 ) -> dict:
     """Build Google Calendar event dict for a strength session."""
     stype = getattr(sess.session_type, "value", sess.session_type)
@@ -379,7 +393,7 @@ class PlanToCalendarSync:
 
         # Build desired events (only today-forward)
         desired: dict[str, dict] = {}  # uid → event_body
-        tz_offset = "-04:00"  # America/Toronto EDT; fine for plan horizon
+        tz_offset = None  # derived per event from settings.timezone (DST-aware)
 
         for week in weeks:
             for workout in week.workouts:

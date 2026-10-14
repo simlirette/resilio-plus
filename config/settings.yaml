@@ -34,3 +34,7 @@ system:
   lock_retry_count: 3
   lock_retry_delay_ms: 2000
   metrics_stale_hours: 24
+
+# Google Calendar (resilio calendar sync). Timezone drives event offsets (DST-aware).
+google_calendar:
+  timezone: Europe/Prague    # athlete's current location (Prague semester); was America/Toronto

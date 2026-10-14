@@ -388,3 +388,14 @@ class TestDiff:
         # Past event not inserted
         assert report.inserted == 0
         client.create_event.assert_not_called()
+
+
+def test_event_offset_follows_timezone_and_dst():
+    """Offsets come from settings.timezone per event date (not a fixed -04:00)."""
+    from datetime import date as _date
+
+    from resilio.core.calendar_sync import _utc_offset
+
+    assert _utc_offset(_date(2026, 10, 20), "15:00", "Europe/Prague") == "+02:00"
+    assert _utc_offset(_date(2026, 11, 20), "15:00", "Europe/Prague") == "+01:00"
+    assert _utc_offset(_date(2026, 11, 20), "15:00", "America/Toronto") == "-05:00"
