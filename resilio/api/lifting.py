@@ -425,3 +425,37 @@ def get_lifting_blocks():
     if isinstance(plan, LiftError):
         return plan
     return plan.lifting_blocks
+
+
+# ----------------------------------------------------------------- SP5: push
+
+
+def push_lifting_week(week_number: int, dry_run: bool = False):
+    """Write plan week N's prescribed strength sessions to Hevy routines (folder "Resilio")."""
+    from resilio.core.lifting.push import push_week
+
+    plan = _load_plan()
+    if isinstance(plan, LiftError):
+        return plan
+    week = next((w for w in plan.weeks if w.week_number == week_number), None)
+    if week is None:
+        return LiftError("not_found", f"Week {week_number} not in current plan.")
+    if not any(s.exercises for s in week.strength_sessions):
+        return LiftError(
+            "validation",
+            f"Week {week_number} has no prescribed exercises to push.",
+            "Generate the week with exercises (weekly-plan-generate), validate and populate it first.",
+        )
+    try:
+        report = push_week(_client(), _store(), week.strength_sessions, week_number, dry_run=dry_run)
+    except HevyAPIError as exc:
+        if exc.status_code == 403:
+            return LiftError(
+                "api_error",
+                "Hevy refused to create a routine (routine limit reached).",
+                "Delete unused routines in the Hevy app (outside the Resilio folder), then retry.",
+            )
+        return _map_hevy_error(exc)
+    except (HevyConfigError, HevyAuthError, HevyRateLimitError) as exc:
+        return _map_hevy_error(exc)
+    return report

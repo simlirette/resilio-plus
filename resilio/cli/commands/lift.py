@@ -288,3 +288,31 @@ def lift_blocks_set_command(
     """
     result = api.set_lifting_blocks(file)
     _emit(result, "" if api.is_lift_error(result) else f"Saved {len(result)} lifting block(s)")
+
+
+# ------------------------------------------------------------------ SP5
+
+
+@app.command(name="push")
+def lift_push_command(
+    week: int = typer.Option(..., "--week", min=1, help="Plan week number to send to Hevy"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Show the routine payloads without writing"),
+) -> None:
+    """Create/update Hevy routines (folder "Resilio", one per weekday) for a plan week.
+
+    Only run without --dry-run after the athlete approved the week. Routines outside the
+    Resilio folder are never modified; Hevy has no delete, so unused slots are renamed.
+
+    Examples:
+        resilio lift push --week 3 --dry-run
+        resilio lift push --week 3
+    """
+    result = api.push_lifting_week(week, dry_run=dry_run)
+    msg = ""
+    if not api.is_lift_error(result):
+        counts: dict[str, int] = {}
+        for a in result.actions:
+            counts[a.action] = counts.get(a.action, 0) + 1
+        summary = ", ".join(f"{v} {k}" for k, v in sorted(counts.items()))
+        msg = f"{'[dry-run] ' if dry_run else ''}Hevy week {week}: {summary}"
+    _emit(result, msg)
