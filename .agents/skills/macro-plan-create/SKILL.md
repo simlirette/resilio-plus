@@ -177,10 +177,10 @@ Note: In Example 2, `target_systemic_load_au` represents total aerobic load acro
 - `weekly_volumes_km` length MUST equal `total_weeks`; each entry must be a positive number
 - `target_systemic_load_au` length MUST equal `total_weeks`; each entry must be >= 0.0
   - Single-sport athletes: Use `[0.0, 0.0, ...]` (systemic load calculated later from running volume)
-  - Multi-sport athletes: Plan total systemic load targets using `resilio analysis load` (running + cross-training + other sports)
+  - Multi-sport athletes (including anyone with a lifting profile): Plan total systemic load targets using `resilio analysis load --days 28 --priority <priority>` (running + lifting + other sports); see `references/lifting_macro.md`
 - `workout_structure_hints` length MUST equal `total_weeks`; each entry must conform to WorkoutStructureHints:
   - `quality.max_sessions`: 0–3
-  - `quality.types`: list of QualityType (e.g., tempo, intervals, strides_only, race_specific)
+  - `quality.types`: list of QualityType (tempo, intervals, hills, race_pace, fartlek, strides_only — note: `race_pace`, not `race_specific`)
   - `long_run.emphasis`: one of easy, steady, progression, race_specific
   - `long_run.pct_range`: [min, max] in 15–35
   - `intensity_balance.low_intensity_pct`: 0.75–0.95

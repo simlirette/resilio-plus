@@ -304,6 +304,8 @@ def validate_week_lifting(week: dict) -> dict:
     raw_sessions = week.get("strength_sessions") or []
     sessions = []
     for i, raw in enumerate(raw_sessions):
+        if isinstance(raw, dict) and week.get("week_number") is not None:
+            raw = {"week_number": week["week_number"], **raw}
         try:
             sessions.append(StrengthSession.model_validate(raw))
         except PydValidationError as exc:

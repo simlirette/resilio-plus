@@ -29,6 +29,26 @@ def round_load(kg: float, step: float = 0.5) -> float:
     return round(round(kg / step) * step, 2)
 
 
+KG_PER_LB = 0.45359237
+
+
+def lbs_equivalent(kg: Optional[float]) -> Optional[float]:
+    """Pound value if ``kg`` is a load the athlete entered in lb (Hevy stores kg only).
+
+    A load counts as lb-entered when it sits on a 0.5 lb grid but not on a 0.25 kg grid,
+    e.g. 54.431 kg = 120 lb. Plain kg loads (25, 27.5, 22.5) return None.
+    """
+    if not kg:
+        return None
+    lbs = kg / KG_PER_LB
+    on_lb_grid = abs(lbs * 2 - round(lbs * 2)) < 0.02
+    on_kg_grid = abs(kg * 4 - round(kg * 4)) < 0.02
+    if on_lb_grid and not on_kg_grid:
+        value = round(lbs * 2) / 2
+        return int(value) if value == int(value) else value
+    return None
+
+
 def e1rm(weight_kg: Optional[float], reps: Optional[int]) -> Optional[float]:
     """Epley estimate; unreliable above 12 reps, so returns None there."""
     if not weight_kg or not reps or reps < 1 or reps > 12:
@@ -217,13 +237,17 @@ def progression(
             reason="Deload week: ~40% fewer sets, same load, stop well short of failure.",
         )
     if min(at_load) >= high:
-        return ProgressionSuggestion(
-            **common,
-            action="increase_load",
-            suggested_load_kg=round_load(load + increment_kg),
-            target_reps=low,
-            reason=f"All sets hit {high}+ reps at {load} kg; add {increment_kg} kg and restart at {low}.",
-        )
+        lbs = lbs_equivalent(load)
+        if lbs is not None:
+            step_lb = 5 if increment_kg <= 2.5 else 10
+            new_kg = round((lbs + step_lb) * KG_PER_LB, 2)
+            reason = (f"All sets hit {high}+ reps at {lbs} lb; add {step_lb} lb ({lbs + step_lb} lb) "
+                      f"and restart at {low}.")
+        else:
+            new_kg = round_load(load + increment_kg)
+            reason = f"All sets hit {high}+ reps at {load} kg; add {increment_kg} kg and restart at {low}."
+        return ProgressionSuggestion(**common, action="increase_load", suggested_load_kg=new_kg,
+                                     target_reps=low, reason=reason)
     if min(at_load) < low:
         return ProgressionSuggestion(
             **common,

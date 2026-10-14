@@ -69,3 +69,27 @@ def test_lift_profile_set_parses_lists_and_ranges(monkeypatch):
 def test_lift_progression_bad_range_is_usage_error():
     res = runner.invoke(app, ["lift", "progression", "--exercise", "x", "--rep-range", "abc"])
     assert res.exit_code == 2
+
+
+def test_analysis_load_reads_cli_envelope_and_stored_activities(tmp_path, monkeypatch):
+    """`activity list` output feeds `analysis load`; without --activities, stored loads are used."""
+    from datetime import date, timedelta
+    from types import SimpleNamespace
+
+    import resilio.api.profile as profile_api
+    from resilio.cli.commands import analysis as analysis_cmd
+
+    env = {"schema_version": "1.0", "ok": True, "data": {"activities": [{"x": 1}], "count": 1,
+                                                          "date_range": {}, "filters": {}}}
+    f = tmp_path / "acts.json"
+    f.write_text(json.dumps(env), encoding="utf-8")
+    assert analysis_cmd._read_json_input(str(f)) == [{"x": 1}]
+
+    recent = SimpleNamespace(date=date.today() - timedelta(days=2), sport_type="strength",
+                             calculated=SimpleNamespace(systemic_load_au=22.0, lower_body_load_au=10.0))
+    old = SimpleNamespace(date=date.today() - timedelta(days=60), sport_type="run",
+                          calculated=SimpleNamespace(systemic_load_au=40.0, lower_body_load_au=40.0))
+    monkeypatch.setattr(profile_api, "_load_all_activities", lambda repo: [recent, old])
+    rows = analysis_cmd._stored_activity_loads(28)
+    assert rows == [{"date": recent.date.isoformat(), "sport_type": "strength",
+                     "calculated": {"systemic_load_au": 22.0, "lower_body_load_au": 10.0}}]

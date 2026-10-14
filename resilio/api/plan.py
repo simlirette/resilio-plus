@@ -836,6 +836,13 @@ def populate_plan_workouts(weeks_data: list[dict]) -> Union[MasterPlan, PlanErro
                         f"Provide explicit workout array (AI Coach designs all workouts)."
             )
 
+        # Workouts and strength sessions inherit the week number when omitted
+        # (export-week output and hand-written weeks often leave it out).
+        if week_data.get("week_number") is not None:
+            for item in list(week_data.get("workouts") or []) + list(week_data.get("strength_sessions") or []):
+                if isinstance(item, dict):
+                    item.setdefault("week_number", week_data["week_number"])
+
         # Validate explicit format
         validation_result = _validate_explicit_workouts(week_data)
         if not validation_result.ok:
@@ -1103,7 +1110,7 @@ def _auto_log_plan_change(change_description: str) -> None:
             return
 
         # Read existing content
-        with open(review_abs_path, 'r') as f:
+        with open(review_abs_path, 'r', encoding='utf-8', errors='replace') as f:
             content = f.read()
 
         # Check if Adaptations section exists
@@ -1117,7 +1124,7 @@ def _auto_log_plan_change(change_description: str) -> None:
         content += entry
 
         # Write back
-        with open(review_abs_path, 'w') as f:
+        with open(review_abs_path, 'w', encoding='utf-8') as f:
             f.write(content)
 
         logger.info(f"Auto-logged plan change: {change_description}")

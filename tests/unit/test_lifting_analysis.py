@@ -228,9 +228,21 @@ def test_progression_bodyweight():
     assert s.action == "bodyweight" and s.suggested_load_kg is None and s.target_reps == 11
 
 
-def test_lbs_entered_loads_round_to_half_kg():
+def test_lbs_entered_loads_progress_in_pounds():
+    from resilio.core.lifting.analysis import lbs_equivalent
+
+    assert lbs_equivalent(40.82336184920758) == 90
+    assert lbs_equivalent(54.431084) == 120
+    assert lbs_equivalent(25.0) is None and lbs_equivalent(27.5) is None
     ws = [_w("a", 8, [("INC", "Incline", [("normal", 40.82336184920758, 10)] * 3)])]
     h = exercise_history(ws, "INC", title="Incline", weeks=8, today=date(2026, 10, 14))
     assert h.sessions[0].top_weight_kg == 40.82
     s = progression(h, [8, 10], 2.5, today=date(2026, 10, 14))
-    assert s.action == "increase_load" and s.suggested_load_kg == 43.5
+    assert s.action == "increase_load" and s.suggested_load_kg == pytest.approx(43.09, abs=0.01)  # 95 lb
+    assert "lb" in s.reason
+
+
+def test_kg_loads_still_round_to_half_kg():
+    ws = [_w("a", 8, [("INC", "Incline", [("normal", 22.5, 10)] * 3)])]
+    h = exercise_history(ws, "INC", title="Incline", weeks=8, today=date(2026, 10, 14))
+    assert progression(h, [8, 10], 2.5, today=date(2026, 10, 14)).suggested_load_kg == 25.0

@@ -1669,10 +1669,10 @@ def create_macro_command(
         output_json(envelope)
         raise typer.Exit(code=5)
 
-    if not isinstance(payload, dict) or "volumes_km" not in payload or "workout_structure_hints" not in payload:
+    if not isinstance(payload, dict) or "weekly_volumes_km" not in payload or "workout_structure_hints" not in payload:
         envelope = create_error_envelope(
             error_type="validation",
-            message="Macro template must include 'volumes_km' and 'workout_structure_hints'",
+            message="Macro template must include 'weekly_volumes_km' and 'workout_structure_hints'",
             data={"file": macro_template_json}
         )
         output_json(envelope)

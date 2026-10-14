@@ -272,3 +272,22 @@ def test_activation_sets_for_tier2_and_tier3_compounds():
                                           warmup_sets=1, rep_range=[8, 10], target_rir=2)], stype="legs",
                  title="Legs")]
     assert not any("activation" in w.lower() for w in _v(s_ok, LiftContext(run_load="light")).warnings)
+
+
+def test_format_line_shows_pounds_for_lbs_entered_loads():
+    line = format_exercise_line(ex("TP", "Triceps Pushdown", sets=2, rr=(10, 12), load=54.431084))
+    assert "@ 120 lb (54.4 kg)" in line
+
+
+def test_strength_sessions_inherit_week_number(monkeypatch):
+    from resilio.api import lifting as lift_api
+
+    monkeypatch.setattr(lift_api, "catalog", lambda: CAT)
+    monkeypatch.setattr(lift_api, "_lifting_profile", lambda: PROFILE)
+    monkeypatch.setattr(lift_api, "_week_context", lambda week, start: None)
+    week = {"week_number": 3, "start_date": "2026-10-19", "workouts": [],
+            "strength_sessions": [{"date": "2026-10-19", "day_of_week": 0, "session_type": "upper",
+                                   "exercises": [{"exercise_template_id": "INC", "title": "Incline Bench Press (Dumbbell)",
+                                                  "sets": 3, "rep_range": [8, 10], "target_rir": 2}]}]}
+    out = lift_api.validate_week_lifting(week)
+    assert not any("invalid" in e for e in out["errors"]), out["errors"]

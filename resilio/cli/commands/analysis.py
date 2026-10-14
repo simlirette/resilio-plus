@@ -32,6 +32,52 @@ from resilio.cli.output import create_error_envelope, output_json
 from resilio.cli.errors import api_result_to_envelope, get_exit_code_from_envelope
 
 app = typer.Typer(help="Weekly analysis and risk assessment")
+
+
+def _stored_activity_loads(days: int) -> list[dict]:
+    """Stored activities of the last ``days`` days, flattened to the fields load analysis reads."""
+    from datetime import date as _date, timedelta as _timedelta
+
+    from resilio.api.profile import _load_all_activities
+    from resilio.core.repository import RepositoryIO
+
+    since = _date.today() - _timedelta(days=days)
+    out = []
+    for a in _load_all_activities(RepositoryIO()):
+        if a.date < since:
+            continue
+        calc = a.calculated
+        out.append({
+            "date": a.date.isoformat(),
+            "sport_type": getattr(a.sport_type, "value", a.sport_type),
+            "calculated": {
+                "systemic_load_au": getattr(calc, "systemic_load_au", 0.0) or 0.0,
+                "lower_body_load_au": getattr(calc, "lower_body_load_au", 0.0) or 0.0,
+            },
+        })
+    return out
+
+
+def _read_json_input(path: str):
+    """Load a JSON input file (UTF-8). Accepts raw data or a resilio CLI envelope.
+
+    Envelopes (``{"schema_version", "ok", "data": ...}``) are unwrapped to ``data``;
+    a ``data`` dict holding a single list (``{"activities": [...]}``) is unwrapped to that list,
+    so ``resilio activity list --since 28d > acts.json`` can feed ``analysis load`` directly.
+    """
+    import json as _json
+
+    with open(path, "r", encoding="utf-8") as f:
+        payload = _json.load(f)
+    if isinstance(payload, dict) and "data" in payload and "ok" in payload:
+        payload = payload["data"]
+        if isinstance(payload, dict):
+            lists = [v for v in payload.values() if isinstance(v, list)]
+            if isinstance(payload.get("activities"), list):
+                payload = payload["activities"]
+            elif len(lists) == 1:
+                payload = lists[0]
+    return payload
 risk_app = typer.Typer(help="Risk assessment commands")
 
 
@@ -58,8 +104,7 @@ def intensity_command(
     """
     try:
         # Load activities
-        with open(activities_json, "r") as f:
-            activities = json.load(f)
+        activities = _read_json_input(activities_json)
 
         result = api_validate_intensity_distribution(
             activities=activities,
@@ -106,8 +151,7 @@ def gaps_command(
     """
     try:
         # Load activities
-        with open(activities_json, "r") as f:
-            activities = json.load(f)
+        activities = _read_json_input(activities_json)
 
         result = api_detect_activity_gaps(
             activities=activities,
@@ -140,7 +184,10 @@ def gaps_command(
 @app.command(name="load")
 def load_command(
     ctx: typer.Context,
-    activities_json: str = typer.Option(..., "--activities", help="JSON file with activities"),
+    activities_json: Optional[str] = typer.Option(
+        None, "--activities",
+        help="JSON file with activities (default: the athlete's stored activities with computed loads)",
+    ),
     days: int = typer.Option(7, "--days", help="Analysis window in days (default 7)"),
     priority: str = typer.Option("equal", "--priority", help="Sport priority: running_primary, equal, other_primary"),
 ) -> None:
@@ -150,9 +197,9 @@ def load_command(
     Breaks down systemic and lower-body load by sport, checks adherence to
     sport priorities, and identifies fatigue risk from sport conflicts.
 
-    Example:
-        resilio analysis load --activities week_activities.json \\
-            --days 7 --priority equal
+    Examples:
+        resilio analysis load --days 28 --priority equal
+        resilio analysis load --activities week_activities.json --days 7 --priority equal
     """
     try:
         # Validate priority
@@ -166,8 +213,7 @@ def load_command(
             raise typer.Exit(code=get_exit_code_from_envelope(envelope))
 
         # Load activities
-        with open(activities_json, "r") as f:
-            activities = json.load(f)
+        activities = _read_json_input(activities_json) if activities_json else _stored_activity_loads(days)
 
         result = api_analyze_load_distribution_by_sport(
             activities=activities,
@@ -218,8 +264,7 @@ def capacity_command(
     """
     try:
         # Load historical activities
-        with open(historical_json, "r") as f:
-            historical_activities = json.load(f)
+        historical_activities = _read_json_input(historical_json)
 
         result = api_check_weekly_capacity(
             week_number=week_number,
@@ -276,18 +321,15 @@ def risk_assess_command(
     """
     try:
         # Load current metrics
-        with open(metrics_json, "r") as f:
-            current_metrics = json.load(f)
+        current_metrics = _read_json_input(metrics_json)
 
         # Load recent activities
-        with open(activities_json, "r") as f:
-            recent_activities = json.load(f)
+        recent_activities = _read_json_input(activities_json)
 
         # Load planned workout (optional)
         planned_workout = None
         if workout_json:
-            with open(workout_json, "r") as f:
-                planned_workout = json.load(f)
+            planned_workout = _read_json_input(workout_json)
 
         result = api_assess_current_risk(
             current_metrics=current_metrics,
@@ -377,12 +419,10 @@ def forecast_command(
     """
     try:
         # Load current metrics
-        with open(metrics_json, "r") as f:
-            current_metrics = json.load(f)
+        current_metrics = _read_json_input(metrics_json)
 
         # Load planned weeks
-        with open(plan_json, "r") as f:
-            planned_weeks = json.load(f)
+        planned_weeks = _read_json_input(plan_json)
 
         result = api_forecast_training_stress(
             weeks_ahead=weeks,
@@ -437,12 +477,10 @@ def taper_status_command(
         race_date_obj = datetime.strptime(race_date, "%Y-%m-%d").date()
 
         # Load current metrics
-        with open(metrics_json, "r") as f:
-            current_metrics = json.load(f)
+        current_metrics = _read_json_input(metrics_json)
 
         # Load recent weeks
-        with open(weeks_json, "r") as f:
-            recent_weeks = json.load(f)
+        recent_weeks = _read_json_input(weeks_json)
 
         result = api_assess_taper_status(
             race_date=race_date_obj,

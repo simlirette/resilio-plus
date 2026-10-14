@@ -11,7 +11,7 @@ from typing import Any, Callable, Iterable, Optional
 
 from pydantic import BaseModel, Field
 
-from resilio.core.lifting.analysis import SECONDARY_WEIGHT
+from resilio.core.lifting.analysis import SECONDARY_WEIGHT, lbs_equivalent
 from resilio.core.lifting.catalog import load_landmarks
 from resilio.schemas.lifting import (
     CatalogEntry,
@@ -246,7 +246,11 @@ def format_exercise_line(e: ExercisePrescription) -> str:
         reps = f"{lo}" if lo == hi else f"{lo}–{hi}"
     else:
         reps = f"{e.duration_seconds}s"
-    parts = [f"{e.sets}×{reps} {e.title}" + (f" @ {_fmt_num(e.load_kg)} kg" if e.load_kg else "")]
+    load = ""
+    if e.load_kg:
+        lbs = lbs_equivalent(e.load_kg)
+        load = f" @ {_fmt_num(lbs)} lb ({e.load_kg:.1f} kg)" if lbs is not None else f" @ {_fmt_num(e.load_kg)} kg"
+    parts = [f"{e.sets}×{reps} {e.title}{load}"]
     if e.target_rir is not None:
         parts.append(f"RIR {e.target_rir}")
     parts.append(f"rest {e.rest_seconds}s")

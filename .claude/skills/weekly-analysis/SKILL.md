@@ -199,7 +199,7 @@ resilio analysis intensity --activities /tmp/week_activities.json --days 7
 ### Step 5: Multi-Sport Load Breakdown
 
 ```bash
-resilio analysis load --activities /tmp/week_activities.json --days 7 --priority [PRIORITY]
+resilio analysis load --days 7 --priority [PRIORITY]   # uses stored activities with computed loads
 ```
 
 **Returns**:

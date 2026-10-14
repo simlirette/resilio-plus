@@ -1794,7 +1794,7 @@ def save_plan_review(
     if not os.path.exists(review_file_path):
         raise FileNotFoundError(f"Review file not found: {review_file_path}")
 
-    with open(review_file_path, 'r') as f:
+    with open(review_file_path, 'r', encoding='utf-8', errors='replace') as f:
         review_content = f.read()
 
     # Generate approval block
@@ -1808,7 +1808,7 @@ def save_plan_review(
     target_path = current_plan_review_path()
     target_abs_path = repo.resolve_path(target_path)
 
-    with open(target_abs_path, 'w') as f:
+    with open(target_abs_path, 'w', encoding='utf-8') as f:
         f.write(full_content)
 
     return {
@@ -1866,14 +1866,14 @@ def append_plan_adaptation(
             f"Plan review not found. Generate and approve plan first with save_plan_review()"
         )
 
-    with open(review_abs_path, 'r') as f:
+    with open(review_abs_path, 'r', encoding='utf-8', errors='replace') as f:
         existing_content = f.read()
 
     # Read adaptation markdown
     if not os.path.exists(adaptation_file_path):
         raise FileNotFoundError(f"Adaptation file not found: {adaptation_file_path}")
 
-    with open(adaptation_file_path, 'r') as f:
+    with open(adaptation_file_path, 'r', encoding='utf-8', errors='replace') as f:
         adaptation_content = f.read()
 
     # Generate adaptation header
@@ -1895,7 +1895,7 @@ def append_plan_adaptation(
     updated_content = existing_content + "\n" + adaptation_header + adaptation_content
 
     # Save updated review
-    with open(review_abs_path, 'w') as f:
+    with open(review_abs_path, 'w', encoding='utf-8') as f:
         f.write(updated_content)
 
     return {
@@ -1970,7 +1970,7 @@ def initialize_training_log(
     log_path = current_training_log_path()
     log_abs_path = repo.resolve_path(log_path)
 
-    with open(log_abs_path, 'w') as f:
+    with open(log_abs_path, 'w', encoding='utf-8') as f:
         f.write(log_content)
 
     return {
@@ -2036,7 +2036,7 @@ def append_weekly_summary(
             f"Training log not found. Initialize it first with initialize_training_log()"
         )
 
-    with open(log_abs_path, 'r') as f:
+    with open(log_abs_path, 'r', encoding='utf-8', errors='replace') as f:
         existing_content = f.read()
 
     # Get phase for this week
@@ -2125,7 +2125,7 @@ You completed **{week_data['actual_volume_km']:.1f} km** of your planned {week_d
     # Append to log
     updated_content = existing_content + "\n" + week_summary
 
-    with open(log_abs_path, 'w') as f:
+    with open(log_abs_path, 'w', encoding='utf-8') as f:
         f.write(updated_content)
 
     return {

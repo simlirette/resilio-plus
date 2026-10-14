@@ -24,6 +24,19 @@ resilio lift blocks get
 ]
 ```
 
+## Total load (`target_systemic_load_au`) — never 0.0 for a lifting athlete
+
+A lifting athlete is multi-sport: fill `target_systemic_load_au` for every week.
+
+```bash
+resilio analysis load --days 28 --priority equal
+```
+
+From the output: running AU per km = run systemic / run km in the window (`resilio week` / activity
+history), lifting AU per session = strength systemic / strength sessions. Per week:
+`target = planned run km × run AU/km + planned lifting sessions × lifting AU/session` (+ other sports).
+Recovery/deload weeks drop with both. Keep week-to-week increases ≤ 10 % in total load.
+
 ## Rules
 
 - Deload block at least every 4 weeks (resilio-plus rule), placed on the running recovery week.
