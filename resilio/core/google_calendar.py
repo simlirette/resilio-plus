@@ -53,6 +53,26 @@ class GoogleCalendarAPIError(GoogleCalendarError):
 # ============================================================
 
 
+def _oauth_failure_message(exc: Exception) -> str:
+    """Build a secret-free auth error message from an OAuth library exception."""
+    error_code = getattr(exc, "error", None)
+    if error_code == "invalid_client":
+        return (
+            "Google OAuth client secret is invalid; replace credentials.json "
+            "and run `resilio calendar auth`"
+        )
+    if isinstance(exc, ValueError) and not error_code:
+        return (
+            "credentials.json is not a valid OAuth client file; download a new "
+            "one (OAuth 2.0 Desktop app) and run `resilio calendar auth`"
+        )
+    detail = f" ({error_code})" if isinstance(error_code, str) and error_code else ""
+    return (
+        f"Google OAuth authorization failed{detail}; check credentials.json "
+        "and run `resilio calendar auth`"
+    )
+
+
 class GoogleCalendarClient:
     """
     Thin wrapper around the Google Calendar REST API.
@@ -86,10 +106,12 @@ class GoogleCalendarClient:
             GoogleCalendarAuthError: If auth fails.
         """
         try:
+            from google.auth.exceptions import GoogleAuthError
             from google.auth.transport.requests import Request
             from google.oauth2.credentials import Credentials
             from google_auth_oauthlib.flow import InstalledAppFlow
             from googleapiclient.discovery import build
+            from oauthlib.oauth2.rfc6749.errors import OAuth2Error
         except ImportError as exc:
             raise GoogleCalendarAuthError(
                 "Google client libraries not installed. Run: "
@@ -111,7 +133,9 @@ class GoogleCalendarClient:
                     creds.refresh(Request())
                     logger.info("Google Calendar token refreshed")
                 except Exception as exc:
-                    logger.warning("Token refresh failed, re-authenticating: %s", exc)
+                    logger.warning(
+                        "Token refresh failed (%s), re-authenticating", type(exc).__name__
+                    )
                     creds = None
 
             if not creds:
@@ -125,10 +149,15 @@ class GoogleCalendarClient:
                         "Google Calendar authorization is required. "
                         "Run: resilio calendar auth"
                     )
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    str(self._credentials_path), SCOPES
-                )
-                creds = flow.run_local_server(port=0)
+                try:
+                    flow = InstalledAppFlow.from_client_secrets_file(
+                        str(self._credentials_path), SCOPES
+                    )
+                    creds = flow.run_local_server(port=0)
+                except (OAuth2Error, GoogleAuthError, ValueError) as exc:
+                    # Never echo the exception text: depending on the library it
+                    # can carry request bodies that include the client secret.
+                    raise GoogleCalendarAuthError(_oauth_failure_message(exc)) from None
                 logger.info("Google Calendar: new token obtained via browser flow")
 
             # Persist token

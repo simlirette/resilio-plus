@@ -26,6 +26,9 @@ app = typer.Typer(
     help="Resilio - AI-powered adaptive running coach (JSON output)",
     add_completion=False,  # Keep it simple for v0
     no_args_is_help=True,
+    # Rich tracebacks with locals would print config objects (OAuth client
+    # secrets, Strava tokens) straight into the terminal on any crash.
+    pretty_exceptions_show_locals=False,
 )
 
 
