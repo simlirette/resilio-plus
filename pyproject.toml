@@ -50,6 +50,12 @@ Repository = "https://github.com/du-phan/resilio-app"
 [tool.poetry]
 packages = [{include = "resilio"}, {include = "scripts", from = "backend"}]
 
+# Poetry owns this project's environment. Without this, any `uv run` launched
+# from the repo root (e.g. a uv-based MCP server at Claude Code startup) builds
+# a partial .venv that Poetry then silently prefers.
+[tool.uv]
+managed = false
+
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4"
 pytest-cov = "^4.1"
