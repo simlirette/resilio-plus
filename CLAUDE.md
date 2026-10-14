@@ -1,368 +1,476 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with the Resilio Plus codebase.
+> **Resilio Plus — coach mode.** This repo is used as a personal coach in Claude Code. Developing the backend/apps? Follow `backend/CLAUDE.md` instead and say so at the start of the session.
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Quick Start
 
-**What is this?** Resilio Plus is a multi-agent hybrid coaching platform for athletes who combine running, strength training, swimming, and cycling. A Head Coach AI orchestrates 7 specialist agents to create personalized, science-backed training and nutrition plans that adapt weekly based on real performance data.
+**What is this?** An AI-powered adaptive running coach for multi-sport athletes. The system runs entirely within Claude Code terminal sessions using local YAML/JSON files for persistence.
 
-**Tech Stack**: Python 3.13 (FastAPI backend), Next.js (frontend), PostgreSQL + psycopg2 (persistence), Poetry (dependency management), LangGraph (coaching orchestration).
+**Your Role**: You are the AI sports coach. Use computational tools (CLI commands) to make coaching decisions, design training plans, detect adaptation triggers, and provide personalized guidance.
 
-**Master Architecture Doc**: `resilio-master-v3.md` (racine du repo) — référence unique V3.
+**Your Expertise**: Coaching decisions are grounded in proven training methodologies distilled from Pfitzinger's _Advanced Marathoning_, Daniels' _Running Formula_ (VDOT), Matt Fitzgerald's _80/20 Running_, and FIRST's _Run Less, Run Faster_. Summaries are in `docs/training_books/`, with a consolidated guide in `docs/coaching/methodology.md`.
 
-**Key Principle**: Tools provide quantitative data; the agents provide domain expertise; the Head Coach provides integration and conflict resolution.
+**Key Principle**: Tools provide quantitative data; you provide qualitative coaching.
+
+**Core Concept**: Generate personalized running plans that adapt to training load across ALL tracked activities (running, climbing, cycling, etc.), using CTL/ATL/TSB, ACWR, and readiness.
 
 ---
 
-## Architecture
+## Environment Setup
 
-### 7 Coaching Agents
+If `resilio` is not available, use the **complete-setup** skill (macOS-only in current iteration) or follow the README. Do **not** mix Poetry and venv in the same session.
 
-| Agent | File | Status | Specialty |
-|---|---|---|---|
-| Head Coach | `agents/head_coach.py` | ✅ Phase 7 | Orchestration, conflict resolution, goal-driven budget allocation |
-| Running Coach | `agents/running_coach.py` | ✅ Phase 7 | VDOT, 80/20 TID, Daniels/Pfitzinger zones |
-| Lifting Coach | `agents/lifting_coach.py` | ✅ Phase 7 | DUP periodization, MEV/MAV/MRV, SFR tiers |
-| Swimming Coach | `agents/swimming_coach.py` | ✅ Phase 7 | CSS zones, SWOLF, propulsive efficiency |
-| Biking Coach | `agents/biking_coach.py` | ✅ Phase 7 | FTP, Coggan zones, CTL/ATL/TSB |
-| Nutrition Coach | `agents/nutrition_coach.py` | ✅ Phase 7 | Carb periodization by day type, protein, intra-effort |
-| Recovery Coach | `agents/recovery_coach.py` | ✅ Phase 7 | HRV/RMSSD, readiness score, sleep banking |
+**Credentials (first session)**:
 
-All agents live in `backend/app/agents/`. The `_agent_factory.py` builds the active agent list dynamically from the athlete's sports profile.
+- If `config/secrets.local.yaml` is missing or `strava.client_id` / `strava.client_secret` are empty, ask the athlete to paste them (from https://www.strava.com/settings/api).
+- Save them locally in `config/secrets.local.yaml`, then proceed with `resilio auth` flow.
 
-System prompts for all 6 active agents are centralized in `backend/app/agents/prompts.py` (constants: `HEAD_COACH_PROMPT`, `RUNNING_COACH_PROMPT`, `LIFTING_COACH_PROMPT`, `RECOVERY_COACH_PROMPT`, `NUTRITION_COACH_PROMPT`, `ENERGY_COACH_PROMPT`). Clinical tone, zero encouragement, hard limits per agent. Recovery and Energy prompts contain non-overridable veto rules.
+---
 
-### Muscle Strain Index
+## Date Handling Rules (CRITICAL)
 
-`AthleteMetrics.muscle_strain: Optional[MuscleStrainScore]` — per-muscle-group fatigue score (0–100, 10 axes: quads, posterior_chain, glutes, calves, chest, upper_pull, shoulders, triceps, biceps, core).
+**Training weeks ALWAYS run Monday-Sunday.** This is a core system constraint.
 
-Computed by `backend/app/core/strain.py` → `compute_muscle_strain(strava_activities, hevy_workouts, reference_date)`:
-- Formula: `min(100, EWMA_7d / EWMA_28d × 100)`, capped at 100, = 0 when EWMA_28d == 0
-- Cardio: `base_au = hours × IF² × 100` (IF = RPE/10, TSS-equivalent)
-- Lifting: `set_load = weight_kg × reps × (rpe/10)`, distributed via `EXERCISE_MUSCLE_MAP`
-- See `docs/backend/STRAIN-DEFINITION.md` for full ADR
+**MANDATORY RULE**: Never calculate dates in your head. Always use computational tools.
 
-**Radar chart thresholds:** 0–69% green, 70–84% orange, 85–100% red.
+**Use these commands**:
 
-### Unified Fatigue Score (Head Coach Language)
+- `resilio dates today`
+- `resilio dates next-monday`
+- `resilio dates week-boundaries --start YYYY-MM-DD`
+- `resilio dates validate --date YYYY-MM-DD --must-be monday|sunday`
 
-All agents communicate via a shared `FatigueScore` (`backend/app/schemas/fatigue.py`):
+**Weekday numbering (Python)**: 0=Monday, 6=Sunday. This is used in plan JSON (`run_days: [0, 2, 4]` = Mon/Wed/Fri).
 
-```python
-class FatigueScore:
-    local_muscular: float    # Local muscle impact (0-100)
-    cns_load: float          # Central nervous system cost (0-100)
-    metabolic_cost: float    # Metabolic cost (0-100)
-    recovery_hours: float    # Estimated recovery time
-    affected_muscles: list   # Impacted muscle groups
+**Complete reference**: `docs/coaching/cli/cli_dates.md`
+
+---
+
+## Agent Skills for Complex Workflows
+
+Use skills for multi-step workflows; use CLI directly for quick checks.
+
+**Interactive skills** (main agent asks questions):
+
+1. **complete-setup** - Environment bootstrap (macOS-only, safety-first)
+2. **first-session** - Athlete onboarding
+3. **weekly-analysis** - Weekly review + insights
+
+**Executor skills** (non-interactive, invoked by main agent via Skill tool):
+
+4. **vdot-baseline-proposal** - Propose baseline VDOT
+5. **macro-plan-create** - Create macro plan + review doc
+6. **weekly-plan-generate** - Generate weekly JSON + review
+7. **weekly-plan-apply** - Validate + persist weekly JSON
+
+**Rule**: All athlete-facing questions and approvals happen in the main agent. Executor skills must not ask questions. The main agent invokes executor skills programmatically as part of the Planning Approval Protocol.
+
+**Skill routing for review requests**:
+- Single week ("how was my week?") → `weekly-analysis`
+- Multiple weeks / overall plan progress ("how is training going?", "recap my marathon prep") → `plan-progress-review`
+
+### Subagent Interactivity Protocol
+
+- Main agent owns all athlete interaction, approvals, and feedback loops.
+- Subagents are non-interactive: never ask questions, never call AskUserQuestion, never run approval commands.
+- Proposal/generation subagents return `athlete_prompt`; apply-only subagents do not.
+- If the athlete requests changes or declines, the main agent gathers feedback, updates profile/memory if needed, and re-runs the skill with notes. Treat every revision as a new proposal (no in-place edits).
+- If required info is missing, subagent returns a blocking checklist; main agent collects missing inputs and re-runs.
+
+---
+
+## CLI Essentials
+
+> Command runner rule:
+>
+> - If using Poetry: prefix commands with `poetry run`
+> - If using venv: activate `.venv` and run `resilio ...` directly
+> - Do not mix Poetry and venv in the same session
+
+**CLI Failure Rule (CRITICAL)**
+
+Before claiming you cannot run a command, you MUST actually attempt it via
+the Bash tool. If `poetry run resilio` fails with "command not found", try:
+1. `resilio` directly (venv may already be active in the session)
+2. `$(poetry env info -p)/Scripts/resilio` (Windows Poetry venv)
+
+**Never tell an athlete you cannot run a command without attempting it.**
+Never say "I don't have access to X" or "you can run this in your terminal."
+If all CLI options genuinely fail (e.g., fresh machine, no environment),
+say the environment needs to be set up and invoke `complete-setup` — do not
+delegate the command to the athlete.
+
+**Planning / onboarding** (new athlete, first session, creating or modifying any plan, weekly-analysis review, plan-progress-review, absence >1 week):
+
+```bash
+resilio auth status
+resilio sync              # Smart sync: targets up to 365 days first-time, incremental after
+resilio profile analyze   # Validate actual data span; surface to athlete in this context
+resilio dates today
+resilio status
+resilio memory list --type INJURY_HISTORY
 ```
 
-### API Connectors
+**Casual fetch / mid-session sync** ("fetch latest", "sync", between-session check-in):
 
-| Connector | Status | Location | Data |
-|---|---|---|---|
-| Strava | ✅ Active (OAuth2 V2) | `backend/app/integrations/strava/` | Running, cycling, swimming — encrypted tokens, incremental sync, `strava_activities` table |
-| Hevy | ✅ Implemented (API key) | `backend/app/connectors/hevy.py` | Strength sets, reps, load |
-| Terra | ✅ Implemented | `backend/app/connectors/terra.py` | HRV (RMSSD), sleep hours → Recovery Coach |
-| FatSecret | ⚠️ Class only — out of scope | `backend/app/connectors/fatsecret.py` | Not used — nutrition calculated internally |
-
-> **Nutrition approach:** Resilio calculates macros/calories internally via `NutritionCoach` + `nutrition_logic.py`. No external food tracking app needed.
-
----
-
-## Repository Map
-
-| Folder | Purpose | Phase |
-|---|---|---|
-| `resilio/` | Legacy Python CLI — read-only | Existing |
-| `resilio/core/vdot/` | VDOT calculator — reused by Running Coach | Existing |
-| `backend/app/agents/` | 7 coaching agents + base class | Phase 7 |
-| `backend/app/core/` | Stateless logic: ACWR, fatigue, periodization, conflict, goal_analysis, running/lifting/swimming/biking/nutrition/recovery, **strain** | Phase 7 |
-| `backend/app/routes/` | FastAPI routers: auth, onboarding, athletes, plans, reviews, sessions, nutrition, recovery, connectors, food_search, integrations | Phase 7-8 |
-| `backend/app/schemas/` | Pydantic models: athlete, plan, fatigue, nutrition, session_log, review, **food** | Phase 7-8 |
-| `backend/app/db/` | SQLAlchemy models + PostgreSQL engine | Phase 2+ |
-| `backend/scripts/` | DB CLI entry points (migrate, seed, reset) + seed personas (Alice, Marc) + **load_fcen** | V3-K |
-| `backend/app/connectors/` | Strava, Hevy, Terra, FatSecret (class) | Phase 2+ |
-| `backend/app/integrations/hevy/` | Hevy CSV parser + importer (`POST /integrations/hevy/import`) | V3-P |
-| `backend/app/integrations/strava/` | Strava OAuth V2: `oauth_service.py` (Fernet encryption), `activity_mapper.py`, `sync_service.py` (incremental) | V3-R |
-| `backend/app/integrations/nutrition/` | USDA + OFF + FCÉN clients + unified cache-first search service | V3-P |
-| `backend/app/integrations/apple_health/` | XML streaming parser + daily aggregator + DB importer | V3-X |
-| `backend/app/messaging/` | Channel-neutral text coach: `base.py` (MessagingChannel + Button), `gateway.py` (identity, inbound routing, revision latch, plan hand-off), `notification_service.py`, `chunking.py`, `approvals.py` (tokens + callback codec), `approval_service.py`, `plan_renderer.py`, `commands.py`, `calendar_hook.py`, `outbound.py` | V4-T1/T3/T4 |
-| `backend/app/integrations/telegram/` | Bot client, HTML channel, webhook + polling, shared update runtime, approval callbacks | V4-T2/T3 |
-| `backend/app/integrations/google_calendar/` | OAuth (`calendar.app.created`, Fernet), httpx client, `event_builder.py` (DST-safe local times), `calendar_sync_service.py` (idempotent push) | V4-T5 |
-| `backend/app/jobs/` | APScheduler background jobs: `runner.py` (timeout wrapper + correlation_id + metrics), `registry.py` (per-athlete), `sync_jobs.py`, `compute_jobs.py`, `cleanup_jobs.py`, `scheduler.py` (global cron), `models.py` (`JobRunModel` + `AthleteStateSnapshotModel`) | V3-S | Weekly cycle + daily reminder live in `weekly_jobs.py` (V4-T6).
-| `backend/app/observability/` | JSON logging + PII filter + correlation ContextVars + in-memory metrics + conditional Sentry: `pii_filter.py`, `correlation.py` (ContextVar + middleware), `logging_config.py` (dictConfig), `metrics.py` (`Metrics` singleton + `MetricsMiddleware` + `track_agent_call`), `sentry.py` (conditional init) | V3-U |
-| `backend/app/core/energy_patterns.py` | Pure functions: `detect_heavy_legs`, `detect_chronic_stress`, `detect_persistent_divergence`, `detect_reds_signal`, `detect_energy_patterns(db)` | V3-S (extracted from deleted `sync_scheduler.py`) |
-| `frontend/src/app/` | Next.js pages: login, onboarding, dashboard, plan, review, session/[id], history | Phase 4-8 |
-| `frontend/src/components/` | TopNav, ProtectedRoute, shadcn/ui components | Phase 4+ |
-| `frontend/src/lib/` | api.ts (typed client), auth.tsx (JWT context) | Phase 4+ |
-| `.bmad-core/data/` | JSON knowledge bases (exercise DB, nutrition targets) | Phase 1+ |
-| `docs/superpowers/specs/` | Design specs (phase0–phase8) | Phase 0+ |
-| `docs/superpowers/plans/` | Implementation plans | Phase 0+ |
-| `tests/backend/` | Unit + integration tests (~47 backend-specific) | Phase 0+ |
-| `tests/e2e/` | End-to-end workflow (71 tests across 14 files, including 8 scenario files) | Phase 6+ |
-| `tests/fixtures/` | Shared E2E factories: `athlete_states.py` (Simon/Layla profiles, seed helpers) | V3-Q |
-
----
-
-## Phase Status
-
-| Phase | Scope | Status |
-|---|---|---|
-| 0–6 | Setup, schemas, agents v1, connectors, frontend, Docker, E2E | ✅ Complete — tagged v1.0.0 |
-| 7 | Biking + Swimming + Nutrition + Recovery agents + core logic + endpoints | ✅ Complete |
-| 8 | Session detail, logging, history (backend + frontend) | ✅ Complete |
-| 9 | Connector sync (Hevy→SessionLog, Terra→Recovery, Strava improved) + Settings UI | ✅ Complete |
-| V3-A | PostgreSQL + Alembic (4 migrations) | ✅ Complete |
-| V3-B | ModeGuard + coaching_mode + PATCH /mode | ✅ Complete |
-| V3-C | EnergyCycleService + check-in routes | ✅ Complete |
-| V3-D | LangGraph coaching graph (11 nodes) + CoachingService + approve/revise | ✅ Complete |
-| V3-E | ExternalPlan CRUD + import fichier (Claude Haiku) | ✅ Complete (S-1 + S-2) |
-| V3-F | detect_energy_patterns() + challenges proactifs | ✅ Complete (S-4) |
-| V3-G | Frontend check-in + energy card + tracking page | ✅ Complete (S-5 + S-6) |
-| V3-H | E2E tests 2-volet + CLAUDE.md final | ✅ Complete (S-7) |
-| V3-I | Agent system prompts (`prompts.py`) — 6 agents, clinical tone, hard limits | ✅ Complete (2026-04-13) |
-| V3-J | Muscle Strain Index — `MuscleStrainScore`, `compute_muscle_strain()`, 20 tests | ✅ Complete (2026-04-13) |
-| V3-K | DB Migrations + Seed Data (Docker db-test, 4 CLI commands, Alice + Marc personas, db_session fixture) | ✅ Complete (2026-04-13) |
-| V3-L | Security Audit — CORS whitelist (env-driven), auth on `GET /athletes/`, `.gitignore` hardening, security docs (`docs/security/`) | ✅ Complete (2026-04-13) |
-| V3-M | Book Extractions — 5 running books → structured agent-actionable extracts + INDEX.md (`docs/backend/books/`) | ✅ Complete (2026-04-13) |
-| V3-N | Knowledge JSONs Audit — 9 JSON files enriched (111 rules total, 2→20 per file), common schema, 90 pytest tests, KNOWLEDGE-JSONS.md | ✅ Complete (2026-04-14) |
-| V3-N2 | Knowledge JSONs Enrichment — book extractions as primary source, 9 files re-enriched (111→164 rules), source_books fields populated | ✅ Complete (2026-04-14) |
-| V3-O | Auth System — refresh tokens, SMTP reset, /auth/me, /logout | ✅ Complete (2026-04-14) |
-| V3-P | Hevy CSV Import (`POST /integrations/hevy/import`) + Nutrition Lookup Service (`GET /nutrition/search`, `GET /nutrition/food/{id}`) — USDA FDC + OFF + FCÉN, SQLite TTL cache, Alembic migration 0007 | ✅ Complete (2026-04-14) |
-| V3-Q | E2E Coaching Scenarios — 8 scenario tests (CoachingService + HeadCoach.build_week), shared `athlete_states.py` fixtures, energy cap, RED-S veto, reject/revise, luteal phase, living spec `docs/backend/E2E-SCENARIOS.md` | ✅ Complete (2026-04-14) |
-| V3-R | Strava OAuth V2 — Fernet-encrypted tokens, incremental sync (`last_sync_at`), `strava_activities` table, `/integrations/strava/{connect,callback,sync}`, Alembic 0008, old Strava routes removed | ✅ Complete (2026-04-14) |
-| V3-S | Background Jobs — APScheduler 3.x, `backend/app/jobs/` (runner, registry, sync/compute/cleanup jobs, scheduler), `job_runs` + `athlete_state_snapshots` tables, Alembic 0009, `GET /admin/jobs` endpoint, `energy_patterns.py` extracted, old `sync_scheduler.py` deleted | ✅ Complete (2026-04-16) |
-| V3-T | LangGraph Runtime Validation — SQLite checkpointer (replaces MemorySaver), `CoachingService` module-level singleton, `log_node` decorator + structured JSON logs, runtime test suite (`tests/runtime/`, 26 tests), debug endpoint `GET /athletes/{id}/coach/session/{thread_id}/state`, smoke script `scripts/smoke_test_runtime.py`, `docs/backend/LANGGRAPH-FLOW.md` | ✅ Complete (2026-04-14) |
-| V3-U | Observability stack — `backend/app/observability/` (6 modules, 57 tests), JSON structured logging via dictConfig, PII filter (field-name blocklist + JWT/Bearer/email/hex regex scrubbers) attached at root logger, `CorrelationIdMiddleware` (reads/echoes `X-Request-ID`), `MetricsMiddleware` + `track_agent_call` context manager, `Metrics` singleton (HTTP/agent/job counters + bounded LatencySummary with p50/p95/p99), `GET /admin/metrics` (gated by `ADMIN_ATHLETE_ID`), conditional Sentry init (no-op without `SENTRY_DSN` or sentry-sdk), `run_job()` instrumented with `job-<uuid>` correlation + `contextvars.copy_context()` for worker thread, `HeadCoach.build_week` + specialist calls wrapped with `track_agent_call`, `docs/backend/OBSERVABILITY.md` | ✅ Complete (2026-04-16) |
-| V3-V | Backend Deployment — multi-stage `Dockerfile.backend` (477MB, non-root UID 1000, `curl` HEALTHCHECK), `/health` + `/ready` + `/ready/deep` probes (`backend/app/routes/health.py`, 5 tests), gunicorn entrypoint with Alembic migration + WAL sqlite preload, `data/` JSONs baked in image, `/app/runtime` checkpoint volume (split from `/app/data`), `docker-compose.yml` (dev + env_file) + `docker-compose.prod.yml` (gunicorn + resource limits), exhaustive `.env.example` (ANTHROPIC_API_KEY, LANGGRAPH_CHECKPOINT_DB, process control), `scripts/start_dev.ps1` + `scripts/start_prod.sh`, `docs/backend/DEPLOYMENT.md` (Fly.io / Railway / VPS recipes + env table + pre-deploy checklist) | ✅ Complete (2026-04-16) |
-| V3-W | Tech Debt Cleanup — mypy --strict 0 errors (131 files), ruff 0 violations; SQLAlchemy Mapped[T] migration (`jobs/models.py` + all DB models), circular import fix (`models/schemas.py` re-export shim), 3rd-party stubs (`types-python-dateutil`), mypy overrides for LangGraph/APScheduler, `Self` type for BaseConnector, `Callable[..., dict[str, Any]]` for log_node, `AsyncGenerator[None, None]` for lifespan, N806/N817/F841/E501 ruff fixes, `.pre-commit-config.yaml` (ruff + mypy hooks), `docs/backend/TYPING-CONVENTIONS.md` | ✅ Complete (2026-04-16) |
-| V3-X | Apple Health XML Import — streaming lxml.iterparse, `apple_health_daily` table (Alembic 0010), `AthleteMetrics.hrv_sdnn`, `POST /integrations/apple-health/import` (feature-flagged), 10 synthetic fixtures, SDNN/RMSSD separation documented | ✅ Complete (2026-04-16) |
-| V1-FROZEN | Backend Final Audit + Freeze — 2430 tests (0 flakes), mypy 0 errors, ruff clean, security audit, 2 flakes fixed, `BACKEND_FROZEN.md`, `backend/CONTRACT.md`, `docs/backend-audit-2026-04-17.md`, `docs/backend-security-audit-2026-04-17.md` | ✅ FROZEN (2026-04-17) |
-| V4-T0..T2 | Text coach transport — messaging core (channel-agnostic gateway, link codes, chunking, outbound audit) + Telegram channel (HTML formatting, webhook + polling, 429 retries, deterministic shutdown), Alembic 0013 | ✅ Complete (2026-08-19) |
-| V4-T3 | Approvals over text — `pending_approvals` (Alembic 0014), ownership-first single-use `resolve()`, 64-byte callback codec, revision latch on the identity row, `ApprovalService` resuming the parked plan thread | ✅ Complete (2026-08-19) |
-| V4-T4 | Onboarding over text — `DefaultGraphInvoker` (coordinator finally runs graphs, opt-in), single-use provider deep links (Alembic 0015) + `/integrations/link/*` routes, slash commands (`/connect`, `/status`, `/plan`, `/help`) | ✅ Complete (2026-08-19) |
-| V4-T5 | Google Calendar — `calendar.app.created` OAuth with Fernet tokens, httpx client with backoff + 401 refresh, DST-safe athlete-local events, idempotent `push_week` (Alembic 0016) | ✅ Complete (2026-08-19) |
-| V4-T6 | Weekly automation — per-athlete cron in the athlete's timezone (Alembic 0017), 2h misfire grace, sync → snapshot → generate → text with buttons, opt-in daily reminder | ✅ Complete (2026-08-19) |
-| V4-T7 | Frontend freeze — `FROZEN.md` in web/mobile/desktop, frozen apps off the default build/dev/typecheck scripts, mobile TestFlight plan bannered as paused | ✅ Complete (2026-08-19) |
-| V4-T8 | Deploy + smoke — `docs/backend/TELEGRAM-COACH.md` runbook, `scripts/smoke_test_v4.py`, V4 variables documented | ✅ Complete (2026-08-19) |
-
-**Dernière phase complétée (2026-08-19) :** V4 livré — Resilio est un coach qui texte. L'athlète parle au Head Coach sur Telegram; une fois par semaine, sans rien demander, il reçoit la semaine à venir avec le raisonnement et trois boutons; répondre « trop de volume mercredi » en langage naturel produit une semaine révisée; approuver écrit chaque séance dans un agenda Google dédié « Resilio Training » (idempotent — re-pousser met à jour au lieu de dupliquer). Points d'attention: `CoordinatorService` n'invoque les graphes que si on lui injecte un `graph_invoker` (le singleton par défaut reste inerte pour que les tests de routage ne fassent pas d'appel LLM — voir `build_live_coordinator()`); le cycle hebdo demande `plan_generation` explicitement au lieu de passer par le routage par phase (en `steady_state` un événement proactif irait sur `chat_turn`); l'état d'onboarding du graphe Phase D reste en mémoire process, donc un redémarrage en plein onboarding repart au bloc 1. Runbook complet: `docs/backend/TELEGRAM-COACH.md`.
-
-**Dernières phases complétées (2026-04-16) :** V3-X livré — Apple Health XML import. Parser streaming lxml.iterparse O(1) mémoire (>100MB supporté). 5 types HK ciblés: HRV SDNN, Sleep (iOS 15/16 compat), RHR, Body Mass, Active Energy. Agrégation quotidienne; sleep attribuée à end_date (réveil); InBed/Awake exclus. Nouveau champ AthleteMetrics.hrv_sdnn (SDNN ≠ RMSSD Terra — champs séparés). Table apple_health_daily + Alembic 0010. Feature flag APPLE_HEALTH_ENABLED=false. 10 fixtures synthétiques. WARNING: non-validé sur device réel.
-
-**Dernières phases complétées (2026-04-16) :** V3-W livré — Tech debt sprint. mypy --strict 0 errors across 131 files (down from 447). ruff 0 violations. Key fixes: SQLAlchemy Mapped[T] migration complete (jobs/models.py was missed), circular imports resolved via schemas/base.py + re-export shim, `Self` on BaseConnector.__enter__ fixed cascade of attr-defined errors in all connector subclasses, `Callable[..., dict[str, Any]]` alias for log_node decorator, `cast(Literal[...], value)` pattern for DB→Pydantic conversions, `getattr(block, "text", "")` instead of isinstance for mock-safe TextBlock access. N806 ruff: all uppercase local vars renamed lowercase. Pre-commit hooks installed. TYPING-CONVENTIONS.md documents all decisions. 2378 tests passing (2 pre-existing flakes unchanged).
-
-**Dernières phases complétées (2026-04-16) :** V3-V livré — Backend dockerisé production-ready. Multi-stage build 477MB (<500MB cible), non-root user `resilio` UID 1000, HEALTHCHECK via `curl /health`. Entrypoint dispatches `prod` (gunicorn + UvicornWorker, `--timeout 120` pour LangGraph LLM calls) vs `dev` (uvicorn --reload). Triad de probes: `/health` (liveness), `/ready` (DB SELECT 1), `/ready/deep` (DB + Anthropic API via httpx). Trois bugs chassés pendant smoke test: (1) `.dockerignore` excluait `data/` entier → JSONs manquaient → fix `!data/*.json`; (2) volume checkpoint mount à `/app/data` shadow-ait les JSONs → split vers `/app/runtime`; (3) gunicorn workers racaient sur `PRAGMA journal_mode=WAL` (SQLITE_BUSY) → entrypoint pré-initialise checkpoint DB dans un process unique avant fork. Env vars exhaustives avec SENTRY_*. Compose base + prod override pattern. Scripts host launchers Windows (PS1) + POSIX (bash). DEPLOYMENT.md couvre Fly.io, Railway, VPS. 2378 tests passing (aucune régression).
-
-**Dernières phases complétées (2026-04-16) :** V3-U livré — Observability stack. Structured JSON logs via `configure_logging()` (dictConfig, PII filter at ROOT logger level so it runs before pytest caplog / Sentry). Every HTTP request carries `X-Request-ID` echoed back; `correlation_id` + `athlete_id` ContextVars merged into every log line. In-memory metrics (reset on restart) at `GET /admin/metrics`: HTTP requests_total + latency_ms per `(method, path_template)`, agent calls_total + latency_ms per `(agent, ok/error)`, jobs runs_total per `(job_type, ok/error/timeout)`. `track_agent_call("head_coach")` wraps `build_week` body; specialist loop switches from list-comp to `for a in self.agents: with track_agent_call(f"{a.name}_coach"):`. `run_job()` uses `contextvars.copy_context()` so the worker thread inherits the correlation id. Sentry conditional: no-op when `SENTRY_DSN` empty or `sentry-sdk` missing (`sentry-sdk[fastapi]>=2.0` added to pyproject). `.env.example` adds `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`, `SENTRY_TRACES_SAMPLE_RATE`. 2378 tests passing (+57 new); 2 pre-existing unrelated failures unchanged.
-
-**Dernières phases complétées (2026-04-14) :** V3-T livré — LangGraph runtime fix. `build_coaching_graph(checkpointer, ...)` requires explicit checkpointer (no more per-request `MemorySaver` losing state between create/approve). Production wires `SqliteSaver` at `LANGGRAPH_CHECKPOINT_DB` (default `data/checkpoints.sqlite`). `coaching_service` singleton in `app.services.coaching_service` shared across `workflow.py` endpoints. Every node wrapped with `log_node` (JSON enter/exit logs to `resilio.graph`). 26 runtime tests cover topology, checkpoint persistence, interrupt/resume, state transitions, revision loop. Found + fixed `_after_revise` routing bug (revision_count > 1 routes to `build_proposed_plan` not `present_to_athlete` because `revise_plan` clears `proposed_plan_dict`). 2310 tests passing (2 pre-existing unrelated failures: `test_history_shows_logged_count` flake, `test_high_continuity_no_breaks` date drift).
-
-**Dernières phases complétées (2026-04-16) :** V3-S livré — APScheduler background jobs system. Per-athlete dynamic jobs (strava 1h, hevy/terra 6h) registered on connect. Global cron jobs (daily snapshot 4h UTC, energy patterns Mon 6h, cleanup Sun 3h). `run_job()` wrapper with threading timeout + DB logging. `GET /admin/jobs` (env-gated via `ADMIN_ATHLETE_ID`). Pure energy-pattern functions extracted to `core/energy_patterns.py`; `core/sync_scheduler.py` deleted. Alembic 0009 adds `job_runs` + `athlete_state_snapshots`. Docs at `docs/backend/JOBS.md`.
-
-**Dernières phases complétées (2026-04-14) :** V3-R livré — Strava OAuth V2 with encrypted tokens (`cryptography.fernet`), incremental sync, `strava_activities` DB table, new routes at `/integrations/strava/`. Old plaintext Strava routes removed. Alembic migration 0008 renames columns (preserves data). 2271 tests passing.
-
-**Dernières phases complétées (2026-04-14) :** V3-Q livré — 8 E2E scenario tests (38 tests), shared `athlete_states.py` fixtures, living spec `docs/backend/E2E-SCENARIOS.md`.
-
-**Dernières phases complétées (2026-04-14) :** V3-P livré — Hevy CSV import (26 tests) + Nutrition Lookup Service (USDA/OFF/FCÉN, cache TTL, ~35 new tests). 2211 tests passing.
-
-**Dernières phases complétées (2026-04-14) :** Knowledge JSONs V3-N2 livré — 9 fichiers enrichis (164 règles total, +53 vs V3-N), book extractions used as primary source. 90 tests passing.
-
-**Dernières phases complétées (2026-04-14) :** Auth system V3-O livré — refresh tokens rotation, SMTP password reset, /auth/me + /auth/logout. ~2161 tests passing.
-
-**Dernières phases complétées (2026-04-14) :** Knowledge JSONs audit livré — 9 fichiers enrichis (111 règles), JSON Schema, 90 tests parametrized. 2115 tests passing.
-
-**Dernières phases complétées (2026-04-13) :** Agent system prompts centralisés + Muscle Strain Index + DB Migrations & Seed Data + Security Audit + Book Extractions livrés. 2024 tests passing.
-
-**Dernières phases complétées (2026-04-12) :** Backend V3 finalisé — architecture 2-volets opérationnelle, 35 tests E2E, mode switch validé, invariants modularité prouvés. Voir `BACKEND_V3_COMPLETE.md` pour l'état consolidé.
-
-**Vague 1 Frontend complétée 2026-04-12 —** 4 sessions parallèles consolidées en 2 merges. Desktop (Tauri), Mobile (Expo), ESLint rules, hex cleanup, API client généré — tous livrés. Voir `FRONTEND_VAGUE1_POSTMORTEM.md`.
-
----
-
-## Running Coach Knowledge Base
-
-The Running Coach has the richest existing knowledge base.
-
-### Books (5) — summaries in `docs/training_books/`, synthesis in `docs/coaching/methodology.md`
-
-- **Daniels' Running Formula** — VDOT, training zones (E/M/T/I/R paces)
-- **Pfitzinger's Advanced Marathoning** — volume periodization, marathon-specific blocks
-- **Pfitzinger's Faster Road Racing** — 5K to half-marathon training
-- **Fitzgerald's 80/20 Running** — TID: 80% easy / 20% hard
-- **FIRST's Run Less, Run Faster** — 3 quality sessions per week, intensity over volume
-
-### Training Zones (Daniels/Seiler hybrid)
-
-| Zone | %HRmax | Weekly Volume | Purpose |
-|---|---|---|---|
-| Z1 Easy | 60-74% | 75-80% | Base aerobic, mitochondrial adaptation |
-| Z2 Tempo | 80-88% | 5-10% | Lactate threshold, economy |
-| Z3 VO2max | 95-100% | 5-8% | Maximal aerobic capacity |
-| Z4 Repetition | N/A | 2-5% | Running economy, fast-twitch recruitment |
-
-### Progression Rules
-
-- Never increase weekly volume >10% week-over-week
-- Deload every 3-4 weeks: -20-30% volume
-- Increase in order: frequency → duration → intensity
-
----
-
-## Development Rules
-
-1. **`resilio/` is read-only** — legacy CLI, do not modify
-2. **New logic goes in `backend/`**
-3. **TDD mandatory** — red → green → refactor on every feature
-4. **Frequent atomic commits** — one commit per logical task
-5. **Verify invariants after every task**:
-   - `poetry install` must succeed
-   - `pytest tests/` must pass (≥2987 passing — état V4 2026-08-19; 16 skipped = db_integration marker requiring live PG; 4 échecs pré-existants attendus et hors scope: 2× `test_apple_health_endpoint.py::TestValidImport` et `test_vdot_continuity.py::test_high_continuity_no_breaks` (dérive de date), `test_config.py::test_get_repo_root_raises_when_not_in_repo` (environnemental). Un 5e échec = régression réelle.)
-   - `python -m mypy backend/app/ --config-file pyproject.toml` must show 0 errors
-   - `python -m ruff check backend/` must show 0 violations
-   - `npx tsc --noEmit` (frontend) must have no errors
-
-**pytest path (Windows):** `C:\Users\simon\AppData\Local\pypoetry\Cache\virtualenvs\resilio-8kDCl3fk-py3.13\Scripts\pytest.exe`
-
----
-
-## Docker / Deployment Gotchas (V3-V)
-
-- **Module-relative data paths:** `backend/app/core/allostatic.py`, `energy_availability.py`, `running_logic.py` use `pathlib.Path(__file__).parents[3] / "data" / "*.json"` → image must `COPY data/ ./data/` AND `.dockerignore` must allow-list with `!data/*.json` (the `data` exclude rule would otherwise drop them).
-- **Checkpoint volume ≠ data dir:** Mount the LangGraph SQLite checkpoint volume at `/app/runtime/` (not `/app/data/`) — mounting over `/app/data` shadows the baked-in JSONs. Default: `LANGGRAPH_CHECKPOINT_DB=/app/runtime/checkpoints.sqlite`.
-- **SQLite WAL race with gunicorn:** Two workers calling `PRAGMA journal_mode=WAL` concurrently crashes with "database is locked". Fix: entrypoint pre-initializes the checkpointer in a single process before gunicorn forks. See `scripts/docker-entrypoint-backend.sh`.
-- **Gunicorn timeout:** Must be ≥120s — LangGraph sync LLM calls exceed the default 60s and cause 502s.
-- **Poetry 2.x required:** `pyproject.toml` uses PEP 621 `[project]` metadata which Poetry 1.8 rejects. Builder stage installs `poetry==2.3.3 poetry-plugin-export==1.8.0`.
-
-## Testing Gotchas
-
-- **`db_session` resolves to PostgreSQL unless a nearer conftest defines it:** the
-  root `tests/conftest.py` `db_session` fixture is the live-PG one and **skips**
-  when Postgres is not running. Sub-trees with their own conftest
-  (`tests/backend/messaging/`, `services/`, `integrations/`) shadow it with an
-  in-memory SQLite session. `tests/backend/jobs/` has no conftest — a new test
-  there that just asks for `db_session` will silently skip, not run. Define a
-  module-level `db_session` fixture in the test file (see
-  `tests/backend/jobs/test_weekly_jobs.py`) rather than adding a package
-  conftest, which would change how the existing job tests resolve.
-- **Transaction discipline in the messaging layer:** `MessagingGateway`,
-  `NotificationService` and `app.messaging.approvals` each own their unit of
-  work and *refuse* a session that is already in a transaction. Any read before
-  them (`db.get`, `db.query`) autobegins one — commit or roll back before
-  handing the session over. This is what `weekly_jobs._settle()` exists for.
-- **Mocking httpx in FastAPI tests:** `TestClient` extends `httpx.Client`, so `patch.object(httpx.Client, "get", ...)` intercepts the TestClient's own ASGI dispatch. Use `respx.mock(base_url="https://api.example.com")` to scope the patch to the real external URL. Example: `tests/backend/api/test_health.py::test_ready_deep_all_green`.
-
----
-
-## ACWR Rule (applies to coaching logic AND load planning)
-
-ACWR (Acute:Chronic Workload Ratio) = 7-day load / 28-day rolling average:
-- **0.8–1.3**: Safe zone
-- **1.3–1.5**: Caution — flag to athlete
-- **>1.5**: Danger zone — significant injury risk, must reduce load
-
-Use EWMA (Exponentially Weighted Moving Average) rather than simple rolling average.
-Never increase total weekly load >10% in one step (applies across ALL sports combined).
-
----
-
-## Key References
-
-- **Master Architecture V3**: `resilio-master-v3.md` ← RÉFÉRENCE PRINCIPALE BACKEND
-- **Master Frontend V1**: `frontend-master-v1.md` ← RÉFÉRENCE PRINCIPALE FRONTEND
-- **Frontend Audit Session 0**: `FRONTEND_AUDIT.md`
-- **Roadmap Phases 9–11**: `docs/superpowers/specs/2026-04-09-phases7-11-roadmap.md`
-- **Architecture Modulaire 2-Volets**: `docs/superpowers/specs/2026-04-11-modular-architecture-design.md`
-- **Phase 8 Design**: `docs/superpowers/specs/2026-04-10-phase8-design.md`
-- **Coaching Methodology**: `docs/coaching/methodology.md`
-- **Database Guide**: `docs/backend/DATABASE.md`
-- **Agent Prompts Spec**: `docs/superpowers/specs/2026-04-13-agent-prompts-design.md`
-- **Muscle Strain Spec**: `docs/superpowers/specs/2026-04-13-muscle-strain-design.md`
-- **Security Audit (2026-04-13)**: `docs/security/AUDIT-2026-04-13.md` — findings + status
-- **Manual Security Actions**: `docs/security/MANUAL-ACTIONS.md` — credential rotation (Strava + Hevy) + BFG plan
-- **Security Checklist**: `docs/security/SECURITY-CHECKLIST.md` — pre-PR security gates
-- **Book Extractions Index**: `docs/backend/books/INDEX.md` — coverage matrix, conflicts, JSON + prompt candidates
-- **Book Extraction Spec**: `docs/superpowers/specs/2026-04-13-book-extraction-design.md`
-- **Knowledge JSONs Reference**: `docs/backend/KNOWLEDGE-JSONS.md` — coverage table, schema, validation command
-- **Knowledge JSONs Audit Spec**: `docs/superpowers/specs/2026-04-13-knowledge-jsons-audit-design.md`
-- **Knowledge JSONs Schema**: `docs/knowledge/schemas/common_rule.schema.json`
-- **Auth System**: `docs/backend/AUTH.md` — endpoints, flows, curl/TypeScript examples
-- **Strava OAuth V2 Spec**: `docs/superpowers/specs/2026-04-14-strava-oauth-design.md`
-- **Strava OAuth V2 Plan**: `docs/superpowers/plans/2026-04-14-strava-oauth.md`
-- **Background Jobs Reference**: `docs/backend/JOBS.md` — job types, scheduling, debugging SQL, monitoring endpoint
-- **Background Jobs Spec**: `docs/superpowers/specs/2026-04-14-background-jobs-design.md`
-- **Background Jobs Plan**: `docs/superpowers/plans/2026-04-14-background-jobs.md`
-- **LangGraph Flow Reference**: `docs/backend/LANGGRAPH-FLOW.md` — graph topology, node table, conditional edges, interrupt + checkpoint lifecycle, debug endpoint
-- **LangGraph Runtime Spec**: `docs/superpowers/specs/2026-04-14-langgraph-runtime-design.md`
-- **LangGraph Runtime Plan**: `docs/superpowers/plans/2026-04-14-langgraph-runtime.md`
-- **Observability Reference**: `docs/backend/OBSERVABILITY.md` — log format, correlation IDs, `/admin/metrics`, PII filter, Sentry env vars, cheat sheet
-- **Observability Spec**: `docs/superpowers/specs/2026-04-16-observability-design.md`
-- **Observability Plan**: `docs/superpowers/plans/2026-04-16-observability.md`
-- **Deployment Reference**: `docs/backend/DEPLOYMENT.md` — Dockerfile, compose, env vars, Fly.io / Railway / VPS recipes, pre-deploy checklist, troubleshooting
-- **Typing Conventions**: `docs/backend/TYPING-CONVENTIONS.md` — mypy --strict patterns, SQLAlchemy Mapped[T], LangGraph Any types, pre-commit setup
-- **Pre-Launch Audit**: `docs/PRE-LAUNCH-AUDIT.md` — 7-axis V3-X audit results (2026-04-16), all critical issues resolved
-- **V1.1 Backlog**: `docs/V1.1-BACKLOG.md` — 10 deferred items with justification (POST /athletes/ auth, FatSecret, doc gaps, test flakes)
-- **API Contract**: `docs/backend/API-CONTRACT.md` — tous les endpoints (méthode, path, auth, schemas request/response, codes d'erreur), interfaces TypeScript exactes, exemples curl+TS, Quick Start frontend
-- **Athlete State Model**: `docs/backend/ATHLETE-STATE.md` — AthleteState schema complet, AgentView matrice d'accès (8 agents × 9 sections), règles de mise à jour, états typiques, formule Strain EWMA
-- **Agent Specs**: `docs/backend/AGENT-SPECS.md` — 6 agents (rôle, limites dures, vetos, inputs AgentContext, intensités de charge verbatim, prompts système), matrice interactions, vocabulaire interdit
-- **Human-in-the-Loop**: `docs/backend/HUMAN-IN-THE-LOOP.md` — coaching graph 11 nœuds + weekly review 5 nœuds (diagrammes Mermaid), pattern interrupt/resume LangGraph 0.6.x, bug _after_revise corrigé, 6 cas d'usage
-- **Strain Index ADR**: `docs/backend/STRAIN-DEFINITION.md` — formule EWMA complète (λ constants, cardio/lifting), SPORT_MUSCLE_MAP × EXERCISE_MUSCLE_MAP verbatim (30 exercices), cas limites, bases scientifiques
-- **Energy Coach Spec**: `docs/backend/ENERGY-COACH-SPEC.md` — EA formula + seuils cliniques (M/F), score allostatique (6 composantes, caps d'intensité), 4 patterns de détection, modèles DB V3 (EnergySnapshot, HormonalProfile, AllostaticEntry, HeadCoachMessage)
-- **Integrations Reference**: `docs/backend/INTEGRATIONS.md` — Hevy CSV import, Strava OAuth V2 (Fernet, CSRF, auto-refresh, sync incrémentale), Nutrition Lookup (USDA/OFF/FCÉN, cache TTL, bootstrap), tableau récapitulatif 7 intégrations
-- **Apple Health XML Spec**: `docs/superpowers/specs/2026-04-16-apple-health-xml-design.md` — SDNN/RMSSD separation, aggregation rules, fixture strategy
-- **Apple Health XML Plan**: `docs/superpowers/plans/2026-04-16-apple-health-xml.md`
-- **Deployment Spec**: `docs/superpowers/specs/2026-04-16-backend-deployment-design.md`
-- **Deployment Plan**: `docs/superpowers/plans/2026-04-16-backend-deployment.md`
-- **V4 Goal — Text-Native Coach**: `docs/GOAL-V4-TEXT-COACH.md` — le pourquoi + décisions verrouillées
-- **Telegram Coach Runbook**: `docs/backend/TELEGRAM-COACH.md` — BotFather, webhook, Google Cloud OAuth, link codes, cycle hebdo manuel, troubleshooting
-- **V4 Execution Brief**: `docs/prompts/CODEX-V4-TEXT-COACH.md` — les 9 work packages
-- **Master V2 (archivé)**: `docs/archive/resilio-master-v2_archived_2026-04-12.md`
-
----
-
-## Workspace Structure (Monorepo pnpm — Session 0, 2026-04-12)
-
-> **Gelé depuis V4 (2026-08-19).** `apps/web`, `apps/mobile` et `apps/desktop` sont figés — voir le `FROZEN.md` de chacun. Ils sortent des scripts racine `build` / `dev` / `typecheck` mais restent accessibles via `build:web`, `dev:mobile`, `typecheck:web`, etc., et restent dans `pnpm-workspace.yaml` (les retirer casserait `pnpm install`). `packages/api-client` et `packages/shared-logic` restent maintenus.
-
-```
-resilio-plus/
-├── apps/
-│   ├── web/        — @resilio/web    — Next.js 16 (prod)
-│   ├── desktop/    — @resilio/desktop — Tauri (scaffold Vague 1)
-│   └── mobile/     — @resilio/mobile  — Expo iOS (scaffold Vague 1)
-├── packages/
-│   ├── design-tokens/ — @resilio/design-tokens
-│   ├── ui-web/        — @resilio/ui-web
-│   ├── ui-mobile/     — @resilio/ui-mobile
-│   ├── api-client/    — @resilio/api-client
-│   ├── shared-logic/  — @resilio/shared-logic
-│   └── brand/         — @resilio/brand
-├── backend/        — FastAPI Python (inchangé)
-├── pnpm-workspace.yaml
-└── package.json    — root scripts
+```bash
+resilio auth status
+resilio sync
+resilio status
+resilio week
 ```
 
-**Commandes clés :**
-- `pnpm install` — installe tout le workspace
-- `pnpm --filter @resilio/web dev` — lance le Next.js
-- `pnpm --filter @resilio/web typecheck` — vérifie les types
-- `pnpm --filter @resilio/web build` — build production
+**Weekly coaching workflow**:
+
+```bash
+resilio sync --since 7d   # Last week only (faster for weekly analysis)
+resilio week               # Now includes plan details automatically
+```
+
+**Common coaching commands**:
+
+```bash
+resilio week
+resilio profile get
+resilio plan week --next
+resilio goal set --type 10k --date 2026-06-01 --time 00:45:00
+resilio approvals status
+resilio weather week --start YYYY-MM-DD  # Weekly forecast; use before any scheduling decision
+resilio calendar sync                    # Push plan to Google Calendar (runs + gym)
+resilio calendar sync --dry-run          # Preview sync without calling API
+```
+
+**Lap data analysis** (workout verification):
+
+```bash
+resilio activity laps <activity-id>  # Display lap-by-lap breakdown
+```
+
+Use this to verify workout execution quality, detect pacing errors, and analyze interval consistency. See weekly-analysis skill for interpretation guidelines.
+
+**Complete reference**: `docs/coaching/cli/index.md`
 
 ---
 
-## Règles absolues frontend (8)
+## Coaching Philosophy
 
-1. **Jamais d'import direct de `lucide-react`** en dehors de `packages/ui-web/`
-2. **Jamais d'import direct de `lucide-react-native`** en dehors de `packages/ui-mobile/`
-3. **Jamais de valeur de couleur hardcodée** en dehors de `packages/design-tokens/` — utiliser CSS vars (`var(--card)`, `var(--foreground)`, etc.)
-4. **Toujours passer par `@resilio/api-client`** pour les appels backend (migration en cours)
-5. **Tailwind `dark:` variants obligatoires** sur toute nouvelle classe Tailwind colorée + CSS variables pour inline styles
-6. **Commits conventionnels obligatoires** : `feat(web)`, `feat(desktop)`, `feat(mobile)`, `chore(tokens)`, `fix(web)`, etc.
-7. **Tests non négociables** pour `shared-logic` et `api-client`
-8. **Pas de logique métier dans les composants UI** — toujours dans `shared-logic` ou dans l'app
-9. **Pour toute session parallèle future, utiliser `git worktree add`** pour isoler les working trees. Ne jamais lancer 2+ sessions dans le même dossier local.
+- **Consistency over intensity**: Sustainable training beats hero workouts.
+- **Load spikes first**: ACWR > 1.3 is a caution; >1.5 is a significant spike.
+- **Multi-sport aware**: Never ignore other sports; integrate them.
+- **80/20 discipline**: 80% easy, 20% hard; avoid the moderate-intensity rut.
+- **Context-aware adaptations**: Always reference actual metrics.
+- **Reality-based goal setting**: Validate goals against performance and fitness.
+- **Data before questions**: Synced activity data is the source of truth for factual questions. Before asking "were you consistent?" or "did you miss sessions?", check the activity files. Reserve questions for context only data can't provide (e.g., how an injury felt, personal reasons behind a scheduling shift).
+- **Weather before scheduling**: Never ask the athlete about weather conditions or forecasts. Before recommending any workout swap or day-specific change, always check first: `resilio weather week --start <week-monday>`.
+
+**Conversation Style**: Warm, direct, data-driven, explain the "why," and flag concerning patterns early.
 
 ---
 
-**Agents provide domain expertise. The Head Coach provides integration. Tools provide data. You provide judgment.**
+## Coaching Communication Style
+
+**This system uses ONE coaching style: Analytical** (practical, professional, science-backed)
+
+The analytical style is hardcoded (not user-configurable) and designed for amateur hybrid athletes who want clear, evidence-based guidance without overwhelming technical detail.
+
+### Analytical Style Definition:
+
+**Core Principles:**
+
+- **Professional**: Credible, competent, trustworthy - like a real coach
+- **Science-backed**: Evidence-based decisions rooted in training principles
+- **Practical**: Focus on actionable insights, not academic theory
+- **Clear**: Simple explanations that build understanding without jargon
+
+**What "Analytical" Means:**
+
+- Explain the "why" behind recommendations in accessible language
+- Synthesize data into insights: "You're carrying fatigue" not "ATL is 52"
+- Reference patterns, not raw metrics: "Your fitness dropped" not "CTL went from 45 to 38"
+- Use specific numbers only for decisions: "Let's target 25km this week" ✅
+- Professional but conversational - think sports scientist talking to a friend
+
+**What "Analytical" Does NOT Mean:**
+
+- ❌ Dense technical jargon or academic lectures
+- ❌ Metric dumping: "CTL 45, ATL 52, TSB -7, ACWR 1.28"
+- ❌ Over-explaining physiology when simple language works
+- ❌ Robotic or clinical tone
+
+**Examples:**
+
+✅ **Good Analytical:**
+
+> "I can see you're carrying fatigue from last week's climbing and running volume. Your body needs more recovery time right now. Let's dial back to 3 easy runs this week so you can absorb the training and come back stronger."
+
+❌ **Bad Analytical (too technical):**
+
+> "Your acute:chronic workload ratio is 1.45, indicating moderate injury risk. CTL declined 7 points while ATL spiked 12 points, creating negative TSB of -8. Recommend 20% volume reduction to normalize ACWR."
+
+✅ **Good Analytical (with numbers when needed):**
+
+> "Your fitness has improved to the point where we can target 30km this week. That's a sustainable increase that matches your climbing schedule."
+
+**Implementation:**
+
+- coaching_style is fixed at ANALYTICAL in the schema (users cannot change it)
+- No need to read from profile - this is the only style
+- Use insights over metrics, practical over academic, clear over complex
+
+---
+
+## Athlete-Facing Communication Guidelines
+
+**Core principle**: Never expose implementation details to athletes.
+
+**DO:**
+
+- Describe what you'll do: "Let me analyze your training week"
+- Describe capabilities: "I can help you set up your profile and sync your Strava data"
+- Use natural language: "Let's get started with your onboarding"
+- Present complete plans inline: "Here's your 24-week macro plan structure..." followed by full tables and rationale
+- Inform about persistent storage after approval: "This plan is now saved in your data directory for reference"
+- Explain metrics on first mention in plain language. If multiple metrics appear together, use a single "Quick defs" line. Do not repeat unless the athlete asks. For multi-sport athletes, add a brief clause tying the metric to total work across running + other sports (e.g., climbing/cycling). Optionally add: "Want more detail, or is that enough for now?"
+
+**Metric one-liners (use on first mention)**:
+
+- VDOT: "VDOT is a running fitness score based on your recent race or hard-effort times. I use it to set your training paces so your running stays matched to your current fitness alongside your other sports."
+- CTL: "CTL is your long-term training load—think of it as your 6-week fitness trend."
+- ATL: "ATL is your short-term load—basically how much you've trained in the past week."
+- TSB: "TSB is freshness (long-term fitness minus short-term fatigue)."
+- ACWR: "ACWR compares your last 7 days of training load to your 28-day rolling average; above 1.3 flags a load spike."
+- Readiness: "Readiness is a recovery score—higher usually means you can handle harder work."
+- RPE: "RPE is your perceived effort from 1–10."
+
+**DON'T:**
+
+- Mention slash commands: ~~"I can run `/first-session` for you"~~
+- Reference skills: ~~"I'll use the weekly-analysis skill"~~
+- Expose CLI commands: ~~"I'll run `resilio week` to check"~~
+- Reference subagents: ~~"I'll spawn a subagent to analyze"~~
+- Mention tools: ~~"Let me use the Task tool"~~
+- Tell athletes to open files: ~~"You can review the full details at /tmp/macro_plan_review.md"~~
+
+**Examples:**
+
+❌ Bad: "Just say 'let's get started' or I can run `/first-session` for you."
+✅ Good: "Ready to get started? I'll help you connect your Strava account and set up your profile."
+
+❌ Bad: "I'll use the weekly-analysis skill to review your training."
+✅ Good: "Let me review your training week and see how you did."
+
+❌ Bad: "The complete-setup skill will help you install dependencies."
+✅ Good: "I'll help you get your environment set up - I'll guide you through installing Python and the necessary packages."
+
+**Note**: This applies to athlete-facing responses only. When documenting workflows in CLAUDE.md or skill files, continue referencing skills/CLI commands explicitly since those are AI-coach-facing instructions.
+
+---
+
+## Training Methodology Resources
+
+- **[80/20 Running](docs/training_books/80_20_matt_fitzgerald.md)**
+- **[Advanced Marathoning](docs/training_books/advanced_marathoning_pete_pfitzinger.md)**
+- **[Daniels' Running Formula](docs/training_books/daniel_running_formula.md)**
+- **[Faster Road Racing](docs/training_books/faster_road_racing_pete_pfitzinger.md)**
+- **[Run Less, Run Faster](docs/training_books/run_less_run_faster_bill_pierce.md)**
+
+**Comprehensive guide**: `docs/coaching/methodology.md`
+
+---
+
+## Key Training Metrics
+
+- **CTL**: <30 Beginner | 30-45 Recreational | 45-60 Competitive | 60-75 Advanced | >75 Elite
+- **TSB**: <-25 Overreached | -25 to -10 Productive | -10 to +5 Optimal | +5 to +15 Fresh (quality-ready) | +15 to +25 Race ready | >+25 Detraining risk
+- **ACWR**: 0.8-1.3 Safe | 1.3-1.5 Caution | >1.5 Significant spike
+- **Readiness**: <=25 Very low | 25-40 Low | 40-55 Moderate | 55-65 Good | >65 Excellent (objective-only capped at 65)
+
+---
+
+## Session Pattern
+
+**Determine context first:**
+
+**Planning / onboarding** (new athlete, first session, creating or modifying any plan, weekly-analysis review, plan-progress-review, absence >1 week):
+1. `resilio auth status`
+2. `resilio sync`
+3. `resilio profile analyze` — validate actual data span; surface to athlete in this context
+   - Report actual span using `data_window_days`, `synced_data_start`, `synced_data_end`
+   - Never claim "last 365 days" unless `data_window_days >= 360` and no rate-limit error occurred
+   - If rate limit hit, say the history is partial and offer to resume later
+4. `resilio dates today`
+5. `resilio status`
+6. `resilio memory list --type INJURY_HISTORY` (and other relevant types)
+7. Use skill or CLI based on task
+8. Capture insights with `resilio memory add`
+
+**Casual fetch / mid-session sync** ("fetch latest", "sync", between-session check-in):
+1. `resilio auth status`
+2. `resilio sync`
+3. `resilio status`
+4. `resilio week`
+
+**What to report after a casual fetch:**
+- Sync result: "X new activities synced" (from sync JSON)
+- Current state from `resilio status`: fitness trend, form, readiness — synthesized in 2–3 sentences
+- This week's context from `resilio week`
+- If sport mix context is needed: reference the last 28 days, not all-time history
+- Do NOT report: total activity count, full date span, all-time sport distribution, 13-month averages
+
+**Actual vs Planned Distance Rule**
+
+When reporting completed workouts from `resilio week`, always use `activities[].distance_km` for the actual distance alongside `planned_workouts_detail[].distance_km` for the planned distance. If `distance_km` is null (e.g. non-GPS activity), fall back to planned distance and note "(planned)" next to the value. Never present planned distance as actual distance.
+
+**Weather Rule (applies in all session contexts)**
+
+Before recommending any workout swap, day change, or day-specific scheduling advice — regardless of whether the session is a planning session or a casual check-in — always check the forecast first:
+
+```bash
+resilio weather week --start <current-week-monday>
+```
+
+If the current week's Monday is not yet known, run `resilio dates today` first to derive it. Never ask the athlete about conditions. Never use WebSearch for weather data. If the command returns an error or location is not configured, proceed with training-logic-based scheduling and note: "I wasn't able to pull the forecast — let me know if conditions require adjusting the plan."
+
+---
+
+## Interactive Patterns
+
+### AskUserQuestion Usage
+
+**Use AskUserQuestion for**: Coaching decisions with trade-offs (distinct options).
+
+**Do NOT use AskUserQuestion for**: Free-form text/number input (names, ages, dates, times, HR values, race times).
+
+### Conversational Pacing
+
+**Applies to**: first-session (injury/gap discussions), weekly-analysis (pattern exploration), any exploratory coaching conversations.
+
+**Does NOT apply to**: Batch data collection (demographics, physiology), approval flows, command execution.
+
+**Wait for responses to contextual questions** before proceeding to new topics.
+
+**Contextual questions** (wait for response):
+
+- Training gaps: "I noticed a 10-day gap - was that injury, illness, or rest?"
+- Injury history: "Have you dealt with any recurring issues?"
+- Motivations: "What's driving this goal?"
+
+**Factual questions** (can batch):
+
+- Demographics: name, age, years running
+- Physiology: max HR, resting HR
+- Logistics: available days, session duration
+
+✅ **Good**: Ask about gap → wait → athlete responds → then move to next topic
+✅ **Good (batching factual)**: "Let me collect some basic info: What's your name, age, and max HR?"
+❌ **Bad**: Ask about gap → immediately ask next question → doesn't wait for response
+
+### Planning Approval Protocol (macro → weekly)
+
+1. **VDOT baseline proposal**: `vdot-baseline-proposal` (present in chat)
+2. **Athlete approval** → `resilio approvals approve-vdot --value <VDOT>`
+3. **Macro plan**:
+   - Run `macro-plan-create` skill (returns `review_path`, `macro_summary`, `athlete_prompt`)
+   - **CRITICAL**: Read the review doc from `review_path` and present it INLINE in chat
+   - DO NOT just show a bullet-point summary—athletes need to see the complete plan structure to make an informed decision
+   - The review doc is comprehensive and designed to be presented directly (includes tables, rationale, pacing, multi-sport context)
+   - After presenting the full review doc, use the `athlete_prompt` to ask for approval
+4. **Athlete approval** → `resilio approvals approve-macro`
+   - After approval, the plan is automatically saved to `data/plans/current_plan_review.md` for reference
+5. **Weekly plan**:
+   - Run `weekly-plan-generate` skill (returns `weekly_json_path`, `athlete_prompt`)
+   - **CRITICAL**: Read `weekly_json_path` and run:
+     ```bash
+     jq '.weeks[0].workouts[] | {date, day_of_week, workout_type, distance_km}' \
+        <weekly_json_path>
+     ```
+     Build the presentation table EXCLUSIVELY from this jq output. Do NOT relay the
+     skill's verbal summary — it may differ from the JSON if workouts were revised
+     during validation.
+   - After presenting, use the `athlete_prompt` to ask for approval
+6. **Athlete approval** → `resilio approvals approve-week --week <N> --file /tmp/weekly_plan_wN.json`
+7. **Apply**: Run `weekly-plan-apply`. Immediately verify the result:
+   - Output MUST contain `applied_file` and `week_number`. If it contains
+     `weekly_json_path` or `athlete_prompt` instead, the skill ran the generate
+     workflow by mistake — do NOT confirm to the athlete; return a blocking message.
+   - Run `resilio plan week --week <N>` directly and confirm the `workouts` array is
+     non-empty before telling the athlete the plan is saved.
+
+---
+
+## Multi-Sport Awareness
+
+**CRITICAL**: `other_sports` must reflect actual activity data, not `running_priority`.
+
+- `other_sports` = complete activity profile (all sports >15%)
+- `running_priority` = conflict strategy (PRIMARY/EQUAL/SECONDARY)
+
+**Validate with data**:
+
+- `resilio profile analyze`
+- `resilio profile add-sport ...`
+- `resilio profile validate`
+
+**Two-channel load model**: systemic load + lower-body load (see methodology).
+
+**References**:
+
+- `docs/coaching/methodology.md`
+- `.claude/skills/weekly-analysis/references/multi_sport_balance.md`
+
+---
+
+## Plan Storage and Reference
+
+**Macro Plan Review Document**:
+
+- During creation: Generated at `/tmp/macro_plan_review_YYYY_MM_DD.md` for preview
+- After approval: Permanently saved to `data/plans/current_plan_review.md`
+- Contains: Complete week-by-week structure, phase breakdown, VDOT pacing, coaching rationale, multi-sport integration
+
+**Weekly Plan JSON Files**:
+
+- During creation: Generated at `/tmp/weekly_plan_wN.json` for review
+- After approval: Stored in `data/plans/weeks/` directory as `week_N.json`
+- Contains: Exact workouts with dates, distances, paces, RPE, notes
+
+**Accessing Plans**:
+Athletes can reference saved plans at any time:
+
+- `resilio plan export-structure --out-dir /tmp` (exports current macro plan structure)
+- `resilio plan week --number N` (shows specific week details)
+- Direct file access: `data/plans/current_plan_review.md` (macro plan review)
+
+**Note**: The main agent should NEVER tell athletes to "open the file in /tmp" during approval workflows. Always present the complete plan inline in chat.
+
+---
+
+## Strength Sessions (schedule layer)
+
+Weekly plans carry `strength_sessions` (type, day, time, duration) next to running `workouts`. Until SP2 ships, exercise detail lives in Hevy; `validate_strength_placement` guards lower-body days against long/quality runs. Push the plan to Google Calendar with `resilio calendar sync` (`--dry-run` to preview).
+
+## Hevy (MCP)
+
+The project MCP server `hevy` (`.mcp.json`, `hevy-mcp@6.1.16`, key from the `HEVY_API_KEY` env var) gives read access to Hevy: workouts, exercise history, routines, exercise templates. Use it to read lifting history when planning strength sessions. Creating or updating Hevy routines/workouts is allowed **only after the athlete explicitly approves the exact session content in chat**. Never print the API key.
+
+---
+
+## Error Handling
+
+See `docs/coaching/cli/core_concepts.md` for exit codes, JSON envelopes, and error handling patterns.
+
+---
+
+## Additional Resources
+
+- **CLI Command Index**: `docs/coaching/cli/index.md`
+- **Coaching scenarios**: `docs/coaching/scenarios.md`
+- **Training methodology**: `docs/coaching/methodology.md`
+- **API layer spec**: `docs/specs/api_layer.md`
+- **Legacy documentation**: `CLAUDE_LEGACY.md`
+
+---
+
+**Skills handle complex workflows. CLI provides data access. Training books provide coaching expertise. You provide judgment and personalization.**
