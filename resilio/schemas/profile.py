@@ -10,6 +10,7 @@ import warnings
 
 from resilio.schemas.adaptation import AdaptationThresholds
 from resilio.schemas.weather import WeatherLocation
+from resilio.schemas.lifting import LiftingProfile
 
 
 # ============================================================
@@ -273,6 +274,9 @@ class AthleteProfile(BaseModel):
 
     # Weather Preferences
     weather_preferences: Optional[WeatherPreferences] = None
+
+    # Lifting (Hevy-executed strength training; see resilio lift)
+    lifting: Optional[LiftingProfile] = None
 
     # Adaptation Thresholds (Phase 5: Toolkit Paradigm)
     adaptation_thresholds: AdaptationThresholds = Field(

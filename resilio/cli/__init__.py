@@ -56,7 +56,7 @@ def main(
 
 
 # Import and register commands
-from resilio.cli.commands import auth, metrics, plan, profile, vdot, guardrails, analysis, memory, activity, dates, performance, goal, approvals, weather, calendar
+from resilio.cli.commands import auth, metrics, plan, profile, vdot, guardrails, analysis, memory, activity, dates, performance, goal, approvals, weather, calendar, lift
 from resilio.cli.commands.init_cmd import init_command
 from resilio.cli.commands.status import status_command
 from resilio.cli.commands.sync import sync_command
@@ -87,3 +87,4 @@ app.add_typer(dates.app, name="dates", help="Date utilities for training plan ge
 app.add_typer(performance.app, name="performance", help="Performance baseline and fitness tracking")
 app.add_typer(approvals.app, name="approvals", help="Manage approval state for planning workflows")
 app.add_typer(calendar.app, name="calendar", help="Sync training plan to Google Calendar")
+app.add_typer(lift.app, name="lift", help="Lifting (Hevy): sync, analysis, prescription, push")
