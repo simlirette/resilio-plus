@@ -184,3 +184,18 @@ def test_validate_week_plan_runs_lifting_checks(tmp_path, monkeypatch):
     res = validate_week_plan(str(f))
     assert any("not a gym day" in e for e in res["errors"])
     assert res["lifting_planned_volume"]["chest"] == 3
+
+
+def test_validate_week_plan_reads_utf8_on_windows(tmp_path):
+    """Plan JSON with accents / dashes must not crash under a cp1252 default encoding."""
+    import json
+
+    from resilio.api.plan import validate_week_plan
+
+    week = {"week_number": 1, "phase": "base", "start_date": "2026-10-19", "end_date": "2026-10-25",
+            "target_volume_km": 0, "target_systemic_load_au": 0, "workouts": [],
+            "notes": "Séance clé — semaine de reprise"}
+    f = tmp_path / "w.json"
+    f.write_text(json.dumps({"weeks": [week]}, ensure_ascii=False), encoding="utf-8")
+    res = validate_week_plan(str(f))
+    assert isinstance(res, dict) and "errors" in res

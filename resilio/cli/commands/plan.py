@@ -550,7 +550,7 @@ def plan_populate_command(
 
     # Load JSON
     try:
-        with open(json_path, 'r') as f:
+        with open(json_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
     except json.JSONDecodeError as e:
         envelope = create_error_envelope(
@@ -929,7 +929,7 @@ def plan_update_from_command(
 
     # Load JSON
     try:
-        with open(json_path, 'r') as f:
+        with open(json_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
     except json.JSONDecodeError as e:
         envelope = create_error_envelope(
@@ -1468,7 +1468,7 @@ def plan_append_week_command(
 
     # Load JSON
     try:
-        with open(json_path, 'r') as f:
+        with open(json_path, 'r', encoding='utf-8') as f:
             week_data = json.load(f)
     except json.JSONDecodeError as e:
         envelope = create_error_envelope(
@@ -1658,7 +1658,7 @@ def create_macro_command(
         output_json(envelope)
         raise typer.Exit(code=2)
     try:
-        with open(json_path, "r") as f:
+        with open(json_path, "r", encoding="utf-8") as f:
             payload = json.load(f)
     except json.JSONDecodeError as e:
         envelope = create_error_envelope(
@@ -1995,9 +1995,9 @@ def assess_period_command(
 
     # Load JSON files
     try:
-        with open(planned_workouts_json, 'r') as f:
+        with open(planned_workouts_json, 'r', encoding='utf-8') as f:
             planned = json.load(f)
-        with open(completed_activities_json, 'r') as f:
+        with open(completed_activities_json, 'r', encoding='utf-8') as f:
             completed = json.load(f)
     except FileNotFoundError as e:
         envelope = {

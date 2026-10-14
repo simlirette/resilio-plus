@@ -687,7 +687,7 @@ def validate_plan_json_structure(
 
     # 1. Load and parse JSON
     try:
-        with open(json_path) as f:
+        with open(json_path, encoding="utf-8") as f:
             data = json.load(f)
     except FileNotFoundError:
         return False, [f"File not found: {json_path}"], []
@@ -2371,7 +2371,7 @@ def validate_week_plan(
         )
 
     try:
-        with open(plan_path, 'r') as f:
+        with open(plan_path, 'r', encoding='utf-8') as f:
             plan_data = json.load(f)
     except json.JSONDecodeError as e:
         return PlanError(

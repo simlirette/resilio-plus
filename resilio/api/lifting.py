@@ -358,7 +358,7 @@ def suggest_loads(file_path: str, overwrite: bool = False) -> Union[dict, LiftEr
         return progression(hist, rep_range, increment_for(entry, profile), deload=deload)
 
     report = apply_load_suggestions(data, suggest, overwrite=overwrite)
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=True), encoding="utf-8")
     filled = sum(1 for r in report if r["status"] == "filled")
     return {"file": str(path), "filled": filled, "exercises": report}
 
