@@ -16,7 +16,6 @@ Creating the dedicated "Resilio Training" calendar requires the broader
 
 from __future__ import annotations
 
-import json
 import logging
 from pathlib import Path
 from typing import Optional
@@ -71,19 +70,24 @@ class GoogleCalendarClient:
     # AUTH
     # ----------------------------------------------------------
 
-    def authenticate(self) -> None:
+    def authenticate(self, interactive: bool = True) -> None:
         """
         Load or obtain OAuth2 credentials and build the service object.
 
-        First call: opens browser for user consent, persists token.
+        First interactive call: opens browser for user consent, persists token.
         Subsequent calls: loads token, refreshes silently if expired.
+
+        Args:
+            interactive: Allow opening a browser when no valid token is available.
+                Automatic background syncs set this to ``False`` so a plan write
+                can never hang while waiting for OAuth consent.
 
         Raises:
             GoogleCalendarAuthError: If auth fails.
         """
         try:
-            from google.oauth2.credentials import Credentials
             from google.auth.transport.requests import Request
+            from google.oauth2.credentials import Credentials
             from google_auth_oauthlib.flow import InstalledAppFlow
             from googleapiclient.discovery import build
         except ImportError as exc:
@@ -115,6 +119,11 @@ class GoogleCalendarClient:
                     raise GoogleCalendarAuthError(
                         f"credentials.json not found at {self._credentials_path}. "
                         "Download it from Google Cloud Console (OAuth 2.0 Desktop app)."
+                    )
+                if not interactive:
+                    raise GoogleCalendarAuthError(
+                        "Google Calendar authorization is required. "
+                        "Run: resilio calendar auth"
                     )
                 flow = InstalledAppFlow.from_client_secrets_file(
                     str(self._credentials_path), SCOPES

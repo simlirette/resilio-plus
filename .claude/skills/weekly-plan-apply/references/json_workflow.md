@@ -13,6 +13,8 @@ resilio plan validate-week --file <APPROVED_FILE>
 
 # 2. Persist
 resilio plan populate --from-json <APPROVED_FILE> --validate
+# The changed week is synchronized to Google Calendar automatically.
+# Confirm data.calendar_sync.ok is true; do not run a separate sync command.
 
 # 3. Confirm (workouts must be non-empty)
 resilio plan week --week <WEEK_NUMBER>
@@ -20,6 +22,9 @@ resilio plan week --week <WEEK_NUMBER>
 
 If `resilio plan populate` fails, return the full CLI output in a blocking checklist.
 Do not attempt to fix the JSON.
+
+If the plan succeeds but `data.calendar_sync.ok` is false, the plan is already
+persisted. Report the Calendar failure and do not populate the week again.
 
 ## What a valid file looks like
 

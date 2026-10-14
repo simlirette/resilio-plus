@@ -516,6 +516,10 @@ resilio plan populate --from-json /tmp/weekly_plan_w1.json --validate
 **Notes:**
 - Safe to call repeatedly; existing weeks are preserved and updated by week_number.
 - Requires weekly approval in `data/state/approvals.json` (set via `resilio approvals approve-week`).
+- Automatically synchronizes the added or modified week to Google Calendar.
+- The response contains `calendar_sync`; no separate sync command is required when
+  `calendar_sync.ok` is `true`.
+- A Calendar failure is reported but does not roll back the already-saved local plan.
 
 ---
 

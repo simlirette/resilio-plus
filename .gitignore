@@ -251,6 +251,14 @@ data/resilio.db
 credentials.json
 data/google_calendar/
 
+# Coach CLI athlete data (explicit — never rely on data/* alone)
+data/athlete/
+data/activities/
+data/metrics/
+data/plans/
+data/state/
+data/lifting/
+
 # Documentation build artifacts
 docs/artifacts/
 

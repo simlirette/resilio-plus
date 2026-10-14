@@ -77,7 +77,7 @@ class RepositoryIO:
 
         # Read and parse
         try:
-            with open(resolved_path) as f:
+            with open(resolved_path, encoding="utf-8") as f:
                 data = yaml.safe_load(f)
         except yaml.YAMLError as e:
             return RepoError(
@@ -330,7 +330,7 @@ class RepositoryIO:
 
         # Read and parse
         try:
-            with open(resolved_path) as f:
+            with open(resolved_path, encoding="utf-8") as f:
                 data = json.load(f)
         except json.JSONDecodeError as e:
             return RepoError(
@@ -454,7 +454,7 @@ class RepositoryIO:
         resolved_path.parent.mkdir(parents=True, exist_ok=True)
 
         try:
-            with open(resolved_path, 'a') as f:
+            with open(resolved_path, 'a', encoding="utf-8") as f:
                 f.write(content)
             return None
         except Exception as e:

@@ -38,7 +38,7 @@ poetry run resilio calendar auth
 - Token saved to `data/google_calendar/token.json` (gitignored)
 - "Resilio Training" calendar created automatically in your Google Calendar
 
-## 5. Sync plan to calendar
+## 5. Initial or manual sync
 
 ```bash
 # Sync next 2 weeks (default)
@@ -51,7 +51,8 @@ poetry run resilio calendar sync --weeks 4
 poetry run resilio calendar sync --dry-run
 ```
 
-Re-run anytime — idempotent (no duplicates even if run 10×).
+This command remains available for initial setup, recovery, and dry-run checks.
+It is idempotent (no duplicates even if run 10×).
 
 ## 6. Verify on iPhone
 
@@ -72,16 +73,22 @@ You'll receive a popup notification 30 min before each run, 60 min before long r
 | Rest | 🛌 Rest | Notes if any |
 | Gym | 🏋️ Leg day | "Voir Hevy pour le détail" |
 
-## 8. Re-sync after plan update
+## 8. Automatic sync after plan updates
 
-Whenever a new week is generated or the plan changes:
+Whenever `resilio plan populate` adds or modifies an approved week, that exact
+week is synchronized automatically. `resilio plan update-from` does the same for
+every replaced week, including weeks beyond the normal `sync_weeks_ahead` window.
 
-```bash
-poetry run resilio calendar sync
-```
+The plan command response includes a `calendar_sync` result. No separate calendar
+command is needed when `calendar_sync.ok` is `true`.
 
 Changed events are patched, removed sessions deleted, new ones added.
 Past events are never modified.
+
+Calendar synchronization is non-blocking: if Google is unavailable or its token
+needs renewal, the local plan remains saved and `calendar_sync.ok` is `false` with
+the required recovery action. Automatic sync never opens a browser while a plan
+is being saved.
 
 ## Settings
 

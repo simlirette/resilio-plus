@@ -11,31 +11,79 @@ from typing import Optional
 import typer
 
 from resilio.api import (
-    get_current_plan,
     api_validate_interval_structure,
     api_validate_plan_structure,
+    get_current_plan,
 )
 from resilio.api.plan import (
-    get_plan_weeks,
+    PlanError,
+    append_training_plan_adaptation,
+    append_weekly_training_summary,
+    assess_week_execution,
     build_macro_template,
     export_plan_structure,
-    populate_plan_workouts,
-    update_plan_from_week,
-    save_training_plan_review,
-    append_training_plan_adaptation,
+    get_plan_weeks,
     initialize_plan_training_log,
-    append_weekly_training_summary,
+    populate_plan_workouts,
+    revert_week_plan,
+    save_training_plan_review,
+    update_plan_from_week,
     validate_plan_json_structure,
     validate_week_plan,
-    revert_week_plan,
-    assess_week_execution,
-    PlanError,
 )
+from resilio.cli.commands.calendar import sync_current_plan
 from resilio.cli.errors import api_result_to_envelope, get_exit_code_from_envelope
-from resilio.cli.output import create_error_envelope, create_success_envelope, output_json
+from resilio.cli.output import (
+    OutputEnvelope,
+    create_error_envelope,
+    create_success_envelope,
+    output_json,
+    to_json_serializable,
+)
 
 # Create subcommand app
 app = typer.Typer(help="Manage training plans")
+
+
+def _auto_sync_calendar_after_plan_change(
+    ctx: typer.Context,
+    envelope: OutputEnvelope,
+    week_numbers: list[int],
+) -> OutputEnvelope:
+    """Attach a non-blocking Google Calendar sync result to a plan response.
+
+    The plan write is the source of truth and has already committed by the time
+    this runs. Calendar failures are therefore reported in the successful plan
+    envelope rather than turning a completed write into a failed command.
+    """
+    if not envelope.ok:
+        return envelope
+
+    cli_ctx = ctx.obj
+    repo_root = getattr(cli_ctx, "repo_root", None) or Path.cwd()
+
+    try:
+        calendar_envelope = sync_current_plan(
+            repo_root,
+            week_numbers=week_numbers,
+            interactive_auth=False,
+        )
+    except Exception as exc:  # Defensive boundary: calendar must not undo a plan write.
+        calendar_envelope = create_error_envelope(
+            error_type="calendar_sync",
+            message=f"Automatic Google Calendar sync failed: {exc}",
+        )
+
+    plan_data = to_json_serializable(envelope.data)
+    if not isinstance(plan_data, dict):
+        plan_data = {"result": plan_data}
+    plan_data["calendar_sync"] = to_json_serializable(calendar_envelope)
+    envelope.data = plan_data
+
+    if not calendar_envelope.ok:
+        envelope.message += "; plan saved but Google Calendar sync failed"
+
+    return envelope
 
 
 @app.command(name="show")
@@ -610,6 +658,12 @@ def plan_populate_command(
         success_message=f"Populated {len(weeks_data)} weeks with workouts",
     )
 
+    envelope = _auto_sync_calendar_after_plan_change(
+        ctx,
+        envelope,
+        [int(week["week_number"]) for week in weeks_data],
+    )
+
     # Output JSON
     output_json(envelope)
 
@@ -903,6 +957,12 @@ def plan_update_from_command(
     envelope = api_result_to_envelope(
         result,
         success_message=f"Updated {len(weeks_data)} weeks from week {week} onwards",
+    )
+
+    envelope = _auto_sync_calendar_after_plan_change(
+        ctx,
+        envelope,
+        [int(week_data["week_number"]) for week_data in weeks_data],
     )
 
     # Output JSON

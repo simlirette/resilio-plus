@@ -61,6 +61,10 @@ checklist. Do NOT attempt to fix the JSON — return the error to the main agent
 resilio plan populate --from-json <APPROVED_FILE> --validate
 ```
 If this fails (exit code ≠ 0), include the full error output in a blocking checklist.
+The command automatically synchronizes the changed week to Google Calendar. Check
+`data.calendar_sync.ok` in the response. If it is `false`, the plan is already
+saved: return a blocking checklist for the Calendar failure and do NOT populate
+the week again.
 
 **Step 4 — Confirm workouts persisted:**
 ```bash
