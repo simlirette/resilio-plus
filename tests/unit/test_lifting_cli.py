@@ -93,3 +93,19 @@ def test_analysis_load_reads_cli_envelope_and_stored_activities(tmp_path, monkey
     rows = analysis_cmd._stored_activity_loads(28)
     assert rows == [{"date": recent.date.isoformat(), "sport_type": "strength",
                      "calculated": {"systemic_load_au": 22.0, "lower_body_load_au": 10.0}}]
+
+
+def test_create_macro_accepts_weekly_volumes_km_key(tmp_path, monkeypatch):
+    """create-macro used to reject templates that only had 'weekly_volumes_km' (the documented key)."""
+    # Isolate: the CLI resolves the repo root from cwd; never touch real athlete data.
+    (tmp_path / ".git").mkdir()
+    monkeypatch.chdir(tmp_path)
+    tpl = tmp_path / "macro.json"
+    tpl.write_text(json.dumps({"total_weeks": 2, "weekly_volumes_km": [10.0, 12.0],
+                               "target_systemic_load_au": [100.0, 110.0],
+                               "workout_structure_hints": [{}, {}]}), encoding="utf-8")
+    res = runner.invoke(app, ["plan", "create-macro", "--goal-type", "10k", "--total-weeks", "2",
+                              "--start-date", "2026-10-19", "--current-ctl", "12", "--baseline-vdot", "35",
+                              "--macro-template-json", str(tpl)])
+    assert "must include 'weekly_volumes_km'" not in res.output
+    assert "must include 'volumes_km'" not in res.output
