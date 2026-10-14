@@ -117,6 +117,8 @@ resilio profile get  # Load athlete profile including other_sports
 
 2.5. Add weekly weather context:
 
+**Weather Context & Adjustments**
+
 ```bash
 resilio weather week --start <WEEK_START>
 ```
