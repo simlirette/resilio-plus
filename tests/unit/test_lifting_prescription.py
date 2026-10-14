@@ -324,3 +324,14 @@ def test_populate_inherits_week_number_on_workouts(monkeypatch):
     with pytest.raises(RuntimeError):
         plan_api.populate_plan_workouts([week])
     assert seen["numbers"] == [4, 4]
+
+
+def test_load_suggestion_report_has_display_with_pounds():
+    week = {"weeks": [{"week_number": 2, "strength_sessions": [{"exercises": [
+        {"exercise_template_id": "TP", "title": "Triceps Pushdown", "sets": 2, "rep_range": [10, 12]}]}]}]}
+
+    def suggest(tid, rep_range, deload):
+        return SimpleNamespace(action="hold", suggested_load_kg=54.431084, reason="r")
+
+    report = apply_load_suggestions(week, suggest)
+    assert report[0]["display"] == "120 lb (54.4 kg)"

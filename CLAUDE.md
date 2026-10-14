@@ -378,7 +378,8 @@ If the current week's Monday is not yet known, run `resilio dates today` first t
    - The review doc is comprehensive and designed to be presented directly (includes tables, rationale, pacing, multi-sport context)
    - After presenting the full review doc, use the `athlete_prompt` to ask for approval
 4. **Athlete approval** → `resilio approvals approve-macro`
-   - After approval, the plan is automatically saved to `data/plans/current_plan_review.md` for reference
+   - Then save the approved review: `resilio plan save-review --from-file <review_path> --approved`
+     (writes `data/plans/current_plan_review.md`; approval alone does not save it)
 5. **Weekly plan**:
    - Run `weekly-plan-generate` skill (returns `weekly_json_path`, `athlete_prompt`)
    - **CRITICAL**: Read `weekly_json_path` and run:

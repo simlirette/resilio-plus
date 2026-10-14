@@ -240,6 +240,12 @@ def _fmt_num(x: float) -> str:
     return f"{x:g}"
 
 
+def load_display(load_kg: float) -> str:
+    """'120 lb (54.4 kg)' for loads entered in lb, otherwise '25 kg'."""
+    lbs = lbs_equivalent(load_kg)
+    return f"{_fmt_num(lbs)} lb ({load_kg:.1f} kg)" if lbs is not None else f"{_fmt_num(load_kg)} kg"
+
+
 def format_exercise_line(e: ExercisePrescription) -> str:
     if e.rep_range:
         lo, hi = e.rep_range
@@ -283,6 +289,7 @@ def apply_load_suggestions(
                 if getattr(sug, "suggested_load_kg", None) is not None:
                     e["load_kg"] = sug.suggested_load_kg
                     report.append({**row, "status": "filled", "load_kg": sug.suggested_load_kg,
+                                   "display": load_display(sug.suggested_load_kg),
                                    "action": sug.action, "reason": sug.reason})
                 else:
                     report.append({**row, "status": "no_load", "action": getattr(sug, "action", None),

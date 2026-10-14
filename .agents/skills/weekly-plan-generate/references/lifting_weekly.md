@@ -71,4 +71,6 @@ Report `data.lifting_planned_volume` in the review and address every lifting war
 Per session: day, title, then one line per exercise, e.g.
 `3×8–10 Romanian Deadlift (Dumbbell) @ 20 kg · RIR 2 · rest 150s`.
 Say which loads came from history and which are "find your working load at RIR 2".
+Show loads with the `display` text from `suggest-loads` (e.g. `120 lb (54.4 kg)` for exercises
+the athlete logs in pounds).
 After approval, the apply step pushes the sessions to Hevy (folder "Resilio").

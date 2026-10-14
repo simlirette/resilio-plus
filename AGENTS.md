@@ -262,7 +262,7 @@ If the current week's Monday is not yet known, run `resilio dates today` first t
 1. **VDOT baseline proposal**: `vdot-baseline-proposal` (present in chat)
 2. **Athlete approval** → `resilio approvals approve-vdot --value <VDOT>`
 3. **Macro plan**: `macro-plan-create` (writes review doc)
-4. **Athlete approval** → `resilio approvals approve-macro`
+4. **Athlete approval** → `resilio approvals approve-macro`, then `resilio plan save-review --from-file <review_path> --approved`
 5. **Weekly plan**: `weekly-plan-generate` (weekly JSON + review)
 6. **Athlete approval** → `resilio approvals approve-week --week <N> --file /tmp/weekly_plan_wN.json`
 7. **Apply**: `weekly-plan-apply` → `resilio plan populate --from-json /tmp/weekly_plan_wN.json --validate`

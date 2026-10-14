@@ -482,6 +482,13 @@ def get_lifting_blocks():
 # ----------------------------------------------------------------- SP5: push
 
 
+class _OfflineHevy:
+    """Stand-in client for dry-runs without HEVY_API_KEY (no network, no writes)."""
+
+    def iter_routine_folders(self):
+        return iter(())
+
+
 def push_lifting_week(week_number: int, dry_run: bool = False):
     """Write plan week N's prescribed strength sessions to Hevy routines (folder "Resilio")."""
     from resilio.core.lifting.push import push_week
@@ -499,7 +506,15 @@ def push_lifting_week(week_number: int, dry_run: bool = False):
             "Generate the week with exercises (weekly-plan-generate), validate and populate it first.",
         )
     try:
-        report = push_week(_client(), _store(), week.strength_sessions, week_number, dry_run=dry_run)
+        try:
+            client = _client()
+        except HevyConfigError:
+            if not dry_run:
+                raise
+            client = _OfflineHevy()  # dry-run without a key: build payloads, skip folder lookup
+        report = push_week(client, _store(), week.strength_sessions, week_number, dry_run=dry_run)
+        if isinstance(client, _OfflineHevy):
+            report.folder_action = "unknown_no_api_key"
     except HevyAPIError as exc:
         if exc.status_code == 403:
             return LiftError(

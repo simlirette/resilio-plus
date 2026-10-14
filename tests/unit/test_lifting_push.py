@@ -157,3 +157,23 @@ def test_routine_limit_error_propagates(tmp_path):
 
     with pytest.raises(HevyAPIError):
         push_week(Limited(folders=[{"id": 7, "title": "Resilio"}]), LiftingStore(tmp_path), [sess(0, [ex()])], 3)
+
+
+def test_dry_run_without_api_key_still_builds_payloads(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+
+    from resilio.api import lifting as api
+    from resilio.core.lifting.hevy_client import HevyConfigError
+
+    def no_key():
+        raise HevyConfigError("HEVY_API_KEY is not set")
+
+    week = SimpleNamespace(week_number=1, strength_sessions=[sess(0, [ex()])])
+    monkeypatch.setattr(api, "_client", no_key)
+    monkeypatch.setattr(api, "_store", lambda: LiftingStore(tmp_path))
+    monkeypatch.setattr(api, "_load_plan", lambda: SimpleNamespace(weeks=[week]))
+    rep = api.push_lifting_week(1, dry_run=True)
+    assert not api.is_lift_error(rep), rep
+    assert rep.folder_action == "unknown_no_api_key" and rep.actions[0].payload["exercises"]
+    real = api.push_lifting_week(1, dry_run=False)
+    assert api.is_lift_error(real) and real.error_type == "config"
