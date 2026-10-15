@@ -59,8 +59,7 @@ def _exercise_payload(e: ExercisePrescription) -> dict:
     for _ in range(e.warmup_sets):
         sets.append({"type": "warmup", "weight_kg": None,
                      "reps": e.rep_range[1] if e.rep_range else None,
-                     "distance_meters": None, "duration_seconds": None, "custom_metric": None,
-                     "rep_range": None})
+                     "distance_meters": None, "duration_seconds": None, "custom_metric": None})
     for _ in range(e.sets):
         sets.append({
             "type": "normal",
@@ -70,8 +69,9 @@ def _exercise_payload(e: ExercisePrescription) -> dict:
             "distance_meters": None,
             "duration_seconds": e.duration_seconds,
             "custom_metric": None,
-            "rep_range": {"start": e.rep_range[0], "end": e.rep_range[1]} if e.rep_range else None,
         })
+        if e.rep_range:
+            sets[-1]["rep_range"] = {"start": e.rep_range[0], "end": e.rep_range[1]}
     return {
         "exercise_template_id": e.exercise_template_id,
         "superset_id": e.superset_group,
@@ -93,11 +93,19 @@ def build_routine_payload(session, week_number: int) -> dict:
     }
 
 
+def _put_set(s: dict) -> dict:
+    # Hevy PUT rejects "rep_range": null ("Expected object, received null"); POST tolerates it.
+    out = {k: s.get(k) for k in _SET_FIELDS}
+    if out.get("rep_range") is None:
+        out.pop("rep_range")
+    return out
+
+
 def _to_put_payload(routine: dict, title: str) -> dict:
     exercises = []
     for e in routine.get("exercises") or []:
         ex = {k: e.get(k) for k in _EXERCISE_FIELDS}
-        ex["sets"] = [{k: s.get(k) for k in _SET_FIELDS} for s in e.get("sets") or []]
+        ex["sets"] = [_put_set(s) for s in e.get("sets") or []]
         exercises.append(ex)
     return {"title": title, "notes": routine.get("notes"), "exercises": exercises}
 

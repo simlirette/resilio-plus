@@ -83,7 +83,26 @@ def test_payload_duration_exercise():
     p = build_routine_payload(sess(0, [ex("PLK", "Plank", rep_range=None, duration_seconds=45,
                                           load_kg=None, target_rir=None, kind="core")]), 3)
     s = p["exercises"][0]["sets"][0]
-    assert s["duration_seconds"] == 45 and s["reps"] is None and s.get("rep_range") is None
+    assert s["duration_seconds"] == 45 and s["reps"] is None and "rep_range" not in s
+
+
+def test_payload_never_sends_null_rep_range():
+    # Hevy PUT returns 400 "Expected object, received null" for rep_range: null.
+    p = build_routine_payload(sess(0, [ex(warmup_sets=2),
+                                       ex("WU", "Warm Up", rep_range=None, duration_seconds=60,
+                                          load_kg=None, target_rir=None, kind="mobility")]), 3)
+    sets = [s for e in p["exercises"] for s in e["sets"]]
+    assert all(s.get("rep_range", {}) is not None for s in sets)
+    assert sum("rep_range" in s for s in sets) == 3
+
+
+def test_rename_unused_drops_null_rep_range(tmp_path):
+    store, hevy = LiftingStore(tmp_path), FakeHevy(folders=[{"id": 7, "title": "Resilio"}])
+    push_week(hevy, store, [sess(0, [ex()]), sess(3, [ex(warmup_sets=1)], "Arms")], week_number=3)
+    hevy.routines["new2"]["exercises"][0]["sets"][0]["rep_range"] = None  # as Hevy GET returns it
+    push_week(hevy, store, [sess(0, [ex()])], week_number=4)
+    sets = hevy.routines["new2"]["exercises"][0]["sets"]
+    assert all(s.get("rep_range", {}) is not None for s in sets)
 
 
 def test_first_push_creates_folder_and_routines_and_saves_slots(tmp_path):
