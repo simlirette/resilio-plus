@@ -38,5 +38,7 @@ system:
 # Google Calendar (resilio calendar sync). Timezone drives event offsets (DST-aware).
 google_calendar:
   timezone: Europe/Prague    # athlete's current location (Prague semester); was America/Toronto
-  # Prague schedule: runs in the morning, gym in the evening (Mon/Wed run + gym days need the gap).
-  run_day_times: {"0": "09:00", "1": "09:00", "2": "09:00", "3": "09:00", "4": "09:00", "5": "09:00", "6": "09:00"}
+  # Prague class schedule: Mon 10:45-14:00 + 17:45-21:00, Tue 8:30-18:30, Wed 11:30-17:30.
+  # Runs before class, gym in the free window after; >=4 h between a run and a gym session.
+  run_day_times: {"0": "08:30", "1": "07:00", "2": "09:00", "3": "09:00", "4": "09:00", "5": "09:00", "6": "09:00"}
+  strength_day_times: {"0": "14:30", "1": "19:00", "2": "18:00", "3": "15:00", "4": "15:00", "5": "15:00", "6": "15:00"}
