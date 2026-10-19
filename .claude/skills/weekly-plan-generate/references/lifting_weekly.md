@@ -15,6 +15,13 @@ resilio lift volume --week-start <PREV_MONDAY> # what was actually done last wee
 If `lift sync` returns `error_type: config` (no `HEVY_API_KEY`), continue without history:
 prescribe by RIR, no loads, and tell the athlete once.
 
+## Program first (fixed for the mesocycle)
+
+Copy each session's exercises from `data/lifting/program.json` (Upper A, Legs, Upper B, Arms).
+Do not swap, add or drop exercises week to week: that only happens when the athlete asks, or at
+a new mesocycle (~3-4 months), and then the program file and Hevy are updated together.
+Weekly variation = sets, RIR and which day a session lands on.
+
 ## Design rules
 
 - **DUP:** give the sessions different rep zones (heavy 6–8 / moderate 8–12 / light 12–15); see
@@ -73,4 +80,6 @@ Per session: day, title, then one line per exercise, e.g.
 Say which loads came from history and which are "find your working load at RIR 2".
 Show loads with the `display` text from `suggest-loads` (e.g. `120 lb (54.4 kg)` for exercises
 the athlete logs in pounds).
-After approval, the apply step pushes the sessions to Hevy (folder "Resilio").
+Hevy is not updated weekly: the athlete runs the fixed program routines and Hevy shows their
+previous numbers. Tell the athlete in chat what differs this week (fewer sets on a deload, a
+session moved to another day).

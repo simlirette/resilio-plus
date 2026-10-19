@@ -467,10 +467,14 @@ resilio lift progression --exercise "<name>"
 **Planning** (macro-plan-create → weekly-plan-generate → weekly-plan-apply)
 
 - Macro: `resilio lift blocks set --file …` (lifting blocks aligned with running phases).
-- Weekly: `strength_sessions[].exercises` with Hevy template ids; `resilio lift suggest-loads --file …`
-  fills loads from history; `resilio plan validate-week` runs the lifting checks.
-- Apply: after populate, `resilio lift push --week N` writes the week to Hevy routines in the
-  "Resilio" folder (one routine per weekday, updated in place; Hevy cannot delete routines).
+- Weekly: `strength_sessions[].exercises` copied from the current program (`data/lifting/program.json`),
+  with Hevy template ids; `resilio lift suggest-loads --file …` fills loads from history;
+  `resilio plan validate-week` runs the lifting checks. Week-to-week changes (deload sets, a session
+  moved for a trip) live in the plan and are told to the athlete in chat; Hevy is not edited for them.
+- Hevy program: the "Resilio" folder holds one routine per session (Upper A, Legs, Upper B, Arms),
+  fixed for the whole mesocycle (~3-4 months). Hevy tracks progress per routine, so weekly rewrites
+  lose the athlete's history. `resilio lift push --week N` runs **only** when the program changes:
+  a new mesocycle, or an exercise swap the athlete asked for. Never as part of a normal weekly apply.
 - Review: `resilio lift adherence --week N` + `resilio lift volume`.
 
 **Rules**
@@ -479,13 +483,14 @@ resilio lift progression --exercise "<name>"
 - Respect `lifting.goal` (e.g. `hypertrophy_athletic`: no working sets below 5 reps except power/plyo).
 - Keep every `protected_exercises` entry in the week unless the athlete drops it.
 - Legs never the day before a long run, intervals, strides or a time trial.
-- `resilio lift push` without `--dry-run` only after the athlete approved the week.
+- `resilio lift push` without `--dry-run` only after the athlete approved the program change
+  (new mesocycle or exercise swap), then update `data/lifting/program.json` to match.
 - Never modify Hevy routines or folders outside the "Resilio" folder.
 
 ## Hevy (MCP)
 
 The project MCP server `hevy` (`.mcp.json`, `hevy-mcp@6.1.16`, key from the `HEVY_API_KEY` env var)
-is for reads and one-off requests (e.g. "build me a 30 min upper session today"). Planned weeks go to
+is for reads and one-off requests (e.g. "build me a 30 min upper session today"). Program changes go to
 Hevy through `resilio lift push`, never by retyping them into MCP calls. Any MCP write needs the
 athlete's explicit approval of the exact content first. Never print the API key.
 

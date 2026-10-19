@@ -68,12 +68,14 @@ saved: return a blocking checklist for the Calendar failure and do NOT populate
 the week again.
 
 <!-- lifting:sp4 -->
-**Step 3.5 — Push lifting to Hevy (only if the week has strength sessions with exercises):**
+**Step 3.5 — Hevy program push (ONLY on a program change):**
 ```bash
 resilio lift push --week <WEEK_NUMBER>
 ```
-This updates the athlete's Hevy routines in the "Resilio" folder (one per weekday).
-It is part of the approved apply, so no extra approval is needed. If it fails
+Skip this step for a normal week. Hevy routines ("Resilio" folder, one per session:
+Upper A, Legs, Upper B, Arms) stay fixed for the mesocycle (~3-4 months) because Hevy
+tracks progress per routine. Run it only when the main agent's arguments say the athlete
+approved a program change (new mesocycle or an exercise swap). If it fails
 (`error_type` config/auth/rate_limit/api_error), the plan is already saved:
 return a blocking checklist with the error and `next_steps`. Do NOT re-populate.
 
