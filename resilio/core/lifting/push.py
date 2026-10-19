@@ -1,15 +1,20 @@
 """
-SP5 — push a plan week's strength sessions to Hevy as routines.
+SP5 — push the lifting *program* (one routine per session) to Hevy.
 
-Hevy's API cannot delete routines, so Resilio owns a fixed set of *slots* (one routine
-per weekday, ``mon``…``sun``, plus ``mon-2`` for a second session on the same day)
-inside a "Resilio" routine folder. Each push updates the slot routines in place; slots
-not used this week are renamed "(not scheduled)" with their exercises left intact.
-Routines outside the Resilio folder are never touched.
+Hevy tracks progress per routine, so routines must stay stable for a whole
+mesocycle (~3-4 months). Push only when the program changes (new block, or an
+exercise swap the athlete asked for), never once a week.
+
+Hevy's API cannot delete routines, so Resilio owns one *slot* per session name
+(``upper-a``, ``legs``, ``upper-b``, ``arms``…) inside a "Resilio" routine folder.
+A push updates those routines in place. The weekday a session lands on does not
+matter, and routines left out of a push are not touched. Routines outside the
+Resilio folder are never touched.
 """
 
 from __future__ import annotations
 
+import re
 from typing import Any, Optional
 
 from pydantic import BaseModel, Field
@@ -19,15 +24,11 @@ from resilio.core.lifting.store import LiftingStore
 from resilio.schemas.lifting import ExercisePrescription
 
 FOLDER_TITLE = "Resilio"
-DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
-DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-_SET_FIELDS = ("type", "weight_kg", "reps", "distance_meters", "duration_seconds", "custom_metric", "rep_range")
-_EXERCISE_FIELDS = ("exercise_template_id", "superset_id", "rest_seconds", "notes")
 
 
 class PushAction(BaseModel):
     slot: str
-    action: str  # create | update | recreate | rename_unused | skip
+    action: str  # create | update | recreate | skip
     title: str
     routine_id: Optional[str] = None
     payload: Optional[dict] = None
@@ -81,33 +82,19 @@ def _exercise_payload(e: ExercisePrescription) -> dict:
     }
 
 
+def slot_key(session) -> str:
+    """Stable slot per session name: 'Upper A' -> 'upper-a', 'Arms (optional)' -> 'arms'."""
+    label = re.sub(r"\(.*?\)", "", _session_label(session))
+    return re.sub(r"[^a-z0-9]+", "-", label.lower()).strip("-") or "session"
+
+
 def build_routine_payload(session, week_number: int) -> dict:
-    day = DAY_LABELS[session.day_of_week]
-    notes = [f"Resilio — Week {week_number} — {session.date.isoformat()}"]
-    if session.notes:
-        notes.append(session.notes)
+    # No weekday or week number in title/notes: the routine must read the same all block long.
     return {
-        "title": f"Resilio · {day} · {_session_label(session)}",
-        "notes": "\n".join(notes),
+        "title": f"Resilio · {_session_label(session)}",
+        "notes": session.notes or None,
         "exercises": [_exercise_payload(e) for e in session.exercises],
     }
-
-
-def _put_set(s: dict) -> dict:
-    # Hevy PUT rejects "rep_range": null ("Expected object, received null"); POST tolerates it.
-    out = {k: s.get(k) for k in _SET_FIELDS}
-    if out.get("rep_range") is None:
-        out.pop("rep_range")
-    return out
-
-
-def _to_put_payload(routine: dict, title: str) -> dict:
-    exercises = []
-    for e in routine.get("exercises") or []:
-        ex = {k: e.get(k) for k in _EXERCISE_FIELDS}
-        ex["sets"] = [_put_set(s) for s in e.get("sets") or []]
-        exercises.append(ex)
-    return {"title": title, "notes": routine.get("notes"), "exercises": exercises}
 
 
 def _ensure_folder(client, mapping: dict, dry_run: bool) -> tuple[Optional[int], str]:
@@ -132,11 +119,11 @@ def push_week(client, store: LiftingStore, sessions: list, week_number: int, dry
         store.save_routine_map({**mapping, "slots": slots})
 
     used: set[str] = set()
-    per_day: dict[int, int] = {}
     for s in sorted(sessions, key=lambda x: (x.date, x.day_of_week)):
-        per_day[s.day_of_week] = per_day.get(s.day_of_week, 0) + 1
-        n = per_day[s.day_of_week]
-        slot = DAY_KEYS[s.day_of_week] + ("" if n == 1 else f"-{n}")
+        slot, n = slot_key(s), 1
+        while slot in used:
+            n += 1
+            slot = f"{slot_key(s)}-{n}"
         payload = build_routine_payload(s, week_number)
         if not s.exercises:
             report.actions.append(PushAction(slot=slot, action="skip", title=payload["title"],
@@ -163,24 +150,4 @@ def push_week(client, store: LiftingStore, sessions: list, week_number: int, dry
         slots[slot] = rid
         store.save_routine_map({**mapping, "slots": slots})
         report.actions.append(PushAction(slot=slot, action=action, title=payload["title"], routine_id=rid))
-
-    for slot, rid in sorted(slots.items()):
-        if slot in used:
-            continue
-        day_label = DAY_LABELS[DAY_KEYS.index(slot.split("-")[0])]
-        title = f"Resilio · {day_label} · (not scheduled)"
-        if dry_run:
-            report.actions.append(PushAction(slot=slot, action="rename_unused", title=title, routine_id=rid))
-            continue
-        try:
-            current = client.get_routine(rid)
-            client.update_routine(rid, _to_put_payload(current, title))
-            report.actions.append(PushAction(slot=slot, action="rename_unused", title=title, routine_id=rid))
-        except HevyAPIError as exc:
-            if exc.status_code != 404:
-                raise
-            slots.pop(slot)
-            store.save_routine_map({**mapping, "slots": slots})
-            report.actions.append(PushAction(slot=slot, action="skip", title=title, routine_id=rid,
-                                             note="routine deleted in Hevy; slot forgotten"))
     return report

@@ -1,4 +1,4 @@
-"""SP5: plan week → Hevy routines (slot reuse, folder, dry-run, 404 recreate, unused rename)."""
+"""SP5: lifting program → Hevy routines (slot per session name, folder, dry-run, 404 recreate)."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from datetime import date
 import pytest
 
 from resilio.core.lifting.hevy_client import HevyAPIError
-from resilio.core.lifting.push import build_routine_payload, push_week
+from resilio.core.lifting.push import build_routine_payload, push_week, slot_key
 from resilio.core.lifting.store import LiftingStore
 from resilio.schemas.lifting import ExercisePrescription
 from resilio.schemas.plan import StrengthSession
@@ -68,7 +68,7 @@ class FakeHevy:
 
 def test_payload_sets_warmups_rep_range_load_and_notes():
     p = build_routine_payload(sess(0, [ex(warmup_sets=1, notes="Slow eccentric")]), week_number=3)
-    assert p["title"] == "Resilio · Mon · Upper A"
+    assert p["title"] == "Resilio · Upper A"
     e = p["exercises"][0]
     assert e["exercise_template_id"] == "INC" and e["rest_seconds"] == 120
     assert [s["type"] for s in e["sets"]] == ["warmup", "normal", "normal", "normal"]
@@ -76,7 +76,7 @@ def test_payload_sets_warmups_rep_range_load_and_notes():
     assert e["sets"][1]["weight_kg"] == 25 and e["sets"][0]["weight_kg"] is None
     assert e["sets"][1]["reps"] == 8
     assert e["notes"] == "RIR 2 · Slow eccentric"
-    assert "Week 3" in p["notes"]
+    assert p["notes"] is None  # no week number or date: routine is stable all block
 
 
 def test_payload_duration_exercise():
@@ -96,22 +96,13 @@ def test_payload_never_sends_null_rep_range():
     assert sum("rep_range" in s for s in sets) == 3
 
 
-def test_rename_unused_drops_null_rep_range(tmp_path):
-    store, hevy = LiftingStore(tmp_path), FakeHevy(folders=[{"id": 7, "title": "Resilio"}])
-    push_week(hevy, store, [sess(0, [ex()]), sess(3, [ex(warmup_sets=1)], "Arms")], week_number=3)
-    hevy.routines["new2"]["exercises"][0]["sets"][0]["rep_range"] = None  # as Hevy GET returns it
-    push_week(hevy, store, [sess(0, [ex()])], week_number=4)
-    sets = hevy.routines["new2"]["exercises"][0]["sets"]
-    assert all(s.get("rep_range", {}) is not None for s in sets)
-
-
 def test_first_push_creates_folder_and_routines_and_saves_slots(tmp_path):
     store, hevy = LiftingStore(tmp_path), FakeHevy()
     rep = push_week(hevy, store, [sess(0, [ex()]), sess(1, [ex("NOR", "Nordic")], "Legs", "legs")], week_number=3)
     assert ("create_folder", "Resilio") in hevy.calls
     assert [a.action for a in rep.actions] == ["create", "create"]
     assert all(c[2] == 99 for c in hevy.calls if c[0] == "create")
-    assert store.load_routine_map()["slots"] == {"mon": "new1", "tue": "new2"}
+    assert store.load_routine_map()["slots"] == {"upper-a": "new1", "legs": "new2"}
 
 
 def test_second_push_updates_existing_slots_no_new_routines(tmp_path):
@@ -127,28 +118,40 @@ def test_existing_folder_is_reused_not_recreated(tmp_path):
     hevy = FakeHevy(folders=[{"id": 7, "title": "Resilio"}])
     push_week(hevy, LiftingStore(tmp_path), [sess(0, [ex()])], week_number=3)
     assert not any(c[0] == "create_folder" for c in hevy.calls)
-    assert hevy.calls[0] == ("create", "Resilio · Mon · Upper A", 7)
+    assert hevy.calls[0] == ("create", "Resilio · Upper A", 7)
 
 
 def test_deleted_routine_is_recreated(tmp_path):
     store = LiftingStore(tmp_path)
-    store.save_routine_map({"folder_id": 7, "slots": {"mon": "gone"}})
+    store.save_routine_map({"folder_id": 7, "slots": {"upper-a": "gone"}})
     hevy = FakeHevy(folders=[{"id": 7, "title": "Resilio"}], missing={"gone"})
     rep = push_week(hevy, store, [sess(0, [ex()])], week_number=3)
     assert rep.actions[0].action == "recreate"
-    assert store.load_routine_map()["slots"]["mon"] == "new1"
+    assert store.load_routine_map()["slots"]["upper-a"] == "new1"
 
 
-def test_unused_slot_is_renamed_keeping_exercises(tmp_path):
+def test_session_moved_to_another_day_keeps_its_routine(tmp_path):
+    # Upper B done on Tuesday one week must update the Upper B routine, not overwrite Legs.
     store, hevy = LiftingStore(tmp_path), FakeHevy(folders=[{"id": 7, "title": "Resilio"}])
-    push_week(hevy, store, [sess(0, [ex()]), sess(3, [ex()], "Arms")], week_number=3)
+    push_week(hevy, store, [sess(1, [ex("NOR", "Nordic")], "Legs", "legs"), sess(2, [ex()], "Upper B")], 3)
+    hevy.calls.clear()
+    push_week(hevy, store, [sess(1, [ex(load_kg=27.5)], "Upper B")], 4)
+    assert hevy.calls == [("update", "new2", "Resilio · Upper B")]
+    assert hevy.routines["new1"]["exercises"][0]["exercise_template_id"] == "NOR"
+
+
+def test_routines_left_out_of_a_push_are_untouched(tmp_path):
+    store, hevy = LiftingStore(tmp_path), FakeHevy(folders=[{"id": 7, "title": "Resilio"}])
+    push_week(hevy, store, [sess(0, [ex()]), sess(3, [ex()], "Arms (optional)", "arms")], week_number=3)
     hevy.calls.clear()
     rep = push_week(hevy, store, [sess(0, [ex()])], week_number=4)
-    renamed = [a for a in rep.actions if a.action == "rename_unused"]
-    assert renamed and renamed[0].slot == "thu"
-    assert hevy.routines["new2"]["title"] == "Resilio · Thu · (not scheduled)"
-    assert hevy.routines["new2"]["exercises"][0]["exercise_template_id"] == "INC"
-    assert "index" not in hevy.routines["new2"]["exercises"][0]
+    assert [c[0] for c in hevy.calls] == ["update"] and len(rep.actions) == 1
+    assert hevy.routines["new2"]["title"] == "Resilio · Arms (optional)"
+
+
+def test_slot_key_ignores_parenthetical_and_case():
+    assert slot_key(sess(3, [ex()], "Arms (optional)")) == "arms"
+    assert slot_key(sess(0, [ex()], "Upper A")) == "upper-a"
 
 
 def test_dry_run_writes_nothing(tmp_path):
@@ -163,10 +166,10 @@ def test_schedule_only_sessions_are_skipped(tmp_path):
     assert rep.actions[0].action == "skip"
 
 
-def test_two_sessions_same_day_get_distinct_slots(tmp_path):
+def test_two_sessions_same_name_get_distinct_slots(tmp_path):
     store = LiftingStore(tmp_path)
-    push_week(FakeHevy(), store, [sess(0, [ex()]), sess(0, [ex()], "Core")], week_number=3)
-    assert set(store.load_routine_map()["slots"]) == {"mon", "mon-2"}
+    push_week(FakeHevy(), store, [sess(0, [ex()]), sess(2, [ex()])], week_number=3)
+    assert set(store.load_routine_map()["slots"]) == {"upper-a", "upper-a-2"}
 
 
 def test_routine_limit_error_propagates(tmp_path):
